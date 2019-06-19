@@ -195,8 +195,8 @@ Parser.prototype.shift = function (type, value, newstate, context) {
         value     : value,
         lineno    : context[0][0],
         col_offset: context[0][1],
-        endlineno : context[1][0],
-        col_endoffset: context[1][1],
+        end_lineno : context[1][0],
+        end_col_offset: context[1][1],
         children  : null
     };
     if (newnode) {
@@ -218,8 +218,8 @@ Parser.prototype.push = function (type, newdfa, newstate, context) {
         value     : null,
         lineno    : context[0][0],
         col_offset: context[0][1],
-        endlineno : context[1][0],
-        col_endoffset: context[1][1],
+        end_lineno : context[1][0],
+        end_col_offset: context[1][1],
         children  : []
     };
     this.stack[this.stack.length - 1] = {
