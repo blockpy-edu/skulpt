@@ -1,3 +1,9 @@
+This is a BlockPy fork of the Skulpt project. We add a few features:
+
+* AST parser now captures end of line/column information
+* MatPlotLib module
+* Exec support
+
 # Welcome to Skulpt
 
 [![Join the chat at https://gitter.im/skulpt/skulpt](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/skulpt/skulpt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
