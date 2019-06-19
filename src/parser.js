@@ -17,6 +17,7 @@
 function Parser (filename, grammar) {
     this.filename = filename;
     this.grammar = grammar;
+    this.comments = {};
     this.p_flags = 0;
     return this;
 }
@@ -67,6 +68,11 @@ function findInDfa (a, obj) {
     }
     return false;
 }
+
+// Add a comment
+Parser.prototype.addcomment = function(value, start, end, line) {
+    this.comments[start] = value;
+};
 
 
 // Add a token; return true if we're done
@@ -143,7 +149,7 @@ Parser.prototype.addtoken = function (type, value, context) {
 
         //print("findInDfa: " + JSON.stringify(arcs)+" vs. " + tp.state);
         if (findInDfa(arcs, [0, tp.state])) {
-            // an accepting state, pop it and try somethign else
+            // an accepting state, pop it and try something else
             //print("WAA");
             this.pop();
             if (this.stack.length === 0) {
@@ -280,7 +286,17 @@ function makeParser (filename, style) {
     return p;
 }
 
+Sk.parseCache = {
+    'lastInput': null,
+    'lastParse': null,
+    'lastUnit': null
+}
+
 Sk.parse = function parse (filename, input) {
+    if (Sk.parseCache.lastInput == input) {
+        return Sk.parseCache.lastUnit;
+    }
+    
     var T_COMMENT = Sk.token.tokens.T_COMMENT;
     var T_NL = Sk.token.tokens.T_NL;
     var T_OP = Sk.token.tokens.T_OP;
@@ -328,6 +344,9 @@ Sk.parse = function parse (filename, input) {
                 lineno += 1;
                 column = 0;
             }
+            if (type === T_COMMENT) {
+                p.addcomment(value, tokenInfo.start, tokenInfo.end, tokenInfo.line);
+            }
         } else {
             if (tokenInfo.type === T_OP) {
                 type = Sk.OpMap[tokenInfo.string];
@@ -348,7 +367,10 @@ Sk.parse = function parse (filename, input) {
     /**
      * Small adjustments here in order to return th flags and the cst
      */
-    return {"cst": parser.rootnode, "flags": parser.p_flags};
+    var result = {"cst": parser.rootnode, "flags": parser.p_flags, "comments": parser.comments};
+    Sk.parseCache.lastUnit = result;
+    Sk.parseCache.lastInput = input;
+    return result;
 };
 
 Sk.parseTreeDump = function parseTreeDump (n, indent) {

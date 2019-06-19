@@ -537,6 +537,51 @@ Sk.builtin.StopIteration = function (args) {
 Sk.abstr.setUpInheritance("StopIteration", Sk.builtin.StopIteration, Sk.builtin.Exception);
 Sk.exportSymbol("Sk.builtin.StopIteration", Sk.builtin.StopIteration);
 
+/**
+ * @constructor
+ * @param {Object} err
+ */
+Sk.builtin.traceback = function(err) {
+    if (!(this instanceof Sk.builtin.traceback)) {
+        return new Sk.builtin.traceback(err);
+    }
+    
+    var lineno = null;
+    if (err.traceback.length > 0) {
+        lineno = err.traceback[0].lineno;
+    }
+    
+    this.tb_lineno = new Sk.builtin.int_(lineno)
+    
+    //tb_frame, tb_lasti, tb_lineno, tb_next
+    
+    this.__class__ = Sk.builtin.traceback;
+    
+    return this;
+}
+Sk.abstr.setUpInheritance("traceback", Sk.builtin.traceback, Sk.builtin.object);
+Sk.builtin.traceback.prototype.tp$getattr = function (name) {
+    if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
+        var _name = name;
+
+        // get javascript string
+        if (Sk.builtin.checkString(name)) {
+            _name = Sk.ffi.remapToJs(name);
+        }
+
+        if (_name === "tb_lineno") {
+            return this[_name];
+        }
+    }
+
+    // if we have not returned yet, try the genericgetattr
+    return Sk.builtin.object.prototype.GenericGetAttr(name);
+};
+Sk.builtin.traceback.prototype["$r"] = function () {
+    return new Sk.builtin.str("<traceback>");
+};
+Sk.exportSymbol("Sk.builtin.traceback", Sk.builtin.traceback);
+
 
 // TODO: Extract into sys.exc_info(). Work out how the heck
 // to find out what exceptions are being processed by parent stack frames...

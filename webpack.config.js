@@ -36,7 +36,7 @@ module.exports = (env, argv) => {
         opt = {
             noEmitOnErrors: true,
             minimizer: [
-                new ClosureWebpackPlugin({mode: 'STANDARD'}, {
+                new ClosureWebpackPlugin({mode: 'STANDARD', platform: 'java'}, {
                     jscomp_error: ['accessControls', 'checkRegExp', 'checkTypes', 'checkVars',
                                    'invalidCasts', 'missingProperties',
                                    'nonStandardJsDocs', 'strictModuleDepCheck', 'undefinedVars',
@@ -51,19 +51,6 @@ module.exports = (env, argv) => {
         assertfile = './assert-prod.js';
         mod = {
             rules: [
-                {
-                    test: /\.js$/,
-                    enforce: 'pre',
-                    exclude: styleexcludes,
-                    use: [
-                        {
-                            loader: 'webpack-jshint-loader',
-                            options: {
-                                emitErrors: true
-                            }
-                        }
-                    ]
-                },
                 {
                      test: /\.js$/,
                      enforce: 'pre',

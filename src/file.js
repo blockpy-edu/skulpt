@@ -26,27 +26,14 @@ Sk.builtin.file = function (name, mode, buffering) {
     } else {
         if (Sk.inBrowser) {  // todo:  Maybe provide a replaceable function for non-import files
             this.fileno = 10;
-            elem = document.getElementById(name.v);
-            if (elem == null) {
-                if (mode.v == "w" || mode.v == "a") {
-                    this.data$ = "";
-                } else {
-                    throw new Sk.builtin.IOError("[Errno 2] No such file or directory: '" + name.v + "'");
-                }
-            } else {
-                if (elem.nodeName.toLowerCase() == "textarea") {
-                    this.data$ = elem.value;
-                } else {
-                    this.data$ = elem.textContent;
-                }
-            }
+            this.data$ = Sk.inBrowser(this.name);
+            this.lineList = this.data$.split("\n");
         } else {
             this.fileno = 11;
             this.data$ = Sk.read(name.v);
+            this.lineList = this.data$.split("\n");
+            this.lineList = this.lineList.slice(0, -1);
         }
-
-        this.lineList = this.data$.split("\n");
-        this.lineList = this.lineList.slice(0, -1);
 
         for (i in this.lineList) {
             this.lineList[i] = this.lineList[i] + "\n";
