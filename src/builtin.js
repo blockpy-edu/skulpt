@@ -1264,7 +1264,11 @@ Sk.builtin.reversed = function reversed (seq) {
         var reverseIter = function (obj) {
             this.idx = obj.sq$length() - 1;
             this.myobj = obj;
+            this.ob$type = Sk.builtin.type.makeTypeObj("reversed", function _reversed(){});            
             this.getitem = Sk.abstr.lookupSpecial(obj, Sk.builtin.str.$getitem);
+            this["$r"] = function() {
+                return new Sk.builtin.str("<reversed>");
+            },
             this.tp$iter = function() {
                 return this;
             },

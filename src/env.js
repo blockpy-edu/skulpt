@@ -281,6 +281,10 @@ Sk.syspath = [];
 
 Sk.inBrowser = Sk.global["document"] !== undefined;
 
+Sk.afterSingleExecution = function(args) {
+};
+Sk.exportSymbol("Sk.afterSingleExecution", Sk.afterSingleExecution);
+
 /**
  * Internal function used for debug output.
  * @param {...} args

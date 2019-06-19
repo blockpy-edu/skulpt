@@ -97,7 +97,7 @@ Compiler.prototype.getSourceLine = function (lineno) {
     return this.source[lineno - 1];
 };
 
-Compiler.prototype.annotateSource = function (ast) {
+Compiler.prototype.annotateSource = function (ast, shouldStep) {
     var i;
     var col_offset;
     var lineno;
@@ -111,7 +111,13 @@ Compiler.prototype.annotateSource = function (ast) {
         out("^\n//\n");
 
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
-        out("$currLineNo = ", lineno, ";\n$currColNo = ", col_offset, ";\n\n");
+        out("\n$currLineNo=Sk.currLineNo=",lineno, ";$currColNo=Sk.currColNo=",col_offset,";");
+		out("Sk.currFilename='",this.filename,"';");
+        // Do not trace the standard library
+        if (shouldStep && (!this.filename || 
+                           !this.filename.startsWith('src/lib/'))) {
+            out("Sk.afterSingleExecution($gbl,"+lineno+","+col_offset+","+this.filename+");\n");
+        }
     }
 };
 
@@ -318,7 +324,7 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
     if (Sk.execLimit !== null || Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "var $dateNow = Date.now();";
         if (Sk.execLimit !== null) {
-            output += "if ($dateNow - Sk.execStart > Sk.execLimit) {throw new Sk.builtin.TimeLimitError(Sk.timeoutMsg())}";
+            output += "if ($dateNow - Sk.execStart > Sk.execLimit && Sk.execLimit !== null) {throw new Sk.builtin.TimeLimitError(Sk.timeoutMsg())}";
         }
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "if ($dateNow - Sk.lastYield > Sk.yieldLimit) {";
@@ -1126,7 +1132,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
         }
     }
 
-    output +=  "try { $ret=susp.child.resume(); } catch(err) { if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if($exc.length>0) { $err=err; $blk=$exc.pop(); } else { throw err; } }" +
+    output +=  "try { $ret=susp.child.resume(); } catch(err) { if (err instanceof Sk.builtin.TimeLimitError) { Sk.execStart = Date.now()} if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if($exc.length>0) { $err=err; Sk.err=$err; $blk=$exc.pop(); } else { throw err; } }" +
                 "};";
 
     output += "var $saveSuspension = function($child, $filename, $lineno, $colno) {" +
@@ -1263,7 +1269,7 @@ Compiler.prototype.cwhile = function (s) {
         orelse = s.orelse.length > 0 ? this.newBlock("while orelse") : null;
         body = this.newBlock("while body");
 
-        this.annotateSource(s);
+        this.annotateSource(s, true);
         this._jumpfalse(this.vexpr(s.test), orelse ? orelse : next);
         this._jump(body);
 
@@ -1982,7 +1988,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     this.u.switchCode = "while(true){try{"
     this.u.switchCode += this.outputInterruptTest();
     this.u.switchCode += "switch($blk){";
-    this.u.suffixCode = "} }catch(err){ if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }} }});";
+    this.u.suffixCode = "} }catch(err){ if (err instanceof Sk.builtin.TimeLimitError) { Sk.execStart = Date.now()} if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }} }});";
 
     //
     // jump back to the handler so it can do the main actual work of the
@@ -2256,7 +2262,7 @@ Compiler.prototype.cclass = function (s) {
     this.u.switchCode += "while(true){try{";
     this.u.switchCode += this.outputInterruptTest();
     this.u.switchCode += "switch($blk){";
-    this.u.suffixCode = "}}catch(err){ if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }}}"
+    this.u.suffixCode = "}}catch(err){ if (err instanceof Sk.builtin.TimeLimitError) { Sk.execStart = Date.now()} if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }}}"
     this.u.suffixCode += "}).call(null, $cell);});";
 
     this.u.private_ = s.name;
@@ -2704,7 +2710,7 @@ Compiler.prototype.cmod = function (mod) {
     this.u.switchCode += this.outputInterruptTest();
     this.u.switchCode += "switch($blk){";
     this.u.suffixCode = "}"
-    this.u.suffixCode += "}catch(err){ if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }} } });";
+    this.u.suffixCode += "}catch(err){ if (err instanceof Sk.builtin.TimeLimitError) { Sk.execStart = Date.now()} if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }} } });";
 
     // Note - this change may need to be adjusted for all the other instances of
     // switchCode and suffixCode in this file.  Not knowing how to test those
