@@ -551,14 +551,15 @@ Sk.builtin.traceback = function(err) {
         lineno = err.traceback[0].lineno;
     }
     
-    this.tb_lineno = new Sk.builtin.int_(lineno)
+    this.tb_lineno = new Sk.builtin.int_(lineno);
     
     //tb_frame, tb_lasti, tb_lineno, tb_next
     
     this.__class__ = Sk.builtin.traceback;
     
     return this;
-}
+};
+
 Sk.abstr.setUpInheritance("traceback", Sk.builtin.traceback, Sk.builtin.object);
 Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {

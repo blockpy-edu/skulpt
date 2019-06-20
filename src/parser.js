@@ -287,10 +287,10 @@ function makeParser (filename, style) {
 }
 
 Sk.parseCache = {
-    'lastInput': null,
-    'lastParse': null,
-    'lastUnit': null
-}
+    "lastInput": null,
+    "lastParse": null,
+    "lastUnit": null
+};
 
 Sk.parse = function parse (filename, input) {
     if (Sk.parseCache.lastInput == input) {
