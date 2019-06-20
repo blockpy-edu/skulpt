@@ -68,6 +68,7 @@ module.exports = (env, argv) => {
             filename: outfile
         },
         devtool: 'source-map',
+        module: mod,
         plugins: [
             new CleanWebpackPlugin(),
             new CopyWebpackPlugin([
@@ -89,8 +90,7 @@ module.exports = (env, argv) => {
             alias: {
                 'assert': assertfile
             }
-        },
-        module: mod
+        }
     };
 
     return config;

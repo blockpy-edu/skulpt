@@ -345,7 +345,7 @@ Sk.parse = function parse (filename, input) {
                 column = 0;
             }
             if (type === T_COMMENT) {
-                p.addcomment(value, tokenInfo.start, tokenInfo.end, tokenInfo.line);
+                parser.addcomment(tokenInfo.string, tokenInfo.start, tokenInfo.end, tokenInfo.line);
             }
         } else {
             if (tokenInfo.type === T_OP) {

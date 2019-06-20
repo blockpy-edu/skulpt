@@ -3152,8 +3152,9 @@ Sk.astDump = function (node) {
     return _format(node, "");
 };
 
-/*
+
 Sk.INHERITANCE_MAP = {
+/*
     'mod': [Module, Interactive, Expression, Suite],
     'stmt': [FunctionDef, ClassDef, Return_,
               Delete_, Assign, AugAssign,
@@ -3177,8 +3178,9 @@ Sk.INHERITANCE_MAP = {
     'arguments_': [],
     'keyword': [],
     'alias': []
-};*/
+*/
+};
 
 Sk.exportSymbol("Sk.astFromParse", Sk.astFromParse);
 Sk.exportSymbol("Sk.astDump", Sk.astDump);
-goog.exportSymbol("Sk.INHERITANCE_MAP", Sk.INHERITANCE_MAP);
+Sk.exportSymbol("Sk.INHERITANCE_MAP", Sk.INHERITANCE_MAP);
