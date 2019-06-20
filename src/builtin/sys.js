@@ -69,6 +69,16 @@ var $builtinmodule = function (name) {
 
     sys.stdout = sys.__stdout__;
     sys.stdin = sys.__stdin__;
+    
+    sys.exc_info = new Sk.builtin.func(function () {
+        var type = Sk.err.ob$type;
+        var value = Sk.builtin.none.none$;
+        var traceback = new Sk.builtin.traceback(Sk.err);
+        //print(traceback.tp$setattr)
+        //traceback.tp$setattr('tb_lineno', traceback.tb_lineno);
+        var vals = [type, Sk.err, traceback];
+        return new Sk.builtin.tuple(vals);
+    });
 
     return sys;
 };
