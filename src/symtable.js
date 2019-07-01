@@ -520,6 +520,30 @@ SymbolTable.prototype.visitStmt = function (s) {
             this.SEQExpr(s.targets);
             this.visitExpr(s.value);
             break;
+        case Sk.astnodes.AnnAssign:
+            if (s.target.constructor == Sk.astnodes.Name) {
+                e_name = s.target;
+                name = Sk.mangleName(this.curClass, e_name.id).v;
+                name = Sk.fixReservedNames(name);
+                cur = this.cur.symFlags[name];
+                if ((cur & (DEF_GLOBAL | DEF_NONLOCAL) )
+                    && (this.global != this.cur.symFlags) // TODO
+                    && (s.simple)) {
+                    throw new Sk.builtin.SyntaxError("annotated name '"+ name +"' can't be global", this.filename, s.lineno);
+                }
+                if (s.simple) {
+                    this.addDef(new Sk.builtin.str(name), DEF_ANNOT | DEF_LOCAL, s.lineno);
+                } else if (s.value) {
+                    this.addDef(new Sk.builtin.str(name), DEF_LOCAL, s.lineno);
+                }
+            } else {
+                this.visitExpr(s.target);
+            }
+            this.visitExpr(s.annotation);
+            if (s.value) {
+                this.visitExpr(s.value);
+            }
+            break;
         case Sk.astnodes.AugAssign:
             this.visitExpr(s.target);
             this.visitExpr(s.value);

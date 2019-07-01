@@ -2370,6 +2370,11 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
                 this.vexpr(s.targets[i], val);
             }
             break;
+        case Sk.astnodes.AnnAssign:
+            val = this.vexpr(s.value);
+            this.vexpr(s.target, val);
+            this.vexpr(s.annotation);
+            break;
         case Sk.astnodes.AugAssign:
             return this.caugassign(s);
         case Sk.astnodes.Print:

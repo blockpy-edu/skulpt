@@ -25,6 +25,12 @@ assert isinstance(comparison.body[0].value, ast.Compare), "Could not access Comp
 print(comparison.body[0].value.ops)
 assert len(comparison.body[0].value.ops) == 1, "Did not retrieve operations from comparison"
 
+print("*"*20)
+
+ANNASSIGN_CODE = 'a: int = 0'
+ann_assign = ast.parse(ANNASSIGN_CODE)
+print(ast.dump(ann_assign))
+
 FOR_CODE = "for x in y:\n    a = 0"
 for_loop = ast.parse(FOR_CODE)
 print("*"*20)
