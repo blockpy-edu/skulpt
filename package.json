@@ -27,7 +27,8 @@
     "test": "node test/testwrapper.js && node test/testunit.js && node test/testunit.js --python3",
     "start": "node support/run/runfile.js",
     "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js -o",
-    "postprofile": "node --prof-process v8.log"
+    "postprofile": "node --prof-process v8.log",
+    "standaloneparser": "webpack src/standalone_parser.js -o dist/python_parser.js"
   },
   "repository": {
     "type": "git",
@@ -66,7 +67,7 @@
     "shelljs": "^0.8.3",
     "strftime": "^0.10.0",
     "webpack": "^4.32.0",
-    "webpack-cli": "^3.3.2"
+    "webpack-cli": "^3.3.4"
   },
   "engines": {
     "node": ">=8.10"

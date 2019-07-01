@@ -154,6 +154,7 @@ var $builtinmodule = function (name) {
         }
         // recursive dump
         var _format = function(node) {
+            //console.log(node.astname, node);
             if (isSpecialPyAst(node)) {
                 return functionName(node)+"()";
             } else if (isPyAst(node)) {
@@ -280,7 +281,7 @@ var $builtinmodule = function (name) {
     AST = function($gbl, $loc) {
         var copyFromJsNode = function(self, key, jsNode) {
             if (key in self.jsNode) {
-                Sk.abstr.sattr(self, key, Sk.ffi.remapToPy(jsNode[key]), true);
+                Sk.abstr.sattr(self, Sk.builtin.str(key), Sk.ffi.remapToPy(jsNode[key]), true);
                 self._attributes.push(Sk.builtin.str(key));
             }
         };
@@ -288,34 +289,43 @@ var $builtinmodule = function (name) {
             depth+=1;
             if (partial === true) {
                 // Alternative constructor for Skulpt's weird nodes
-                //print(" ".repeat(depth)+"S:", jsNode);
+                //console.log(" ".repeat(depth)+"S:", jsNode);
                 self.jsNode = {'_astname': jsNode};
                 self.astname = jsNode;
                 self._fields = Sk.builtin.list([]);
                 self._attributes = Sk.builtin.list([]);
-                Sk.abstr.sattr(self, '_fields', self._fields, true);
-                Sk.abstr.sattr(self, '_attributes', self._attributes, true);
+                Sk.abstr.sattr(self, Sk.builtin.str('_fields'), self._fields, true);
+                Sk.abstr.sattr(self, Sk.builtin.str('_attributes'), self._attributes, true);
+                //console.log(" ".repeat(depth)+"--", jsNode);
             } else {
-                //print(" ".repeat(depth)+"P:", jsNode._astname);
+                //console.log(" ".repeat(depth)+"P:", jsNode._astname);
                 self.jsNode = jsNode;
                 self.astname = jsNode._astname;
                 var fieldListJs = iter_fieldsJs(jsNode);
                 self._fields = [];
                 self._attributes = [];
+                //console.log(" ".repeat(depth)+"FIELDS");
                 for (var i = 0; i < fieldListJs.length; i += 1) {
                     var field = fieldListJs[i][0], value = fieldListJs[i][1];
-                    value = convertValue(value);
-                    Sk.abstr.sattr(self, field, value, true);
+                    //console.log(" ".repeat(depth+1)+field, value)
+                    if (field === 'docstring' && value === undefined) {
+                        value = Sk.builtin.str('');
+                    } else {
+                        value = convertValue(value);
+                    }
+                    Sk.abstr.sattr(self, Sk.builtin.str(field), value, true);
                     self._fields.push(Sk.builtin.tuple([Sk.builtin.str(field), value]));
                 }
+                //console.log(" ".repeat(depth)+"FIELDS")
                 self._fields = Sk.builtin.list(self._fields)
-                Sk.abstr.sattr(self, '_fields', self._fields, true);
+                Sk.abstr.sattr(self, Sk.builtin.str('_fields'), self._fields, true);
                 copyFromJsNode(self, 'lineno', self.jsNode);
                 copyFromJsNode(self, 'col_offset', self.jsNode);
-                copyFromJsNode(self, 'endlineno', self.jsNode);
-                copyFromJsNode(self, 'col_endoffset', self.jsNode);
+                copyFromJsNode(self, 'end_lineno', self.jsNode);
+                copyFromJsNode(self, 'end_col_offset', self.jsNode);
                 self._attributes = Sk.builtin.list(self._attributes);
-                Sk.abstr.sattr(self, '_attributes', self._attributes, true);
+                Sk.abstr.sattr(self, Sk.builtin.str('_attributes'), self._attributes, true);
+                //console.log(" ".repeat(depth)+"--", jsNode._astname);
             }
             depth -= 1;
         });
@@ -334,7 +344,7 @@ var $builtinmodule = function (name) {
             return Sk.misceval.callsim(mod.Module, new Sk.INHERITANCE_MAP.mod[0]([]));
         }
         if (filename === undefined) {
-            filename = '<unknown>';
+            filename = Sk.builtin.str('<unknown>');
         }
         var parse = Sk.parse(filename, Sk.ffi.remapToJs(source));
         ast = Sk.astFromParse(parse.cst, filename, parse.flags);
@@ -364,7 +374,7 @@ var $builtinmodule = function (name) {
         mod[base] = Sk.misceval.buildClass(mod, baseClass, base, [mod.AST]);
         for (var i=0; i < Sk.INHERITANCE_MAP[base].length; i++) {
             var nodeType = Sk.INHERITANCE_MAP[base][i];
-            var nodeName = functionName(nodeType);
+            var nodeName = nodeType.prototype._astname;
             var nodeClass = function($gbl, $loc) { return this;};
             mod[nodeName] = Sk.misceval.buildClass(mod, nodeClass, nodeName, [mod[base]])
         }

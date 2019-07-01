@@ -42,8 +42,16 @@ function run (python3, opt, filename) {
 	elapsed = (endtime - starttime) / 1000;
 	console.log("Run time: " + elapsed.toString() + "s");
     }, function(e) {
-	console.log("UNCAUGHT EXCEPTION: " + e);
-	console.log(e.stack);
+        if (e.message) {
+            console.log(e.message + "\n");
+            console.log(e.stack);
+        } else if (e.nativeError) {
+            console.log(e.nativeError.message + "\n");
+            console.log(e.nativeError.stack);
+        } else {
+            console.log(e.toString());
+            console.log(e.stack)
+        }
     });
 }
 

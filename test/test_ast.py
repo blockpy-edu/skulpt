@@ -13,8 +13,8 @@ assert addition.body[0].value.left.n == 1, "Parsed Addition wasn't correct"
 print("lineno", addition.body[0].lineno)
 assert addition.body[0].lineno == 1, "Addition's lineno was not 1"
 assert addition.body[0].col_offset == 0, "Addition's col_offset was not 0"
-assert addition.body[0].col_endoffset == 1, "Addition's col_endoffset was not 1"
-assert addition.body[0].endlineno == 1, "Addition's endlineno was not 1"
+assert addition.body[0].end_col_offset == 1, "Addition's end_col_offset was not 1"
+assert addition.body[0].end_lineno == 1, "Addition's end_lineno was not 1"
 
 print("1 + 2")
 #print(ast.dump(addition)
@@ -35,7 +35,7 @@ print("FOR", for_loop.body[0].body[0], "should be Assign")
 #print("FOR", for_loop.body[0].body[0].id, "should not be a")
 print(ast.dump(for_loop))
 
-
+print("MULTILINE")
 multiline = ast.parse("""for x in y:
    a + 1 - 3
 if x:

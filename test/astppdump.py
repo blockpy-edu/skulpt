@@ -24,4 +24,4 @@ def astppdump(node):
 
 
 if __name__ == "__main__":
-    print astppdump(ast.parse(open(sys.argv[1]).read(), sys.argv[1]))
+    print(astppdump(ast.parse(open(sys.argv[1]).read(), sys.argv[1])))
