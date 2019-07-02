@@ -10,7 +10,7 @@
  */
 Sk.builtin.method = function (func, self, klass, builtin) {
     if (!(this instanceof Sk.builtin.method)) {
-        Sk.builtin.pyCheckArgsLen("method", arguments.length, 3, 3);
+        Sk.builtin.pyCheckArgsLen("method", arguments.length, 2, 3);
         if (!Sk.builtin.checkCallable(func)) {
             throw new Sk.builtin.TypeError("First argument must be callable");
         }

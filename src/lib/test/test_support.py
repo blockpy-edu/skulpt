@@ -25,8 +25,8 @@ import unittest
 def run_unittest(*classes):
     """Run tests from unittest.TestCase-derived classes."""
     for cls in classes:
-        print cls
+        print(cls)
         if issubclass(cls, unittest.TestCase):
             cls().main()
         else:
-            print "Don't know what to do with ", cls
+            print("Don't know what to do with ", cls)

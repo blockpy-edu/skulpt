@@ -42,6 +42,7 @@ function run (python3, opt, filename) {
 	elapsed = (endtime - starttime) / 1000;
 	console.log("Run time: " + elapsed.toString() + "s");
     }, function(e) {
+        console.error(e);
         if (e.message) {
             console.log(e.message + "\n");
             console.log(e.stack);

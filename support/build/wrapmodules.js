@@ -2,6 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const minify = require('babel-minify');
 
+const reqskulpt = require('../run/require-skulpt').requireSkulpt;
+var skulpt = reqskulpt();
+Sk.configure({__future__: Sk.python3});
+
+var WHITE_LIST = ['tifa.py', 'builtin_definitions.py', 'type_definitions.py'];
+function endsWithAny(string, suffixes) {
+    return suffixes.some(function (suffix) {
+        return string.endsWith(suffix);
+    });
+}
+
 /**
  * If this optional file exists in the top level directory, it will be
  * used to exclude libraries from the standard library file.
@@ -42,6 +53,24 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             let result = minify(contents);
                             contents = result.code;
                         }
+                        // AOT compilation
+                        /*
+                        else if (ext == '.py' &&
+                                   !endsWithAny(fullname, WHITE_LIST) &&
+                                   !fullname.startsWith('src/builtin/')) {
+                            var co;
+                            try {
+                                co = Sk.compile(contents, fullname, 'exec', true);
+                                console.log("Compiled: "+fullname);
+                            } catch (e) {
+                                console.log("Failed to compile: "+fullname);
+                                console.log(e);
+                                console.log(e.stack);
+                                console.error(e.args);
+                            }
+                            fullname = fullname.replace(/\.py$/, ".js");
+                            contents = co.code + '\nvar $builtinmodule = ' + co.funcname + ';';
+                        }*/
                         ret.files[fullname] = contents;
                     }
                 }

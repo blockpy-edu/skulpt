@@ -51,12 +51,12 @@ module.exports = (env, argv) => {
         assertfile = './assert-prod.js';
         mod = {
             rules: [
-                {
+                /*{
                      test: /\.js$/,
                      enforce: 'pre',
                      exclude: styleexcludes,
                      loader: 'eslint-loader'
-                }
+                }*/
             ]
         };
     }
@@ -65,6 +65,7 @@ module.exports = (env, argv) => {
         entry: './src/main.js',
         output: {
             path: path.resolve(__dirname, 'dist'),
+            devtoolFallbackModuleFilenameTemplate: '[absolute-resource-path]?[hash]',
             filename: outfile
         },
         devtool: 'source-map',

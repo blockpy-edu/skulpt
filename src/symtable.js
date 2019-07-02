@@ -22,6 +22,11 @@ var DEF_FREE_CLASS = 2 << 8;
 /* free variable from class's method */
 var DEF_IMPORT = 2 << 9;
 /* assignment occurred via import */
+var DEF_NONLOCAL = 2 << 10;
+/* nonlocal stmt */
+var DEF_ANNOT = 2 << 11;
+/* this name is annotated */
+
 
 var DEF_BOUND = (DEF_LOCAL | DEF_PARAM | DEF_IMPORT);
 
@@ -477,6 +482,7 @@ SymbolTable.prototype.visitStmt = function (s) {
     var i;
     var nameslen;
     var tmp;
+    var e_name;
     Sk.asserts.assert(s !== undefined, "visitStmt called with undefined");
     switch (s.constructor) {
         case Sk.astnodes.FunctionDef:
@@ -696,7 +702,14 @@ SymbolTable.prototype.visitExpr = function (e) {
             this.SEQExpr(e.values);
             break;
         case Sk.astnodes.DictComp:
+            this.newTmpname(e.lineno);
+            this.visitExpr(e.key);
+            this.visitExpr(e.value);
+            this.visitComprehension(e.generators, 0);
+            break;
         case Sk.astnodes.SetComp:
+            this.newTmpname(e.lineno);
+            this.visitExpr(e.elt);
             this.visitComprehension(e.generators, 0);
             break;
         case Sk.astnodes.ListComp:

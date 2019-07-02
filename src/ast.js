@@ -627,9 +627,9 @@ function astForIfStmt (c, n) {
                     astForSuite(c, CHILD(n, NCH(n) - 4)),
                     astForSuite(c, CHILD(n, NCH(n) - 1)),
                     CHILD(n, NCH(n) - 6).lineno,
-                    CHILD(n, NCH(n) - 6).col_offset),
+                    CHILD(n, NCH(n) - 6).col_offset,
                     CHILD(n, NCH(n) - 6).end_lineno,
-                    CHILD(n, NCH(n) - 6).end_col_offset];
+                    CHILD(n, NCH(n) - 6).end_col_offset)];
             nElif--;
         }
 
@@ -642,8 +642,8 @@ function astForIfStmt (c, n) {
                     orelse,
                     CHILD(n, off).lineno,
                     CHILD(n, off).col_offset,
-                    CHILD(n, off).end_lineno,
-                    CHILD(n, off).end_col_offset)];
+                    CHILD(n, NCH(n) - 6).end_lineno, 
+                    CHILD(n, NCH(n) - 6).end_col_offset)];
         }
         return new Sk.astnodes.If(
             ast_for_expr(c, CHILD(n, 1)),
