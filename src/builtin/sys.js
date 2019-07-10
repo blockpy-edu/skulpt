@@ -23,6 +23,8 @@ var $builtinmodule = function (name) {
     sys.modules = Sk.sysmodules;
 
     sys.path = Sk.realsyspath;
+    
+    sys.platform = Sk.builtin.str('skulpt');
 
     sys.getExecutionLimit = new Sk.builtin.func(function () {
         if (Sk.execLimit === null) {

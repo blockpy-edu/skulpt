@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const minify = require('babel-minify');
 
+/*
 const reqskulpt = require('../run/require-skulpt').requireSkulpt;
 var skulpt = reqskulpt();
 Sk.configure({__future__: Sk.python3});
@@ -11,7 +12,7 @@ function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);
     });
-}
+}*/
 
 /**
  * If this optional file exists in the top level directory, it will be

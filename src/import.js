@@ -465,7 +465,7 @@ Sk.importBuiltinWithBody = function (name, dumpJS, body, canSuspend) {
 };
 
 Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
-    //print("Importing: ", JSON.stringify(name), JSON.stringify(fromlist), level);
+    //console.log("Importing: ", JSON.stringify(name), JSON.stringify(fromlist), level);
     //if (name == "") { debugger; }
 
     // Save the Sk.globals variable importModuleInternal_ may replace it when it compiles

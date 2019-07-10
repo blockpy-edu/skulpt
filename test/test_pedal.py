@@ -5,6 +5,8 @@ def click(phase):
     diff = time.time() - stopwatch
     print("Phase {}: {} secs".format(phase, round(diff, 2)))
     stopwatch = time.time()
+# import time; stopwatch = time.time();
+# print("Phase {}: {} secs".format(phase, round(time.time() - stopwatch, 2))) ; stopwatch = time.time()
     
 import pedal
 click("Imported pedal")

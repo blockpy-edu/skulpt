@@ -729,6 +729,10 @@ SymbolTable.prototype.visitExpr = function (e) {
                 throw new Sk.builtin.SyntaxError("'return' with argument inside generator", this.filename);
             }
             break;
+        case Sk.astnodes.YieldFrom:
+            this.visitExpr(e.value);
+            this.cur.generator = true;
+            break;
         case Sk.astnodes.Compare:
             this.visitExpr(e.left);
             this.SEQExpr(e.comparators);
