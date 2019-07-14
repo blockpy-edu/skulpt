@@ -1,8 +1,6 @@
-import time; stopwatch = time.time();
-print("Phase {}: {} secs".format("Tifa.Tifa Before all imports", round(time.time() - stopwatch, 2))) ; stopwatch = time.time()
 import ast
 from pprint import pprint
-print("Phase {}: {} secs".format("Tifa.Tifa Before import", round(time.time() - stopwatch, 2))) ; stopwatch = time.time()
+
 from pedal.report import MAIN_REPORT
 
 from pedal.tifa.type_definitions import (UnknownType, RecursedType,
@@ -1239,5 +1237,3 @@ class Tifa(ast.NodeVisitor):
             self.tifa.scope_chain.pop(0)
             # Restore the scope
             self.tifa.scope_chain = self.old_scope
-
-print("Phase {}: {} secs".format("Tifa.Tifa Evaled", round(time.time() - stopwatch, 2))) ; stopwatch = time.time()

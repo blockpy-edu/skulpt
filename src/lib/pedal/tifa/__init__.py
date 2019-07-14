@@ -68,9 +68,8 @@ Important concepts:
     Name Map
         (Path x Fully Qualified Names) => States
 """
-import time; stopwatch = time.time();
+
 from pedal.tifa.tifa import Tifa
-print("Phase {}: {} secs".format("Tifa.Tifa loaded", round(time.time() - stopwatch, 2))) ; stopwatch = time.time()
 from pedal.report import MAIN_REPORT
 
 NAME = 'TIFA'
