@@ -52,6 +52,16 @@ Sk.builtin.object.prototype.GenericGetAttr = function (pyName, canSuspend) {
     dict = this["$d"] || this.constructor["$d"];
     //print("getattr", tp.tp$name, name);
 
+    if (jsName === "__class__") {
+        if (tp !== null) {
+            return tp;
+        }
+    } else if (jsName === "__name__") {
+        if (this.tp$name !== null) {
+            return Sk.ffi.remapToPy(this.tp$name);
+        }
+    }
+
     // todo; assert? force?
     if (dict) {
         if (dict.mp$lookup) {

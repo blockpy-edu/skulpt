@@ -1,5 +1,12 @@
 var $builtinmodule = function (name) {
     var mod = {};
+
+    function mangleAppropriately(name) {
+        switch (name) {
+            case "name": return "name_$rn$";
+            default: return name;
+        }
+    }
     
     /**
      * Consumes an AST Node (JS version). Return a list of tuples of 
@@ -15,7 +22,7 @@ var $builtinmodule = function (name) {
             }
         }
         return fieldList;
-    }
+    };
     
     mod.iter_fields = function(node) {
         return node._fields;
@@ -27,7 +34,7 @@ var $builtinmodule = function (name) {
         } else if (isSpecialPyAst(value)) {
             var constructorName = functionName(value);
             return Sk.misceval.callsim(mod[constructorName], constructorName, true);
-        } else if (typeof value == 'number') {
+        } else if (typeof value == "number") {
             return Sk.builtin.assk$(value);
         } else if (Array === value.constructor) {
             var subvalues = [];
@@ -47,16 +54,16 @@ var $builtinmodule = function (name) {
             }
             return Sk.builtin.list(subvalues);
         } else if (isJsAst(value)) {
-            var constructorName = functionName(value.constructor)
+            var constructorName = functionName(value.constructor);
             return Sk.misceval.callsim(mod[constructorName], value);
         } else {// Else already a Python value
             return value;
         }
-    }
+    };
     
     var isJsAst = function(jsNode) {
         return jsNode instanceof Object && "_astname" in jsNode;
-    }
+    };
     var isSpecialPyAst = function(val) {
         if (typeof val == "function") {
             switch (functionName(val)) {
@@ -75,7 +82,7 @@ var $builtinmodule = function (name) {
         } else {
             return false;
         }
-    }
+    };
     var isPyAst = function(pyValue) {
         return Sk.misceval.isTrue(Sk.builtin.isinstance(pyValue, mod.AST));
     };
@@ -103,7 +110,7 @@ var $builtinmodule = function (name) {
             }
         }
         return resultList;
-    }
+    };
     
     // Python node
     mod.iter_child_nodes = function(node) {
@@ -175,7 +182,7 @@ var $builtinmodule = function (name) {
                 if (include_attributes) {
                     for (var i = 0; i < attributeList.length; i += 1) {
                         var field = Sk.ffi.remapToJs(attributeList[i]);
-                        var value = Sk.ffi.remapToJs(node.jsNode[field])
+                        var value = Sk.ffi.remapToJs(node.jsNode[field]);
                         fieldArgs.push(field+"="+value);
                     }
                 }
@@ -183,14 +190,14 @@ var $builtinmodule = function (name) {
                 return rv + fieldArgs + ")";
             } else if (isPyList(node)) {
                 var nodes = node.v.map(_format);
-                nodes = nodes.join(', ');
+                nodes = nodes.join(", ");
                 return "["+nodes+"]";
             } else {
                 return Sk.ffi.remapToJs(node.$r());
             }
-        }
+        };
         return Sk.ffi.remapToPy(_format(node, 0));
-    }
+    };
 
     var depth = 0;
     var NodeVisitor = function($gbl, $loc) {
@@ -199,10 +206,10 @@ var $builtinmodule = function (name) {
             depth += 1;
             /** Visit a node. **/
             //print(" ".repeat(depth), "VISIT", node.jsNode._astname)
-            var method_name = 'visit_' + node.jsNode._astname;
+            var method_name = "visit_" + node.jsNode._astname;
             //print(" ".repeat(depth), "I'm looking for", method_name)
-            method_name = Sk.ffi.remapToPy(method_name)
-            method = Sk.builtin.getattr(self, method_name, $loc.generic_visit)
+            method_name = Sk.ffi.remapToPy(method_name);
+            method = Sk.builtin.getattr(self, method_name, $loc.generic_visit);
             if (method.im_self) {
                 //print(method.im_func.func_code)
                 result = Sk.misceval.callsim(method, node);
@@ -239,7 +246,7 @@ var $builtinmodule = function (name) {
             }
             return Sk.builtin.none.none$;
         });
-    }
+    };
     mod.NodeVisitor = Sk.misceval.buildClass(mod, NodeVisitor, "NodeVisitor", []);
 
     // Python node
@@ -255,7 +262,7 @@ var $builtinmodule = function (name) {
             resultList = resultList.concat(children.v);
         }
         return Sk.builtin.list(resultList);
-    }
+    };
 
     /*NodeVisitor.prototype.visitList = function(nodes) {
         for (var j = 0; j < nodes.length; j += 1) {
@@ -290,12 +297,12 @@ var $builtinmodule = function (name) {
             if (partial === true) {
                 // Alternative constructor for Skulpt's weird nodes
                 //console.log(" ".repeat(depth)+"S:", jsNode);
-                self.jsNode = {'_astname': jsNode};
+                self.jsNode = {"_astname": jsNode};
                 self.astname = jsNode;
                 self._fields = Sk.builtin.list([]);
                 self._attributes = Sk.builtin.list([]);
-                Sk.abstr.sattr(self, Sk.builtin.str('_fields'), self._fields, true);
-                Sk.abstr.sattr(self, Sk.builtin.str('_attributes'), self._attributes, true);
+                Sk.abstr.sattr(self, Sk.builtin.str("_fields"), self._fields, true);
+                Sk.abstr.sattr(self, Sk.builtin.str("_attributes"), self._attributes, true);
                 //console.log(" ".repeat(depth)+"--", jsNode);
             } else {
                 //console.log(" ".repeat(depth)+"P:", jsNode._astname);
@@ -308,23 +315,25 @@ var $builtinmodule = function (name) {
                 for (var i = 0; i < fieldListJs.length; i += 1) {
                     var field = fieldListJs[i][0], value = fieldListJs[i][1];
                     //console.log(" ".repeat(depth+1)+field, value)
-                    if (field === 'docstring' && value === undefined) {
-                        value = Sk.builtin.str('');
+                    if (field === "docstring" && value === undefined) {
+                        value = Sk.builtin.str("");
                     } else {
                         value = convertValue(value);
                     }
+                    field = mangleAppropriately(field);
                     Sk.abstr.sattr(self, Sk.builtin.str(field), value, true);
+                    // TODO: Figure out why name is getting manged, and make it stop!
                     self._fields.push(Sk.builtin.tuple([Sk.builtin.str(field), value]));
                 }
                 //console.log(" ".repeat(depth)+"FIELDS")
-                self._fields = Sk.builtin.list(self._fields)
-                Sk.abstr.sattr(self, Sk.builtin.str('_fields'), self._fields, true);
-                copyFromJsNode(self, 'lineno', self.jsNode);
-                copyFromJsNode(self, 'col_offset', self.jsNode);
-                copyFromJsNode(self, 'end_lineno', self.jsNode);
-                copyFromJsNode(self, 'end_col_offset', self.jsNode);
+                self._fields = Sk.builtin.list(self._fields);
+                Sk.abstr.sattr(self, Sk.builtin.str("_fields"), self._fields, true);
+                copyFromJsNode(self, "lineno", self.jsNode);
+                copyFromJsNode(self, "col_offset", self.jsNode);
+                copyFromJsNode(self, "end_lineno", self.jsNode);
+                copyFromJsNode(self, "end_col_offset", self.jsNode);
                 self._attributes = Sk.builtin.list(self._attributes);
-                Sk.abstr.sattr(self, Sk.builtin.str('_attributes'), self._attributes, true);
+                Sk.abstr.sattr(self, Sk.builtin.str("_attributes"), self._attributes, true);
                 //console.log(" ".repeat(depth)+"--", jsNode._astname);
             }
             depth -= 1;
@@ -333,7 +342,7 @@ var $builtinmodule = function (name) {
             return Sk.builtin.str("<_ast."+self.astname+" object>");
         });
         $loc.__repr__ = $loc.__str__;
-    }
+    };
     mod.AST = Sk.misceval.buildClass(mod, AST, "AST", []);
     
     //mod.literal_eval
@@ -344,13 +353,13 @@ var $builtinmodule = function (name) {
             return Sk.misceval.callsim(mod.Module, new Sk.INHERITANCE_MAP.mod[0]([]));
         }
         if (filename === undefined) {
-            filename = Sk.builtin.str('<unknown>');
+            filename = Sk.builtin.str("<unknown>");
         }
         var parse = Sk.parse(filename, Sk.ffi.remapToJs(source));
         ast = Sk.astFromParse(parse.cst, filename, parse.flags);
         return Sk.misceval.callsim(mod.Module, ast);
         // Walk tree and create nodes (lazily?)
-    }
+    };
     
     /*
     mod.Module = function ($gbl, $loc) {
@@ -359,12 +368,12 @@ var $builtinmodule = function (name) {
     
     function functionName(fun) {
         var ret = fun.toString();
-        ret = ret.substr('function '.length);
-        ret = ret.substr(0, ret.indexOf('('));
+        ret = ret.substr("function ".length);
+        ret = ret.substr(0, ret.indexOf("("));
         if (ret == "In_") {
             ret = "In";
-        } else if (ret == 'Import_') {
-            ret = 'Import';
+        } else if (ret == "Import_") {
+            ret = "Import";
         }
         return ret;
     }
@@ -376,7 +385,7 @@ var $builtinmodule = function (name) {
             var nodeType = Sk.INHERITANCE_MAP[base][i];
             var nodeName = nodeType.prototype._astname;
             var nodeClass = function($gbl, $loc) { return this;};
-            mod[nodeName] = Sk.misceval.buildClass(mod, nodeClass, nodeName, [mod[base]])
+            mod[nodeName] = Sk.misceval.buildClass(mod, nodeClass, nodeName, [mod[base]]);
         }
     }
     

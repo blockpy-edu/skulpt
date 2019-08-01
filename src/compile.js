@@ -116,7 +116,7 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         // Do not trace the standard library
         if (shouldStep && (!this.filename || 
                            !this.filename.startsWith('src/lib/'))) {
-            out("Sk.afterSingleExecution($gbl,"+lineno+","+col_offset+","+this.filename+");\n");
+            out("Sk.afterSingleExecution($gbl,"+lineno+","+col_offset+","+JSON.stringify(this.filename)+");\n");
         }
     }
 };
@@ -2371,8 +2371,10 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             }
             break;
         case Sk.astnodes.AnnAssign:
-            val = this.vexpr(s.value);
-            this.vexpr(s.target, val);
+            if (s.value !== null) {
+                val = this.vexpr(s.value);
+                this.vexpr(s.target, val);
+            }
             this.vexpr(s.annotation);
             break;
         case Sk.astnodes.AugAssign:
@@ -2697,7 +2699,7 @@ Compiler.prototype.cmod = function (mod) {
 
     this.u.varDeclsCode += "if ("+modf+".$wakingSuspension!==undefined) { $wakeFromSuspension(); }" +
         "if (Sk.retainGlobals) {" +
-        "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; }" +
+        //"    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; }" +
         "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; $loc.__file__=new Sk.builtins.str('" + this.filename + "');}" +
         "    else { Sk.globals = $gbl; }" +
         "} else { Sk.globals = $gbl; }";
@@ -2749,8 +2751,9 @@ Compiler.prototype.cmod = function (mod) {
  * @param {string} filename where it came from
  * @param {string} mode one of 'exec', 'eval', or 'single'
  * @param {boolean=} canSuspend if the generated code supports suspension
+ * @param {boolean=} annotate Whether or not to annotate the source code
  */
-Sk.compile = function (source, filename, mode, canSuspend) {
+Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     //print("FILE:", filename);
     // __future__ flags can be set from code
     // (with "from __future__ import ..." statements),
@@ -2767,7 +2770,7 @@ Sk.compile = function (source, filename, mode, canSuspend) {
     flags.cf_flags = parse.flags;
 
     var st = Sk.symboltable(ast, filename);
-    var c = new Compiler(filename, st, flags.cf_flags, canSuspend, source); // todo; CO_xxx
+    var c = new Compiler(filename, st, flags.cf_flags, canSuspend, annotate ? source : false); // todo; CO_xxx
     var funcname = c.cmod(ast);
 
     // Restore the global __future__ flags

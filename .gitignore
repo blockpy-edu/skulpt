@@ -22,3 +22,4 @@ src/internalpython.js
 Pipfile
 package-lock.json
 *~
+/deleteme.txt

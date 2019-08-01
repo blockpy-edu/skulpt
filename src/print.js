@@ -47,7 +47,7 @@ var print_f = function function_print(kwa) {
     remap_val = kwargs.mp$lookup(new Sk.builtin.str("file"));
     if(remap_val !== undefined) {
         is_none = Sk.builtin.checkNone(remap_val);
-        if(is_none || remap_val.tp$getattr("write") !== undefined) {
+        if(is_none || remap_val.tp$getattr(new Sk.builtin.str("write")) !== undefined) {
             kw_list["file"] = is_none ? kw_list["file"] : remap_val;
         } else {
             throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(remap_val) + "' object has no attribute 'write'");

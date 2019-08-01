@@ -1,0 +1,1 @@
+print(TypeError().__class__)

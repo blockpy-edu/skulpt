@@ -91,6 +91,14 @@ Sk.builtin.BaseException.prototype.args = {
     }
 };
 
+/*
+Sk.builtin.BaseException.prototype.tp$getattr = function(pyName, canSuspend) {
+    switch (Sk.ffi.remapToJs(pyName)) {
+        case "__class__": return this.__class__;
+        default: return undefined;
+    }
+};*/
+
 Sk.exportSymbol("Sk.builtin.BaseException", Sk.builtin.BaseException);
 
 /**
@@ -286,8 +294,30 @@ Sk.builtin.SyntaxError = function (args) {
         return o;
     }
     Sk.builtin.StandardError.apply(this, arguments);
+    if (arguments.length >= 3) {
+        this.lineno = Sk.ffi.remapToPy(arguments[2]);
+    } else {
+        this.lineno = Sk.ffi.remapToPy(null);
+    }
 };
 Sk.abstr.setUpInheritance("SyntaxError", Sk.builtin.SyntaxError, Sk.builtin.StandardError);
+Sk.builtin.SyntaxError.prototype.tp$getattr = function (name) {
+    if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
+        var _name = name;
+
+        // get javascript string
+        if (Sk.builtin.checkString(name)) {
+            _name = Sk.ffi.remapToJs(name);
+        }
+
+        if (_name === "lineno") {
+            return this[_name];
+        }
+    }
+
+    // if we have not returned yet, try the genericgetattr
+    return Sk.builtin.object.prototype.GenericGetAttr(name);
+};
 
 /**
  * @constructor
@@ -356,6 +386,7 @@ Sk.builtin.TypeError = function (args) {
         return o;
     }
     Sk.builtin.StandardError.apply(this, arguments);
+    this.__class__ = Sk.builtin.TypeError;
 };
 Sk.abstr.setUpInheritance("TypeError", Sk.builtin.TypeError, Sk.builtin.StandardError);
 Sk.exportSymbol("Sk.builtin.TypeError", Sk.builtin.TypeError);

@@ -36,6 +36,7 @@ Sk.builtins = {
     "ValueError"         : Sk.builtin.ValueError,
     "Exception"          : Sk.builtin.Exception,
     "ZeroDivisionError"  : Sk.builtin.ZeroDivisionError,
+    "SyntaxError"        : Sk.builtin.SyntaxError,
     "AssertionError"     : Sk.builtin.AssertionError,
     "ImportError"        : Sk.builtin.ImportError,
     "IndentationError"   : Sk.builtin.IndentationError,

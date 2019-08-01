@@ -57,6 +57,7 @@ Parser.prototype.setup = function (start) {
     };
     this.stack = [stackentry];
     this.used_names = {};
+    Sk._setupTokenRegexes();
 };
 
 function findInDfa (a, obj) {
@@ -344,7 +345,8 @@ Sk.parse = function parse (filename, input) {
                 lineno += 1;
                 column = 0;
             }
-            if (type === T_COMMENT) {
+            
+            if (tokenInfo.type === T_COMMENT) {
                 parser.addcomment(tokenInfo.string, tokenInfo.start, tokenInfo.end, tokenInfo.line);
             }
         } else {

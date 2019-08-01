@@ -215,13 +215,6 @@ Sk.configure = function (options) {
 Sk.exportSymbol("Sk.configure", Sk.configure);
 
 /*
-* Replaceable handler for uncaught exceptions
-*/
-Sk.uncaughtException = function(err) {
-    throw err;
-};
-
-/*
  * Replaceable handler for uncaught exceptions
  */
 Sk.uncaughtException = function(err) {
