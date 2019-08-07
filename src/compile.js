@@ -116,7 +116,7 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         // Do not trace the standard library
         if (shouldStep && (!this.filename || 
                            !this.filename.startsWith('src/lib/'))) {
-            out("Sk.afterSingleExecution($gbl,"+lineno+","+col_offset+","+JSON.stringify(this.filename)+");\n");
+            out("Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,"+lineno+","+col_offset+","+JSON.stringify(this.filename)+");\n");
         }
     }
 };
@@ -2339,7 +2339,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
         this.u.doesSuspend = true;
     }
 
-    this.annotateSource(s);
+    this.annotateSource(s, true);
 
     switch (s.constructor) {
         case Sk.astnodes.FunctionDef:

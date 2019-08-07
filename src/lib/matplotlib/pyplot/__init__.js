@@ -47,14 +47,10 @@ var $builtinmodule = function(name) {
             chart = {};
             
             chart.margin = {"top": 20, "right": 30, "bottom": 50, "left": 40};
-            chart.width = Sk.console.width - chart.margin.left - chart.margin.right;
-            chart.height = Sk.console.height - chart.margin.top - chart.margin.bottom;
+            chart.width = Sk.console.getWidth() - chart.margin.left - chart.margin.right;
+            chart.height = Sk.console.getHeight() - chart.margin.top - chart.margin.bottom;
             chart.id = "chart" + chartCounter;
             chart.type = type;
-            
-            if (Sk.console.skipDrawing) {
-                return chart;
-            }
             
             return chart;
         }
@@ -99,10 +95,10 @@ var $builtinmodule = function(name) {
         var xdata = null;
         var ydata = null;
         var stylestring = null;
-        if (args.length == 1) {
+        if (args.length === 1) {
             // ydata
             ydata = Sk.ffi.remapToJs(args[0]);
-        } else if (args.length == 2) {
+        } else if (args.length === 2) {
             if (Sk.builtin.checkString(args[1])) {
                 // ydata, style
                 ydata = Sk.ffi.remapToJs(args[0]);
@@ -112,7 +108,7 @@ var $builtinmodule = function(name) {
                 xdata = Sk.ffi.remapToJs(args[0]);
                 ydata = Sk.ffi.remapToJs(args[1]);
             }
-        } else if (args.length == 3) {
+        } else if (args.length === 3) {
             // xdata, ydata, style
             xdata = Sk.ffi.remapToJs(args[0]);
             ydata = Sk.ffi.remapToJs(args[1]);
@@ -158,9 +154,9 @@ var $builtinmodule = function(name) {
         updateMinMax("x", xdata);
         updateMinMax("y", ydata);
         
-        if (Sk.console.skipDrawing) {
+        /*if (Sk.console.isMuted()) {
             return;
-        }
+        }*/
     };
     plot_f.co_kwargs = true;
     mod.plot = new Sk.builtin.func(plot_f);
@@ -174,11 +170,12 @@ var $builtinmodule = function(name) {
         if (!chart) {
             createChart("line");
         }
-        if (chart.type == "hist" && plots.length < 1) {
+        // TODO: Currently, cannot overlay histograms on other charts
+        if (chart.type === "hist" && plots.length < 1) {
             resetChart();
             return;
         }
-        if (plots.length == 0) {
+        if (plots.length === 0) {
             return;
         }
         if (extents["xMin"] === undefined || extents["yMin"] === undefined) {
@@ -188,7 +185,7 @@ var $builtinmodule = function(name) {
         var yAxisBuffer;
         
         // Establish x/y scalers and axes
-        if (chart.type == "scatter" || chart.type == "line") {
+        if (chart.type === "scatter" || chart.type === "line") {
             yAxisBuffer = 5*Math.max(extents["yMin"].toLocaleString().length, 
                                      extents["yMax"].toLocaleString().length);
             chart.xScale = d3.scale.linear()
@@ -197,7 +194,7 @@ var $builtinmodule = function(name) {
             chart.xAxis = d3.svg.axis()
                 .scale(chart.xScale)
                 .orient("bottom");
-        } else if (chart.type == "hist") {
+        } else if (chart.type === "hist") {
             yAxisBuffer = 5*Math.max(extents["xMin"].toLocaleString().length, 
                                      extents["xMax"].toLocaleString().length);
             chart.xScale = d3.scale.linear()
@@ -221,7 +218,7 @@ var $builtinmodule = function(name) {
                 tickArray
             //chart.xScale.ticks(bins)
             )(plots[0]["data"]);
-        } else if (chart.type == "bar") {
+        } else if (chart.type === "bar") {
             yAxisBuffer = 5*Math.max(extents["yMin"].toLocaleString().length, 
                                      extents["yMax"].toLocaleString().length);
             chart.xScale = d3.scale.ordinal()
@@ -232,6 +229,7 @@ var $builtinmodule = function(name) {
                 .tickFormat(function(d) { return d.index; })
                 .orient("bottom");
         }
+        // Fix y-axis
         if (chart.type !== "hist") {
             chart.yScale = d3.scale.linear()
                 .domain([extents["yMin"], extents["yMax"]])
@@ -253,11 +251,12 @@ var $builtinmodule = function(name) {
             .interpolate("linear");
                             
         // set css classes
-        chart.svg = d3.select(Sk.console.container).append("div").append("svg");
+        let outputTarget = Sk.console.plot(plots);
+        chart.svg = d3.select(outputTarget.html[0]).append("div").append("svg");
         //$(chart.svg.node()).parent().hide();
         chart.svg.attr("class", "chart");
-        chart.svg.attr("width", Sk.console.width);
-        chart.svg.attr("height", Sk.console.height);
+        chart.svg.attr("width", Sk.console.getWidth());
+        chart.svg.attr("height", Sk.console.getHeight());
         chart.svg.attr("chartCount", chartCounter);
         
         var translation = "translate(" + (chart.margin.left + yAxisBuffer) + "," + chart.margin.top + ")";
@@ -319,13 +318,13 @@ var $builtinmodule = function(name) {
         // Actually draw the chart objects
         for (var i = 0; i < plots.length; i += 1) {
             var plot = plots[i];
-            if (plot["type"] == "line") {
+            if (plot["type"] === "line") {
                 chart.canvas.append("path")
                     .style("stroke", plot["style"]["color"])
                     .attr("class", "line")
                     .data(plot["data"])
                     .attr("d", chart.mapLine(plot["data"]));
-            } else if (plot["type"] == "scatter") {
+            } else if (plot["type"] === "scatter") {
                 chart.canvas.append("g")
                     .attr("class", "series")
                     .selectAll(".point")
@@ -337,7 +336,7 @@ var $builtinmodule = function(name) {
                     .attr("cx", chart.mapX)
                     .attr("cy", chart.mapY)
                     .attr("r", 2);
-            } else if (plot["type"] == "hist") {
+            } else if (plot["type"] === "hist") {
                 chart.canvas.selectAll(".bar")
                     .data(histMapper)
                     .enter().append("rect")
@@ -350,40 +349,43 @@ var $builtinmodule = function(name) {
                     .attr("height", function(d) { return chart.height - chart.yScale(d.y); });
             }
         }
-        if (Sk.console.pngMode) {
-            var doctype = '<?xml version="1.0" standalone="no"?>' + "<" + '!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-            var xml = new XMLSerializer().serializeToString(chart.svg[0][0]);
-            var blob = new Blob([ doctype + xml], { type: "image/svg+xml" });
-            var url = window.URL.createObjectURL(blob);
-            //var data = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
-            var img  = document.createElement("img");
-            img.style.display = "block";
-            var oldChart = chart;
-            var oldPlots = plots;
-            Sk.console.printHtml(img, oldPlots);
-            resetChart();
-            oldChart.svg[0][0].parentNode.replaceChild(img, oldChart.svg[0][0]);
-            img.onload = function() {
-                img.onload = null;
-                //TODO: Make this capture a class descendant. Cross the D3/Jquery barrier!
-                var canvas = document.createElement("canvas");
-                canvas.width = Sk.console.width;
-                canvas.height = Sk.console.height;
-                var ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0);
-                var canvasUrl = canvas.toDataURL("image/png");
-                img.setAttribute("src", canvasUrl);
-                // Snip off this chart, we can now start a new one.
-            };
-            img.onerror = function() {
-                
-            };
-            img.setAttribute("src", url);
-        } else {
-            Sk.console.printHtml(chart.svg, plots);
+
+        var doctype = '<?xml version="1.0" standalone="no"?>' + "<" + '!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+        var xml = new XMLSerializer().serializeToString(chart.svg[0][0]);
+        var blob = new Blob([ doctype + xml], { type: "image/svg+xml" });
+        var url = window.URL.createObjectURL(blob);
+        //var data = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
+        let anchor = document.createElement("a");
+        var img  = document.createElement("img");
+        img.style.display = "block";
+        var oldChart = chart;
+        let filename = labels.title;
+        resetChart();
+        //outputTarget.html[0].appendChild(img);
+        // TODO: Consider using the SVG as the actual image, and using this as the href
+        //       surrounding it instead.
+        oldChart.svg[0][0].parentNode.replaceChild(anchor, oldChart.svg[0][0]);
+        img.onload = function() {
+            img.onload = null;
+            //TODO: Make this capture a class descendant. Cross the D3/Jquery barrier!
+            var canvas = document.createElement("canvas");
+            canvas.width = Sk.console.getWidth();
+            canvas.height = Sk.console.getHeight();
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            var canvasUrl = canvas.toDataURL("image/png");
+            img.setAttribute("src", canvasUrl);
+            img.setAttribute("title", "Generated plot titled: "+filename);
+            img.setAttribute("alt", "Generated plot titled: "+filename);
+            anchor.setAttribute("href", canvasUrl);
+            anchor.setAttribute("download", filename);
             // Snip off this chart, we can now start a new one.
-            resetChart();
-        }
+        };
+        img.onerror = function(e) {
+            console.error(e);
+        };
+        img.setAttribute("src", url);
+        anchor.appendChild(img);
     };
     mod.show = new Sk.builtin.func(show_f);
 
@@ -460,10 +462,10 @@ var $builtinmodule = function(name) {
         // Parse different argument combinations
         var data = null;
         var stylestring = null;
-        if (args.length == 1) {
+        if (args.length === 1) {
             // xdata
             data = Sk.ffi.remapToJs(args[0]);
-        } else if (args.length == 2) {
+        } else if (args.length === 2) {
             // xdata, style
             data = Sk.ffi.remapToJs(args[0]);
             stylestring = Sk.ffi.remapToJs(args[1]);
@@ -496,10 +498,6 @@ var $builtinmodule = function(name) {
             }
         });
         updateMinMax("x", data);
-        
-        if (Sk.console.skipDrawing) {
-            return;
-        }
     };
     hist_f.co_kwargs = true;
     mod.hist = new Sk.builtin.func(hist_f);
@@ -523,18 +521,18 @@ var $builtinmodule = function(name) {
         var xdata = null;
         var ydata = null;
         var stylestring = null;
-        if (args.length == 2) {
+        if (args.length === 2) {
             // xdata, ydata
             xdata = Sk.ffi.remapToJs(args[0]);
             ydata = Sk.ffi.remapToJs(args[1]);
-        } else if (args.length == 3) {
+        } else if (args.length === 3) {
             // xdata, ydata, style
             xdata = Sk.ffi.remapToJs(args[0]);
             ydata = Sk.ffi.remapToJs(args[1]);
             stylestring = Sk.ffi.remapToJs(args[2]);
         }
         
-        if (xdata.length > dot_limit) {
+        if (xdata && xdata.length > dot_limit) {
             var xdataSampled = [], ydataSampled = [];
             var LENGTH = xdata.length, RATE = LENGTH / dot_limit;
             for (var i = 0; i < dot_limit; i+= 1) {
@@ -578,9 +576,6 @@ var $builtinmodule = function(name) {
         // Update min/max
         updateMinMax("x", xdata);
         updateMinMax("y", ydata);
-        if (Sk.console.skipDrawing) {
-            return;
-        }
     };
     scatter_f.co_kwargs = true;
     mod.scatter = new Sk.builtin.func(scatter_f);
@@ -589,7 +584,7 @@ var $builtinmodule = function(name) {
     return mod;
 };
 
-
+//TODO: Make font size controllable
 jsplotlib.rc = {
     "lines.linewidth": 1.0,
     "lines.linestyle": "-",
