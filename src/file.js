@@ -1,3 +1,7 @@
+var STDOUT_FILENO = 1;
+var STDIN_FILENO = 0;
+var STDERR_FILENO = 2;
+
 /**
  * @constructor
  * @param {Sk.builtin.str} name
@@ -18,11 +22,11 @@ Sk.builtin.file = function (name, mode, buffering) {
 
     if (this.name === "/dev/stdout") {
         this.data$ = Sk.builtin.none.none$;
-        this.fileno = 1;
+        this.fileno = STDOUT_FILENO;
     } else if (this.name === "/dev/stdin") {
-        this.fileno = 0;
+        this.fileno = STDIN_FILENO;
     } else if (this.name === "/dev/stderr") {
-        this.fileno = 2;
+        this.fileno = STDERR_FILENO;
     } else {
         if (Sk.inBrowser) {  // todo:  Maybe provide a replaceable function for non-import files
             this.fileno = 10;
@@ -241,6 +245,8 @@ Sk.builtin.file.prototype["write"] = new Sk.builtin.func(function write(self, st
     } else {
         throw new Sk.builtin.IOError("File not open for writing");
     }
+
+    return Sk.builtin.none.none$;
 });
 
 

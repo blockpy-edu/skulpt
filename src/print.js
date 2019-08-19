@@ -78,6 +78,7 @@ var print_f = function function_print(kwa) {
     }
     // ToDo:
     // cpython print function may receive another flush kwarg that flushes the output stream immediatelly
+    return Sk.builtin.none.none$;
 };
 
 print_f.co_kwargs = true;

@@ -40,7 +40,6 @@ class Tifa(ast.NodeVisitor):
             report = MAIN_REPORT
         self.report = report
         self._initialize_report()
-        self.PYTHON_3 = python_3
 
     def _initialize_report(self):
         """
@@ -119,7 +118,7 @@ class Tifa(ast.NodeVisitor):
             self.report['tifa']['error'] = error
             self.report.attach('tifa_error', category='Analyzer', tool='TIFA',
                                mistake={
-                                   'message': "Could not process code",
+                                   'message': "Could not process code: "+str(error),
                                    'error': error
                                })
             return self.report['tifa']
@@ -333,6 +332,12 @@ class Tifa(ast.NodeVisitor):
                 if potential_name is not None and result is None:
                     result = potential_name
             return result
+    
+    def visit_AnnAssign(self, node):
+        """
+        TODO: Implement!
+        """
+        pass
 
     def visit_Assign(self, node):
         """
@@ -529,7 +534,7 @@ class Tifa(ast.NodeVisitor):
                                "position": self.locate(iter)})
 
         if not isinstance(iter_type, INDEXABLE_TYPES):
-            self.report_issue("Iterating over non-list",
+            self.report_issue("Iterating over Non-list",
                               {"name": iter_list_name,
                                "position": self.locate(iter)})
 
