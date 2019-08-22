@@ -552,7 +552,8 @@ class Tifa(ast.NodeVisitor):
     def visit_comprehension(self, node):
         self._visit_collection_loop(node)
         # Handle the bodies
-        self.visit_statements(node.ifs)
+        if node.ifs:
+            self.visit_statements(node.ifs)
 
     def visit_Dict(self, node):
         """
@@ -840,11 +841,9 @@ class Tifa(ast.NodeVisitor):
             return UnknownType()
         elif type(node.op) in VALID_UNARYOP_TYPES:
             op_lookup = VALID_UNARYOP_TYPES[type(node.op)]
-            if type(node.op) in op_lookup:
-                op_lookup = op_lookup[type(node.op)]
-                if type(operand) in op_lookup:
-                    op_lookup = op_lookup[type(operand)]
-                    return op_lookup(operand)
+            if type(operand) in op_lookup:
+                op_lookup = op_lookup[type(operand)]
+                return op_lookup(operand)
         return UnknownType()
 
     def visit_While(self, node):

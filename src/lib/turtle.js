@@ -19,7 +19,7 @@ var $builtinmodule = function (name) {
     }
 
     function generateTurtleModule(_target) {
-        var _module              = {},
+        var _module              = {__name__: Sk.builtin.str("turtle")},
             _durationSinceRedraw = 0,
             _focus               = true,
             OPTIMAL_FRAME_RATE   = 1000/30,

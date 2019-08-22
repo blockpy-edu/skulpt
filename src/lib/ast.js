@@ -1,5 +1,5 @@
 var $builtinmodule = function (name) {
-    var mod = {};
+    var mod = {__name__: Sk.builtin.str("_ast")};
 
     function mangleAppropriately(name) {
         switch (name) {
@@ -29,7 +29,8 @@ var $builtinmodule = function (name) {
     };
     
     var convertValue = function(value) {
-        if (value === null) {
+        // acbart: kwarg field for lambdas (and functions perhaps?) can be undefined
+        if (value === null || value === undefined) {
             return Sk.builtin.none.none$;
         } else if (isSpecialPyAst(value)) {
             var constructorName = functionName(value);

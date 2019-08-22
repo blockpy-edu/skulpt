@@ -56,11 +56,11 @@ Sk.builtin.object.prototype.GenericGetAttr = function (pyName, canSuspend) {
         if (tp !== null) {
             return tp;
         }
-    } else if (jsName === "__name__") {
+    }/* else if (jsName === "__name__") {
         if (this.tp$name !== null) {
             return Sk.ffi.remapToPy(this.tp$name);
         }
-    }
+    }*/
 
     // todo; assert? force?
     if (dict) {

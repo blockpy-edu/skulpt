@@ -391,21 +391,34 @@ Compiler.prototype.cunpackstarstoarray = function(elts, permitEndOnly) {
     if (!elts || elts.length == 0) {
         return "[]";
     }
-    let arr = this._gr("unpack", "[]");
+
     let hasStars = false;
+    // If there are no stars, we have a nice fast path here
     for (let elt of elts) {
         if (permitEndOnly && hasStars) {
             throw new Sk.builtin.SyntaxError("Extended argument unpacking is not permitted in Python 2");
         }
-        if (elt.constructor !== Sk.astnodes.Starred) {
-            out(arr,".push(",this.vexpr(elt),");");
-        } else {
-            out("$ret = Sk.misceval.iterFor(Sk.abstr.iter(",this.vexpr(elt.value),"), function(e) { ",arr,".push(e); });");
-            this._checkSuspension();
+        if (elt.constructor === Sk.astnodes.Starred) {
             hasStars = true;
         }
     }
-    return arr;
+
+    if (hasStars) {
+        // Slow path
+        let arr = this._gr("unpack", "[]");
+        for (let elt of elts) {
+            if (elt.constructor !== Sk.astnodes.Starred) {
+                out(arr,".push(",this.vexpr(elt),");");
+            } else {
+                out("$ret = Sk.misceval.iterFor(Sk.abstr.iter(",this.vexpr(elt.value),"), function(e) { ",arr,".push(e); });");
+                this._checkSuspension();
+            }
+        }
+        return arr;
+    } else {
+        // Fast path
+        return "[" + elts.map((expr) => this.vexpr(expr)).join(",") + "]";
+    }
 }
 
 Compiler.prototype.ctuplelistorset = function(e, data, tuporlist) {
@@ -1955,17 +1968,20 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     for (i = 0; args && i < args.args.length; ++i) {
         id = args.args[i].arg;
         if (this.isCell(id)) {
-            this.u.varDeclsCode += "$cell." + id.v + "=" + id.v + ";";
+            let mangled = fixReservedNames(mangleName(this.u.private_, id).v);
+            this.u.varDeclsCode += "$cell." + mangled + "=" + mangled + ";";
         }
     }
     for (i = 0; args && args.kwonlyargs && i < args.kwonlyargs.length; ++i) {
         id = args.kwonlyargs[i].arg;
         if (this.isCell(id)) {
-            this.u.varDeclsCode += "$cell." + id.v + "=" + id.v + ";";
+            let mangled = fixReservedNames(mangleName(this.u.private_, id).v);
+            this.u.varDeclsCode += "$cell." + mangled + "=" + mangled + ";";
         }
     }
     if (vararg && this.isCell(vararg.arg)) {
-        this.u.varDeclsCode += "$cell." + vararg.arg.v + "=" + vararg.arg.v + ";";
+        let mangled = fixReservedNames(mangleName(this.u.private_, vararg.arg).v);
+        this.u.varDeclsCode += "$cell." + mangled + "=" + mangled + ";";
     }
 
     //
@@ -2449,6 +2465,7 @@ var D_CELLVARS = 2;
 
 Compiler.prototype.isCell = function (name) {
     var mangled = mangleName(this.u.private_, name).v;
+    mangled = fixReservedNames(mangled);
     var scope = this.u.ste.getScope(mangled);
     var dict = null;
     return scope === Sk.SYMTAB_CONSTS.CELL;
@@ -2513,7 +2530,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
     // have to do this after looking it up in the scope
     mangled = fixReservedWords(mangled);
 
-    //print("mangled", mangled);
+    //console.log("mangled", mangled);
     // TODO TODO TODO todo; import * at global scope failing here
     Sk.asserts.assert(scope || name.v.charAt(1) === "_");
 

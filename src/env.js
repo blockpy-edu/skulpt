@@ -210,9 +210,20 @@ Sk.configure = function (options) {
     Sk.switch_version("clear$", Sk.__future__.list_clear);
 
     Sk.builtin.lng.tp$name = Sk.__future__.no_long_type ? "int" : "long";
+
+    Sk.setupOperators(Sk.__future__.python3);
+    Sk.setupDunderMethods(Sk.__future__.python3);
+    Sk.setupObjects(Sk.__future__.python3);
 };
 
 Sk.exportSymbol("Sk.configure", Sk.configure);
+
+/*
+* Replaceable handler for uncaught exceptions
+*/
+Sk.uncaughtException = function(err) {
+    throw err;
+};
 
 /*
  * Replaceable handler for uncaught exceptions
@@ -349,6 +360,9 @@ Sk.setup_method_mappings = function () {
                         Sk.builtin.tuple_iter_,
                         Sk.builtin.generator,
                         Sk.builtin.enumerate,
+                        Sk.builtin.filter_,
+                        Sk.builtin.zip_,
+                        Sk.builtin.map_,
                         Sk.builtin.iterator],
             2: "next",
             3: "__next__"

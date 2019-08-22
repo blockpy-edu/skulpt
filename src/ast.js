@@ -247,8 +247,21 @@ var operatorMap = {};
     operatorMap[TOK.T_PERCENT] = Sk.astnodes.Mod;
 }());
 
+Sk.setupOperators = function (py3) {
+    if (py3) {
+        operatorMap[TOK.T_AT] = Sk.astnodes.MatMult;
+    } else {
+        if (operatorMap[TOK.T_AT]) {
+            delete operatorMap[TOK.T_AT];
+        }
+    }
+}
+Sk.exportSymbol("Sk.setupOperators", Sk.setupOperators);
+
 function getOperator (n) {
-    Sk.asserts.assert(operatorMap[n.type] !== undefined, "Operator missing from operatorMap");
+    if (operatorMap[n.type] === undefined) {
+        throw new Sk.builtin.SyntaxError("invalid syntax", n.type, n.lineno);
+    }
     return operatorMap[n.type];
 }
 
@@ -2033,6 +2046,10 @@ function astForAugassign (c, n) {
                 return Sk.astnodes.Pow;
             }
             return Sk.astnodes.Mult;
+        case "@":
+            if (Sk.__future__.python3) {
+                return Sk.astnodes.MatMult;
+            }
         default:
             Sk.asserts.fail("invalid augassign");
     }
@@ -2282,14 +2299,14 @@ function parsestr (c, s) {
                 else if (c === "x") {
                     d0 = s.charAt(++i);
                     d1 = s.charAt(++i);
-                    ret += String.fromCharCode(parseInt(d0 + d1, 16));
+                    ret += encodeUtf8(String.fromCharCode(parseInt(d0 + d1, 16)));
                 }
                 else if (c === "u" || c === "U") {
                     d0 = s.charAt(++i);
                     d1 = s.charAt(++i);
                     d2 = s.charAt(++i);
                     d3 = s.charAt(++i);
-                    ret += String.fromCharCode(parseInt(d0 + d1, 16), parseInt(d2 + d3, 16));
+                    ret += encodeUtf8(String.fromCharCode(parseInt(d0 + d1, 16), parseInt(d2 + d3, 16)));
                 }
                 else {
                     // Leave it alone
@@ -2301,7 +2318,7 @@ function parsestr (c, s) {
                 ret += c;
             }
         }
-        return ret;
+        return decodeUtf8(ret);
     };
 
     //print("parsestr", s);

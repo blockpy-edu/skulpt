@@ -299,6 +299,7 @@ Sk.builtin.func.prototype.tp$call = function (posargs, kw) {
         co_argcount = this.func_code.co_varnames ? this.func_code.co_varnames.length : posargs.length;
     }
     let varnames = this.func_code.co_varnames || [];
+
     let co_kwonlyargcount = this.func_code.co_kwonlyargcount || 0;
     let totalArgs = co_argcount + co_kwonlyargcount;
     let kwargs;
@@ -311,7 +312,6 @@ Sk.builtin.func.prototype.tp$call = function (posargs, kw) {
     /* Copy positional arguments into arguments to our JS function*/
     let nposargs = posargs.length;
     let args = (posargs.length <= co_argcount) ? posargs : posargs.slice(0, co_argcount);
-
 
     /* Pack other positional arguments into the *args argument */
     if (this.func_code.co_varargs) {
@@ -392,6 +392,7 @@ Sk.builtin.func.prototype.tp$call = function (posargs, kw) {
             throw new Sk.builtin.TypeError(this.tp$getname() + "() missing " + missing.length + " required keyword argument" + (missing.length==1?"":"s") + ": " + missing.join(", "));
         }
     }
+
 
     if (this.func_closure) {
         // todo; OK to modify?
