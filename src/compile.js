@@ -1883,7 +1883,6 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     if (hasCell) {
         this.u.prefixCode += "\n// has cell\n";
     }
-    this.u.prefixCode += "Sk.scopes=Sk.scopes||[];Sk.scopes.push('"+coname.v+"');\n";
 
     //
     // set up standard dicts/variables
@@ -1989,7 +1988,6 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     this.u.switchCode +=    this.outputInterruptTest();
     this.u.switchCode +=    "switch($blk){";
     this.u.suffixCode = "}" + this.handleTraceback(true, coname.v);
-    this.u.suffixCode += "Sk.scopes.pop();";
     this.u.suffixCode += "});";
     /*this.u.suffixCode = ("} }catch(err){ "+
                          "if (err instanceof Sk.builtin.TimeLimitError) {"+
@@ -2255,7 +2253,6 @@ Compiler.prototype.cclass = function (s) {
     entryBlock = this.newBlock("class entry");
 
     this.u.prefixCode = "var " + scopename + "=(function $" + s.name.v + "$class_outer($globals,$locals,$cell){var $gbl=$globals,$loc=$locals;$free=$globals;";
-    this.u.prefixCode += "Sk.scopes=Sk.scopes||[];Sk.scopes.push('"+s.name.v+"');\n";
     this.u.switchCode += "(function $" + s.name.v + "$_closure($cell){";
     this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
@@ -2270,7 +2267,6 @@ Compiler.prototype.cclass = function (s) {
     this.u.switchCode += this.outputInterruptTest();
     this.u.switchCode += "switch($blk){";
     this.u.suffixCode = "}" + this.handleTraceback(true, s.name.v);
-    this.u.suffixCode += "Sk.scopes.pop();";
     /*this.u.suffixCode = ("}}catch(err){ if (err instanceof Sk.builtin.TimeLimitError) {"+
         "Sk.execStart = Date.now();Sk.execPaused=0"+
         "} if (!(err instanceof Sk.builtin.BaseException)) {"+
@@ -2698,7 +2694,6 @@ Compiler.prototype.cmod = function (mod) {
     this.u.varDeclsCode =
         "var $gbl = $forcegbl || {}, $blk=" + entryBlock +
         ",$exc=[],$loc=$gbl,$cell={},$err=undefined;" +
-        "Sk.scopes=Sk.scopes||[];Sk.scopes.push('<module>');"+
         "$loc.__file__=new Sk.builtins.str('" + this.filename +
         "');var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
@@ -2730,7 +2725,6 @@ Compiler.prototype.cmod = function (mod) {
     this.u.switchCode += this.outputInterruptTest();
     this.u.switchCode += "switch($blk){";
     this.u.suffixCode = "}" + this.handleTraceback(true, "<module>");
-    this.u.suffixCode += "Sk.scopes.pop();";
     this.u.suffixCode += "});";
     //this.u.suffixCode += "}catch(err){ if (err instanceof Sk.builtin.TimeLimitError) { Sk.execStart = Date.now();Sk.execPaused=0} if (!(err instanceof Sk.builtin.BaseException)) { err = new Sk.builtin.ExternalError(err); } err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'}); if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }} } });";
 
@@ -2764,12 +2758,11 @@ Compiler.prototype.cmod = function (mod) {
 Compiler.prototype.handleTraceback = function(doContinue, scopeName) {
     doContinue = doContinue ? "continue" : "";
     return ("}catch(err){ "+
-        "Sk.err=[err,$blk];"+
         "if(err instanceof Sk.builtin.TimeLimitError){"+
         "Sk.execStart=Date.now();Sk.execPaused=0"+
         "}if(!(err instanceof Sk.builtin.BaseException)) {"+
         "err=new Sk.builtin.ExternalError(err);" +
-        "}err.traceback.push({"+
+        "}Sk.err=err;err.traceback.push({"+
             "lineno:$currLineNo,"+
             "colno:$currColNo,"+
             "filename:'"+this.filename+"'," +

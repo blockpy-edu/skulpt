@@ -90,6 +90,7 @@ Sk.builtins = {
     "callable"  : Sk.builtin.callable,
     "delattr"   : Sk.builtin.delattr,
     "eval_$rn$" : Sk.builtin.eval_,
+    "compile"   : Sk.builtin.compile,
     "exec"      : Sk.builtin.exec,
     "execfile"  : Sk.builtin.execfile,
     "frozenset" : Sk.builtin.frozenset,

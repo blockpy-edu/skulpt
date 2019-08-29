@@ -574,11 +574,11 @@ Sk.exportSymbol("Sk.builtin.StopIteration", Sk.builtin.StopIteration);
 /**
  * @constructor
  */
-Sk.builtin.frame = function() {
+Sk.builtin.frame = function(trace) {
     if (!(this instanceof Sk.builtin.frame)) {
-        return new Sk.builtin.frame();
+        return new Sk.builtin.frame(trace);
     }
-
+    this.trace = trace;
     this.__class__ = Sk.builtin.frame;
     return this;
 };
@@ -600,9 +600,11 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
             case "f_code": return Sk.builtin.none.none$;
             case "f_globals": return Sk.builtin.none.none$;
             case "f_lasti": return Sk.builtin.none.none$;
-            case "f_lineno": return Sk.builtin.none.none$;
+            case "f_lineno": return this.trace.lineno;
             case "f_locals": return Sk.builtin.none.none$;
             case "f_trace": return Sk.builtin.none.none$;
+            case "co_filename": return this.trace.filename;
+            case "co_name": return this.trace.scope;
         }
     }
 
@@ -618,28 +620,35 @@ Sk.exportSymbol("Sk.builtin.frame", Sk.builtin.frame);
  * @constructor
  * @param {Object} err
  */
-Sk.builtin.traceback = function(err) {
+Sk.builtin.traceback = function(trace) {
     if (!(this instanceof Sk.builtin.traceback)) {
-        return new Sk.builtin.traceback(err);
+        return new Sk.builtin.traceback(trace);
     }
-    
-    var lineno = null;
-    if (err.traceback.length > 0) {
-        lineno = err.traceback[0].lineno;
-    }
-    
-    this.tb_lineno = new Sk.builtin.int_(lineno);
+
+    this.trace = trace;
+
+    this.tb_lineno = new Sk.builtin.int_(trace.lineno);
     // TODO: Hack, you know this isn't right
-    this.tb_frame = Sk.builtin.none.none$;
+    this.tb_frame = new Sk.builtin.frame(trace);
     
     //tb_frame, tb_lasti, tb_lineno, tb_next
     
     this.__class__ = Sk.builtin.traceback;
-    
+
     return this;
 };
 
 Sk.abstr.setUpInheritance("traceback", Sk.builtin.traceback, Sk.builtin.object);
+Sk.builtin.traceback.fromList = function(traces) {
+    var current = Sk.builtin.traceback(traces[0]),
+        first = current;
+    for (var i=1; i<traces.length;i++) {
+        current.tb_next = Sk.builtin.traceback(traces[i]);
+        current = current.tb_next;
+    }
+    current.tb_next = Sk.builtin.none.none$;
+    return first;
+};
 Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
         var _name = name;
@@ -650,9 +659,9 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
         }
 
         switch (_name) {
-            case "tb_lineno": return this[_name];
-            case "tb_frame": return new Sk.builtin.frame();
-            case "tb_next": return Sk.builtin.none.none$;
+            case "tb_lineno":
+            case "tb_frame":
+            case "tb_next": return this[_name];
         }
     }
 

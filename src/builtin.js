@@ -1356,6 +1356,42 @@ Sk.builtin.execfile = function execfile () {
     throw new Sk.builtin.NotImplementedError("execfile is not yet implemented");
 };
 
+/**
+ * Okay, I'll be honest, this is 100% not a real code object. It just holds the source
+ * code and filename. I'm relying on the `exec` call to actually compile it. IT'S ALL
+ * A BIG LIE. I'm sorry. -acbart
+ * @param filename
+ * @param source
+ * @returns {Sk.builtin|*}
+ */
+Sk.builtin.code = function(filename, source) {
+    if (!(this instanceof Sk.builtin.code)) {
+        return new Sk.builtin.code(filename, source);
+    }
+    this.filename = filename;
+    this.source = source;
+    this.__class__ = Sk.builtin.code;
+    return this;
+};
+Sk.abstr.setUpInheritance("code", Sk.builtin.code, Sk.builtin.object);
+Sk.builtin.code.prototype["$r"] = function () {
+    return new Sk.builtin.str("<code object, file \""+this.filename+"\">");
+};
+Sk.exportSymbol("Sk.builtin.code", Sk.builtin.code);
+
+Sk.builtin.compile = function(source, filename, mode, flags, dont_inherit, optimize) {
+    Sk.builtin.pyCheckArgsLen("compile", arguments.length, 3, 6);
+    source = Sk.ffi.remapToJs(source);
+    filename = Sk.ffi.remapToJs(filename);
+    if (!Sk.compiledSources) {
+        Sk.compiledSources = {};
+    }
+    Sk.compiledSources[filename] = source;
+    return new Sk.builtin.code(filename, source);
+};
+
+
+
 var extractDict = function(obj) {
     var ret = {};
     var k, v, kAsJs, iter;
@@ -1371,11 +1407,17 @@ var extractDict = function(obj) {
     return ret;
 };
 
-Sk.builtin.exec = function execf(python_code, new_globals) {
+Sk.builtin.exec = function execf(pythonCode, new_globals) {
     Sk.builtin.pyCheckArgs("exec", arguments, 1, 2);
     var backupRG = Sk.retainGlobals;
     Sk.retainGlobals = true;
-    var filename = "test";
+    var filename = "<string>";
+    if (pythonCode instanceof Sk.builtin.code) {
+        filename = pythonCode.filename;
+        pythonCode = pythonCode.source;
+    } else {
+        pythonCode = Sk.ffi.remapToJs(pythonCode);
+    }
     var new_globals_copy = extractDict(new_globals);
     if (!new_globals_copy.__file__) {
         new_globals_copy.__file__ = Sk.ffi.remapToPy(filename);
@@ -1390,8 +1432,10 @@ Sk.builtin.exec = function execf(python_code, new_globals) {
         backupSysmodules.mp$ass_subscript(key, value);
     });
     Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
-    python_code = Sk.ffi.remapToJs(python_code);
-    Sk.importMainWithBody(filename, false, python_code, true);
+    //Sk.importMainWithBody(filename, false, python_code, true);
+    var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
+    var modname = name;
+    Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true)
     Sk.globals = backupGlobals;
     Sk.misceval.iterFor(backupSysmodules.tp$iter(), function(key) {
         var value = backupSysmodules.mp$subscript(key);

@@ -353,8 +353,8 @@ def extract(frame_gen, limit=None, lookup_lines=True, capture_locals=False):
     fnames = set()
     for f, lineno in frame_gen:
         co = f.f_code
-        filename = "Apple.py" #co.co_filename
-        name = "Ada" #co.co_name
+        filename = f.co_filename #co.co_filename
+        name = f.co_name #co.co_name
 
         fnames.add(filename)
         linecache.lazycache(filename, f.f_globals)

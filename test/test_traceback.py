@@ -10,13 +10,16 @@ be_stupid()
 '''
 
 def win_dumb_prize():
-    exec(bad_code, {'wrong': another_dumb_approach})
+    co = compile(bad_code, "my_weird_file.py", 'exec')
+    exec(co, {'wrong': another_dumb_approach})
 
 try:
     win_dumb_prize()
 except Exception as e:
+    print(e)
     result = sys.exc_info()
-    print(result[2])
-    print(result[2].tb_lineno)
+    print("Exception", result[1])
+    print("Traceback", result[2])
+    print("Traceback Line number", result[2].tb_lineno)
     import traceback
-    print(traceback.extract_tb(result[2]))
+    print("ExtractedFrames", traceback.extract_tb(result[2]))
