@@ -30,6 +30,9 @@ Sk.builtin.BaseException = function (args) {
     }
     this.args = new Sk.builtin.tuple(args);
     this.traceback = [];
+    // TODO: Hack, this exception isn't guaranteed to be thrown!
+    this.err = Sk.err;
+    //Sk.err = this;
 
     // For errors occurring during normal execution, the line/col/etc
     // of the error are populated by each stack frame of the runtime code,
@@ -570,6 +573,49 @@ Sk.exportSymbol("Sk.builtin.StopIteration", Sk.builtin.StopIteration);
 
 /**
  * @constructor
+ */
+Sk.builtin.frame = function() {
+    if (!(this instanceof Sk.builtin.frame)) {
+        return new Sk.builtin.frame();
+    }
+
+    this.__class__ = Sk.builtin.frame;
+    return this;
+};
+
+Sk.abstr.setUpInheritance("frame", Sk.builtin.frame, Sk.builtin.object);
+
+Sk.builtin.frame.prototype.tp$getattr = function (name) {
+    if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
+        var _name = name;
+
+        // get javascript string
+        if (Sk.builtin.checkString(name)) {
+            _name = Sk.ffi.remapToJs(name);
+        }
+
+        switch (_name) {
+            case "f_back": return Sk.builtin.none.none$;
+            case "f_builtins": return Sk.builtin.none.none$;
+            case "f_code": return Sk.builtin.none.none$;
+            case "f_globals": return Sk.builtin.none.none$;
+            case "f_lasti": return Sk.builtin.none.none$;
+            case "f_lineno": return Sk.builtin.none.none$;
+            case "f_locals": return Sk.builtin.none.none$;
+            case "f_trace": return Sk.builtin.none.none$;
+        }
+    }
+
+    // if we have not returned yet, try the genericgetattr
+    return Sk.builtin.object.prototype.GenericGetAttr(name);
+};
+Sk.builtin.frame.prototype["$r"] = function () {
+    return new Sk.builtin.str("<frame object>");
+};
+Sk.exportSymbol("Sk.builtin.frame", Sk.builtin.frame);
+
+/**
+ * @constructor
  * @param {Object} err
  */
 Sk.builtin.traceback = function(err) {
@@ -583,6 +629,8 @@ Sk.builtin.traceback = function(err) {
     }
     
     this.tb_lineno = new Sk.builtin.int_(lineno);
+    // TODO: Hack, you know this isn't right
+    this.tb_frame = Sk.builtin.none.none$;
     
     //tb_frame, tb_lasti, tb_lineno, tb_next
     
@@ -601,8 +649,10 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
             _name = Sk.ffi.remapToJs(name);
         }
 
-        if (_name === "tb_lineno") {
-            return this[_name];
+        switch (_name) {
+            case "tb_lineno": return this[_name];
+            case "tb_frame": return new Sk.builtin.frame();
+            case "tb_next": return Sk.builtin.none.none$;
         }
     }
 
@@ -610,7 +660,7 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     return Sk.builtin.object.prototype.GenericGetAttr(name);
 };
 Sk.builtin.traceback.prototype["$r"] = function () {
-    return new Sk.builtin.str("<traceback>");
+    return new Sk.builtin.str("<traceback object>");
 };
 Sk.exportSymbol("Sk.builtin.traceback", Sk.builtin.traceback);
 

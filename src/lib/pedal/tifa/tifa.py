@@ -551,7 +551,7 @@ class Tifa(ast.NodeVisitor):
 
     def visit_comprehension(self, node):
         self._visit_collection_loop(node)
-        # Handle the bodies
+        # Handle ifs, unless they're blank (None in Skulpt :)
         if node.ifs:
             self.visit_statements(node.ifs)
 
@@ -842,8 +842,7 @@ class Tifa(ast.NodeVisitor):
         elif type(node.op) in VALID_UNARYOP_TYPES:
             op_lookup = VALID_UNARYOP_TYPES[type(node.op)]
             if type(operand) in op_lookup:
-                op_lookup = op_lookup[type(operand)]
-                return op_lookup(operand)
+                return op_lookup[type(operand)]()
         return UnknownType()
 
     def visit_While(self, node):

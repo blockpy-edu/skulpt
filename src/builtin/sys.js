@@ -73,13 +73,22 @@ var $builtinmodule = function (name) {
     sys.stdin = sys.__stdin__;
     
     sys.exc_info = new Sk.builtin.func(function () {
-        var type = Sk.err.ob$type;
-        var value = Sk.builtin.none.none$;
-        var traceback = new Sk.builtin.traceback(Sk.err);
-        //print(traceback.tp$setattr)
-        //traceback.tp$setattr('tb_lineno', traceback.tb_lineno);
-        var vals = [type, Sk.err, traceback];
-        return new Sk.builtin.tuple(vals);
+        console.log(Sk.scopes);
+        if (Sk.err.length && Sk.err[0]) {
+            console.log(">>>", Sk.err[0], "<<<");
+            console.log("%%%", Sk.err[1], "$$$");
+            console.log(Sk.err.traceback);
+            console.log(Sk.ffi.remapToJs(Sk.sysmodules));
+            var type = Sk.err.ob$type;
+            var value = Sk.builtin.none.none$;
+            var traceback = new Sk.builtin.traceback(Sk.err[0]);
+            //print(traceback.tp$setattr)
+            //traceback.tp$setattr('tb_lineno', traceback.tb_lineno);
+            var vals = [type, Sk.err[0], traceback];
+            return new Sk.builtin.tuple(vals);
+        } else {
+            return new Sk.builtin.tuple(Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.none.none$);
+        }
     });
 
     return sys;

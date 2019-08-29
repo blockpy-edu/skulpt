@@ -337,7 +337,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         // }
 
         finalcode += "\n" + co.funcname + ";";
-
+        //console.log(finalcode);
         modscope = Sk.global["eval"](finalcode);
 
         module["$d"] = {

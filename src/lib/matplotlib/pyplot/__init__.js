@@ -2,7 +2,7 @@ var jsplotlib = {};
 
 // Skulpt translation
 var $builtinmodule = function(name) {
-    var mod = {};
+    var mod = {__name__: "matplotlib.pyplot"};
     
     // Unique ID generator for charts
     var chartCounter = 0;

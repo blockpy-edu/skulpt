@@ -1,7 +1,18 @@
 """Extract, format and print information about Python stack traces."""
 
 import collections
-import linecache
+
+class linecache:
+    @staticmethod
+    def getline(filename, lineno, module_globals=None):
+        return "Apples and bananas"
+    @staticmethod
+    def lazycache(filename, globals):
+        return "Frogs and ketchup"
+    @staticmethod
+    def checkcache(filename):
+        return "Weird ocean city"
+
 import sys
 from itertools import islice
 
@@ -69,7 +80,7 @@ def extract_tb(tb, limit=None):
     trace.  The line is a string with leading and trailing
     whitespace stripped; if the source is not available it is None.
     """
-    return StackSummary.extract(walk_tb(tb), limit=limit)
+    return extract(walk_tb(tb), limit=limit)
 
 #
 # Exception formatting and output.
@@ -315,56 +326,57 @@ def walk_tb(tb):
 
 _RECURSIVE_CUTOFF = 3 # Also hardcoded in traceback.c.
 
+
+def extract(frame_gen, limit=None, lookup_lines=True, capture_locals=False):
+    """Create a StackSummary from a traceback or stack object.
+
+    :param frame_gen: A generator that yields (frame, lineno) tuples to
+        include in the stack.
+    :param limit: None to include all frames or the number of frames to
+        include.
+    :param lookup_lines: If True, lookup lines for each frame immediately,
+        otherwise lookup is deferred until the frame is rendered.
+    :param capture_locals: If True, the local variables from each frame will
+        be captured as object representations into the FrameSummary.
+    """
+    if limit is None:
+        limit = getattr(sys, 'tracebacklimit', None)
+        if limit is not None and limit < 0:
+            limit = 0
+    if limit is not None:
+        if limit >= 0:
+            frame_gen = islice(frame_gen, limit)
+        else:
+            frame_gen = collections.deque(frame_gen, maxlen=-limit)
+
+    result = StackSummary()
+    fnames = set()
+    for f, lineno in frame_gen:
+        co = f.f_code
+        filename = "Apple.py" #co.co_filename
+        name = "Ada" #co.co_name
+
+        fnames.add(filename)
+        linecache.lazycache(filename, f.f_globals)
+        # Must defer line lookups until we have called checkcache.
+        if capture_locals:
+            f_locals = f.f_locals
+        else:
+            f_locals = None
+        result.append(FrameSummary(
+            filename, lineno, name, lookup_line=False, locals=f_locals))
+    for filename in fnames:
+        linecache.checkcache(filename)
+    # If immediate lookup was desired, trigger lookups now.
+    if lookup_lines:
+        for f in result:
+            f.line
+    return result
+
 class StackSummary(list):
     """A stack of frames."""
 
-    @classmethod
-    def extract(klass, frame_gen, *, limit=None, lookup_lines=True,
-            capture_locals=False):
-        """Create a StackSummary from a traceback or stack object.
 
-        :param frame_gen: A generator that yields (frame, lineno) tuples to
-            include in the stack.
-        :param limit: None to include all frames or the number of frames to
-            include.
-        :param lookup_lines: If True, lookup lines for each frame immediately,
-            otherwise lookup is deferred until the frame is rendered.
-        :param capture_locals: If True, the local variables from each frame will
-            be captured as object representations into the FrameSummary.
-        """
-        if limit is None:
-            limit = getattr(sys, 'tracebacklimit', None)
-            if limit is not None and limit < 0:
-                limit = 0
-        if limit is not None:
-            if limit >= 0:
-                frame_gen = islice(frame_gen, limit)
-            else:
-                frame_gen = collections.deque(frame_gen, maxlen=-limit)
-
-        result = klass()
-        fnames = set()
-        for f, lineno in frame_gen:
-            co = f.f_code
-            filename = co.co_filename
-            name = co.co_name
-
-            fnames.add(filename)
-            linecache.lazycache(filename, f.f_globals)
-            # Must defer line lookups until we have called checkcache.
-            if capture_locals:
-                f_locals = f.f_locals
-            else:
-                f_locals = None
-            result.append(FrameSummary(
-                filename, lineno, name, lookup_line=False, locals=f_locals))
-        for filename in fnames:
-            linecache.checkcache(filename)
-        # If immediate lookup was desired, trigger lookups now.
-        if lookup_lines:
-            for f in result:
-                f.line
-        return result
 
     @classmethod
     def from_list(klass, a_list):

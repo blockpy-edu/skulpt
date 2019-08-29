@@ -1356,6 +1356,56 @@ Sk.builtin.execfile = function execfile () {
     throw new Sk.builtin.NotImplementedError("execfile is not yet implemented");
 };
 
+var extractDict = function(obj) {
+    var ret = {};
+    var k, v, kAsJs, iter;
+    for (iter = obj.tp$iter(), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+        v = obj.mp$subscript(k);
+        if (v === undefined) {
+            v = null;
+        }
+        kAsJs = Sk.ffi.remapToJs(k);
+        // todo; assert that this is a reasonble lhs?
+        ret[kAsJs] = v;
+    }
+    return ret;
+};
+
+Sk.builtin.exec = function execf(python_code, new_globals) {
+    Sk.builtin.pyCheckArgs("exec", arguments, 1, 2);
+    var backupRG = Sk.retainGlobals;
+    Sk.retainGlobals = true;
+    var filename = "test";
+    var new_globals_copy = extractDict(new_globals);
+    if (!new_globals_copy.__file__) {
+        new_globals_copy.__file__ = Sk.ffi.remapToPy(filename);
+    }
+    if (!new_globals_copy.__name__) {
+        new_globals_copy.__name__ = Sk.ffi.remapToPy(filename);
+    }
+    var backupGlobals = Sk.globals,
+        backupSysmodules = new Sk.builtin.dict([]);
+    Sk.misceval.iterFor(Sk.sysmodules.tp$iter(), function(key) {
+        var value = Sk.sysmodules.mp$subscript(key);
+        backupSysmodules.mp$ass_subscript(key, value);
+    });
+    Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
+    python_code = Sk.ffi.remapToJs(python_code);
+    Sk.importMainWithBody(filename, false, python_code, true);
+    Sk.globals = backupGlobals;
+    Sk.misceval.iterFor(backupSysmodules.tp$iter(), function(key) {
+        var value = backupSysmodules.mp$subscript(key);
+        Sk.sysmodules.mp$ass_subscript(key, value);
+    });
+    for (var key in new_globals_copy) {
+        if (new_globals_copy.hasOwnProperty(key)) {
+            var pykey = Sk.ffi.remapToPy(key);
+            Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key])
+        }
+    }
+    Sk.retainGlobals = backupRG;
+};
+
 Sk.builtin.frozenset = function frozenset () {
     throw new Sk.builtin.NotImplementedError("frozenset is not yet implemented");
 };

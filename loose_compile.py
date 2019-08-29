@@ -11,6 +11,7 @@ class SkulptCompiler(NodeVisitor):
         self.stack = []
 
     def generic_visit(self, node):
+        print(type(node).__name__)
         self.unhandled.add(type(node).__name__)
         return NodeVisitor.generic_visit(self, node)
 
@@ -28,7 +29,7 @@ class SkulptCompiler(NodeVisitor):
     def visit_Module(self, node):
         self.add_statement("var $builtinmodule = function (name) {")
         self.enter("mod")
-        self.add_statement("let mod = {};")
+        self.add_statement("let mod = {{__name__: {name} }};".format(name=name))
         for statement in node.body:
             self.visit(statement)
         self.add_statement("return mod;")
@@ -54,7 +55,13 @@ class SkulptCompiler(NodeVisitor):
         ))
 
     def visit_Name(self, node):
-        return "Sk.misceval.loadname('{}', $gbl)".format(node.id)
+        if isinstance(node.ctx, ast.Load):
+            return node.id
+        elif isinstance(node.ctx, ast.Store):
+            return "var {name}".format(node.id)
+        elif isinstance(node.ctx, ast.Delete):
+            pass
+        #return "Sk.misceval.loadname('{}', $gbl)".format(node.id)
 
     def visit_FunctionDef(self, node):
         owner = self.context
@@ -62,17 +69,17 @@ class SkulptCompiler(NodeVisitor):
         str_args = ", ".join("'{}'".format(arg.arg) for arg in node.args.args)
         defaults = ", ".join(self.visit(default) for default in node.args.defaults)
         self.add_statement(
-            "var _{name} = new Sk.builtin.func(function({args}) {{".format(
+            "var {name} = new Sk.builtin.func(function({args}) {{".format(
                 name=node.name, args=args))
         self.enter(node.name)
         for statement in node.body:
             self.visit(statement)
         self.exit()
         self.add_statement("}});")
-        self.add_statement("_{name}.co_varnames = [{args}]".format(
+        self.add_statement("{name}.co_varnames = [{args}]".format(
             name=node.name, args=str_args
         ))
-        self.add_statement("_{name}.$defaults = [{defaults}]".format(
+        self.add_statement("{name}.$defaults = [{defaults}]".format(
             name=node.name, defaults=defaults
         ))
         self.add_statement("{owner}.{name} = _{name}".format(
@@ -118,6 +125,23 @@ class SkulptCompiler(NodeVisitor):
 
     def visit_Return(self, node):
         self.add_statement("return {};".format(self.visit(node.value)));
+        
+    def visit_ImportFrom(self, node):
+        module = node.module
+        names = node.names
+        self.add_statement("var {module} = Sk.builtin.__import__('{module}', $gbl, $loc, [{names}], -1);".format(
+            module=module,
+            names=", ".join(repr(name) for name in names),
+        ))
+        for name in names:
+            self.add_statement("var {name} = Sk.abstr.gattr({module}, new Sk.builtin.str({name!r}))".format(
+                name=name,
+                module=module
+            ))
+
+    def visit_Call(self, node):
+        func = node.func
+
 
 if __name__ == '__main__':
     target = sys.argv[1]
