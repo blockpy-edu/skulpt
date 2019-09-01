@@ -1,5 +1,8 @@
 from reprlib import recursive_repr
 
+def wraps(wrapper, wrapped):
+    return wrapper
+
 # Purely functional, no descriptor behaviour
 class partial:
     """New function with partial application of the given arguments

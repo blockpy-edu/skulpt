@@ -161,8 +161,11 @@ Sk.importSetUpPath = function (canSuspend) {
 Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, relativeToPackage, returnUndefinedOnTopLevelNotFound, canSuspend) {
     //dumpJS = true;
     /* TODO: temporary hack, need to delete! */
-    if (name === "pedal.sandbox.sandbox") {
+    /*if (name === "pedal.sandbox.sandbox") {
         suppliedPyBody= "class Sandbox: pass\ndef run(): pass\ndef reset(): pass";
+    }*/
+    if (name === "pedal.sandbox.timeout") {
+        suppliedPyBody = "def timeout(delay, func, *args, **kwargs):\n    return func(*args, **kwargs)";
     }
     /* End hack */
     var filename;
@@ -195,10 +198,10 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
 
     // if leaf is already in sys.modules, early out
     try {
-        prev = Sk.sysmodules.mp$subscript(modname);
+        prev = Sk.sysmodules.mp$subscript(new Sk.builtin.str(modname));
         // if we're a dotted module, return the top level, otherwise ourselves
         if (modNameSplit.length > 1) {
-            return Sk.sysmodules.mp$subscript(absolutePackagePrefix + modNameSplit[0]);
+            return Sk.sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + modNameSplit[0]));
         } else {
             return prev;
         }
@@ -227,7 +230,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
             if (!topLevelModuleToReturn) {
                 return undefined;
             }
-            parentModule = Sk.sysmodules.mp$subscript(absolutePackagePrefix + parentModName);
+            parentModule = Sk.sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + parentModName));
             searchFileName = modNameSplit[modNameSplit.length-1];
             searchPath = parentModule.tp$getattr(Sk.builtin.str.$path);
         }
@@ -297,7 +300,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         }
 
         // Now we know this module exists, we can add it to the cache
-        Sk.sysmodules.mp$ass_subscript(modname, module);
+        Sk.sysmodules.mp$ass_subscript(new Sk.builtin.str(modname), module);
 
         module.$js = co.code; // todo; only in DEBUG?
         finalcode = co.code;
@@ -337,7 +340,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         // }
 
         finalcode += "\n" + co.funcname + ";";
-        //console.log(finalcode);
+
         modscope = Sk.global["eval"](finalcode);
 
         module["$d"] = {
@@ -472,6 +475,14 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
     // a Python language module.
     var saveSk = Sk.globals;
 
+    if (Sk.builtin.checkString(name)) {
+        name = name.v;
+    }
+
+    if (globals === undefined) {
+        globals = Sk.globals;
+    }
+
     // This might be a relative import, so first we get hold of the module object
     // representing this module's package (so we can search its __path__).
     // module.__package__ contains its name, so we use that to look it up in sys.modules.
@@ -496,7 +507,7 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
             relativeToPackageName = relativeToPackageNames.join(".");
         }
         try {
-            relativeToPackage = Sk.sysmodules.mp$subscript(relativeToPackageName);
+            relativeToPackage = Sk.sysmodules.mp$subscript(new Sk.builtin.str(relativeToPackageName));
         } catch(e) {
             relativeToPackageName = undefined;
         }
@@ -544,9 +555,10 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
             var importChain;
 
             leafModule = Sk.sysmodules.mp$subscript(
-                (relativeToPackageName || "") +
-                    ((relativeToPackageName && name) ? "." : "") +
-                    name);
+                new Sk.builtin.str((relativeToPackageName || "") +
+                                    ((relativeToPackageName && name) ? "." : "") +
+                                    name)
+            );
 
             for (i = 0; i < fromlist.length; i++) {
                 fromName = fromlist[i];

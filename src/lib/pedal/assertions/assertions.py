@@ -25,7 +25,17 @@ def safe_repr(obj, short=False):
     return result
 
 
-punctuation_table = str.maketrans(string.punctuation, ' ' * len(string.punctuation))
+try:
+    punctuation_table = str.maketrans(string.punctuation, ' ' * len(string.punctuation))
+except AttributeError:
+    punctuation_table = None
+
+if punctuation_table is None:
+    def strip_punctuation(a_string):
+        return ''.join(ch for ch in a_string if ch not in set(string.punctuation))
+else:
+    def strip_punctuation(a_string):
+        return a_string.translate(punctuation_table)
 
 
 def _normalize_string(a_string, numeric_endings=False):
@@ -35,7 +45,7 @@ def _normalize_string(a_string, numeric_endings=False):
     if numeric_endings:
         a_string = re.sub(r"(\s*[0-9]+)\.[0-9]+(\s*)", r"\1\2", a_string)
     # Remove punctuation
-    a_string = a_string.translate(punctuation_table)
+    a_string = strip_punctuation(a_string)
     # Split lines
     lines = a_string.split("\n")
     normalized = [[piece

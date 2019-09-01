@@ -1,7 +1,7 @@
-var tokens = Sk.token.tokens
+var tokens = Sk.token.tokens;
 
-const TokenError = Error;
-const IndentationError = Error;
+const TokenError = Sk.builtin.SyntaxError;
+const IndentationError = Sk.builtin.SyntaxError;
 
 /**
  *
@@ -235,7 +235,7 @@ Sk.exportSymbol("Sk._setupTokenRegexes", Sk._setupTokenRegexes);
  * @param {string} encoding
  * @param {function(TokenInfo): void} yield_
  */
-function _tokenize(readline, encoding, yield_) {
+function _tokenize(readline, encoding, yield_, filename) {
     
 
     var lnum = 0,
@@ -284,7 +284,8 @@ function _tokenize(readline, encoding, yield_) {
 
         if (contstr) {                       // continued string
             if (!line) {
-                throw new TokenError("EOF in multi-line string", strstart);
+                //throw new TokenError("EOF in multi-line string", strstart);
+                throw new TokenError("EOF in multi-line string", filename, spos[0], [spos, epos]);
             }
             endprog.lastIndex = 0;
             var endmatch = endprog.exec(line);
@@ -348,7 +349,7 @@ function _tokenize(readline, encoding, yield_) {
                 if (!contains(indents, column)) {
                     throw new IndentationError(
                         "unindent does not match any outer indentation level",
-                        ["<tokenize>", lnum, pos, line]);
+                        filename, spos[0], [spos, epos]); //["<tokenize>", lnum, pos, line]);
                 }
 
                 indents = indents.slice(0, -1);
@@ -357,7 +358,8 @@ function _tokenize(readline, encoding, yield_) {
             }
         } else {                                  // continued statement
             if (!line) {
-                throw new TokenError("EOF in multi-line statement", [lnum, 0]);
+                //throw new TokenError("EOF in multi-line statement", [lnum, 0]);
+                throw new TokenError("EOF in multi-line statement", filename, spos[0], [spos, epos]);
             }
             continued = 0;
         }

@@ -5,7 +5,7 @@ var $builtinmodule = function() {
     mod = {};
 
     // Dependency
-    Sample = Sk.sysmodules.mp$subscript("sound.sample").$d.Sample;
+    Sample = Sk.sysmodules.mp$subscript(new Sk.builtin.str("sound.sample")).$d.Sample;
 
     soundWrapper = {
         stopPlaying: new Sk.builtin.func(function (sound) {

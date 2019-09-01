@@ -29,6 +29,7 @@ Sk.builtins = {
     "any"       : new Sk.builtin.func(Sk.builtin.any),
     "all"       : new Sk.builtin.func(Sk.builtin.all),
 
+    "BaseException"      : Sk.builtin.BaseException,
     "AttributeError"     : Sk.builtin.AttributeError,
     "ValueError"         : Sk.builtin.ValueError,
     "Exception"          : Sk.builtin.Exception,
@@ -89,6 +90,7 @@ Sk.builtins = {
     "bytearray" : Sk.builtin.bytearray,
     "callable"  : Sk.builtin.callable,
     "delattr"   : Sk.builtin.delattr,
+    "__import__": Sk.builtin.__import__,
     "eval_$rn$" : Sk.builtin.eval_,
     "compile"   : Sk.builtin.compile,
     "exec"      : Sk.builtin.exec,
@@ -108,7 +110,8 @@ Sk.builtins = {
     "apply_$rn$": Sk.builtin.apply_,
     "buffer"    : Sk.builtin.buffer,
     "coerce"    : Sk.builtin.coerce,
-    "intern"    : Sk.builtin.intern
+    "intern"    : Sk.builtin.intern,
+    //"classmethod": Sk.builtin.classmethod,
 };
 
 Sk.setupObjects = function (py3) {

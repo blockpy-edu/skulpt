@@ -649,6 +649,7 @@ class Sandbox(DataSandbox):
             with self.trace._as_filename(as_filename, code):
                 exec(compiled_code, self.data)
         except Exception as user_exception:
+            print(user_exception)
             self._stop_patches()
             info = sys.exc_info()
             self._capture_exception(user_exception, info,

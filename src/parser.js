@@ -360,7 +360,7 @@ Sk.parse = function parse (filename, input) {
                 endmarker_seen = true;
             }
         }
-    });
+    }, filename);
 
     if (!endmarker_seen) {
         throw new Sk.builtin.SyntaxError("incomplete input", this.filename);

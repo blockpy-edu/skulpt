@@ -2289,6 +2289,7 @@ var $builtinmodule = function (name) {
         addModuleMethod(Screen, _module, "$window_width", getScreen);
         addModuleMethod(Screen, _module, "$window_height", getScreen);
         addModuleMethod(Screen, _module, "$bgpic", getScreen);
+        addModuleMethod(Screen, _module, "$setup", getScreen);
 
         _module.Turtle = Sk.misceval.buildClass(_module, TurtleWrapper, "Turtle", []);
         _module.Screen = Sk.misceval.buildClass(_module, ScreenWrapper, "Screen", []);

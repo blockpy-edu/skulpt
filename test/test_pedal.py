@@ -33,6 +33,11 @@ if ast.find_all("Assign"):
     print(ast.find_all("Assign"))
 click("Found assignments")
 
+from pedal.sandbox.sandbox import run
+
+student = run()
+print(student)
+
 from pedal.resolvers import simple
 click("Imported resolver")
 

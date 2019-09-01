@@ -846,6 +846,7 @@ Sk.builtin.setattr = function setattr (obj, pyName, value) {
             throw new Sk.builtin.TypeError("attribute name must be string");
         }
         jsName = pyName.$jsstr();
+
         if (obj.tp$setattr) {
             obj.tp$setattr(new Sk.builtin.str(Sk.fixReservedWords(jsName)), value);
         } else {
@@ -1424,6 +1425,9 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
     }
     if (!new_globals_copy.__name__) {
         new_globals_copy.__name__ = Sk.ffi.remapToPy(filename);
+    }
+    if (!new_globals_copy.__package__) {
+        new_globals_copy.__package__ = Sk.builtin.none.none$;
     }
     var backupGlobals = Sk.globals,
         backupSysmodules = new Sk.builtin.dict([]);

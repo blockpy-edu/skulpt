@@ -1,0 +1,50 @@
+Sk.builtin.classmethod = function classmethod(f) {
+    if (!(this instanceof Sk.builtin.classmethod)) {
+        Sk.builtin.pyCheckArgsLen("classmethod", arguments.length, 1, 1);
+        return new Sk.builtin.classmethod(f);
+    }
+    this["$d"] = new Sk.builtin.dict([]);
+    this["$d"].mp$ass_subscript(Sk.builtin.str("f"), f);
+    this["$d"].mp$ass_subscript(Sk.builtin.str("__dict__"), this.$d);
+    var __get__ = new Sk.builtin.func(function __get__(self, obj, klass) {
+        Sk.builtin.pyCheckArgsLen("__get__", arguments.length, 1, 2, false, true);
+        if (obj === Sk.builtin.none.none$ && klass === Sk.builtin.none.none$) {
+            throw new Sk.builtin.TypeError("__get__(None, None) is invalid");
+        }
+
+        if (Sk.builtin.checkNone(klass)) {
+            klass = Sk.builtin.type(obj);
+        }
+
+        var newFunction = new Sk.builtins.function(function(args) {
+            var f = Sk.abstr.gattr(self, Sk.builtin.str("f"), true);
+            var fArgs = [klass];
+            Sk.misceval.iterFor(Sk.abstr.iter(args), function (e) {
+                fArgs.push(e);
+            });
+            return Sk.misceval.callsimArray(f, fArgs);
+        });
+        newFunction.co_name = new Sk.builtin["str"]("newfunc");
+        newFunction.co_varnames = [];
+        newFunction.co_varargs = 1;
+
+        return newFunction;
+    });
+    __get__.co_name = new Sk.builtin.str("__get__");
+    __get__.$defaults = [Sk.builtin.none.none$];
+    __get__.co_varnames = ["self", "obj", "klass"];
+    this["$d"].mp$ass_subscript(Sk.builtin.str("__get__"), __get__);
+    this.__class__ = Sk.builtin.classmethod;
+    //return Sk.misceval.buildClass({}, this, "classmethod", [Sk.builtin.object]);
+    return this;
+};
+Sk.builtin.classmethod.co_name = new Sk.builtin.str("__init__");
+Sk.builtin.classmethod.co_varnames = ["f"];
+Sk.abstr.setUpInheritance("classmethod", Sk.builtin.classmethod, Sk.builtin.object);
+
+/*var fields = new Sk.builtin.dict([]);
+fields.mp$ass_subscript(Sk.builtin.str("__module__"), new Sk.builtin.str("classmethod"));
+Sk.builtin.classmethod = Sk.builtin.type(new Sk.builtin.str("classmethod"), new Sk.builtin.tuple([Sk.builtin.object]), fields);*/
+//Sk.builtin.classmethod = Sk.builtin.type.makeIntoTypeObj("classmethod", Sk.builtin.classmethod);
+
+Sk.exportSymbol("Sk.builtin.classmethod", Sk.builtin.classmethod);

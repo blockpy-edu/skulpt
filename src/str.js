@@ -281,7 +281,7 @@ Sk.builtin.str.prototype["join"] = new Sk.builtin.func(function (self, seq) {
     return new Sk.builtin.str(arrOfStrs.join(self.v));
 });
 
-Sk.builtin.str.prototype["split"] = new Sk.builtin.func(function (self, on, howmany) {
+var genericsSplit = function genericsSplit(self, on, howmany) {
     var splits;
     var index;
     var match;
@@ -339,6 +339,23 @@ Sk.builtin.str.prototype["split"] = new Sk.builtin.func(function (self, on, howm
     }
 
     return new Sk.builtin.list(result);
+};
+
+Sk.builtin.str.prototype["split"] = new Sk.builtin.func(function (self, sep, maxsplit) {
+    return genericsSplit(self, sep, maxsplit);
+});
+
+Sk.builtin.str.prototype["rsplit"] = new Sk.builtin.func(function (self, sep, maxsplit) {
+    var allSplit = genericsSplit(self, sep, undefined);
+    if (maxsplit !== undefined) {
+        if (!Sk.builtin.checkInt(maxsplit)) {
+            throw new Sk.builtin.TypeError("an integer is required");
+        }
+        // TODO
+        return allSplit;
+    } else {
+        return allSplit;
+    }
 });
 
 Sk.builtin.str.prototype["strip"] = new Sk.builtin.func(function (self, chars) {

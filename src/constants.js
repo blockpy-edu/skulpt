@@ -134,3 +134,10 @@ var builtinNames = [
 for (var i = 0; i < builtinNames.length; i++) {
     Sk.builtin[builtinNames[i]].co_name = new Sk.builtin.str(builtinNames[i]);
 }
+
+Sk.builtin.str.prototype["split"].co_varnames = ["sep", "maxsplit"];
+Sk.builtin.str.prototype["split"].$defaults = [Sk.builtin.none.none$, Sk.builtin.int_(-1)];
+Sk.builtin.str.prototype["split"].co_kwargs = true;
+Sk.builtin.str.prototype["rsplit"].co_varnames = ["sep", "maxsplit"];
+Sk.builtin.str.prototype["rsplit"].$defaults = [Sk.builtin.none.none$, Sk.builtin.int_(-1)];
+Sk.builtin.str.prototype["rsplit"].co_kwargs = true;

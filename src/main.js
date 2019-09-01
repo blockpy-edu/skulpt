@@ -50,6 +50,7 @@ require("./enumerate.js");
 require("./filter.js");
 require("./zip.js");
 require("./map.js");
+//require("./classmethod.js");
 require("./token.js");
 require("./tokenize.js");
 require("../gen/parse_tables.js");
