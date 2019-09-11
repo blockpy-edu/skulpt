@@ -7,6 +7,15 @@
 Sk.sysmodules = new Sk.builtin.dict([]);
 Sk.realsyspath = undefined;
 
+Sk.getCurrentSysModules = function() {
+    var sys = Sk.sysmodules.mp$lookup(Sk.builtin.str("sys"));
+    if (sys === undefined) {
+        return Sk.sysmodules;
+    } else {
+        return sys.tp$getattr(Sk.builtin.str("modules"));
+    }
+};
+
 /**
  * @param {string} name to look for
  * @param {string} ext extension to use (.py or .js)
@@ -115,6 +124,42 @@ Sk.doOneTimeInitialization = function (canSuspend) {
         }
     }
 
+    // Mock builtin module
+    var modname = new Sk.builtin.str("builtins");
+    Sk.builtins["__builtins__"] = new Sk.builtin.module();
+    Sk.builtins["__builtins__"].$d = {
+        "__name__": modname,
+        "__doc__":new Sk.builtin.str("Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices."),
+        "__package__": Sk.builtin.str.$emptystr
+    };
+    Sk.builtins["__builtins__"].overrides = new Sk.builtin.dict([]);
+    Sk.builtins["__builtins__"].tp$getattr = function(pyName, canSuspend) {
+        var jsName = Sk.ffi.remapToJs(pyName);
+        var overrides = this.overrides;
+        if (jsName === "__dict__") {
+            return this;
+        } else if (jsName === "copy") {
+            return function(k, d) {
+                return overrides.copy.tp$call([overrides]);
+            };
+        } else if (jsName === "get") {
+            return function(k, d) {
+                return overrides.get.tp$call([overrides, k, d]);
+            };
+        }
+    };
+    Sk.builtins["__builtins__"].tp$getitem = function(key) {
+        var overridden = this.overrides.mp$lookup(key);
+        if (overridden !== undefined) {
+            return overridden;
+        }
+        var jsName = Sk.ffi.remapToJs(key);
+        if (Sk.builtins[jsName] !== undefined) {
+            return Sk.builtins[jsName];
+        }
+        throw new Sk.builtin.NameError("name '" + Sk.unfixReserved(name) + "' is not defined");
+    };
+    Sk.getCurrentSysModules().mp$ass_subscript(modname, Sk.builtins["__builtins__"]);
 
     for (var file in Sk.internalPy.files) {
         var fileWithoutExtension = file.split(".")[0].split("/")[1];
@@ -198,10 +243,10 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
 
     // if leaf is already in sys.modules, early out
     try {
-        prev = Sk.sysmodules.mp$subscript(new Sk.builtin.str(modname));
+        prev = Sk.getCurrentSysModules().mp$subscript(new Sk.builtin.str(modname));
         // if we're a dotted module, return the top level, otherwise ourselves
         if (modNameSplit.length > 1) {
-            return Sk.sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + modNameSplit[0]));
+            return Sk.getCurrentSysModules().mp$subscript(new Sk.builtin.str(absolutePackagePrefix + modNameSplit[0]));
         } else {
             return prev;
         }
@@ -230,7 +275,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
             if (!topLevelModuleToReturn) {
                 return undefined;
             }
-            parentModule = Sk.sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + parentModName));
+            parentModule = Sk.getCurrentSysModules().mp$subscript(new Sk.builtin.str(absolutePackagePrefix + parentModName));
             searchFileName = modNameSplit[modNameSplit.length-1];
             searchPath = parentModule.tp$getattr(Sk.builtin.str.$path);
         }
@@ -300,7 +345,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         }
 
         // Now we know this module exists, we can add it to the cache
-        Sk.sysmodules.mp$ass_subscript(new Sk.builtin.str(modname), module);
+        Sk.getCurrentSysModules().mp$ass_subscript(new Sk.builtin.str(modname), module);
 
         module.$js = co.code; // todo; only in DEBUG?
         finalcode = co.code;
@@ -389,6 +434,9 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
             }
         }
 
+        // TODO: answer.py.instructor_append
+        // Somehow adding it into the name of the module
+
         if (topLevelModuleToReturn) {
             // if we were a dotted name, then we want to return the top-most
             // package. we store ourselves into our parent as an attribute
@@ -468,7 +516,7 @@ Sk.importBuiltinWithBody = function (name, dumpJS, body, canSuspend) {
 };
 
 Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
-    //console.log("Importing: ", JSON.stringify(name), JSON.stringify(fromlist), level);
+
     //if (name == "") { debugger; }
 
     // Save the Sk.globals variable importModuleInternal_ may replace it when it compiles
@@ -507,7 +555,7 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
             relativeToPackageName = relativeToPackageNames.join(".");
         }
         try {
-            relativeToPackage = Sk.sysmodules.mp$subscript(new Sk.builtin.str(relativeToPackageName));
+            relativeToPackage = Sk.getCurrentSysModules().mp$subscript(new Sk.builtin.str(relativeToPackageName));
         } catch(e) {
             relativeToPackageName = undefined;
         }
@@ -554,7 +602,7 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
             var leafModule;
             var importChain;
 
-            leafModule = Sk.sysmodules.mp$subscript(
+            leafModule = Sk.getCurrentSysModules().mp$subscript(
                 new Sk.builtin.str((relativeToPackageName || "") +
                                     ((relativeToPackageName && name) ? "." : "") +
                                     name)
@@ -603,3 +651,4 @@ Sk.exportSymbol("Sk.importMainWithBody", Sk.importMainWithBody);
 Sk.exportSymbol("Sk.importBuiltinWithBody", Sk.importBuiltinWithBody);
 Sk.exportSymbol("Sk.builtin.__import__", Sk.builtin.__import__);
 Sk.exportSymbol("Sk.importStar", Sk.importStar);
+Sk.exportSymbol("Sk.getCurrentSysModules", Sk.getCurrentSysModules);

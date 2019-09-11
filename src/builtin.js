@@ -1429,29 +1429,43 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
     if (!new_globals_copy.__package__) {
         new_globals_copy.__package__ = Sk.builtin.none.none$;
     }
-    var backupGlobals = Sk.globals,
-        backupSysmodules = new Sk.builtin.dict([]);
+    var backupGlobals = Sk.globals;
+    /*var backupSysmodules = new Sk.builtin.dict([]);
     Sk.misceval.iterFor(Sk.sysmodules.tp$iter(), function(key) {
         var value = Sk.sysmodules.mp$subscript(key);
         backupSysmodules.mp$ass_subscript(key, value);
-    });
+    });*/
     Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
     //Sk.importMainWithBody(filename, false, python_code, true);
     var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
     var modname = name;
-    Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true)
+    var caughtError = null;
+    /*var friendlyKeys = [];
+    Sk.misceval.iterFor(Sk.sysmodules.tp$iter(), function(key) {
+        friendlyKeys.push(key.v);
+    });
+    console.log("LOADING", friendlyKeys);*/
+    try {
+        Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true)
+    } catch (e) {
+        caughtError = e;
+    }
     Sk.globals = backupGlobals;
-    Sk.misceval.iterFor(backupSysmodules.tp$iter(), function(key) {
+    /*Sk.misceval.iterFor(backupSysmodules.tp$iter(), function(key) {
         var value = backupSysmodules.mp$subscript(key);
         Sk.sysmodules.mp$ass_subscript(key, value);
-    });
+    });*/
+    Sk.getCurrentSysModules().mp$del_subscript(Sk.builtin.str(name));
     for (var key in new_globals_copy) {
         if (new_globals_copy.hasOwnProperty(key)) {
             var pykey = Sk.ffi.remapToPy(key);
-            Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key])
+            Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
         }
     }
     Sk.retainGlobals = backupRG;
+    if (caughtError !== null) {
+        throw caughtError;
+    }
 };
 
 Sk.builtin.frozenset = function frozenset () {

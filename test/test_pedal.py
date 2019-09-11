@@ -37,6 +37,7 @@ from pedal.sandbox.sandbox import run
 
 student = run()
 print(student)
+click("Ran sandbox")
 
 from pedal.resolvers import simple
 click("Imported resolver")

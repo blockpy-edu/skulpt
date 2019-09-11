@@ -24,7 +24,7 @@ var $builtinmodule = function (name) {
 
     sys.path = Sk.realsyspath;
     
-    sys.platform = Sk.builtin.str('skulpt');
+    sys.platform = Sk.builtin.str("skulpt");
 
     sys.getExecutionLimit = new Sk.builtin.func(function () {
         if (Sk.execLimit === null) {
@@ -75,7 +75,6 @@ var $builtinmodule = function (name) {
     sys.exc_info = new Sk.builtin.func(function () {
         if (Sk.err) {
             var type = Sk.err.ob$type;
-            var value = Sk.builtin.none.none$;
             var traceback = new Sk.builtin.traceback.fromList(Sk.err.traceback);
             //print(traceback.tp$setattr)
             //traceback.tp$setattr('tb_lineno', traceback.tb_lineno);

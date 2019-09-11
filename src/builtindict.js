@@ -42,6 +42,7 @@ Sk.builtins = {
     "KeyError"           : Sk.builtin.KeyError,
     "TypeError"          : Sk.builtin.TypeError,
     "NameError"          : Sk.builtin.NameError,
+    "OSError"            : Sk.builtin.OSError,
     "IOError"            : Sk.builtin.IOError,
     "NotImplementedError": Sk.builtin.NotImplementedError,
     "StandardError"      : Sk.builtin.StandardError,

@@ -32,6 +32,9 @@ Sk.builtin.BaseException = function (args) {
     this.traceback = [];
     // TODO: Hack, this exception isn't guaranteed to be thrown!
     this.err = Sk.err;
+    this.__cause__ = Sk.builtin.none.none$;
+    this.__context__ = Sk.builtin.none.none$;
+    this.__suppress_context__ = Sk.builtin.none.none$;
     //Sk.err = this;
 
     // For errors occurring during normal execution, the line/col/etc
@@ -58,7 +61,14 @@ Sk.builtin.BaseException.prototype.tp$str = function () {
         ret += ": " + (this.args.v.length > 0 ? this.args.v[0].v : "");
     }
     if (this.traceback.length !== 0) {
-        ret += " on line " + this.traceback[0].lineno;
+        var lineno = this.traceback[0].lineno;
+        ret += " on line ";
+        console.log(lineno);
+        if (Sk.builtin.checkInt(lineno)) {
+            ret += lineno.v !== undefined ? lineno.v : lineno;
+        } else {
+            ret += lineno;
+        }
     } else {
         ret += " at <unknown>";
     }
@@ -91,6 +101,36 @@ Sk.builtin.BaseException.prototype.toString = function () {
 Sk.builtin.BaseException.prototype.args = {
     "tp$descr_get": function(self, clstype) {
         return self.args;
+    },
+    "tp$descr_set": function(self, value) {
+        self.args = value;
+    }
+};
+
+Sk.builtin.BaseException.prototype.__cause__ = {
+    "tp$descr_get": function(self, clstype) {
+        return self.__cause__;
+    },
+    "tp$descr_set": function(self, value) {
+        self.__cause__ = value;
+    }
+};
+
+Sk.builtin.BaseException.prototype.__context__ = {
+    "tp$descr_get": function(self, clstype) {
+        return self.__context__;
+    },
+    "tp$descr_set": function(self, value) {
+        self.__context__ = value;
+    }
+};
+
+Sk.builtin.BaseException.prototype.__suppress_context__ = {
+    "tp$descr_get": function(self, clstype) {
+        return self.__suppress_context__;
+    },
+    "tp$descr_set": function(self, value) {
+        self.__suppress_context__ = value;
     }
 };
 
@@ -315,6 +355,8 @@ Sk.builtin.SyntaxError.prototype.tp$getattr = function (name) {
 
         if (_name === "lineno") {
             return this[_name];
+        } else if (_name == "__name__") {
+            return Sk.builtin.str("SyntaxError");
         }
     }
 
@@ -338,6 +380,24 @@ Sk.builtin.RuntimeError = function (args) {
 };
 Sk.abstr.setUpInheritance("RuntimeError", Sk.builtin.RuntimeError, Sk.builtin.StandardError);
 Sk.exportSymbol("Sk.builtin.RuntimeError", Sk.builtin.RuntimeError);
+
+
+/**
+ * @constructor
+ * @extends Sk.builtin.StandardError
+ * @param {...*} args
+ */
+Sk.builtin.OSError = function (args) {
+    var o;
+    if (!(this instanceof Sk.builtin.OSError)) {
+        o = Object.create(Sk.builtin.OSError.prototype);
+        o.constructor.apply(o, arguments);
+        return o;
+    }
+    Sk.builtin.StandardError.apply(this, arguments);
+};
+Sk.abstr.setUpInheritance("OSError", Sk.builtin.OSError, Sk.builtin.StandardError);
+Sk.exportSymbol("Sk.builtin.OSError", Sk.builtin.OSError);
 
 
 /**
@@ -600,11 +660,12 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
             case "f_code": return Sk.builtin.none.none$;
             case "f_globals": return Sk.builtin.none.none$;
             case "f_lasti": return Sk.builtin.none.none$;
-            case "f_lineno": return this.trace.lineno;
+            case "f_lineno": return Sk.ffi.remapToPy(this.trace.lineno);
+            case "f_line": return Sk.ffi.remapToPy(this.trace.source);
             case "f_locals": return Sk.builtin.none.none$;
             case "f_trace": return Sk.builtin.none.none$;
-            case "co_filename": return this.trace.filename;
-            case "co_name": return this.trace.scope;
+            case "co_filename": return Sk.ffi.remapToPy(this.trace.filename);
+            case "co_name": return Sk.ffi.remapToPy(this.trace.scope);
         }
     }
 
@@ -630,6 +691,7 @@ Sk.builtin.traceback = function(trace) {
     this.tb_lineno = new Sk.builtin.int_(trace.lineno);
     // TODO: Hack, you know this isn't right
     this.tb_frame = new Sk.builtin.frame(trace);
+    this.tb_source = new Sk.builtin.str(trace.source);
     
     //tb_frame, tb_lasti, tb_lineno, tb_next
     
@@ -660,6 +722,7 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
 
         switch (_name) {
             case "tb_lineno":
+            case "tb_source":
             case "tb_frame":
             case "tb_next": return this[_name];
         }

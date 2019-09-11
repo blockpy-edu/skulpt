@@ -103,18 +103,20 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
     var i;
     var col_offset;
     var lineno;
+    var sourceLine;
     if (this.source) {
         lineno = ast.lineno;
         col_offset = ast.col_offset;
-        out("\n//\n// line ", lineno, ":\n// ", this.getSourceLine(lineno), "\n// ");
+        sourceLine = this.getSourceLine(lineno);
+        /*out("\n//\n// line ", lineno, ":\n// ", sourceLine, "\n// ");
         for (i = 0; i < col_offset; ++i) {
             out(" ");
         }
-        out("^\n//\n");
+        out("^\n//\n");*/
 
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         out("\n$currLineNo=Sk.currLineNo=",lineno, ";$currColNo=Sk.currColNo=",col_offset,";");
-        out("Sk.currFilename='",this.filename,"';");
+        out("Sk.currFilename='",this.filename,"';$currSource=",JSON.stringify(sourceLine),";");
         // Do not trace the standard library
         if (shouldStep && (!this.filename || 
                            !this.filename.startsWith("src/lib/"))) {
@@ -331,7 +333,7 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
         }
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "if ($dateNow - Sk.lastYield > Sk.yieldLimit) {";
-            output += "var $susp = $saveSuspension({data: {type: 'Sk.yield'}, resume: function() {}}, '"+this.filename+"',$currLineNo,$currColNo);";
+            output += "var $susp = $saveSuspension({data: {type: 'Sk.yield'}, resume: function() {}}, '"+this.filename+"',$currLineNo,$currColNo, $currSource);";
             output += "$susp.$blk = $blk;";
             output += "$susp.optional = true;";
             output += "return $susp;";
@@ -378,9 +380,9 @@ Compiler.prototype._checkSuspension = function(e) {
         this._jump(retblk);
         this.setBlock(retblk);
 
-        e = e || {lineno: "$currLineNo", col_offset: "$currColNo"};
+        e = e || {lineno: "$currLineNo", col_offset: "$currColNo", source: "$currSource"};
 
-        out ("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+"); }");
+        out ("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+","+e.source+"); }");
 
         this.u.doesSuspend = true;
         this.u.tempsToSave = this.u.tempsToSave.concat(this.u.localtemps);
@@ -1125,7 +1127,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                  "var $wakeFromSuspension = function() {" +
                     "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;" +
                     "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
-                    "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now();" +
+                    "$currLineNo=susp.$lineno;$currColNo=susp.$colno;$currSource=susp.$source;Sk.lastYield=Date.now();" +
                     (hasCell?"$cell=susp.$cell;":"");
 
     for (i = 0; i < localsToSave.length; i++) {
@@ -1142,11 +1144,11 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                 // Close out function
                 ";");
 
-    output += "var $saveSuspension = function($child, $filename, $lineno, $colno) {" +
+    output += "var $saveSuspension = function($child, $filename, $lineno, $colno, $source) {" +
                 "var susp = new Sk.misceval.Suspension(); susp.child=$child;" +
                 "susp.resume=function(){"+unit.scopename+".$wakingSuspension=susp; return "+unit.scopename+"("+(unit.ste.generator?"$gen":"")+"); };" +
                 "susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
-                "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;" +
+                "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;susp.source=$source;" +
                 "susp.optional=susp.child.optional;" +
                 (hasCell ? "susp.$cell=$cell;" : "");
 
@@ -1282,7 +1284,7 @@ Compiler.prototype.cwhile = function (s) {
             var suspType = "Sk.delay";
             var debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
             out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
-                "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
+                "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+","+s.source+");",
                 "$susp.$blk = "+debugBlock+";",
                 "$susp.optional = true;",
                 "return $susp;",
@@ -1350,7 +1352,7 @@ Compiler.prototype.cfor = function (s) {
         var suspType = "Sk.delay";
         var debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
         out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
-            "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
+            "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+","+s.source+");",
             "$susp.$blk = "+debugBlock+";",
             "$susp.optional = true;",
             "return $susp;",
@@ -1901,7 +1903,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
 
     // note special usage of 'this' to avoid having to slice globals into
     // all function invocations in call
-    this.u.varDeclsCode += "var $blk=" + entryBlock + ",$exc=[],$loc=" + locals + cells + ",$gbl=this,$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
+    this.u.varDeclsCode += "var $blk=" + entryBlock + ",$exc=[],$loc=" + locals + cells + ",$gbl=this,$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
     }
@@ -2254,7 +2256,7 @@ Compiler.prototype.cclass = function (s) {
 
     this.u.prefixCode = "var " + scopename + "=(function $" + s.name.v + "$class_outer($globals,$locals,$cell){var $gbl=$globals,$loc=$locals;$free=$globals;";
     this.u.switchCode += "(function $" + s.name.v + "$_closure($cell){";
-    this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
+    this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.switchCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
@@ -2339,7 +2341,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
     if (Sk.debugging && this.u.canSuspend) {
         debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
         out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
-            "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
+            "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+","+s.source+");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
             "return $susp;",
@@ -2695,7 +2697,7 @@ Compiler.prototype.cmod = function (mod) {
         "var $gbl = $forcegbl || {}, $blk=" + entryBlock +
         ",$exc=[],$loc=$gbl,$cell={},$err=undefined;" +
         "$loc.__file__=new Sk.builtins.str('" + this.filename +
-        "');var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
+        "');var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
@@ -2765,6 +2767,7 @@ Compiler.prototype.handleTraceback = function(doContinue, scopeName) {
         "}Sk.err=err;err.traceback.push({"+
             "lineno:$currLineNo,"+
             "colno:$currColNo,"+
+            "source:$currSource,"+
             "filename:'"+this.filename+"'," +
             "scope:'"+scopeName+"'"+
         "});"+
@@ -2793,6 +2796,7 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     // compilers flags, later we can add other ones too
     var flags = {};
     flags.cf_flags = parse.flags;
+
 
     var st = Sk.symboltable(ast, filename);
     var c = new Compiler(filename, st, flags.cf_flags, canSuspend, annotate ? source : false); // todo; CO_xxx

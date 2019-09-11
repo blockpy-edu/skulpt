@@ -7,6 +7,8 @@ from pedal.sandbox.exceptions import SandboxException
 from pedal.sandbox.sandbox import DataSandbox
 from pedal.assertions.setup import _setup_assertions, AssertionException
 
+# TODO: Allow bundling of assertions to make a table
+
 iterable = lambda obj: hasattr(obj,'__iter__') or hasattr(obj,'__getitem__')
 
 _MAX_LENGTH = 80
@@ -565,7 +567,11 @@ def assertHasFunction(obj, function, args=None, returns=None,
     if isinstance(obj, DataSandbox):
         comparison = lambda o, f: f in o.data
     else:
-        comparison = lambda o, f: f in hasattr(o, f)
+        def comparison(o, f):
+            try:
+                return f in o
+            except:
+                return hasattr(o, f)
     if not _basic_assertion(obj, function,
                             comparison,
                             "Could not find function {}{}",
@@ -576,7 +582,10 @@ def assertHasFunction(obj, function, args=None, returns=None,
     if isinstance(obj, DataSandbox):
         student_function = obj.data[function]
     else:
-        student_function = getattr(obj, function)
+        try:
+            student_function = obj[function]
+        except:
+            student_function = getattr(obj, function)
     if _basic_assertion(student_function, function,
                             lambda l, r: callable(l),
                             "The value {} is in the variable {}, and that value is not a callable function.",

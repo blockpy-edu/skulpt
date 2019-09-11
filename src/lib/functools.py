@@ -1,7 +1,10 @@
 from reprlib import recursive_repr
 
-def wraps(wrapper, wrapped):
-    return wrapper
+def wraps(wrapped):
+    def make_wrapper(wrapper):
+        wrapper.__name__ = wrapped.__name__
+        return wrapper
+    return make_wrapper
 
 # Purely functional, no descriptor behaviour
 class partial:

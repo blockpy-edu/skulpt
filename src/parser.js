@@ -313,14 +313,14 @@ Sk.parse = function parse (filename, input) {
      * @returns {function(): string}
      */
     function readline(input) {
-        var lines = input.split("\n").reverse().map(function (l) { return l + "\n"; });
+        var lines = input.split("\n").reverse();//.map(function (l) { return l + "\n"; });
 
         return function() {
             if (lines.length === 0) {
                 throw new Sk.builtin.Exception("EOF");
             }
 
-            return lines.pop();
+            return lines.pop()+"\n";
         };
     }
 

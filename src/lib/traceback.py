@@ -80,7 +80,7 @@ def extract_tb(tb, limit=None):
     trace.  The line is a string with leading and trailing
     whitespace stripped; if the source is not available it is None.
     """
-    return extract(walk_tb(tb), limit=limit)
+    return StackSummary.extract(walk_tb(tb), limit=limit)
 
 #
 # Exception formatting and output.
@@ -249,7 +249,7 @@ class FrameSummary:
       mapping the name to the repr() of the variable.
     """
 
-    __slots__ = ('filename', 'lineno', 'name', '_line', 'locals')
+    __slots__ = ('filename', 'lineno', 'name', 'line', 'locals')
 
     def __init__(self, filename, lineno, name, *, lookup_line=True,
             locals=None, line=None):
@@ -266,8 +266,8 @@ class FrameSummary:
         self.lineno = lineno
         self.name = name
         self._line = line
-        if lookup_line:
-            self.line
+        #if lookup_line:
+        #    self.line
         self.locals = {k: repr(v) for k, v in locals.items()} if locals else None
 
     def __eq__(self, other):
@@ -277,14 +277,14 @@ class FrameSummary:
                     self.name == other.name and
                     self.locals == other.locals)
         if isinstance(other, tuple):
-            return (self.filename, self.lineno, self.name, self.line) == other
+            return (self.filename, self.lineno, self.name, self._line) == other
         return NotImplemented
 
     def __getitem__(self, pos):
-        return (self.filename, self.lineno, self.name, self.line)[pos]
+        return (self.filename, self.lineno, self.name, self._line)[pos]
 
     def __iter__(self):
-        return iter([self.filename, self.lineno, self.name, self.line])
+        return iter([self.filename, self.lineno, self.name, self._line])
 
     def __repr__(self):
         return "<FrameSummary file {filename}, line {lineno} in {name}>".format(
@@ -293,11 +293,11 @@ class FrameSummary:
     def __len__(self):
         return 4
 
-    @property
-    def line(self):
-        if self._line is None:
-            self._line = linecache.getline(self.filename, self.lineno).strip()
-        return self._line
+    #@property
+    #def line(self):
+    #    if self._line is None:
+    #        self._line = linecache.getline(self.filename, self.lineno).strip()
+    #    return self._line
 
 
 def walk_stack(f):
@@ -327,56 +327,56 @@ def walk_tb(tb):
 _RECURSIVE_CUTOFF = 3 # Also hardcoded in traceback.c.
 
 
-def extract(frame_gen, limit=None, lookup_lines=True, capture_locals=False):
-    """Create a StackSummary from a traceback or stack object.
-
-    :param frame_gen: A generator that yields (frame, lineno) tuples to
-        include in the stack.
-    :param limit: None to include all frames or the number of frames to
-        include.
-    :param lookup_lines: If True, lookup lines for each frame immediately,
-        otherwise lookup is deferred until the frame is rendered.
-    :param capture_locals: If True, the local variables from each frame will
-        be captured as object representations into the FrameSummary.
-    """
-    if limit is None:
-        limit = getattr(sys, 'tracebacklimit', None)
-        if limit is not None and limit < 0:
-            limit = 0
-    if limit is not None:
-        if limit >= 0:
-            frame_gen = islice(frame_gen, limit)
-        else:
-            frame_gen = collections.deque(frame_gen, maxlen=-limit)
-
-    result = StackSummary()
-    fnames = set()
-    for f, lineno in frame_gen:
-        co = f.f_code
-        filename = f.co_filename #co.co_filename
-        name = f.co_name #co.co_name
-
-        fnames.add(filename)
-        linecache.lazycache(filename, f.f_globals)
-        # Must defer line lookups until we have called checkcache.
-        if capture_locals:
-            f_locals = f.f_locals
-        else:
-            f_locals = None
-        result.append(FrameSummary(
-            filename, lineno, name, lookup_line=False, locals=f_locals))
-    for filename in fnames:
-        linecache.checkcache(filename)
-    # If immediate lookup was desired, trigger lookups now.
-    if lookup_lines:
-        for f in result:
-            f.line
-    return result
-
 class StackSummary(list):
     """A stack of frames."""
 
+    @staticmethod
+    def extract(frame_gen, limit=None, lookup_lines=True, capture_locals=False):
+        """Create a StackSummary from a traceback or stack object.
 
+        :param frame_gen: A generator that yields (frame, lineno) tuples to
+            include in the stack.
+        :param limit: None to include all frames or the number of frames to
+            include.
+        :param lookup_lines: If True, lookup lines for each frame immediately,
+            otherwise lookup is deferred until the frame is rendered.
+        :param capture_locals: If True, the local variables from each frame will
+            be captured as object representations into the FrameSummary.
+        """
+        if limit is None:
+            limit = getattr(sys, 'tracebacklimit', None)
+            if limit is not None and limit < 0:
+                limit = 0
+        if limit is not None:
+            if limit >= 0:
+                frame_gen = list(frame_gen)[:limit]
+            else:
+                frame_gen = collections.deque(frame_gen, maxlen=-limit)
+
+        result = StackSummary()
+        fnames = set()
+        for f, lineno in frame_gen:
+            co = f.f_code
+            filename = f.co_filename  # co.co_filename
+            name = f.co_name  # co.co_name
+            line = f.f_line
+
+            fnames.add(filename)
+            # linecache.lazycache(filename, f.f_globals)
+            # Must defer line lookups until we have called checkcache.
+            if capture_locals:
+                f_locals = f.f_locals
+            else:
+                f_locals = None
+            result.append(FrameSummary(
+                filename, lineno, name, line=line, lookup_line=False, locals=f_locals))
+        # for filename in fnames:
+        #    linecache.checkcache(filename)
+        # If immediate lookup was desired, trigger lookups now.
+        # if lookup_lines:
+        #    for f in result:
+        #        f.line
+        return result
 
     @classmethod
     def from_list(klass, a_list):
@@ -434,8 +434,8 @@ class StackSummary(list):
             row = []
             row.append('  File "{}", line {}, in {}\n'.format(
                 frame.filename, frame.lineno, frame.name))
-            if frame.line:
-                row.append('    {}\n'.format(frame.line.strip()))
+            if frame._line:
+                row.append('    {}\n'.format(frame._line.strip()))
             if frame.locals:
                 for name, value in sorted(frame.locals.items()):
                     row.append('    {name} = {value}\n'.format(name=name, value=value))
@@ -532,22 +532,22 @@ class TracebackException:
             self.text = exc_value.text
             self.offset = exc_value.offset
             self.msg = exc_value.msg
-        if lookup_lines:
-            self._load_lines()
+        #if lookup_lines:
+        #    self._load_lines()
 
     @classmethod
     def from_exception(cls, exc, *args, **kwargs):
         """Create a TracebackException from an exception."""
         return cls(type(exc), exc, exc.__traceback__, *args, **kwargs)
 
-    def _load_lines(self):
-        """Private API. force all lines in the stack to be loaded."""
-        for frame in self.stack:
-            frame.line
-        if self.__context__:
-            self.__context__._load_lines()
-        if self.__cause__:
-            self.__cause__._load_lines()
+    #def _load_lines(self):
+    #    """Private API. force all lines in the stack to be loaded."""
+    #    for frame in self.stack:
+    #        frame.line
+    #    if self.__context__:
+    #        self.__context__._load_lines()
+    #    if self.__cause__:
+    #        self.__cause__._load_lines()
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -572,8 +572,11 @@ class TracebackException:
             yield _format_final_exc_line(None, self._str)
             return
 
-        stype = self.exc_type.__qualname__
-        smod = self.exc_type.__module__
+        stype = self.exc_type.__name__
+        if hasattr(self.exc_type, "__module__"):
+            smod = self.exc_type.__module__
+        else:
+            smod = "builtins"
         if smod not in ("__main__", "builtins"):
             stype = smod + '.' + stype
 
@@ -600,7 +603,7 @@ class TracebackException:
         msg = self.msg or "<no detail available>"
         yield "{}: {}\n".format(stype, msg)
 
-    def format(self, *, chain=True):
+    def format(self, chain=True):
         """Format the exception.
 
         If chain is not *True*, *__cause__* and *__context__* will not be formatted.

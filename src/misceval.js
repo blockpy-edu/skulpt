@@ -694,13 +694,21 @@ Sk.exportSymbol("Sk.misceval.print_", Sk.misceval.print_);
  * @param {Object=} other generally globals
  */
 Sk.misceval.loadname = function (name, other) {
-    var bi;
+    var builtinModule, bi;
     var v = other[name];
     if (v !== undefined) {
         if (typeof v === "function" && v["$d"] === undefined && v["tp$name"] === undefined) {
             return v();
         }
         return v;
+    }
+
+    // Check if we've overridden the builtin via the builtin's module
+    if (other["__builtins__"] !== undefined) {
+        builtinModule = other["__builtins__"].mp$lookup(new Sk.builtin.str(name));
+        if (builtinModule !== undefined) {
+            return builtinModule;
+        }
     }
 
     bi = Sk.builtins[name];

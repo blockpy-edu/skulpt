@@ -10,11 +10,11 @@ def _importer(target):
     components = target.split('.')
     import_path = components.pop(0)
     thing = __import__(import_path)
-
     for comp in components:
         import_path += ".%s" % comp
         thing = _dot_lookup(thing, comp, import_path)
     return thing
+
 
 def rsplit(a_str, sep, howmany):
     broken = a_str.split(sep)
@@ -25,6 +25,7 @@ def rsplit(a_str, sep, howmany):
     back.insert(0, sep.join(front))
     return back
 
+
 def _get_target(target):
     try:
         target, attribute = rsplit(target, '.', 1)
@@ -33,6 +34,7 @@ def _get_target(target):
                         (target,))
     getter = lambda: _importer(target)
     return getter, attribute
+
 
 class Patch:
     def __init__(self, target, new, return_value):
@@ -59,12 +61,15 @@ class Patch:
             new_attr = self.return_value
         setattr(self.getter(), self.attribute, new_attr)
 
-
     def stop(self):
         setattr(self.getter(), self.attribute, self.backup)
+        if self.target == 'sys.modules':
+            self.getter().modules['sys'].modules = self.backup
+
 
 def pass_through(target, new=None, return_value=None):
     return Patch(target, new, return_value)
+
 
 patch = pass_through
 patch.dict = pass_through

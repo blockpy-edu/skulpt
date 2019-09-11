@@ -47,6 +47,7 @@ Sk.builtin.str.$contains = new Sk.builtin.str("__contains__");
 Sk.builtin.str.$copy = new Sk.builtin.str("__copy__");
 Sk.builtin.str.$dict = new Sk.builtin.str("__dict__");
 Sk.builtin.str.$dir = new Sk.builtin.str("__dir__");
+Sk.builtin.str.$doc = new Sk.builtin.str("__doc__");
 Sk.builtin.str.$enter = new Sk.builtin.str("__enter__");
 Sk.builtin.str.$eq = new Sk.builtin.str("__eq__");
 Sk.builtin.str.$exit = new Sk.builtin.str("__exit__");
@@ -70,6 +71,7 @@ Sk.builtin.str.$new = new Sk.builtin.str("__new__");
 Sk.builtin.str.$next2 = new Sk.builtin.str("next");
 Sk.builtin.str.$next3 = new Sk.builtin.str("__next__");
 Sk.builtin.str.$path = new Sk.builtin.str("__path__");
+Sk.builtin.str.$package = new Sk.builtin.str("__package__");
 Sk.builtin.str.$repr = new Sk.builtin.str("__repr__");
 Sk.builtin.str.$reversed = new Sk.builtin.str("__reversed__");
 Sk.builtin.str.$round = new Sk.builtin.str("__round__");
@@ -90,6 +92,11 @@ Sk.misceval.op2method_ = {
 
 var builtinNames = [
     "int_",
+    "float_",
+    "bool",
+    "dict",
+    "list",
+    "str",
     "lng",
     "sorted",
     "range",
@@ -128,11 +135,45 @@ var builtinNames = [
     "divmod",
     "format",
     "globals",
-    "issubclass"
+    "issubclass",
+
+    "BaseException",
+    "Exception",
+    "StandardError",
+    "AssertionError",
+    "AttributeError",
+    "ImportError",
+    "IndentationError",
+    "IndexError",
+    "KeyError",
+    "NameError",
+    "UnboundLocalError",
+    "OverflowError",
+    "SyntaxError",
+    "RuntimeError",
+    "OSError",
+    "SuspensionError",
+    "SystemExit",
+    "TypeError",
+    "ValueError",
+    "ZeroDivisionError",
+    "TimeLimitError",
+    "IOError",
+    "NotImplementedError",
+    "NegativePowerError",
+    "ExternalError",
+    "OperationError",
+    "SystemError",
+    "StopIteration",
 ];
 
 for (var i = 0; i < builtinNames.length; i++) {
-    Sk.builtin[builtinNames[i]].co_name = new Sk.builtin.str(builtinNames[i]);
+    var renamed = builtinNames[i];
+    if (renamed.endsWith("_")) {
+        renamed = renamed.slice(0, -1);
+    }
+    Sk.builtin[builtinNames[i]].co_name = new Sk.builtin.str(renamed);
+    Sk.builtin[builtinNames[i]].__name__ = new Sk.builtin.str(renamed);
 }
 
 Sk.builtin.str.prototype["split"].co_varnames = ["sep", "maxsplit"];

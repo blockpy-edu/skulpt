@@ -1082,6 +1082,10 @@ Sk.builtin.int_.prototype.str$ = function (base, sign) {
     return tmp;
 };
 
+Sk.builtin.int_.prototype.bit_length = function () {
+    return new Sk.builtin.int_(Math.abs(this.v).toString(2).length);
+};
+
 /**
  * Takes a JavaScript string and returns a number using the parser and negater
  *  functions (for int/long right now)
