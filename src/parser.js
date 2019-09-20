@@ -287,16 +287,8 @@ function makeParser (filename, style) {
     return p;
 }
 
-Sk.parseCache = {
-    "lastInput": null,
-    "lastParse": null,
-    "lastUnit": null
-};
 
 Sk.parse = function parse (filename, input) {
-    if (Sk.parseCache.lastInput == input) {
-        return Sk.parseCache.lastUnit;
-    }
     
     var T_COMMENT = Sk.token.tokens.T_COMMENT;
     var T_NL = Sk.token.tokens.T_NL;
@@ -370,8 +362,6 @@ Sk.parse = function parse (filename, input) {
      * Small adjustments here in order to return th flags and the cst
      */
     var result = {"cst": parser.rootnode, "flags": parser.p_flags, "comments": parser.comments};
-    Sk.parseCache.lastUnit = result;
-    Sk.parseCache.lastInput = input;
     return result;
 };
 

@@ -74,7 +74,7 @@ def find_def_by_name(name, root=None):
     return None
 
 
-def match_parameters(name, *types, root=None):
+def match_parameters(name, *types, returns=None, root=None):
     defn = find_def_by_name(name, root)
     if defn:
         for expected, actual in zip(types, defn.args.args):
@@ -88,6 +88,21 @@ def match_parameters(name, *types, root=None):
                              "wrong_parameter_type")
                     return None
         else:
+            if returns is not None:
+                if not isinstance(returns, str):
+                    returns = returns.__name__
+                if defn.returns:
+                    actual_type = parse_type(defn.returns)
+                    if not type_check(returns, actual_type):
+                        gently_r("Error in definition of function `{}` return type. Expected `{}`, "
+                                 "instead found {}.".format(name, returns, actual_type),
+                                 "wrong_return_type")
+                        return None
+                else:
+                    gently_r("Error in definition of function `{}` return type. Expected `{}`, "
+                             "but there was no return type specified.".format(name, returns),
+                             "missing_return_type")
+                    return None
             return defn
 
 
@@ -222,7 +237,17 @@ def unit_test(name, *tests):
                     tip = out[1]
                     out = out[0]
                 message = ("<td><code>{}</code></td>" * 3)
-                test_out = the_function(*inp)
+                ran = True
+                try:
+                    test_out = the_function(*inp)
+                except Exception as e:
+                    message = message.format(inputs, str(e), repr(out))
+                    message = "<tr class=''>" + RED_X + message + "</tr>"
+                    success = False
+                    ran = False
+                if not ran:
+                    result += message
+                    continue
                 message = message.format(inputs, repr(test_out), repr(out))
                 if (isinstance(out, float) and
                         isinstance(test_out, (float, int)) and

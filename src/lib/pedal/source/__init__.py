@@ -79,8 +79,7 @@ def _check_issues(code, report):
         report.attach('Syntax error', category='Syntax', tool='Source',
                       group=report['source']['section'],
                       mistake={'message': "Invalid syntax on line "
-                                          + str(e.lineno)
-                                          + "\n\n"+str(e),
+                                          + str(e.lineno),
                                'error': e,
                                'position': {"line": e.lineno}})
         report['source']['success'] = False

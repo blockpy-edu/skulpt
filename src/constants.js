@@ -41,6 +41,7 @@ Sk.builtin.str.$real = new Sk.builtin.str("real");
 
 Sk.builtin.str.$abs = new Sk.builtin.str("__abs__");
 Sk.builtin.str.$call = new Sk.builtin.str("__call__");
+Sk.builtin.str.$class = new Sk.builtin.str("__class__");
 Sk.builtin.str.$cmp = new Sk.builtin.str("__cmp__");
 Sk.builtin.str.$complex = new Sk.builtin.str("__complex__");
 Sk.builtin.str.$contains = new Sk.builtin.str("__contains__");
@@ -182,3 +183,19 @@ Sk.builtin.str.prototype["split"].co_kwargs = true;
 Sk.builtin.str.prototype["rsplit"].co_varnames = ["sep", "maxsplit"];
 Sk.builtin.str.prototype["rsplit"].$defaults = [Sk.builtin.none.none$, Sk.builtin.int_(-1)];
 Sk.builtin.str.prototype["rsplit"].co_kwargs = true;
+
+var builtinStringMethods = [
+    "capitalize", "center", "count", "encode", "endswith", "expandtabs",
+    "find", "format", "index", "isalnum", "isalpha",
+    "isdigit", "islower", "isnumeric", "isspace",
+    "istitle", "isupper", "join", "ljust", "lower", "lstrip",
+    "partition", "replace", "rfind", "rindex", "rjust", "rpartition", "rsplit",
+    "rstrip", "split", "splitlines", "startswith", "strip", "swapcase", "title",
+    "upper", "zfill"
+];
+for (i = 0; i < builtinStringMethods.length; i++) {
+    renamed = builtinStringMethods[i];
+    Sk.builtin.str.prototype[renamed].co_name = new Sk.builtin.str(renamed);
+    Sk.builtin.str.prototype[renamed].__name__ = new Sk.builtin.str(renamed);
+    Sk.builtin.str.prototype[renamed].tp$name = renamed;
+}

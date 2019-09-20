@@ -172,11 +172,7 @@ def dirname(p):
 
 def islink(path):
     """Test whether a path is a symbolic link"""
-    try:
-        st = os.lstat(path)
-    except (OSError, ValueError, AttributeError):
-        return False
-    return stat.S_ISLNK(st.st_mode)
+    return False
 
 # Being true for dangling symbolic links is also useful.
 

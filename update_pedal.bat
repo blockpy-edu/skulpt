@@ -1,0 +1,1 @@
+cp -R C:/Users/acbart/Projects/pedal/pedal/ C:/Users/acbart/Projects/blockpy-edu/skulpt/src/lib/

@@ -337,11 +337,11 @@ Sk.builtin.SyntaxError = function (args) {
         return o;
     }
     Sk.builtin.StandardError.apply(this, arguments);
-    if (arguments.length >= 3) {
-        this.lineno = Sk.ffi.remapToPy(arguments[2]);
-    } else {
-        this.lineno = Sk.ffi.remapToPy(null);
-    }
+    this.text = arguments.length >= 1 ? Sk.ffi.remapToPy(arguments[0]) : Sk.builtin.none.none$;
+    this.msg = this.text;
+    this.filename = arguments.length >= 2 ? Sk.ffi.remapToPy(arguments[1]) : Sk.builtin.none.none$;
+    this.lineno = arguments.length >= 3 ? Sk.ffi.remapToPy(arguments[2]) : Sk.builtin.none.none$;
+    this.offset = arguments.length >= 4 ? Sk.ffi.remapToPy(arguments[3]) : Sk.builtin.none.none$;
 };
 Sk.abstr.setUpInheritance("SyntaxError", Sk.builtin.SyntaxError, Sk.builtin.StandardError);
 Sk.builtin.SyntaxError.prototype.tp$getattr = function (name) {
@@ -353,10 +353,13 @@ Sk.builtin.SyntaxError.prototype.tp$getattr = function (name) {
             _name = Sk.ffi.remapToJs(name);
         }
 
-        if (_name === "lineno") {
+        if (_name === "lineno" || _name === "msg" || _name === "filename" || _name==="offset" ||
+            _name === "text") {
             return this[_name];
-        } else if (_name == "__name__") {
+        } else if (_name === "__name__") {
             return Sk.builtin.str("SyntaxError");
+        } else if (_name === "__cause__" || _name === "__context__" || _name==="__suppress_context__") {
+            return Sk.builtin.none.none$;
         }
     }
 

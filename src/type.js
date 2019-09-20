@@ -250,8 +250,8 @@ Sk.builtin.type = function (name, bases, dict) {
             klass[k.v] = v;
         }
 
-        klass["__class__"] = klass;
-        klass["__name__"] = name;
+        klass.prototype.__class__ = klass;
+        klass.prototype.__name__ = name;
         klass.sk$klass = true;
         klass.prototype["$r"] = function () {
             var cname;
@@ -478,6 +478,7 @@ Sk.builtin.type.makeIntoTypeObj = function (name, t) {
     Sk.asserts.assert(name !== undefined);
     Sk.asserts.assert(t !== undefined);
     t.ob$type = Sk.builtin.type;
+    t.__class__ = Sk.builtin.type;
     t.tp$name = name;
     t["$r"] = function () {
         var ctype;

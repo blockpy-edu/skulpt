@@ -238,6 +238,11 @@ Sk.builtin.str.re_escape_ = function (s) {
     return ret.join("");
 };
 
+Sk.builtin.str.prototype["encode"] = new Sk.builtin.func(function (self) {
+    //Sk.builtin.pyCheckArgsLen("encode", arguments.length, 1, 1);
+    return self;
+});
+
 Sk.builtin.str.prototype["lower"] = new Sk.builtin.func(function (self) {
     Sk.builtin.pyCheckArgsLen("lower", arguments.length, 1, 1);
     return new Sk.builtin.str(self.v.toLowerCase());

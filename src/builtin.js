@@ -740,8 +740,18 @@ Sk.builtin.isinstance = function isinstance (obj, type) {
         }
     }
 
+    var objType;
+
+    // Overridden __class__
+    var __class__ = obj.tp$getattr(Sk.builtin.str.$class);
+    if (__class__ !== undefined) {
+        objType = __class__;
+    } else {
+        objType = obj.ob$type;
+    }
+
     // Normal case
-    if (obj.ob$type === type) {
+    if (objType === type) {
         return Sk.builtin.bool.true$;
     }
 
@@ -779,7 +789,7 @@ Sk.builtin.isinstance = function isinstance (obj, type) {
         return Sk.builtin.bool.false$;
     };
 
-    return issubclass(obj.ob$type, type);
+    return issubclass(objType, type);
 };
 
 Sk.builtin.hash = function hash (value) {
@@ -1396,6 +1406,9 @@ Sk.builtin.compile = function(source, filename, mode, flags, dont_inherit, optim
 var extractDict = function(obj) {
     var ret = {};
     var k, v, kAsJs, iter;
+    if (obj === undefined) {
+        return ret;
+    }
     for (iter = obj.tp$iter(), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
         v = obj.mp$subscript(k);
         if (v === undefined) {
@@ -1430,35 +1443,25 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
         new_globals_copy.__package__ = Sk.builtin.none.none$;
     }
     var backupGlobals = Sk.globals;
-    /*var backupSysmodules = new Sk.builtin.dict([]);
-    Sk.misceval.iterFor(Sk.sysmodules.tp$iter(), function(key) {
-        var value = Sk.sysmodules.mp$subscript(key);
-        backupSysmodules.mp$ass_subscript(key, value);
-    });*/
     Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
-    //Sk.importMainWithBody(filename, false, python_code, true);
     var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
+    var pyName = Sk.builtin.str(name);
+    var sysModules = Sk.getCurrentSysModules();
     var modname = name;
     var caughtError = null;
-    /*var friendlyKeys = [];
-    Sk.misceval.iterFor(Sk.sysmodules.tp$iter(), function(key) {
-        friendlyKeys.push(key.v);
-    });
-    console.log("LOADING", friendlyKeys);*/
     try {
         Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true)
     } catch (e) {
         caughtError = e;
     }
     Sk.globals = backupGlobals;
-    /*Sk.misceval.iterFor(backupSysmodules.tp$iter(), function(key) {
-        var value = backupSysmodules.mp$subscript(key);
-        Sk.sysmodules.mp$ass_subscript(key, value);
-    });*/
-    Sk.getCurrentSysModules().mp$del_subscript(Sk.builtin.str(name));
+    // Only try to delete if we succeeded in creating it!
+    if (sysModules.mp$lookup(pyName)) {
+        Sk.getCurrentSysModules().mp$del_subscript(pyName);
+    }
     for (var key in new_globals_copy) {
         if (new_globals_copy.hasOwnProperty(key)) {
-            var pykey = Sk.ffi.remapToPy(key);
+            var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
             Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
         }
     }
