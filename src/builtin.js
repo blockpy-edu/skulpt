@@ -474,9 +474,9 @@ Sk.builtin.abs = function abs (x) {
     }
 
     // call custom __abs__ methods
-    if (x.tp$getattr) {
-        var f = x.tp$getattr(Sk.builtin.str.$abs);
-        return Sk.misceval.callsimArray(f);
+    if (x.__class__.tp$getattr) {
+        var f = x.__class__.tp$getattr(Sk.builtin.str.$abs);
+        return Sk.misceval.callsimArray(f, [x]);
     }
 
     throw new TypeError("bad operand type for abs(): '" + Sk.abstr.typeName(x) + "'");

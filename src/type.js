@@ -256,9 +256,9 @@ Sk.builtin.type = function (name, bases, dict) {
         klass.prototype["$r"] = function () {
             var cname;
             var mod;
-            var reprf = this.tp$getattr(Sk.builtin.str.$repr);
+            var reprf = this.__class__.tp$getattr(Sk.builtin.str.$repr);
             if (reprf !== undefined && reprf.im_func !== Sk.builtin.object.prototype["__repr__"]) {
-                return Sk.misceval.apply(reprf, undefined, undefined, undefined, []);
+                return Sk.misceval.apply(reprf, undefined, undefined, undefined, [this]);
             }
 
             if ((klass.prototype.tp$base !== undefined) &&
@@ -317,9 +317,9 @@ Sk.builtin.type = function (name, bases, dict) {
         };
 
         klass.prototype.tp$str = function () {
-            var strf = this.tp$getattr(Sk.builtin.str.$str);
+            var strf = this.__class__.tp$getattr(Sk.builtin.str.$str);
             if (strf !== undefined && strf.im_func !== Sk.builtin.object.prototype["__str__"]) {
-                return Sk.misceval.apply(strf, undefined, undefined, undefined, []);
+                return Sk.misceval.apply(strf, undefined, undefined, undefined, [this]);
             }
             if ((klass.prototype.tp$base !== undefined) &&
                 (klass.prototype.tp$base !== Sk.builtin.object) &&

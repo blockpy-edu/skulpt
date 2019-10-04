@@ -1128,9 +1128,9 @@ Sk.builtin.str.prototype.nb$remainder = function (rhs) {
                     if (Sk.__future__.python3) {
                         precision = 6;
                     } else {
-                    precision = 7;
+                        precision = 7;
+                    }
                 }
-            }
             }
             result = (convValue)[convName](precision); // possible loose of negative zero sign
 

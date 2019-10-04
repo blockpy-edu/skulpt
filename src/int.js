@@ -89,18 +89,18 @@ Sk.builtin.int_ = function (x, base) {
      *  1. __int__
      *  2. __trunc__
      */
-    if(x !== undefined && (x.tp$getattr && (func = x.tp$getattr(Sk.builtin.str.$int_)))) {
+    if(x !== undefined && (x.__class__ && x.__class__.tp$getattr && (func = x.__class__.tp$getattr(Sk.builtin.str.$int_)))) {
         // calling a method which contains im_self and im_func
         // causes skulpt to automatically map the im_self as first argument
-        ret = Sk.misceval.callsimArray(func);
+        ret = Sk.misceval.callsimArray(func, [x]);
         magicName = "__int__";
     } else if(x !== undefined && x.__int__) {
         // required for internal types
         // __int__ method is on prototype
         ret = Sk.misceval.callsimArray(x.__int__, [x]);
         magicName = "__int__";
-    } else if(x !== undefined && (x.tp$getattr && (func = x.tp$getattr(Sk.builtin.str.$trunc)))) {
-        ret = Sk.misceval.callsimArray(func);
+    } else if(x !== undefined && (x.__class__ && x.__class__.tp$getattr && (func = x.__class__.tp$getattr(Sk.builtin.str.$trunc)))) {
+        ret = Sk.misceval.callsimArray(func, [x]);
         magicName = "__trunc__";
     } else if(x !== undefined && x.__trunc__) {
         ret = Sk.misceval.callsimArray(x.__trunc__, [x]);

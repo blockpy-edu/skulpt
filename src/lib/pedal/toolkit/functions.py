@@ -168,32 +168,32 @@ def output_test(name, *tests):
                             message += "<tr class='info'><td colspan=4>" + tip + "</td></tr>"
                         success = False
                     elif len(test_out) > 1:
-                        message = message.format(inputs, repr(out), "<i>Too many outputs</i>", tip)
+                        message = message.format(inputs, "\n".join(out), "<i>Too many outputs</i>", tip)
                         message = "<tr class=''>" + RED_X + message + "</tr>"
                         if tip:
                             message += "<tr class='info'><td colspan=4>" + tip + "</td></tr>"
                         success = False
                     elif out not in test_out:
-                        message = message.format(inputs, repr(out), repr(test_out[0]), tip)
+                        message = message.format(inputs, "\n".join(out), "\n".join(test_out), tip)
                         message = "<tr class=''>" + RED_X + message + "</tr>"
                         if tip:
                             message += "<tr class='info'><td colspan=4>" + tip + "</td></tr>"
                         success = False
                     else:
-                        message = message.format(inputs, repr(out), repr(test_out[0]), tip)
+                        message = message.format(inputs, "\n".join(out), "\n".join(test_out), tip)
                         message = "<tr class=''>" + GREEN_CHECK + message + "</tr>"
                         success_count += 1
                 elif out != test_out:
                     if len(test_out) < 1:
-                        message = message.format(inputs, repr(out), "<i>No output</i>", tip)
+                        message = message.format(inputs, "\n".join(out), "<i>No output</i>", tip)
                     else:
-                        message = message.format(inputs, repr(out), repr(test_out[0]), tip)
+                        message = message.format(inputs, "\n".join(out), "\n".join(test_out), tip)
                     message = "<tr class=''>" + RED_X + message + "</tr>"
                     if tip:
                         message += "<tr class='info'><td colspan=4>" + tip + "</td></tr>"
                     success = False
                 else:
-                    message = message.format(inputs, repr(out), repr(test_out[0]), tip)
+                    message = message.format(inputs, "\n".join(out), "\n".join(test_out), tip)
                     message = "<tr class=''>" + GREEN_CHECK + message + "</tr>"
                     success_count += 1
                 result += message
