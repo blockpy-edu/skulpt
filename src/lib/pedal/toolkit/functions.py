@@ -3,7 +3,7 @@ from pedal.report.imperative import gently, explain, gently_r, explain_r, MAIN_R
 from pedal.sandbox import compatibility
 import ast
 
-from pedal.toolkit.signatures import type_check, parse_type, normalize_type
+from pedal.toolkit.signatures import type_check, parse_type, normalize_type, parse_type_value, test_type_equality
 
 DELTA = 0.001
 
@@ -79,10 +79,9 @@ def match_parameters(name, *types, returns=None, root=None):
     if defn:
         for expected, actual in zip(types, defn.args.args):
             if actual.annotation:
-                if not isinstance(expected, str):
-                    expected = expected.__name__
+                expected = parse_type_value(expected, True)
                 actual_type = parse_type(actual.annotation)
-                if not type_check(expected, actual_type):
+                if not test_type_equality(expected, actual_type):
                     gently_r("Error in definition of function `{}` parameter `{}`. Expected `{}`, "
                              "instead found `{}`.".format(name, actual.arg, expected, actual_type),
                              "wrong_parameter_type")
