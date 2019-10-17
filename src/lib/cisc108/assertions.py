@@ -199,14 +199,14 @@ def _is_equal(x, y, precision, exact_strings, *args):
     """
     
     # Check if generators
-    if isinstance(x, SET_GENERATOR_TYPES):
-        x = set(x)
-    elif isinstance(x, LIST_GENERATOR_TYPES):
+    if isinstance(x, LIST_GENERATOR_TYPES):
         x = list(x)
-    if isinstance(y, SET_GENERATOR_TYPES):
-        y = set(y)
-    elif isinstance(y, LIST_GENERATOR_TYPES):
+    elif isinstance(x, SET_GENERATOR_TYPES):
+        x = set(x)
+    if isinstance(y, LIST_GENERATOR_TYPES):
         y = list(y)
+    elif isinstance(y, SET_GENERATOR_TYPES):
+        y = set(y)
     
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)

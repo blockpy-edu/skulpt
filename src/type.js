@@ -336,11 +336,12 @@ Sk.builtin.type = function (name, bases, dict) {
             return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
         };
         klass.prototype.tp$call = function (args, kw) {
-            return Sk.misceval.chain(this.tp$getattr(Sk.builtin.str.$call, true), function(callf) {
+            var that = this;
+            return Sk.misceval.chain(this.__class__.tp$getattr(Sk.builtin.str.$call, true), function(callf) {
                 if (callf === undefined) {
                     throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object is not callable");
                 }
-                return Sk.misceval.applyOrSuspend(callf, undefined, undefined, kw, args);
+                return Sk.misceval.applyOrSuspend(callf, undefined, undefined, kw, [that].concat(args));
             });
         };
         klass.prototype.tp$iter = function () {
@@ -379,17 +380,17 @@ Sk.builtin.type = function (name, bases, dict) {
         };
 
         klass.prototype.tp$getitem = function (key, canSuspend) {
-            var getf = this.tp$getattr(Sk.builtin.str.$getitem, canSuspend), r;
+            var getf = this.__class__.tp$getattr(Sk.builtin.str.$getitem, canSuspend), r;
             if (getf !== undefined) {
-                r = Sk.misceval.applyOrSuspend(getf, undefined, undefined, undefined, [key]);
+                r = Sk.misceval.applyOrSuspend(getf, undefined, undefined, undefined, [this, key]);
                 return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
             }
             throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object does not support indexing");
         };
         klass.prototype.tp$setitem = function (key, value, canSuspend) {
-            var setf = this.tp$getattr(Sk.builtin.str.$setitem, canSuspend), r;
+            var setf = this.__class__.tp$getattr(Sk.builtin.str.$setitem, canSuspend), r;
             if (setf !== undefined) {
-                r = Sk.misceval.applyOrSuspend(setf, undefined, undefined, undefined, [key, value]);
+                r = Sk.misceval.applyOrSuspend(setf, undefined, undefined, undefined, [this, key, value]);
                 return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
             }
             throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object does not support item assignment");

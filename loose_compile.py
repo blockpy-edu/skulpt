@@ -3,6 +3,7 @@ import os
 
 from ast import NodeVisitor, parse
 
+
 class SkulptCompiler(NodeVisitor):
     def __init__(self):
         self.indent = 0
@@ -16,7 +17,7 @@ class SkulptCompiler(NodeVisitor):
         return NodeVisitor.generic_visit(self, node)
 
     def add_statement(self, line):
-        self.result.append("    "*self.indent + line)
+        self.result.append("    " * self.indent + line)
 
     def enter(self, name):
         self.indent += 1
@@ -61,7 +62,7 @@ class SkulptCompiler(NodeVisitor):
             return "var {name}".format(node.id)
         elif isinstance(node.ctx, ast.Delete):
             pass
-        #return "Sk.misceval.loadname('{}', $gbl)".format(node.id)
+        # return "Sk.misceval.loadname('{}', $gbl)".format(node.id)
 
     def visit_FunctionDef(self, node):
         owner = self.context
@@ -115,17 +116,16 @@ class SkulptCompiler(NodeVisitor):
         attr = "Sk.builtins.str('{}')".format(node.attr)
         if type(node.ctx).__name__ == "Store":
             return "Sk.abstr.sattr({owner}, {attr}, {{value}}, true);".format(
-                   owner=owner, attr=attr
-               )
+                owner=owner, attr=attr
+            )
         elif type(node.ctx).__name__ == "Load":
             return "Sk.abstr.gattr({owner}, {attr}, true)".format(owner=owner, attr=attr)
-        else: # Del
+        else:  # Del
             pass
-
 
     def visit_Return(self, node):
         self.add_statement("return {};".format(self.visit(node.value)));
-        
+
     def visit_ImportFrom(self, node):
         module = node.module
         names = node.names

@@ -129,7 +129,7 @@ class Tifa(ast.NodeVisitor):
         report.
 
         Args:
-            ast (Ast): The AST object
+            ast_tree (Ast): The AST object
         Returns:
             Report: The final report object created (also available as a field).
         """
@@ -529,9 +529,12 @@ class Tifa(ast.NodeVisitor):
             iter_type = self.visit(iter)
 
         if iter_type.is_empty():
-            self.report_issue("Iterating over empty list",
-                              {"name": iter_list_name,
-                               "position": self.locate(iter)})
+            # TODO: It should check if its ONLY ever iterating over an empty list.
+            # For now, only reports if we are NOT in a function
+            if len(self.scope_chain) == 1:
+                self.report_issue("Iterating over empty list",
+                                  {"name": iter_list_name,
+                                   "position": self.locate(iter)})
 
         if not isinstance(iter_type, INDEXABLE_TYPES):
             self.report_issue("Iterating over Non-list",
@@ -561,6 +564,7 @@ class Tifa(ast.NodeVisitor):
         - empty
         - uniform type
         - record
+        TODO: Handle records appropriately
         """
         type = DictType()
         if not node.keys:
@@ -619,9 +623,9 @@ class Tifa(ast.NodeVisitor):
                     name = arg.arg
                     if arg.annotation:
                         self.visit(arg.annotation)
-                        annotation = get_tifa_type(arg.annotation, {})
+                        annotation = get_tifa_type(arg.annotation, self)
                         # TODO: Check that arg.type and parameter type match!
-                        if not are_types_equal(annotation, parameter):
+                        if not are_types_equal(annotation, parameter, True):
                             self.report_issue("Parameter Type Mismatch",
                                               {"parameter": annotation, "parameter_name": name,
                                                "argument": parameter})
@@ -641,8 +645,8 @@ class Tifa(ast.NodeVisitor):
                     return_value = return_state.type
                     if node.returns:
                         #self.visit(node.returns)
-                        returns = get_tifa_type(node.returns, {})
-                        if not are_types_equal(return_value, returns):
+                        returns = get_tifa_type(node.returns, self)
+                        if not are_types_equal(return_value, returns, True):
                             self.report_issue("Multiple Return Types",
                                               {"expected": returns.singular_name,
                                                "actual": return_value.singular_name,
@@ -803,6 +807,7 @@ class Tifa(ast.NodeVisitor):
     def visit_Return(self, node):
         if len(self.scope_chain) == 1:
             self.report_issue("Return outside function")
+        # TODO: Unconditional return inside loop
         if node.value is not None:
             self.return_variable(self.visit(node.value))
         else:

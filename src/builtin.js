@@ -274,9 +274,9 @@ Sk.builtin.len = function len (item) {
 
     if (item.tp$length) {
         if (Sk.builtin.checkFunction(item)) {
-            special = Sk.abstr.lookupSpecial(item, Sk.builtin.str.$len);
+            special = Sk.abstr.lookupSpecial(item.__class__, Sk.builtin.str.$len);
             if (special != null) {
-                return Sk.misceval.callsimArray(special, [item]);
+                return Sk.misceval.callsimArray(special, [this, item]);
             } else {
                 if (Sk.__future__.exceptions) {
                     throw new Sk.builtin.TypeError("object of type '" + Sk.abstr.typeName(item) + "' has no len()");

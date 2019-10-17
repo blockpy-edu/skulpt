@@ -20,9 +20,12 @@ from pedal.report import *
 
 from pedal.source import set_source
 
+print("TEST")
+
 CODE = """
 def x():
-    return -5
+    print("ALPHA")
+    return {'x': 5}
 """
 
 set_source(CODE, "answer.py")
@@ -35,13 +38,16 @@ student = MAIN_REPORT['sandbox']['run'] = Sandbox()
 
 compatibility.run_student(raise_exceptions=False)
 
+print("FIRE")
+
 #assert_equal(student.call('x'), 1.5)
 y=student.call('x')
-#print("AAAA")
-print(abs(y))
-#print("BBB")
+print("AAAA")
+print(y.keys())
+print(y['x'])
+print(y['x']+7)
+print(7)
+print("BBB")
 #print(abs(y))
-#print("CCCC")
-
-
-
+print("CCCC")
+print(len(y))
