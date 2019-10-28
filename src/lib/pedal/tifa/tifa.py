@@ -354,24 +354,46 @@ class Tifa(ast.NodeVisitor):
         # Handle targets
         self._visit_nodes(node.targets)
 
-        # TODO: Properly handle assignments with subscripts
-        def action(target, type):
-            if isinstance(target, ast.Name):
-                self.store_variable(target.id, type)
-            elif isinstance(target, (ast.Tuple, ast.List)):
-                for i, elt in enumerate(target.elts):
-                    eltType = type.index(LiteralNum(i))
-                    action(elt, eltType)
-            elif isinstance(target, ast.Subscript):
-                pass
-            elif isinstance(target, ast.Attribute):
-                left_hand_type = self.visit(target.value)
-                if isinstance(left_hand_type, InstanceType):
-                    left_hand_type.add_attr(target.attr, type)
-                # TODO: Otherwise we attempted to assign to a non-instance
-                # TODO: Handle minor type changes (e.g., appending to an inner list)
+        self.walk_targets(node.targets, value_type, self.assign_target)
 
-        self.walk_targets(node.targets, value_type, action)
+    # TODO: Properly handle assignments with subscripts
+    def assign_target(self, target, type):
+        if isinstance(target, ast.Name):
+            self.store_variable(target.id, type)
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            for i, elt in enumerate(target.elts):
+                eltType = type.index(LiteralNum(i))
+                self.assign_target(elt, eltType)
+        elif isinstance(target, ast.Subscript):
+            left_hand_type = self.visit(target.value)
+            if isinstance(left_hand_type, ListType):
+                # TODO: Handle updating value in list
+                pass
+            elif isinstance(left_hand_type, DictType):
+                if not isinstance(target.slice, ast.Index):
+                    # TODO: Can't subscript a dictionary assignment
+                    return None
+                literal = self.get_literal(target.slice.value)
+                if not literal:
+                    key_type = self.visit(target.slice.value)
+                    left_hand_type.empty = False
+                    left_hand_type.keys = key_type.clone()
+                    left_hand_type.values = type.clone()
+                elif left_hand_type.literals:
+                    original_type = left_hand_type.has_literal(literal)
+                    if not original_type:
+                        left_hand_type.update_key(literal, type.clone())
+                    elif not are_types_equal(original_type, type):
+                        # TODO: Fix "Dictionary" to be the name of the variable
+                        self.report_issue("Type changes",
+                                          {'name': "Dictionary", 'old': original_type,
+                                           'new': type})
+        elif isinstance(target, ast.Attribute):
+            left_hand_type = self.visit(target.value)
+            if isinstance(left_hand_type, InstanceType):
+                left_hand_type.add_attr(target.attr, type)
+            # TODO: Otherwise we attempted to assign to a non-instance
+            # TODO: Handle minor type changes (e.g., appending to an inner list)
 
     def visit_AugAssign(self, node):
         # Handle value
@@ -392,7 +414,7 @@ class Tifa(ast.NodeVisitor):
                 if type(right) in op_lookup:
                     op_lookup = op_lookup[type(right)]
                     result_type = op_lookup(left, right)
-                    self.store_variable(name, result_type)
+                    self.assign_target(node.target, result_type)
                     return result_type
 
         self.report_issue("Incompatible types",
@@ -624,6 +646,10 @@ class Tifa(ast.NodeVisitor):
                     if arg.annotation:
                         self.visit(arg.annotation)
                         annotation = get_tifa_type(arg.annotation, self)
+                        # TODO: Use parameter information to "fill in" empty lists
+                        if isinstance(parameter, ListType) and isinstance(annotation, ListType):
+                            if isinstance(parameter.subtype, UnknownType):
+                                parameter.subtype = annotation.subtype
                         # TODO: Check that arg.type and parameter type match!
                         if not are_types_equal(annotation, parameter, True):
                             self.report_issue("Parameter Type Mismatch",
@@ -648,8 +674,8 @@ class Tifa(ast.NodeVisitor):
                         returns = get_tifa_type(node.returns, self)
                         if not are_types_equal(return_value, returns, True):
                             self.report_issue("Multiple Return Types",
-                                              {"expected": returns.singular_name,
-                                               "actual": return_value.singular_name,
+                                              {"expected": returns.precise_description(),
+                                               "actual": return_value.precise_description(),
                                                "position": return_state.position})
             return return_value
 

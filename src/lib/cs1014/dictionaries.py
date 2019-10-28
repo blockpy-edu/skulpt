@@ -60,6 +60,68 @@ def dict_chain_group(key_sets):
         key_order_unchained(key_set)
 
 
+def var_check(expr, keys=None):
+    """
+
+    :param expr: Expression to be evaluated
+    :type expr: CaitNode
+    :param keys: List of keys
+    :type keys: list of Str
+    :return: Key value if expression was a name node assigned a key value or if the value is a string key value
+    :rtype: bool/Str
+    """
+    if expr.is_ast('Str') and (keys is None or expr.value in keys):
+        return expr.value
+    elif expr.is_ast("Name"):
+        matches = find_matches("{} = __key__".format(expr.value))  # TODO: Relies on .value returning id for Name nodes
+        for match in matches:
+            __key__ = match["__key__"]
+            if __key__.is_ast('Str') and (keys is None or __key__.value in keys):
+                return __key__.value
+    return False
+
+
+def list_dict_indices(expr):
+    """
+    Takes the first key slice of a dictionary and returns a list of all the slices.
+    :param expr: a single key slice value at the one level of slicing
+    :type expr: CaitNode
+    :return: A list of index ast nodes (each slice), .value should get the ast_node unit that was used for the slice
+    :rtype: CaitNode(Index)
+    """
+    return expr.parent.parent.parent.find_all('Index')  # TODO: Relies on AST Structure
+
+
+def uncover_type(name, tifa_type):
+    """
+
+    :param name: A Name Ast Node whose type we are looking through
+    :type name: CaitNode (Name)
+    :param tifa_type: The data type of the item
+    :type tifa_type: str
+    :return: the data_state object representing when name was of the specified type
+    :rtype: Tifa State or None
+    """
+    state = name.get_data_state()
+    if name.was_type(tifa_type) and state:
+        while state and str(state.type) != tifa_type:
+            state = state.trace[0]
+        return state
+    return None
+
+
+def dict_detect(expr):
+    if expr.find_match("_var_[__expr__]", use_previous=False):
+        return expr
+    elif expr.is_ast("Name"):
+        matches = find_matches("{} = _var_[__expr__]".format(expr.id))
+        if matches:
+            return matches[-1]["_var_"].ast_node.parent.parent
+            # TODO: Rework to chase down all indirect accesses part of the same chain as a string (and then CaitNode)
+        # fall through return None
+    return None
+
+
 # dict_hard_codes
 def dict_hard_codes_group(print_vals, list_vals):
     hard_coding(print_vals)
@@ -106,8 +168,9 @@ def print_dict_key(keys):
 
     for match in matches:
         __str__ = match["__str__"]
-        if __str__.is_ast("Str") and __str__.value in keys:
-            return explain_r(message.format(__str__.value), code, label=tldr)
+        key = var_check(__str__, keys)
+        if key:
+            return explain_r(message.format(key), code, label=tldr)
     return False
 
 
@@ -123,13 +186,23 @@ def var_instead_of_key(keys):
         _var_ = match["_var_"]
         if _var_.id in keys:
             submatch = find_match("_dict_['{}']".format(_var_.id))
-            if submatch is None:
+            submatch2 = find_match("{} = ___".format(_var_.id))
+            if submatch is None and submatch2 is None:
+                # If we don't find a dictionary access using this key and
+                # we don't see that this variable is assigned to a value...
                 return explain_r(message.format(_var_.id), code, label=tldr)
     return False
 
 
 # dict_acc_group
 def parens_in_dict(keys):
+    """
+    Checks fr the mistsake of using parenthesis as a dictionary access
+    :param keys: List of keys
+    :type keys: list of Str
+    :return: Feedback String
+    :rtype: Str
+    """
     message = ('It seems like you are having trouble with dictionary syntax. The dictionary key <code>"{}"'
                "</code>should use brackets.")
     code = "par_dict"
@@ -137,14 +210,16 @@ def parens_in_dict(keys):
     matches = find_matches("_var_(__str__)")
     for match in matches:
         __str__ = match['__str__']
-        if __str__.is_ast("Str") and __str__.value in keys:
-            return explain_r(message.format(__str__.value), code, label=tldr)
+        _var_ = match['_var_']
+        key = var_check(__str__, keys)
+        if key and data_state(_var_.id):
+            return explain_r(message.format(key), code, label=tldr)
     return False
 
 
 # dict_list_group
 def list_as_dict():
-    message = ("A list of Dictionaries like <code>{}</code> is not itself a dictionary. "
+    message = ("The list of Dictionaries <code>{}</code> is not itself a dictionary. "
                "To access key-value pairs of the dictionaries in the list, "
                "you need to access each dictionary in the list one at a time.")
     code = "list_dict"
@@ -152,8 +227,8 @@ def list_as_dict():
     matches = find_matches("_list_[__exp__]")
     for match in matches:
         _list_ = match['_list_']
-        if (_list_.was_type("ListType") and _list_.get_data_state()
-                and str(_list_.get_data_state().type.subtype) == "DictType"):
+        type_check = uncover_type(_list_, "ListType")
+        if type_check and str(type_check.type.subtype) == "DictType":
             return explain_r(message.format(_list_.id), code, label=tldr)
     return False
 
@@ -191,8 +266,12 @@ def wrong_keys(unused_keys):
     matches = find_matches("_var_[__str__]")
     for match in matches:
         __str__ = match["__str__"]
-        if __str__.is_ast("Str") and __str__.value in unused_keys:
-            return explain_r(message.format(__str__.value), code, label=tldr)
+        indices = list_dict_indices(__str__)
+        for index in indices:
+            __str__ = index.value
+            key = var_check(__str__, unused_keys)
+            if key:
+                return explain_r(message.format(key), code, label=tldr)
     return False
 
 
@@ -317,6 +396,16 @@ def list_str_dict(keys):
 
 # dict_acc_group
 def missing_key(keys):
+    """
+    Checks if student is missing a key
+
+    TODO: Should be good if run AFTER the var_instead_of_key check, although it doesn't appear to catch a key that's
+       been assigned as the value of an unused variable.
+    :param keys: list of keys
+    :type keys: list of Str
+    :return: Feedback String
+    :rtype: Str
+    """
     message = "You seem to be missing the following dictionary key(s):<ul>{}</ul>"
     code = "miss_key"
     tldr = "Missing necessary keys"
@@ -398,7 +487,8 @@ def no_dict_in_loop():
         _item_ = match['_item_']
         submatches = match['__expr__'].find_matches("_item_[__str__]")
         for submatch in submatches:
-            if submatch["__str__"].is_ast("Str"):
+            key = var_check(submatch["__str__"])
+            if key:
                 return False
     return explain_r(message, code, label=tldr)
 
@@ -431,8 +521,8 @@ def str_list(keys):
 
 # dict_list_group
 def list_var_dict_acc():
-    message = ("The for statement only specifies a list target, in this case, a list of dictionaries. "
-               "It does not operate on the entire list. Keys should be used on the individual dictionaries of the list.")
+    message = ("The for statement only specifies a list target, in this case, a list of dictionaries. It does not "
+               "operate on the entire list. Keys should be used on the individual dictionaries of the list.")
     code = "l_var_dacc"
     tldr = "List variable cannot be dictionary accessed"
 
@@ -450,14 +540,24 @@ def key_comp(keys):
                'are not filtering data. Dictionary keys are only used to access existing data.')
     code = "key_comp"
     tldr = "Comparing Keys"
-
+    """
     matches = find_matches("for _var_ in ___:\n"
                            "    if _var_[__str1__] == __str2__:\n"
                            "        pass")
+    """
+    matches = find_matches("for _var_ in ___:\n"
+                           "    if __expr__ == __str2__:\n"
+                           "        pass")
     for match in matches:
-        __str1__ = match["__str1__"]
+        __expr__ = match["__expr__"]
+        submatch = dict_detect(__expr__)
+        # __str1__ = match["__str1__"]
+        # if submatch:
+        __str1__ = submatch.find_match("_var_[__str1__]", use_previous=False)["__str1__"]
         __str2__ = match["__str2__"]
-        if __str1__.is_ast("Str") and __str1__.value in keys and __str2__.is_ast("Str") and __str2__.value in keys:
+        value1 = var_check(__str1__, keys)
+        value2 = var_check(__str2__, keys)
+        if value1 and value2:
             return explain_r(message.format(__str1__.value, __str2__.value), code, label=tldr)
     return False
 
@@ -476,6 +576,9 @@ def col_dict():
 
 # dict_acc_group
 def var_key(keys):
+    # TODO: Could use this method for other methods to check if the code needs to use the value of the variable.
+    #  In other words, if we have a variable in place of a key AND this test fails, it means that they have an
+    #  initialized variable whose assigned value we should check as we are able to (statically).
     message = ("It looks like you are trying to use <code>{}</code> as a key. Dictionary keys are string values. "
                "Variable names don't have a meaning to a computer.")
     code = "var_key"
@@ -491,6 +594,9 @@ def var_key(keys):
 
 # dict_plot
 def key_order(keys):
+    # TODO: Is it possible to run this test after confirming (through other tests) that there are no unused keys and
+    #  that all keys used are the correct keys, such that the feedback message can explicitly address JUST the case of
+    #  wrong order?
     message = "It looks like you aren't using the correct keys, or the correct key order. Double check your data map."
     code = "key_order_c"
     tldr = "Wrong key order"
