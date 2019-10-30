@@ -4,6 +4,15 @@ This is a BlockPy fork of the Skulpt project. We add a few features:
 * MatPlotLib module
 * Exec support
 
+Our instructions for installation
+
+* `git clone <this package>`
+* `cd ./skulpt`
+* `npm install`
+* `npm run devbuild`
+
+Now you've built skulpt! You can use it in BlockPy-server, or the BlockPy-client, depending on what you want to work on.
+
 # Welcome to Skulpt
 
 [![Join the chat at https://gitter.im/skulpt/skulpt](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/skulpt/skulpt?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
