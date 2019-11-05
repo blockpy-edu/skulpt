@@ -395,6 +395,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
             parentModName ? new Sk.builtin.str(absolutePackagePrefix + parentModName) :
             relativePackageName ? relativePackageName : Sk.builtin.none.none$
         };
+        //module["$d"]["__dict__"] = module["$d"];
         if (co.packagePath) {
             module["$d"]["__path__"] = new Sk.builtin.tuple([new Sk.builtin.str(co.packagePath)]);
         }

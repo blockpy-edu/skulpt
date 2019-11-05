@@ -1,5 +1,5 @@
 var $builtinmodule = function (name) {
-    var request = {};
+    var request = {__name__: Sk.builtin.str("requests")};
 
 
     //~ Classes .................................................................
@@ -19,17 +19,17 @@ var $builtinmodule = function (name) {
             self.lineList = self.data$.split("\n");
             self.lineList = self.lineList.slice(0, -1);
             for (var i = 0; i < self.lineList.length; i++) {
-                self.lineList[i] = self.lineList[i] + '\n';
+                self.lineList[i] = self.lineList[i] + "\n";
             }
             self.currentLine = 0;
             self.pos$ = 0;
-            Sk.abstr.sattr(self, 'text', Sk.ffi.remapToPy(self.data$), true);
+            Sk.abstr.sattr(self, Sk.builtin.str("text"), Sk.ffi.remapToPy(self.data$), true);
         });
 
 
         // ------------------------------------------------------------
         $loc.__str__ = new Sk.builtin.func(function (self) {
-            return Sk.ffi.remapToPy('<Response>');
+            return Sk.ffi.remapToPy("<Response>");
         });
         
         $loc.__repr__ = $loc.__str__;
@@ -97,7 +97,7 @@ var $builtinmodule = function (name) {
     };
 
     request.Response =
-        Sk.misceval.buildClass(request, response, 'Response', []);
+        Sk.misceval.buildClass(request, response, "Response", []);
 
 
     //~ Module functions ........................................................
@@ -118,6 +118,7 @@ var $builtinmodule = function (name) {
                 Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout).then(function(result) {
                     resolve(Sk.misceval.callsim(request.Response, result));
                 }, function(err) {
+                    console.log("Err1");
                     reject(err);
                     //resolve(Sk.misceval.callsim(request.Response, err));
                 });
@@ -143,6 +144,7 @@ var $builtinmodule = function (name) {
         var susp = new Sk.misceval.Suspension();
 
         susp.resume = function() {
+            console.log("err2", susp);
             if (susp.data["error"]) {
                 //throw new Sk.builtin.IOError(susp.data["error"].message);
                 throw susp.data["error"];
@@ -157,8 +159,10 @@ var $builtinmodule = function (name) {
                 resolution = value;
                 return value;
             }, function(err) {
+                console.log("err3", err);
                 resolution = "";
-                throw err;
+                //throw err;
+                return Promise.reject(err);
                 //return err;
             })
         };

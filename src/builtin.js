@@ -1450,10 +1450,12 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
     var modname = name;
     var caughtError = null;
     try {
-        Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true)
+        Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
     } catch (e) {
+        console.log("SYSTEMATIC ERROR");
         caughtError = e;
     }
+    console.log("FINISHED EVAL");
     Sk.globals = backupGlobals;
     // Only try to delete if we succeeded in creating it!
     if (sysModules.mp$lookup(pyName)) {

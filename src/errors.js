@@ -63,7 +63,6 @@ Sk.builtin.BaseException.prototype.tp$str = function () {
     if (this.traceback.length !== 0) {
         var lineno = this.traceback[0].lineno;
         ret += " on line ";
-        console.log(lineno);
         if (Sk.builtin.checkInt(lineno)) {
             ret += lineno.v !== undefined ? lineno.v : lineno;
         } else {
