@@ -2,21 +2,26 @@ import sys
 import os
 
 from ast import NodeVisitor, parse
+import ast
+from textwrap import indent, dedent
 
 
 class SkulptCompiler(NodeVisitor):
-    def __init__(self):
+    def __init__(self, module_name, original_lines):
+        self.module_name = module_name
+        self.original_lines = original_lines
         self.indent = 0
         self.unhandled = set()
         self.result = []
         self.stack = []
 
     def generic_visit(self, node):
-        print(type(node).__name__)
+        print(self.indent*" ", type(node).__name__)
         self.unhandled.add(type(node).__name__)
-        return NodeVisitor.generic_visit(self, node)
+        result = NodeVisitor.generic_visit(self, node)
+        return result
 
-    def add_statement(self, line):
+    def add_statement(self, line=""):
         self.result.append("    " * self.indent + line)
 
     def enter(self, name):
@@ -30,9 +35,14 @@ class SkulptCompiler(NodeVisitor):
     def visit_Module(self, node):
         self.add_statement("var $builtinmodule = function (name) {")
         self.enter("mod")
-        self.add_statement("let mod = {{__name__: {name} }};".format(name=name))
+        self.add_statement("let mod = {{__name__: {name} }};".format(name=self.module_name))
         for statement in node.body:
-            self.visit(statement)
+            try:
+                self.visit(statement)
+                self.add_statement()
+            except Exception as e:
+                print("ERROR line {}: {}".format(statement.lineno, self.original_lines[statement.lineno-1]))
+                raise e
         self.add_statement("return mod;")
         self.exit()
         self.add_statement("};")
@@ -40,6 +50,7 @@ class SkulptCompiler(NodeVisitor):
     @property
     def context(self):
         return self.stack[-1]
+
 
     def visit_ClassDef(self, node):
         owner = self.context
@@ -49,6 +60,7 @@ class SkulptCompiler(NodeVisitor):
         self.enter("$loc")
         for statement in node.body:
             self.visit(statement)
+            self.add_statement()
         self.exit()
         bases = ", ".join(self.visit(base) for base in node.bases)
         self.add_statement("}}, '{name}', [{bases}], {{}});".format(
@@ -59,9 +71,9 @@ class SkulptCompiler(NodeVisitor):
         if isinstance(node.ctx, ast.Load):
             return node.id
         elif isinstance(node.ctx, ast.Store):
-            return "var {name}".format(node.id)
-        elif isinstance(node.ctx, ast.Delete):
-            pass
+            return "var {name} = {{value}}".format(name=node.id)
+        elif isinstance(node.ctx, ast.Del):
+            return "delete {name};".format(name=node.id)
         # return "Sk.misceval.loadname('{}', $gbl)".format(node.id)
 
     def visit_FunctionDef(self, node):
@@ -80,12 +92,22 @@ class SkulptCompiler(NodeVisitor):
         self.add_statement("{name}.co_varnames = [{args}]".format(
             name=node.name, args=str_args
         ))
-        self.add_statement("{name}.$defaults = [{defaults}]".format(
-            name=node.name, defaults=defaults
-        ))
+        if defaults:
+            self.add_statement("{name}.$defaults = [{defaults}]".format(
+                name=node.name, defaults=defaults
+            ))
         self.add_statement("{owner}.{name} = _{name}".format(
             owner=owner, name=node.name
         ))
+
+    def visit_If(self, node):
+        condition = self.visit(node.test)
+        self.add_statement("if ({condition}) {{".format(condition=condition))
+        self.enter("if")
+        for statement in node.body:
+            self.visit(statement)
+        self.exit()
+        self.add_statement("}")
 
     def visit_Assign(self, node):
         # handle multiple targets
@@ -93,26 +115,72 @@ class SkulptCompiler(NodeVisitor):
         value = self.visit(node.value)
         if type(target).__name__ == 'Attribute':
             self.add_statement(self.visit_Attribute(target).format(value=value))
+        elif isinstance(target, ast.Name):
+            self.add_statement(self.visit_Name(target).format(value=value)+";")
+        elif isinstance(target, ast.Subscript):
+            self.add_statement(self.visit_Subscript(target).format(value=value)+";")
 
     def visit_Str(self, node):
-        return "new Sk.builtins.str('{}')".format(node.s)
+        return repr(node.s)
+        #return "new Sk.builtins.str('{}')".format(node.s)
 
     def visit_Num(self, node):
         return "new Sk.builtin.int_({})".format(node.n)
 
+    def visit_List(self, node):
+        return "[" + ", ".join(str(self.visit(elt))
+                               for elt in node.elts) + "]"
+
+    def visit_Dict(self, node):
+        return "{"+", ".join("{}: {}".format(self.visit(k), self.visit(v))
+                             for k,v in zip(node.keys, node.values))+"}"
+
     def visit_NameConstant(self, node):
         if node.value == True:
-            return "Sk.builtin.bool.true$"
+            return "true"#"Sk.builtin.bool.true$"
         elif node.value == False:
-            return "Sk.builtin.bool.false$"
+            return "false"#"Sk.builtin.bool.false$"
         elif node.value == None:
-            return "Sk.builtin.none.none$"
+            return "null"#"Sk.builtin.none.none$"
 
     def visit_Expr(self, node):
-        self.add_statement(self.visit(node.value))
+        if isinstance(node.value, ast.Str):
+            self.add_commented_block(node.value.s)
+        else:
+            self.add_statement(self.visit(node.value))
+
+    def add_commented_block(self, value):
+        self.add_statement("/**"+indent(dedent(value), (self.indent)*"    "))
+        self.add_statement("**/")
+
+    def visit_Subscript(self, node):
+        if isinstance(node.slice, ast.Index):
+            value = self.visit(node.value)
+            index = self.visit(node.slice.value)
+            if isinstance(node.ctx, ast.Store):
+                return "{value}[{index}] = {{value}};".format(value=value, index=index)
+            elif isinstance(node.ctx, ast.Load):
+                return "{value}[{index}]".format(value=value, index=index)
+            elif isinstance(node.ctx, ast.Del):
+                return "delete {value}[{index}];".format(value=value, index=index)
+        else:
+            pass
+            # TODO: Slices
+        return "BANANA"
+
+
+    def visit_InternalAttribute(self, node, attr):
+        if isinstance(node.ctx, ast.Store):
+            return "this.{attr} = {{value}};".format(attr=attr)
+        elif isinstance(node.ctx, ast.Load):
+            return "this.{attr}".format(attr=attr)
+        elif isinstance(node.ctx, ast.Del):
+            return "delete this.{attr};".format(attr=attr)
 
     def visit_Attribute(self, node):
         owner = self.visit(node.value)
+        if owner == "self":
+            return self.visit_InternalAttribute(node, node.attr)
         attr = "Sk.builtins.str('{}')".format(node.attr)
         if type(node.ctx).__name__ == "Store":
             return "Sk.abstr.sattr({owner}, {attr}, {{value}}, true);".format(
@@ -131,16 +199,18 @@ class SkulptCompiler(NodeVisitor):
         names = node.names
         self.add_statement("var {module} = Sk.builtin.__import__('{module}', $gbl, $loc, [{names}], -1);".format(
             module=module,
-            names=", ".join(repr(name) for name in names),
+            names=", ".join(repr(name.name) for name in names),
         ))
         for name in names:
             self.add_statement("var {name} = Sk.abstr.gattr({module}, new Sk.builtin.str({name!r}))".format(
-                name=name,
+                name=name.asname if name.asname else name.name,
                 module=module
             ))
 
     def visit_Call(self, node):
         func = node.func
+        # TODO: args
+        return "{func}()".format(func=self.visit(func))
 
 
 if __name__ == '__main__':
@@ -148,7 +218,7 @@ if __name__ == '__main__':
     with open(target, 'r') as target_file:
         code = target_file.read()
     parsed = parse(code)
-    compiler = SkulptCompiler()
+    compiler = SkulptCompiler(sys.argv[2], code.split("\n"))
     compiled = compiler.visit(parsed)
     print("\n".join(compiler.result))
-    print(compiler.unhandled)
+    print("Did not handle:", compiler.unhandled)

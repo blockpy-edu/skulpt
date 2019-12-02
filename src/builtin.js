@@ -1423,54 +1423,60 @@ var extractDict = function(obj) {
 
 Sk.builtin.exec = function execf(pythonCode, new_globals) {
     Sk.builtin.pyCheckArgs("exec", arguments, 1, 2);
-    var backupRG = Sk.retainGlobals;
-    Sk.retainGlobals = true;
-    var filename = "<string>";
-    if (pythonCode instanceof Sk.builtin.code) {
-        filename = pythonCode.filename;
-        pythonCode = pythonCode.source;
-    } else {
-        pythonCode = Sk.ffi.remapToJs(pythonCode);
-    }
-    var new_globals_copy = extractDict(new_globals);
-    if (!new_globals_copy.__file__) {
-        new_globals_copy.__file__ = Sk.ffi.remapToPy(filename);
-    }
-    if (!new_globals_copy.__name__) {
-        new_globals_copy.__name__ = Sk.ffi.remapToPy(filename);
-    }
-    if (!new_globals_copy.__package__) {
-        new_globals_copy.__package__ = Sk.builtin.none.none$;
-    }
-    var backupGlobals = Sk.globals;
-    Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
-    var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
-    var pyName = Sk.builtin.str(name);
-    var sysModules = Sk.getCurrentSysModules();
-    var modname = name;
-    var caughtError = null;
-    try {
-        Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
-    } catch (e) {
-        console.log("SYSTEMATIC ERROR");
-        caughtError = e;
-    }
-    console.log("FINISHED EVAL");
-    Sk.globals = backupGlobals;
-    // Only try to delete if we succeeded in creating it!
-    if (sysModules.mp$lookup(pyName)) {
-        Sk.getCurrentSysModules().mp$del_subscript(pyName);
-    }
-    for (var key in new_globals_copy) {
-        if (new_globals_copy.hasOwnProperty(key)) {
-            var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
-            Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
+
+    var prom = new Promise(function(resolve, reject) {
+        var backupRG = Sk.retainGlobals;
+        Sk.retainGlobals = true;
+        var filename = "<string>";
+        if (pythonCode instanceof Sk.builtin.code) {
+            filename = pythonCode.filename;
+            pythonCode = pythonCode.source;
+        } else {
+            pythonCode = Sk.ffi.remapToJs(pythonCode);
         }
-    }
-    Sk.retainGlobals = backupRG;
-    if (caughtError !== null) {
-        throw caughtError;
-    }
+        var new_globals_copy = extractDict(new_globals);
+        if (!new_globals_copy.__file__) {
+            new_globals_copy.__file__ = Sk.ffi.remapToPy(filename);
+        }
+        if (!new_globals_copy.__name__) {
+            new_globals_copy.__name__ = Sk.ffi.remapToPy(filename);
+        }
+        if (!new_globals_copy.__package__) {
+            new_globals_copy.__package__ = Sk.builtin.none.none$;
+        }
+        var backupGlobals = Sk.globals;
+        Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
+        var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
+        var pyName = Sk.builtin.str(name);
+        var sysModules = Sk.getCurrentSysModules();
+        var modname = name;
+        var caughtError = null;
+        try {
+            Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
+        } catch (e) {
+            console.log("SYSTEMATIC ERROR");
+            caughtError = e;
+        }
+        console.log("FINISHED EVAL");
+        Sk.globals = backupGlobals;
+        // Only try to delete if we succeeded in creating it!
+        if (sysModules.mp$lookup(pyName)) {
+            Sk.getCurrentSysModules().mp$del_subscript(pyName);
+        }
+        for (var key in new_globals_copy) {
+            if (new_globals_copy.hasOwnProperty(key)) {
+                var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
+                Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
+            }
+        }
+        Sk.retainGlobals = backupRG;
+        if (caughtError !== null) {
+            throw caughtError;
+        }
+        resolve();
+    });
+
+    return Sk.misceval.promiseToSuspension(prom);
 };
 
 Sk.builtin.frozenset = function frozenset () {

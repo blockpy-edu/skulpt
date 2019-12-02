@@ -113,6 +113,9 @@ var $builtinmodule = function (name) {
      * constructs a Response.
      */
     request.get = new Sk.builtin.func(function (url, data, timeout) {
+        if (Sk.requestsGet) {
+            return Sk.misceval.callsim(request.Response, Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout));
+        }
         var prom = new Promise(function(resolve, reject) {
             if (Sk.requestsGet) {
                 Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout).then(function(result) {

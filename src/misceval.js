@@ -1046,7 +1046,7 @@ Sk.exportSymbol("Sk.misceval.applyAsync", Sk.misceval.applyAsync);
  */
 
 Sk.misceval.chain = function (initialValue, chainedFns) {
-    // We try to minimse overhead when nothing suspends (the common case)
+    // We try to minimise overhead when nothing suspends (the common case)
     var i = 1, value = initialValue, j, fs;
 
     while (true) {

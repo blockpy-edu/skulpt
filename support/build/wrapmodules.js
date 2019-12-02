@@ -2,17 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const minify = require('babel-minify');
 
-/*
+
 const reqskulpt = require('../run/require-skulpt').requireSkulpt;
 var skulpt = reqskulpt();
 Sk.configure({__future__: Sk.python3});
 
-var WHITE_LIST = ['tifa.py', 'builtin_definitions.py', 'type_definitions.py'];
+var WHITE_LIST = ['tifa.py', 'sandbox.py', 'stretchy_tree_matching.py'];
 function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);
     });
-}*/
+}
 
 /**
  * If this optional file exists in the top level directory, it will be
@@ -50,18 +50,18 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                     let ext = path.extname(file);
                     if (exts.includes(ext)) {
                         let contents = fs.readFileSync(fullname, 'utf8');
-                        if (minifyjs && (ext == ".js")) {
+                        if (minifyjs && (ext === ".js")) {
                             let result = minify(contents);
                             contents = result.code;
                         }
                         // AOT compilation
-                        /*
-                        else if (ext == '.py' &&
-                                   !endsWithAny(fullname, WHITE_LIST) &&
-                                   !fullname.startsWith('src/builtin/')) {
+
+                        else if (false && ext === ".py" &&
+                                   endsWithAny(fullname, WHITE_LIST) &&
+                                   fullname.startsWith("src/lib/pedal/")) {
                             var co;
                             try {
-                                co = Sk.compile(contents, fullname, 'exec', true);
+                                co = Sk.compile(contents, fullname, "exec", true, false);
                                 console.log("Compiled: "+fullname);
                             } catch (e) {
                                 console.log("Failed to compile: "+fullname);
@@ -71,7 +71,8 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             }
                             fullname = fullname.replace(/\.py$/, ".js");
                             contents = co.code + '\nvar $builtinmodule = ' + co.funcname + ';';
-                        }*/
+                            contents = minify(contents).code;
+                        }
                         ret.files[fullname] = contents;
                     }
                 }
