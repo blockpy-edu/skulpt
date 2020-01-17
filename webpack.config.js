@@ -51,12 +51,12 @@ module.exports = (env, argv) => {
         assertfile = "./assert-prod.js";
         mod = {
             rules: [
-                /*{
+                {
                      test: /\.js$/,
                      enforce: 'pre',
                      exclude: styleexcludes,
                      loader: 'eslint-loader'
-                }*/
+                }
             ]
         };
     }

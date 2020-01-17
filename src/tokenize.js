@@ -246,6 +246,8 @@ function _tokenize(readline, encoding, yield_, filename) {
         needcont = 0,
         contline = null,
         indents = [0],
+        spos = [0,0],
+        epos = [0,0],
         capos = null,
         endprog = undefined,
         strstart = undefined,
@@ -379,8 +381,8 @@ function _tokenize(readline, encoding, yield_, filename) {
             if (pseudomatch) {                                // scan for tokens
                 var start = pos;
                 var end = start + pseudomatch[1].length;
-                var spos = [lnum, start];
-                var epos = [lnum, end];
+                spos = [lnum, start];
+                epos = [lnum, end];
                 var pos = end;
                 if (start == end) {
                     continue;

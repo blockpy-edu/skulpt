@@ -368,6 +368,12 @@ var $builtinmodule = function (name) {
     }*/
     
     function functionName(fun) {
+        let astname = fun.prototype._astname;
+        switch (astname) {
+            case "arguments": return "arguments_";
+            default: return astname;
+        }
+        /*
         var ret = fun.toString();
         ret = ret.substr("function ".length);
         ret = ret.substr(0, ret.indexOf("("));
@@ -376,7 +382,7 @@ var $builtinmodule = function (name) {
         } else if (ret == "Import_") {
             ret = "Import";
         }
-        return ret;
+        return ret;*/
     }
     
     for (var base in Sk.INHERITANCE_MAP) {

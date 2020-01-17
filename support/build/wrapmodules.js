@@ -49,14 +49,14 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                 } else if (stat.isFile()) {
                     let ext = path.extname(file);
                     if (exts.includes(ext)) {
-                        let contents = fs.readFileSync(fullname, 'utf8');
+                        let contents = fs.readFileSync(fullname, "utf8");
                         if (minifyjs && (ext === ".js")) {
                             let result = minify(contents);
                             contents = result.code;
                         }
                         // AOT compilation
 
-                        else if (false && ext === ".py" &&
+                        else if (ext === ".py" &&
                                    endsWithAny(fullname, WHITE_LIST) &&
                                    fullname.startsWith("src/lib/pedal/")) {
                             var co;
@@ -70,7 +70,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                                 console.error(e.args);
                             }
                             fullname = fullname.replace(/\.py$/, ".js");
-                            contents = co.code + '\nvar $builtinmodule = ' + co.funcname + ';';
+                            contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
                             contents = minify(contents).code;
                         }
                         ret.files[fullname] = contents;
