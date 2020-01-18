@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const minify = require('babel-minify');
+const beautify = require('js-beautify');
 
 
 const reqskulpt = require('../run/require-skulpt').requireSkulpt;
@@ -71,7 +72,10 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             }
                             fullname = fullname.replace(/\.py$/, ".js");
                             contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
+                            fs.writeFileSync("dist/"+file+".js", beautify(contents), 'utf8');
                             contents = minify(contents).code;
+                            fs.writeFileSync("dist/"+file+".minified.js", contents, 'utf8');
+                            fs.writeFileSync("dist/"+file+".minified.beautified.js", beautify(contents), 'utf8');
                         }
                         ret.files[fullname] = contents;
                     }

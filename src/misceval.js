@@ -1309,3 +1309,36 @@ Sk.misceval.buildClass = function (globals, func, name, bases, cell) {
     return klass;
 };
 Sk.exportSymbol("Sk.misceval.buildClass", Sk.misceval.buildClass);
+
+Sk.misceval.handleTraceback = function(err,currLineNo,currColNo,currSource,filename, scopeName) {
+    if(err instanceof Sk.builtin.TimeLimitError){
+        Sk.execStart=Date.now();
+        Sk.execPaused=0;
+    }
+    if(!(err instanceof Sk.builtin.BaseException)) {
+        err=new Sk.builtin.ExternalError(err);
+    }
+    Sk.err=err;
+    err.traceback.push({
+        lineno: currLineNo,
+        colno: currColNo,
+        source: currSource,
+        filename: filename,
+        scope: scopeName
+    });
+    return err;
+};
+Sk.exportSymbol("Sk.misceval.handleTraceback", Sk.misceval.handleTraceback);
+
+Sk.misceval.startTimer = function() {
+    if (typeof Sk.execStart === "undefined") {
+        Sk.execStart = Date.now();
+        Sk.execPaused=0;
+    }
+};
+Sk.exportSymbol("Sk.misceval.startTimer", Sk.misceval.startTimer);
+
+Sk.misceval.errorUL = function(mangled) {
+    return new Sk.builtin.UnboundLocalError('local variable "'+mangled+ '" referenced before assignment');
+};
+Sk.exportSymbol("Sk.misceval.errorUL", Sk.misceval.errorUL);

@@ -382,7 +382,7 @@ Compiler.prototype._checkSuspension = function(e) {
 
         e = e || {lineno: "$currLineNo", col_offset: "$currColNo", source: "$currSource"};
 
-        out ("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+","+e.source+"); }");
+        out ("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,$fname,"+e.lineno+","+e.col_offset+","+e.source+"); }");
 
         this.u.doesSuspend = true;
         this.u.tempsToSave = this.u.tempsToSave.concat(this.u.localtemps);
@@ -1122,9 +1122,20 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     var localSaveCode = [];
     var localsToSave = unit.localnames.concat(unit.tempsToSave);
     var seenTemps = {};
+
+    var localsToSaveWithoutDuplicates = [];
+    for (i = 0; i < localsToSave.length; i++) {
+        t = localsToSave[i];
+        if (seenTemps[t]===undefined) {
+            localsToSaveWithoutDuplicates.push(t);
+            seenTemps[t] = true;
+        }
+    }
+    localsToSave = localsToSaveWithoutDuplicates;
+
     var hasCell = unit.ste.blockType === Sk.SYMTAB_CONSTS.FunctionBlock && unit.ste.childHasFree;
-    var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "") +
-                 "var $wakeFromSuspension = function() {" +
+    var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "");
+    output += "var $wakeFromSuspension = function() {" +
                     "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;" +
                     "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
                     "$currLineNo=susp.$lineno;$currColNo=susp.$colno;$currSource=susp.$source;Sk.lastYield=Date.now();" +
@@ -1132,10 +1143,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
 
     for (i = 0; i < localsToSave.length; i++) {
         t = localsToSave[i];
-        if (seenTemps[t]===undefined) {
-            output += t + "=susp.$tmps." + t + ";";
-            seenTemps[t] = true;
-        }
+        output += t + "=susp.$tmps." + t + ";";
     }
 
     output +=  ("try {"+
@@ -1152,13 +1160,9 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                 "susp.optional=susp.child.optional;" +
                 (hasCell ? "susp.$cell=$cell;" : "");
 
-    seenTemps = {};
     for (i = 0; i < localsToSave.length; i++) {
         t = localsToSave[i];
-        if (seenTemps[t]===undefined) {
-            localSaveCode.push("\"" + t + "\":" + t);
-            seenTemps[t]=true;
-        }
+        localSaveCode.push("\"" + t + "\":" + t);
     }
     output +=   "susp.$tmps={" + localSaveCode.join(",") + "};" +
                 "return susp;" +
@@ -1905,7 +1909,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     // all function invocations in call
     this.u.varDeclsCode += "var $blk=" + entryBlock + ",$exc=[],$loc=" + locals + cells + ",$gbl=this,$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
     if (Sk.execLimit !== null) {
-        this.u.varDeclsCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
+        this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
         this.u.varDeclsCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
@@ -2259,7 +2263,7 @@ Compiler.prototype.cclass = function (s) {
     this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
     if (Sk.execLimit !== null) {
-        this.u.switchCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
+        this.u.switchCode += "Sk.misceval.startTimer();";
     }
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
         this.u.switchCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
@@ -2534,7 +2538,8 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                 case Sk.astnodes.Load:
                 case Sk.astnodes.Param:
                     // Need to check that it is bound!
-                    out("if (", mangled, " === undefined) { throw new Sk.builtin.UnboundLocalError('local variable \\\'", mangled, "\\\' referenced before assignment'); }\n");
+                    //out("if (", mangled, " === undefined) { throw new Sk.builtin.UnboundLocalError('local variable \\\'", mangled, "\\\' referenced before assignment'); }\n");
+                    out("if (", mangled, " === undefined) { throw Sk.misceval.errorUL('",mangled,"'); }\n");
                     return mangled;
                 case Sk.astnodes.Store:
                     out(mangled, "=", dataToStore, ";");
@@ -2700,7 +2705,7 @@ Compiler.prototype.cmod = function (mod) {
         "');var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
     if (Sk.execLimit !== null) {
-        this.u.varDeclsCode += "if (typeof Sk.execStart === 'undefined') {Sk.execStart = Date.now();Sk.execPaused=0}";
+        this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
 
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
@@ -2759,19 +2764,9 @@ Compiler.prototype.cmod = function (mod) {
 
 Compiler.prototype.handleTraceback = function(doContinue, scopeName) {
     doContinue = doContinue ? "continue" : "";
-    return ("}catch(err){ "+
-        "if(err instanceof Sk.builtin.TimeLimitError){"+
-        "Sk.execStart=Date.now();Sk.execPaused=0"+
-        "}if(!(err instanceof Sk.builtin.BaseException)) {"+
-        "err=new Sk.builtin.ExternalError(err);" +
-        "}Sk.err=err;err.traceback.push({"+
-            "lineno:$currLineNo,"+
-            "colno:$currColNo,"+
-            "source:$currSource,"+
-            "filename:'"+this.filename+"'," +
-            "scope:'"+scopeName+"'"+
-        "});"+
-        "if($exc.length>0){$err=err;$blk=$exc.pop();"+doContinue+"}else{throw err;}}}");
+    return "}catch(err){"+
+        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,$currSource,$fname,'" + scopeName + "');"+
+        "if($exc.length>0){$err=err;$blk=$exc.pop();"+doContinue+"}else{throw err;}}}";
 };
 
 /**
@@ -2805,7 +2800,9 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     // Restore the global __future__ flags
     Sk.__future__ = savedFlags;
 
-    var ret = "$compiledmod = function() {" + c.result.join("") + "\nreturn " + funcname + ";}();";
+    var shortCutConstants = "const $fname='"+filename+"';";
+
+    var ret = "$compiledmod = function() {" + shortCutConstants +c.result.join("") + "\nreturn " + funcname + ";}();";
     return {
         funcname: "$compiledmod",
         code    : ret
