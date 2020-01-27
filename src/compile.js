@@ -20,6 +20,7 @@ function Compiler (filename, st, flags, canSuspend, sourceCodeForAnnotation) {
     this.nestlevel = 0;
 
     this.u = null;
+    this.consts = {};
     this.stack = [];
 
     this.result = [];
@@ -61,7 +62,7 @@ function CompilerUnit () {
     this.blocks = [];
     this.curblock = 0;
 
-    this.consts = {};
+    //this.consts = {};
 
     this.scopename = null;
 
@@ -287,9 +288,9 @@ Compiler.prototype.makeConstant = function (rest) {
     }
 
     // Check if we've already defined this exact constant
-    for (var constant in this.u.consts) {
-        if (this.u.consts.hasOwnProperty(constant)) {
-            cval = this.u.consts[constant];
+    for (var constant in this.consts) {
+        if (this.consts.hasOwnProperty(constant)) {
+            cval = this.consts[constant];
             if (cval == val) {
                 // We have, just use it
                 return constant;
@@ -298,8 +299,8 @@ Compiler.prototype.makeConstant = function (rest) {
     }
 
     // We have not, build new one
-    v = this.u.scopename + "." + this.gensym("const");
-    this.u.consts[v] = val;
+    v = "$moduleConstants" + "." + this.gensym("_");
+    this.consts[v] = val;
     return v;
 };
 
@@ -2651,11 +2652,6 @@ Compiler.prototype.exitScope = function () {
         mangled = fixReservedNames(mangled);
         out(prev.scopename, ".co_name=new Sk.builtins['str']('", mangled, "');");
     }
-    for (var constant in prev.consts) {
-        if (prev.consts.hasOwnProperty(constant)) {
-            prev.suffixCode += constant + " = " + prev.consts[constant] + ";";
-        }
-    }
 };
 
 /**
@@ -2800,9 +2796,19 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     // Restore the global __future__ flags
     Sk.__future__ = savedFlags;
 
-    var shortCutConstants = "const $fname='"+filename+"';";
+    var shortCutConstants = "const $fname='"+filename+"',$moduleConstants={};";
+    var constantDefinitions = [];
+    for (var constant in c.consts) {
+        if (c.consts.hasOwnProperty(constant)) {
+            constantDefinitions.push(constant + " = " + c.consts[constant] + ";");
+        }
+    }
 
-    var ret = "$compiledmod = function() {" + shortCutConstants +c.result.join("") + "\nreturn " + funcname + ";}();";
+    var ret = ("$compiledmod = function() {" +
+        shortCutConstants +
+        c.result.join("") +
+        constantDefinitions.join("") +
+        "\nreturn " + funcname + ";}();");
     return {
         funcname: "$compiledmod",
         code    : ret

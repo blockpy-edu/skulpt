@@ -58,8 +58,9 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                         // AOT compilation
 
                         else if (ext === ".py" &&
-                                   endsWithAny(fullname, WHITE_LIST) &&
+                                   //endsWithAny(fullname, WHITE_LIST) &&
                                    fullname.startsWith("src/lib/pedal/")) {
+                            return;
                             var co;
                             try {
                                 co = Sk.compile(contents, fullname, "exec", true, false);
@@ -72,10 +73,10 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             }
                             fullname = fullname.replace(/\.py$/, ".js");
                             contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
-                            fs.writeFileSync("dist/"+file+".js", beautify(contents), 'utf8');
-                            contents = minify(contents).code;
-                            fs.writeFileSync("dist/"+file+".minified.js", contents, 'utf8');
-                            fs.writeFileSync("dist/"+file+".minified.beautified.js", beautify(contents), 'utf8');
+                            //fs.writeFileSync("dist/parts/"+file+".js", beautify(contents), 'utf8');
+                            //contents = minify(contents).code;
+                            //fs.writeFileSync("dist/parts/"+file+".minified.js", contents, 'utf8');
+                            //fs.writeFileSync("dist/parts/"+file+".minified.beautified.js", beautify(contents), 'utf8');
                         }
                         ret.files[fullname] = contents;
                     }
@@ -115,6 +116,10 @@ if (process.argv.includes("internal")) {
         minifyjs: true,
         excludes: excludes
     };
+
+    if (!fs.existsSync("dist/parts/")){
+        fs.mkdirSync("dist/parts/");
+    }
 
     buildJsonFile("builtinFiles", ["src/builtin", "src/lib"], [".js", ".py"], "dist/skulpt-stdlib.js", opts)
 } else if (process.argv.includes("unit2")) {
