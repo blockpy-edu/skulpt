@@ -27,10 +27,21 @@ function run (python3, opt, filename) {
     console.log("-----");
 
     Sk.configure({
-	syspath: [path.dirname(filename)],
-	read: (fname) => { return fs.readFileSync(fname, "utf8"); },
-	output: (args) => { process.stdout.write(args); },
-	__future__: pyver
+        syspath: [path.dirname(filename)],
+        inputfun: (promptMessage) => {
+            let resolveText;
+            let submittedPromise = new Promise((resolve) => {
+                resolveText = resolve;
+            });
+            setTimeout(()=>{resolveText(Sk.builtin.str("quit"));}, 2000);
+            return submittedPromise;
+            /*return process.stdin.on("data", function (data) {
+                return data;
+            });*/
+        },
+        read: (fname) => { return fs.readFileSync(fname, "utf8"); },
+        output: (args) => { process.stdout.write(args); },
+        __future__: pyver
     });
 
     Sk.misceval.asyncToPromise(function() {

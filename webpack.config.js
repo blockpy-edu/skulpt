@@ -52,10 +52,10 @@ module.exports = (env, argv) => {
         mod = {
             rules: [
                 {
-                     test: /\.js$/,
-                     enforce: 'pre',
-                     exclude: styleexcludes,
-                     loader: 'eslint-loader'
+                    test: /\.js$/,
+                    enforce: "pre",
+                    exclude: styleexcludes,
+                    loader: "eslint-loader"
                 }
             ]
         };

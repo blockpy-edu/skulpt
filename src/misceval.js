@@ -1338,6 +1338,16 @@ Sk.misceval.startTimer = function() {
 };
 Sk.exportSymbol("Sk.misceval.startTimer", Sk.misceval.startTimer);
 
+Sk.misceval.pauseTimer = function() {
+    Sk.execPaused=Date.now();
+};
+Sk.exportSymbol("Sk.misceval.pauseTimer", Sk.misceval.pauseTimer);
+
+Sk.misceval.unpauseTimer = function() {
+    Sk.execPaused=Date.now()-Sk.execPaused;
+};
+Sk.exportSymbol("Sk.misceval.unpauseTimer", Sk.misceval.unpauseTimer);
+
 Sk.misceval.errorUL = function(mangled) {
     return new Sk.builtin.UnboundLocalError('local variable "'+mangled+ '" referenced before assignment');
 };

@@ -1,13 +1,7 @@
 '''
-CISC108 Module that includes some basic helper functions such as assert_equal().
+CISC106 Module that includes some basic helper functions such as assert_equal().
 
 Versions:
-0.4 - 2020-APR-25, Austin Cory Bart
- + Added new assert_type function
- + Added tests for assert_type
-0.3 - 2019-JUL-??, Eleonor Bart
- + Vastly improved unit tests' flexibility
- + Started work on assert_false and assert_true
 0.2.1 - 2019-JAN-23, Austin Cory Bart
  + Keep track of tests' counts in student_tests
  + Improve make_type_name for BlockPy compatibility
@@ -78,7 +72,6 @@ def make_type_name(value):
     except Exception:
         return str(type(value))[8:-2]
 
-
 def get_line_code():
     # Load in extract_stack, or provide shim for environments without it.
     try:
@@ -92,22 +85,6 @@ def get_line_code():
         return None, None
 
 
-def _normalize_string(text):
-    '''
-    For strings:
-    - strips whitespace from each line
-    - lower cases
-    '''
-    # Lowercase
-    text = text.lower()
-    # Strip whitespace from each line
-    lines = text.split("\n")
-    lines = [line.strip() for line in lines if line.strip()]
-    text = "\n".join(lines)
-    # Return result
-    return text
-
-
 # Don't print message from assert_equal on success
 QUIET = False
 
@@ -119,12 +96,12 @@ LIST_GENERATOR_TYPES = (type(map(bool, [])), type(filter(bool, [])),
 
 MESSAGE_LINE_CODE = " - [line {line}] {code}"
 MESSAGE_UNRELATED_TYPES = (
-    "FAILURE{context}, predicted answer was {y} ({y_type!r}), "
-    "computed answer was {x} ({x_type!r}). "
+    "FAILURE{context}, predicted answer was {y!r} ({y_type!r}), "
+    "computed answer was {x!r} ({x_type!r}). "
     "You attempted to compare unrelated data types.")
 MESSAGE_GENERIC_FAILURE = (
-    "FAILURE{context}, predicted answer was {y}, "
-    "computed answer was {x}.")
+    "FAILURE{context}, predicted answer was {y!r}, "
+    "computed answer was {x!r}.")
 MESSAGE_GENERIC_SUCCESS = (
     "TEST PASSED{context}")
 
@@ -146,12 +123,10 @@ class StudentTestReport:
         self.successes = 0
         self.tests = 0
         self.lines = []
-
-
+    
 student_tests = StudentTestReport()
 
-
-def assert_equal(x, y, precision=4, exact_strings=False, *args) -> bool:
+def assert_equal(x, y, precision=4, exact_strings=False, *args):
     """
     Checks an expected value using the _is_equal function.
     Prints a message if the test case passed or failed.
@@ -222,7 +197,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
     >>> _is_equal(12.3456, 12.34568w5)
      False
     """
-
+    
     # Check if generators
     if isinstance(x, LIST_GENERATOR_TYPES):
         x = list(x)
@@ -232,7 +207,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
         y = list(y)
     elif isinstance(y, SET_GENERATOR_TYPES):
         y = set(y)
-
+    
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
         return abs(x - y) < error
@@ -265,6 +240,22 @@ def _is_equal(x, y, precision, exact_strings, *args):
         return None
     else:
         return x == y
+
+
+def _normalize_string(text):
+    '''
+    For strings:
+    - strips whitespace from each line
+    - lower cases
+    '''
+    # Lowercase
+    text = text.lower()
+    # Strip whitespace from each line
+    lines = text.split("\n")
+    lines = [line.strip() for line in lines if line.strip()]
+    text = "\n".join(lines)
+    # Return result
+    return text
 
 
 def _are_sequences_equal(x, y, precision, exact_strings):
@@ -301,215 +292,3 @@ def _are_sets_equal(x, y, precision, exact_strings):
         if not _set_contains(x_element, y, precision, exact_strings):
             return False
     return True
-
-################################################################################
-# Truthiness stuff
-
-def assert_true(x) -> bool:
-    """
-    Checks an expected value using the _is_true function.
-    Prints a message if the test case passed or failed.
-
-    Args:
-        x (Any): Any kind of python value. Should have been computed by
-            the students' code (their actual answer).
-    Returns:
-        bool: Whether or not the assertion passed.
-    """
-    line, code = get_line_code()
-    if None in (line, code):
-        context = ""
-    else:
-        context = MESSAGE_LINE_CODE.format(line=line, code=code)
-
-    result = _is_true(x)
-    if result is None:
-        print(MESSAGE_UNRELATED_TYPES.format(context=context,
-                                             x=x, x_type=type(x).__name__,
-                                             y=True, y_type=type(True).__name__))
-        return False
-    elif not result:
-        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=True))
-        return False
-    elif not QUIET:
-        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
-    return True
-
-
-def assert_false(x) -> bool:
-    """
-    Checks an expected value using the _is_true function.
-    Prints a message if the test case passed or failed.
-
-    Args:
-        x (Any): Any kind of python value. Should have been computed by
-            the students' code (their actual answer).
-    Returns:
-        bool: Whether or not the assertion passed.
-    """
-    line, code = get_line_code()
-    if None in (line, code):
-        context = ""
-    else:
-        context = MESSAGE_LINE_CODE.format(line=line, code=code)
-
-    result = _is_true(x)
-    if result is None:
-        print(MESSAGE_UNRELATED_TYPES.format(context=context,
-                                             x=x, x_type=type(x).__name__,
-                                             y=False, y_type=type(False).__name__))
-        return False
-    elif result:
-        print(MESSAGE_GENERIC_FAILURE.format(context=context, x=x, y=False))
-        return False
-    elif not QUIET:
-        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
-    return True
-
-
-def _is_true(x):
-    """
-    _is_true : thing -> boolean
-    _is_true : number -> boolean
-    Determines whether the argument is true.
-    Returns None when attempting to assert a non-boolean
-
-    Examples:
-    >>> _is_true(True)
-     False
-
-    >>> _is_true("hi")
-     None
-
-    >>> _is_true(False)
-     False
-    """
-
-    if not isinstance(x, bool):
-        return None
-    else:
-        return x
-        
-################################################################################
-# Type Checking
-
-BETTER_TYPE_NAMES = {
-    str: 'string',
-    int: 'integer',
-    float: 'float',
-    bool: 'boolean',
-    dict: 'dictionary',
-    list: 'list'
-}
-
-def _get_name(value):
-    try:
-        return BETTER_TYPE_NAMES.get(value, value.__name__)
-    except Exception:
-        return str(value)[8:-2]
-    
-def _make_key_list(values):
-    if not values:
-        return "and there were no keys at all"
-    elif len(values) == 1:
-        return "but there was the key {!r}".format(values[0])
-    else:
-        return "but there were the keys "+ (", ".join(sorted(map(repr, values[:-1])))) + " and {!r}".format(values[-1])
-
-WRONG_TYPE_MESSAGE = " was the wrong type. Expected type was {y_type!r}, but actual value was {x} ({x_type!r})."
-WRONG_KEY_TYPE_MESSAGE = " had a wrong type for a key. Expected type of all keys was {y_type!r}, but there was the key {x} ({x_type!r})."
-MISSING_KEY_MESSAGE = " was missing the key {!r}, {}."
-EXTRA_KEYS_MESSAGE = " had all the correct keys ({}), but also had these unexpected keys: {}"
-NOT_A_TYPE_MESSAGE = " was the value {x!r} ({x_type!r}). However, that's not important because the expected type ({y}) doesn't make sense! The type definition should not have literal values like {y} in it, only types (like {y_type}). The literal values go into instances of the type."
-
-def _validate_dictionary_type(value, expected_type, path):
-    if not isinstance(value, dict):
-        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="dictionary")
-    for expected_key, expected_value in expected_type.items():
-        if isinstance(expected_key, str):
-            if expected_key not in value:
-                return path + MISSING_KEY_MESSAGE.format(expected_key, _make_key_list(list(value.keys())))
-            reason = _validate_type(value[expected_key], expected_value,
-                                    path+"[{!r}]".format(expected_key))
-            if reason:
-                return reason
-        elif isinstance(expected_key, type):
-            for k, v in value.items():
-                new_path = path+"[{!r}]".format(k)
-                if not isinstance(k, expected_key):
-                    return path + WRONG_KEY_TYPE_MESSAGE.format(x=repr(k), x_type=_get_name(type(k)), y_type=_get_name(expected_key))
-                reason = _validate_type(v, expected_value, new_path)
-                if reason:
-                    return reason
-            break # only support one key/value type in Lookup style
-    else:
-        if len(expected_type) != len(value):
-            unexpected_keys = set(value.keys()) - set(expected_type.keys())
-            unexpected_keys = ", ".join(sorted(map(repr, unexpected_keys)))
-            expected_keys = ", ".join(sorted(map(repr, expected_type)))
-            return path + EXTRA_KEYS_MESSAGE.format(expected_keys, unexpected_keys)
-        
-SIMPLE_TYPES = (int, float, bool, str)
-
-def _validate_type(value, expected_type, path="world"):
-    if isinstance(expected_type, dict):
-        return _validate_dictionary_type(value, expected_type, path)
-    elif isinstance(expected_type, list):
-        if not isinstance(value, list):
-            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="list")
-        if not expected_type and value:
-            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type="empty list")
-        for index, element in enumerate(value):
-            reason = _validate_type(element, expected_type[0], path+"[{}]".format(index))
-            if reason:
-                return reason
-    elif isinstance(expected_type, SIMPLE_TYPES):
-        return path + NOT_A_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y=repr(expected_type), y_type=type(expected_type).__name__)
-    elif expected_type == float:
-        if not isinstance(value, (int, float)) and value is not None:
-            return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
-    elif isinstance(value, bool) and expected_type != bool:
-        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
-    elif not isinstance(value, expected_type) and value is not None:
-        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)), y_type=_get_name(expected_type))
-    elif value == None and expected_type != None:
-        return path + WRONG_TYPE_MESSAGE.format(x=repr(value), x_type=_get_name(type(value)),
-                                                y_type=_get_name(expected_type))
-
-def assert_type(value, expected_type) -> bool:
-    """
-    Checks that the given value is of the expected_type.
-    
-    Args:
-        value (Any): Any kind of python value. Should have been computed by
-            the students' code (their actual answer).
-        expected_type (type): Any kind of type value. Should be in the format
-            used within CISC108. This includes support for literal composite
-            types (e.g., [int] and {str: int}) and record types.
-    Returns:
-        bool: Whether or not the assertion passed.
-    """
-    # Can we add in the line number and code?
-    line, code = get_line_code()
-    if None in (line, code):
-        context = ""
-    else:
-        context = MESSAGE_LINE_CODE.format(line=line, code=code)
-        student_tests.lines.append(line)
-    
-    reason = _validate_type(value, expected_type, "value")
-    student_tests.tests += 1
-    if reason is not None:
-        student_tests.failures += 1
-        if isinstance(expected_type, dict):
-            if isinstance(value, dict):
-                reason = "the "+reason
-            else:
-                reason = "the "+reason
-        print("FAILURE{context},".format(context=context), reason)
-        return False
-    elif not QUIET:
-        print(MESSAGE_GENERIC_SUCCESS.format(context=context))
-    student_tests.successes += 1
-    return True
-

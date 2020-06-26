@@ -872,6 +872,7 @@ Sk.builtin.raw_input = function (prompt) {
     var lprompt = prompt ? prompt : "";
 
     return Sk.misceval.chain(Sk.importModule("sys", false, true), function (sys) {
+
         if (Sk.inputfunTakesPrompt) {
             return Sk.misceval.callsimOrSuspendArray(Sk.builtin.file.$readline, [sys["$d"]["stdin"], null, lprompt]);
         } else {

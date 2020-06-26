@@ -148,6 +148,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
 
         lprompt = lprompt ? lprompt : "";
 
+        Sk.misceval.pauseTimer();
         x = Sk.inputfun(lprompt);
 
         if (x instanceof Promise) {
@@ -158,6 +159,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
                     throw susp.data.error;
                 }
 
+                Sk.misceval.unpauseTimer();
                 return new Sk.builtin.str(susp.data.result);
             };
 
@@ -168,6 +170,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
 
             return susp;
         } else {
+            Sk.execPaused = Date.now()-Sk.execPaused;
             return new Sk.builtin.str(x);
         }
     } else {

@@ -886,7 +886,7 @@ Sk.builtin.float_.prototype.str$ = function (base, sign) {
         if (Sk.__future__.python3) {
             tmp = work.toPrecision(16);
         } else {
-        	tmp = work.toPrecision(12);
+            tmp = work.toPrecision(12);
         }
         
 
