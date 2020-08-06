@@ -80,20 +80,20 @@ Sk.builtin.file.prototype.tp$iter = function () {
     var currentLine = this.currentLine;
 
     var ret =
-    {
-        tp$iter    : function () {
-            return ret;
-        },
-        $obj       : this,
-        $index     : currentLine,
-        $lines     : allLines,
-        tp$iternext: function () {
-            if (ret.$index >= ret.$lines.length) {
-                return undefined;
+        {
+            tp$iter: function () {
+                return ret;
+            },
+            $obj: this,
+            $index: currentLine,
+            $lines: allLines,
+            tp$iternext: function () {
+                if (ret.$index >= ret.$lines.length) {
+                    return undefined;
+                }
+                return new Sk.builtin.str(ret.$lines[ret.$index++]);
             }
-            return new Sk.builtin.str(ret.$lines[ret.$index++]);
-        }
-    };
+        };
     return ret;
 };
 
@@ -128,9 +128,9 @@ Sk.builtin.file.prototype["read"] = new Sk.builtin.func(function read(self, size
     }
 
     ret = new Sk.builtin.str(self.data$.substr(self.pos$, l_size));
-    if(size === undefined){
+    if (size === undefined) {
         self.pos$ = len;
-    }else{
+    } else {
         self.pos$ += Sk.ffi.remapToJs(size);
     }
     if (self.pos$ >= len) {
@@ -154,7 +154,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
         if (x instanceof Promise) {
             susp = new Sk.misceval.Suspension();
 
-            susp.resume = function() {
+            susp.resume = function () {
                 if (susp.data.error) {
                     throw susp.data.error;
                 }
@@ -170,7 +170,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
 
             return susp;
         } else {
-            Sk.execPaused = Date.now()-Sk.execPaused;
+            Sk.execPaused = Date.now() - Sk.execPaused;
             return new Sk.builtin.str(x);
         }
     } else {
@@ -201,7 +201,7 @@ Sk.builtin.file.prototype["readlines"] = new Sk.builtin.func(function readlines(
 });
 
 Sk.builtin.file.prototype["seek"] = new Sk.builtin.func(function seek(self, offset, whence) {
-    var l_offset =  Sk.ffi.remapToJs(offset);
+    var l_offset = Sk.ffi.remapToJs(offset);
 
     if (whence === undefined) {
         whence = 0;

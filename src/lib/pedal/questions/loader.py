@@ -193,6 +193,7 @@ def check_function_value(function, values, settings):
 
 class TestCase:
     CASE_COUNT = 0
+
     def __init__(self, function_name, case_name):
         self.function_name = function_name
         if case_name is None:
@@ -245,6 +246,7 @@ class TestCase:
 
     def fail(self):
         self.success = False
+
 
 def check_case(function, case, student_function):
     """
@@ -330,12 +332,12 @@ def make_table(cases):
         body.append("    </tr>")
     body = "\n".join(body)
     return TEST_TABLE_TEMPLATE.format(body=body)
-    #if ((any(args) and any(inputs)) or
+    # if ((any(args) and any(inputs)) or
     #        (any(expected_outputs) and any(expected_returns)) or
     #        (any(actual_outputs) and any(actual_returns))):
     #    # Complex cells
     #    pass
-    #else:
+    # else:
     # Simple table
     # Make header
 
@@ -381,7 +383,7 @@ def check_cases(function, student_function, settings):
                 table = make_table(test_cases)
                 raise FeedbackException("toolkit", "failed_test_cases",
                                         function_name=function_name,
-                                        cases_count=len(cases), failure_count=len(cases)-success_cases,
+                                        cases_count=len(cases), failure_count=len(cases) - success_cases,
                                         table=table)
             else:
                 raise FeedbackException("toolkit", "failed_test_cases_count",
@@ -432,7 +434,7 @@ def load_question(data):
                     check_cases(function, student_function, settings)
                 except FeedbackException as fe:
                     success_ratio = (1.0 - fe.fields['failure_count'] / fe.fields['cases_count'])
-                    function_points += function_rubric.get('cases', 80*success_ratio)
+                    function_points += function_rubric.get('cases', 80 * success_ratio)
                     yield fe.as_message(), fe.label
                 else:
                     function_points += function_rubric.get('cases', 80)

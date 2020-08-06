@@ -11,6 +11,7 @@ import asdl
 TABSIZE = 4
 MAX_COL = 80
 
+
 def get_c_type(name):
     """Return a string for the C name of the type.
 
@@ -24,6 +25,7 @@ def get_c_type(name):
         return name
     else:
         return "%s_ty" % name
+
 
 def reflow_lines(s, depth):
     """Reflow the line s indented depth tabs.
@@ -53,19 +55,20 @@ def reflow_lines(s, depth):
             # find new size based on brace
             j = cur.find('{', 0, i)
             if j >= 0:
-                j += 2 # account for the brace and the space after it
+                j += 2  # account for the brace and the space after it
                 size -= j
                 padding = " " * j
             else:
                 j = cur.find('(', 0, i)
                 if j >= 0:
-                    j += 1 # account for the paren (no space after it)
+                    j += 1  # account for the paren (no space after it)
                     size -= j
                     padding = " " * j
-        cur = cur[i+1:]
+        cur = cur[i + 1:]
     else:
         lines.append(padding + cur)
     return lines
+
 
 def is_simple(sum):
     """Return True if a sum is a simple.
@@ -166,7 +169,7 @@ class PrototypeVisitor(EmitVisitor):
 
     def visitSum(self, sum, name):
         if is_simple(sum):
-            pass # XXX
+            pass  # XXX
         else:
             for t in sum.types:
                 self.visit(t, name, sum.attributes)
@@ -213,10 +216,10 @@ class PrototypeVisitor(EmitVisitor):
         else:
             argstr = "PyArena *arena"
         margs = "a0"
-        for i in range(1, len(args)+1):
+        for i in range(1, len(args) + 1):
             margs += ", a%d" % i
         self.emit("#define %s(%s) _Py_%s(%s)" % (name, margs, name, margs), 0,
-                reflow = 0)
+                  reflow=0)
         self.emit("%s _Py_%s(%s);" % (ctype, name, argstr), 0)
 
     def visitProduct(self, prod, name):
@@ -230,6 +233,7 @@ class FunctionVisitor(PrototypeVisitor):
     def emit_function(self, name, ctype, args, attrs, union=1):
         def emit(s, depth=0, reflow=1):
             self.emit(s, depth, reflow)
+
         argstr = ", ".join(["/* {%s} */ %s" % (atype, aname)
                             for atype, aname, opt in args + attrs])
         emit("/** @constructor */")
@@ -247,10 +251,10 @@ class FunctionVisitor(PrototypeVisitor):
         emit("}")
         emit("")
 
-
     def emit_body_union(self, name, args, attrs):
         def emit(s, depth=0, reflow=1):
             self.emit(s, depth, reflow)
+
         for argtype, argname, opt in args:
             emit("this.%s = %s;" % (argname, argname), 1)
         for argtype, argname, opt in attrs:
@@ -259,9 +263,11 @@ class FunctionVisitor(PrototypeVisitor):
     def emit_body_struct(self, name, args, attrs):
         def emit(s, depth=0, reflow=1):
             self.emit(s, depth, reflow)
+
         for argtype, argname, opt in args:
             emit("this.%s = %s;" % (argname, argname), 1)
         assert not attrs
+
 
 class PickleVisitor(EmitVisitor):
 
@@ -290,18 +296,19 @@ def cleanName(name):
     if name[-1] == "_": return name[:-1]
     return name
 
-class FieldNamesVisitor(PickleVisitor):
 
+class FieldNamesVisitor(PickleVisitor):
     """note that trailing comma is bad in IE so we have to fiddle a bit to avoid it"""
 
     def visitProduct(self, prod, name):
         if prod.fields:
             self.emit('Sk.astnodes.%s.prototype._astname = "%s";' % (name, cleanName(name)), 0)
-            self.emit("Sk.astnodes.%s.prototype._fields = [" % name,0)
+            self.emit("Sk.astnodes.%s.prototype._fields = [" % name, 0)
             c = 0
             for f in prod.fields:
                 c += 1
-                self.emit('"%s", function(n) { return n.%s; }%s' % (f.name, f.name, "," if c < len(prod.fields) else ""), 1)
+                self.emit(
+                    '"%s", function(n) { return n.%s; }%s' % (f.name, f.name, "," if c < len(prod.fields) else ""), 1)
             self.emit("];", 0)
 
     def visitSum(self, sum, name):
@@ -320,10 +327,13 @@ class FieldNamesVisitor(PickleVisitor):
             c = 0
             for t in cons.fields:
                 c += 1
-                self.emit('"%s", function(n) { return n.%s; }%s' % (t.name, t.name, "," if c < len(cons.fields) else ""), 1)
-        self.emit("];",0)
+                self.emit(
+                    '"%s", function(n) { return n.%s; }%s' % (t.name, t.name, "," if c < len(cons.fields) else ""), 1)
+        self.emit("];", 0)
+
 
 _SPECIALIZED_SEQUENCES = ('stmt', 'expr')
+
 
 def find_sequence(fields, doing_specialization):
     """Return True if any field uses a sequence."""
@@ -334,6 +344,7 @@ def find_sequence(fields, doing_specialization):
             if str(f.type) not in _SPECIALIZED_SEQUENCES:
                 return True
     return False
+
 
 def has_sequence(types, doing_specialization):
     for t in types:
@@ -351,7 +362,9 @@ class ChainOfVisitors:
             v.visit(object)
             v.emit("", 0)
 
+
 common_msg = "/* File automatically generated by %s. */\n\n"
+
 
 def main(asdlfile, outputfile):
     argv0 = sys.argv[0]
@@ -367,28 +380,30 @@ def main(asdlfile, outputfile):
     f.write(auto_gen_msg)
     f.write("/* Object that holds all nodes */\n");
     f.write("Sk.astnodes = {};\n\n");
-    
+
     c = ChainOfVisitors(TypeDefVisitor(f),
                         )
     c.visit(mod)
 
-    f.write("\n"*5)
+    f.write("\n" * 5)
     f.write("/* ---------------------- */\n")
     f.write("/* constructors for nodes */\n")
     f.write("/* ---------------------- */\n")
-    f.write("\n"*5)
+    f.write("\n" * 5)
     v = ChainOfVisitors(
         FunctionVisitor(f),
         FieldNamesVisitor(f),
-        )
+    )
     v.visit(mod)
 
     f.write('Sk.exportSymbol("Sk.astnodes", Sk.astnodes);\n');
-    
+
     f.close()
+
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 3:
         print("usage: asdl_js.py input.asdl output.js")
         raise SystemExit()

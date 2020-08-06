@@ -1,615 +1,310 @@
-if(Sk.builtin === undefined) {
+/**
+ * @namespace Sk.builtin
+ *
+ * @description
+ * All the builtin types as well as useful functions
+ */
+if (Sk.builtin === undefined) {
     Sk.builtin = {};
 }
 
 /**
- * Maps Python dunder names to the Skulpt Javascript function names that
- * implement them.
- *
- * Note: __add__, __mul__, and __rmul__ can be used for either numeric or
- * sequence types. Here, they default to the numeric versions (i.e. nb$add,
- * nb$multiply, and nb$reflected_multiply). This works because Sk.abstr.binary_op_
- * checks for the numeric shortcuts and not the sequence shortcuts when computing
- * a binary operation.
- *
- * Because many of these functions are used in contexts in which Skulpt does not
- * [yet] handle suspensions, the assumption is that they must not suspend. However,
- * some of these built-in functions are acquiring 'canSuspend' arguments to signal
- * where this is not the case. These need to be spliced out of the argument list before
- * it is passed to python. Array values in this map contain [dunderName, argumentIdx],
- * where argumentIdx specifies the index of the 'canSuspend' boolean argument.
- *
- * @type {Object}
- */
-Sk.dunderToSkulpt = {
-    "__eq__": "ob$eq",
-    "__ne__": "ob$ne",
-    "__lt__": "ob$lt",
-    "__le__": "ob$le",
-    "__gt__": "ob$gt",
-    "__ge__": "ob$ge",
-    "__hash__": "tp$hash",
-    "__abs__": "nb$abs",
-    "__neg__": "nb$negative",
-    "__pos__": "nb$positive",
-    "__int__": "nb$int_",
-    "__long__": "nb$lng",
-    "__float__": "nb$float_",
-    "__add__": "nb$add",
-    "__radd__": "nb$reflected_add",
-    "__sub__": "nb$subtract",
-    "__rsub__": "nb$reflected_subtract",
-    "__mul__": "nb$multiply",
-    "__rmul__": "nb$reflected_multiply",
-    "__div__": "nb$divide",
-    "__rdiv__": "nb$reflected_divide",
-    "__floordiv__": "nb$floor_divide",
-    "__rfloordiv__": "nb$reflected_floor_divide",
-    "__mod__": "nb$remainder",
-    "__rmod__": "nb$reflected_remainder",
-    "__divmod__": "nb$divmod",
-    "__rdivmod__": "nb$reflected_divmod",
-    "__pow__": "nb$power",
-    "__rpow__": "nb$reflected_power",
-    "__contains__": "sq$contains",
-    "__len__": ["sq$length", 1],
-    "__get__": ["tp$descr_get", 3],
-    "__set__": ["tp$descr_set", 3]
-};
-
-Sk.setupDunderMethods = function (py3) {
-    if (py3) {
-        Sk.dunderToSkulpt["__matmul__"] = "tp$matmul";
-        Sk.dunderToSkulpt["__rmatmul__"] = "tp$reflected_matmul";
-    } else {
-        if (Sk.dunderToSkulpt["__matmul__"]) {
-            delete Sk.dunderToSkulpt["__matmul__"];
-        }
-        if (Sk.dunderToSkulpt["__rmatmul__"]) {
-            delete Sk.dunderToSkulpt["__rmatmul__"];
-        }
-    }
-};
-
-Sk.exportSymbol("Sk.setupDunderMethods", Sk.setupDunderMethods);
-/**
- *
  * @constructor
+ * @extends {Sk.builtin.object}
+ * @description
+ * this should never be called as a constructor
+ * instead use {@link Sk.abstr.buildNativeClass} or
+ * {@link Sk.misceval.buildClass}
  *
- * @param {*} name name or object to get type of, if only one arg
- *
- * @param {Sk.builtin.tuple=} bases
- *
- * @param {Object=} dict
- *
- *
- * This type represents the type of `type'. *Calling* an instance of
- * this builtin type named "type" creates class objects. The resulting
- * class objects will have various tp$xyz attributes on them that allow
- * for the various operations on that object.
- *
- * calling the type or calling an instance of the type? or both?
  */
-Sk.builtin.type = function (name, bases, dict) {
-    var mro;
-    var obj;
-    var klass;
-    var v;
-    if (bases === undefined && dict === undefined) {
-        // 1 arg version of type()
-        // the argument is an object, not a name and returns a type object
-        obj = name;
-        return obj.ob$type;
+Sk.builtin.type = function type() {
+    Sk.asserts.assert(false, "calling new Sk.builtin.type is not safe");
+};
+
+/** @typedef {Sk.builtin.type|Function} */ var typeObject;
+
+Sk.builtin.type.prototype.tp$doc = "type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type";
+
+/**
+ * @this {typeObject | Sk.builtin.type}
+ */
+Sk.builtin.type.prototype.tp$call = function (args, kwargs) {
+    if (this === Sk.builtin.type) {
+        // check the args are 1 - only interested in the 1 argument form if
+        // if the nargs and nkeywords != 1 or 3 and zero raise an error
+        if (args.length === 1 && (kwargs === undefined || !kwargs.length)) {
+            return args[0].ob$type;
+        } else if (args.length !== 3) {
+            throw new Sk.builtin.TypeError("type() takes 1 or 3 arguments");
+        }
+    }
+    let obj,
+        self = this;
+
+    obj = this.prototype.tp$new(args, kwargs);
+
+    if (obj.$isSuspension) {
+        return Sk.misceval.chain(
+            obj,
+            function (o) {
+                obj = o;
+                if (!obj.ob$type.$isSubType(self)) {
+                    // don't initialize an obj if it's type is not a subtype of this!
+                    // typically obj$obtype === self so this check is fast
+                    return;
+                }
+                return obj.tp$init(args, kwargs);
+            },
+            () => obj
+        );
+    } else if (!obj.ob$type.$isSubType(self)) {
+        return obj;
     } else {
-
-        // argument dict must be of type dict
-        if(dict.tp$name !== "dict") {
-            throw new Sk.builtin.TypeError("type() argument 3 must be dict, not " + Sk.abstr.typeName(dict));
+        const res = obj.tp$init(args, kwargs);
+        Sk.asserts.assert(res !== undefined, "should return None in init method for " + obj.tp$name);
+        if (res.$isSuspension) {
+            return Sk.misceval.chain(res, () => obj);
         }
+        return obj;
+    }
+};
 
-        // checks if name must be string
-        if(!Sk.builtin.checkString(name)) {
-            throw new Sk.builtin.TypeError("type() argument 1 must be str, not " + Sk.abstr.typeName(name));
+Sk.builtin.type.prototype.tp$new = function (args, kwargs) {
+    // currently skulpt does not support metatypes...
+    // metatype.prototype = this
+    if (args.length !== 3) {
+        if (args.length === 1 && (kwargs === undefined || !kwargs.length)) {
+            return args[0].ob$type;
         }
-
-        // argument bases must be of type tuple
-        if(bases.tp$name !== "tuple") {
-            throw new Sk.builtin.TypeError("type() argument 2 must be tuple, not " + Sk.abstr.typeName(bases));
-        }
-
-        // type building version of type
-
-        // dict is the result of running the classes code object
-        // (basically the dict of functions). those become the prototype
-        // object of the class).
-
-        /**
-        * The constructor is a stub, that gets called from object.__new__
-        * @constructor
-        */
-        klass = function (args, kws) {
-            var args_copy;
-
-            // Call up through the chain in case there's a built-in object
-            // whose constructor we need to initialise
-            if (klass.prototype.tp$base !== undefined) {
-                if (klass.prototype.tp$base.sk$klass) {
-                    klass.prototype.tp$base.call(this, args, kws);
-                } else {
-                    // Call super constructor if subclass of a builtin
-                    args_copy = args.slice();
-                    args_copy.unshift(klass, this);
-                    Sk.abstr.superConstructor.apply(undefined, args_copy);
-                }
-            }
-
-            this["$d"] = new Sk.builtin.dict([]);
-            this["$d"].mp$ass_subscript(new Sk.builtin.str("__dict__"), this["$d"]);
-        };
-
-        var _name = Sk.ffi.remapToJs(name); // unwrap name string to js for latter use
-
-        var inheritsBuiltin = false;
-
-        // Invoking the class object calls __new__() to generate a new instance,
-        // then __init__() to initialise it
-        klass.tp$call = function(args, kws) {
-            var newf = Sk.builtin.type.typeLookup(klass, Sk.builtin.str.$new), newargs;
-            var self;
-
-            args = args || [];
-            kws = kws || [];
-
-            if (newf === undefined || newf === Sk.builtin.object.prototype["__new__"]) {
-                // No override -> just call the constructor
-                self = new klass(args, kws);
-                newf = undefined;
-            } else {
-                newargs = args.slice();
-                newargs.unshift(klass);
-                self = Sk.misceval.applyOrSuspend(newf, undefined, undefined, kws, newargs);
-            }
-
-            return Sk.misceval.chain(self, function(s) {
-                var init = Sk.builtin.type.typeLookup(s.ob$type, Sk.builtin.str.$init);
-
-                self = s; // in case __new__ suspended
-
-                if (init !== undefined) {
-                    args.unshift(self);
-                    return Sk.misceval.applyOrSuspend(init, undefined, undefined, kws, args);
-                } else if (newf === undefined && (args.length !== 0 || kws.length !== 0) && !inheritsBuiltin) {
-                    // We complain about spurious constructor arguments if neither __new__
-                    // nor __init__ were overridden
-                    throw new Sk.builtin.TypeError("__init__() got unexpected argument(s)");
-                }
-            }, function(r) {
-                if (r !== Sk.builtin.none.none$ && r !== undefined) {
-                    throw new Sk.builtin.TypeError("__init__() should return None, not " + Sk.abstr.typeName(r));
-                } else {
-                    return self;
-                }
-            });
-        };
-
-        if (bases.v.length === 0 && Sk.__future__.inherit_from_object) {
-            // new style class, inherits from object by default
-            bases.v.push(Sk.builtin.object);
-            Sk.abstr.setUpInheritance(_name, klass, Sk.builtin.object);
-        }
-
-        var parent, it, firstAncestor, builtin_bases = [];
-        // Set up inheritance from any builtins
-        for (it = bases.tp$iter(), parent = it.tp$iternext(); parent !== undefined; parent = it.tp$iternext()) {
-            if (firstAncestor === undefined) {
-                firstAncestor = parent;
-            }
-
-            while (parent.sk$klass && parent.prototype.tp$base) {
-                parent = parent.prototype.tp$base;
-            }
-
-            if (!parent.sk$klass && builtin_bases.indexOf(parent) < 0) {
-                builtin_bases.push(parent);
-                inheritsBuiltin = true;
-            }
-        }
-
-        if (builtin_bases.length > 1) {
-            throw new Sk.builtin.TypeError("Multiple inheritance with more than one builtin type is unsupported");
-        }
-
-        // Javascript does not support multiple inheritance, so only the first
-        // base (if any) will directly inherit in Javascript
-        if (firstAncestor !== undefined) {
-            Sk.abstr.inherits(klass, firstAncestor);
-
-            if (firstAncestor.prototype instanceof Sk.builtin.object || firstAncestor === Sk.builtin.object) {
-                klass.prototype.tp$base = firstAncestor;
-            }
-        }
-
-        klass.prototype.tp$name = _name;
-        klass.prototype.ob$type = Sk.builtin.type.makeIntoTypeObj(_name, klass);
-
-        // set __module__ if not present (required by direct type(name, bases, dict) calls)
-        var module_lk = new Sk.builtin.str("__module__");
-        if(dict.mp$lookup(module_lk) === undefined) {
-            dict.mp$ass_subscript(module_lk, Sk.globals["__name__"]);
-        }
-
-        // copy properties into our klass object
-        // uses python iter methods
-        var k;
-        for (it = dict.tp$iter(), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
-            v = dict.mp$subscript(k);
-            if (v === undefined) {
-                v = null;
-            }
-            klass.prototype[k.v] = v;
-            klass[k.v] = v;
-        }
-
-        klass.prototype.__class__ = klass;
-        klass.prototype.__name__ = name;
-        klass.sk$klass = true;
-        klass.prototype["$r"] = function () {
-            var cname;
-            var mod;
-            var reprf = this.__class__.tp$getattr(Sk.builtin.str.$repr);
-            if (reprf !== undefined && reprf.im_func !== Sk.builtin.object.prototype["__repr__"]) {
-                return Sk.misceval.apply(reprf, undefined, undefined, undefined, [this]);
-            }
-
-            if ((klass.prototype.tp$base !== undefined) &&
-                (klass.prototype.tp$base !== Sk.builtin.object) &&
-                (klass.prototype.tp$base.prototype["$r"] !== undefined)) {
-                // If subclass of a builtin which is not object, use that class' repr
-                return klass.prototype.tp$base.prototype["$r"].call(this);
-            } else {
-                // Else, use default repr for a user-defined class instance
-                mod = dict.mp$subscript(module_lk); // lookup __module__
-                cname = "";
-                if (mod) {
-                    cname = mod.v + ".";
-                }
-                return new Sk.builtin.str("<" + cname + _name + " object>");
-            }
-        };
-
-        klass.prototype.tp$setattr = function(pyName, data, canSuspend) {
-            var r, setf = Sk.builtin.object.prototype.GenericGetAttr.call(this, Sk.builtin.str.$setattr);
-            if (setf !== undefined) {
-                var f = /** @type {?} */ (setf);
-                r = Sk.misceval.callsimOrSuspendArray(f, [pyName, data]);
-                return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-            }
-
-            return Sk.builtin.object.prototype.GenericSetAttr.call(this, pyName, data, canSuspend);
-        };
-
-        klass.prototype.tp$getattr = function(pyName, canSuspend) {
-            var r, descr, /** @type {(Object|undefined)} */ getf;
-            // Find __getattribute__ on this type if we can
-            descr = Sk.builtin.type.typeLookup(klass, Sk.builtin.str.$getattribute);
-
-            if (descr !== undefined && descr !== null && descr.tp$descr_get !== undefined) {
-                getf = descr.tp$descr_get.call(descr, this, klass);
-            }
-
-            if (getf === undefined) {
-                getf = Sk.builtin.object.prototype.GenericPythonGetAttr.bind(null, this);
-            }
-
-            // Convert AttributeErrors back into 'undefined' returns to match the tp$getattr
-            // convention
-            r = Sk.misceval.tryCatch(function() {
-                return Sk.misceval.callsimOrSuspendArray(/** @type {Object} */ (getf), [pyName]);
-            }, function (e) {
-                if (e instanceof Sk.builtin.AttributeError) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            });
-
-            return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-        };
-
-        klass.prototype.tp$str = function () {
-            var strf = this.__class__.tp$getattr(Sk.builtin.str.$str);
-            if (strf !== undefined && strf.im_func !== Sk.builtin.object.prototype["__str__"]) {
-                return Sk.misceval.apply(strf, undefined, undefined, undefined, [this]);
-            }
-            if ((klass.prototype.tp$base !== undefined) &&
-                (klass.prototype.tp$base !== Sk.builtin.object) &&
-                (klass.prototype.tp$base.prototype.tp$str !== undefined)) {
-                // If subclass of a builtin which is not object, use that class' repr
-                return klass.prototype.tp$base.prototype.tp$str.call(this);
-            }
-            return this["$r"]();
-        };
-        klass.prototype.tp$length = function (canSuspend) {
-            var r = Sk.misceval.chain(Sk.abstr.gattr(this, Sk.builtin.str.$len, canSuspend), function(lenf) {
-                return Sk.misceval.applyOrSuspend(lenf, undefined, undefined, undefined, []);
-            });
-            return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-        };
-        klass.prototype.tp$call = function (args, kw) {
-            var that = this;
-            return Sk.misceval.chain(this.__class__.tp$getattr(Sk.builtin.str.$call, true), function(callf) {
-                if (callf === undefined) {
-                    throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object is not callable");
-                }
-                return Sk.misceval.applyOrSuspend(callf, undefined, undefined, kw, [that].concat(args));
-            });
-        };
-        klass.prototype.tp$iter = function () {
-            var iterf = this.tp$getattr(Sk.builtin.str.$iter);
-            if (iterf === undefined) {
-                throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object is not iterable");
-            }
-            return Sk.misceval.callsimArray(iterf);
-        };
-        klass.prototype.tp$iternext = function (canSuspend) {
-            var self = this;
-            var next;
-
-            if (Sk.__future__.dunder_next) {
-                next = Sk.builtin.str.$next3;
-            } else {
-                next = Sk.builtin.str.$next2;
-            }
-            var r = Sk.misceval.chain(self.tp$getattr(next, canSuspend), function(iternextf) {
-                if (iternextf === undefined) {
-                    throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(self) + "' object is not iterable");
-                }
-
-                return Sk.misceval.tryCatch(function() {
-                    return Sk.misceval.callsimOrSuspendArray(iternextf);
-                }, function(e) {
-                    if (e instanceof Sk.builtin.StopIteration) {
-                        return undefined;
-                    } else {
-                        throw e;
-                    }
-                });
-            });
-
-            return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-        };
-
-        klass.prototype.tp$getitem = function (key, canSuspend) {
-            var getf = this.__class__.tp$getattr(Sk.builtin.str.$getitem, canSuspend), r;
-            if (getf !== undefined) {
-                r = Sk.misceval.applyOrSuspend(getf, undefined, undefined, undefined, [this, key]);
-                return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-            }
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object does not support indexing");
-        };
-        klass.prototype.tp$setitem = function (key, value, canSuspend) {
-            var setf = this.__class__.tp$getattr(Sk.builtin.str.$setitem, canSuspend), r;
-            if (setf !== undefined) {
-                r = Sk.misceval.applyOrSuspend(setf, undefined, undefined, undefined, [this, key, value]);
-                return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
-            }
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object does not support item assignment");
-        };
-
-        if (bases) {
-            //print("building mro for", name);
-            //for (var i = 0; i < bases.length; ++i)
-            //print("base[" + i + "]=" + bases[i].tp$name);
-            klass["$d"] = new Sk.builtin.dict([]);
-            klass["$d"].mp$ass_subscript(Sk.builtin.type.basesStr_, bases);
-            mro = Sk.builtin.type.buildMRO(klass);
-            klass["$d"].mp$ass_subscript(Sk.builtin.type.mroStr_, mro);
-            klass.tp$mro = mro;
-            //print("mro result", Sk.builtin.repr(mro).v);
-        }
-
-        // fix for class attributes
-        klass.tp$setattr = Sk.builtin.type.prototype.tp$setattr;
-
-        var shortcutDunder = function (skulpt_name, magic_name, magic_func, canSuspendIdx) {
-            klass.prototype[skulpt_name] = function () {
-                var canSuspend = false;
-                var len = arguments.length;
-                var args, i, j;
-                if ((canSuspendIdx !== null) && (canSuspendIdx <= len)) {
-                    args = new Array(len);
-                } else {
-                    args = new Array(len+1);
-                }
-
-                args[0] = this;
-                j = 1;
-                for (i = 0; i < len; i++) {
-                    if (i === (canSuspendIdx-1)) {
-                        canSuspend = arguments[i];
-                    } else {
-                        args[j] = arguments[i];
-                        j += 1;
-                    }
-                }
-
-                if (canSuspend) {
-                    return Sk.misceval.callsimOrSuspendArray(magic_func, args);
-                } else {
-                    return Sk.misceval.callsimArray(magic_func, args);
-                }
-            };
-        };
-
-        // Register skulpt shortcuts to magic methods defined by this class.
-        // Dynamically deflined methods (eg those returned by __getattr__())
-        // cannot be used by these magic functions; this is consistent with
-        // how CPython handles "new-style" classes:
-        // https://docs.python.org/2/reference/datamodel.html#special-method-lookup-for-old-style-classes
-        var dunder, skulpt_name, canSuspendIdx;
-        for (dunder in Sk.dunderToSkulpt) {
-            skulpt_name = Sk.dunderToSkulpt[dunder];
-            if (typeof(skulpt_name) === "string") {
-                canSuspendIdx = null;
-            } else {
-                canSuspendIdx = skulpt_name[1];
-                skulpt_name = skulpt_name[0];
-            }
-
-            if (klass[dunder]) {
-                // scope workaround
-                shortcutDunder(skulpt_name, dunder, klass[dunder], canSuspendIdx);
-            }
-        }
-
-        return klass;
+        throw new Sk.builtin.TypeError("type() takes 1 or 3 arguments");
     }
 
+    let $name, bases, dict;
+    $name = args[0];
+    bases = args[1];
+    dict = args[2];
+    // first check that we only have 3 args and they're of the correct type
+    // argument dict must be of type dict
+    if (dict.tp$name !== "dict") {
+        throw new Sk.builtin.TypeError("type() argument 3 must be dict, not " + Sk.abstr.typeName(dict));
+    }
+    // checks if name must be string
+    if (!Sk.builtin.checkString($name)) {
+        throw new Sk.builtin.TypeError("type() argument 1 must be str, not " + Sk.abstr.typeName($name));
+    }
+    $name = $name.$jsstr();
+    // argument bases must be of type tuple
+    if (bases.tp$name !== "tuple") {
+        throw new Sk.builtin.TypeError("type() argument 2 must be tuple, not " + Sk.abstr.typeName(bases));
+    }
+
+    /**
+     * @type {!typeObject}
+     */
+    const klass = function () {
+    // klass is essentially a function that gives its instances a dict
+        // if we support slots then we might need to have two versions of this
+        this.$d = new Sk.builtin.dict();
+    };
+
+    // this function tries to match Cpython - the best base is not always bases[0]
+    // we require a best bases for checks in __new__ as well as future support for slots
+    const best_base = Sk.builtin.type.$best_base(bases.v);
+
+    // get the metaclass from kwargs
+    // todo this is not really the right way to do it...
+    let metaclass;
+    if (kwargs) {
+        const meta_idx = kwargs.indexOf("metaclass");
+        if (meta_idx >= 0) {
+            metaclass = kwargs[meta_idx + 1];
+            kwargs = kwargs.splice(meta_idx, 1);
+        }
+    }
+
+    Sk.abstr.setUpInheritance($name, klass, best_base, metaclass);
+
+    klass.prototype.tp$bases = bases.v;
+    klass.prototype.tp$mro = klass.$buildMRO();
+
+    // some properties of klass objects and instances
+    klass.prototype.hp$type = true;
+    klass.sk$klass = true;
+
+    // set some defaults which can be overridden by the dict object
+    klass.prototype.__module__ = Sk.globals["__name__"];
+    klass.prototype.__doc__ = Sk.builtin.none.none$;
+
+    // set __dict__ if not already on the prototype
+    /**@todo __slots__ */
+    if (klass.$typeLookup(Sk.builtin.str.$dict) === undefined) {
+        klass.prototype.__dict__ = new Sk.builtin.getset_descriptor(klass, Sk.generic.getSetDict);
+    }
+
+    // copy properties from dict into klass.prototype
+    for (let it = dict.tp$iter(), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
+        const v = dict.mp$subscript(k);
+        klass.prototype[k.v] = v;
+    }
+    klass.$allocateSlots();
+
+    if (klass.prototype.sk$prototypical) {
+        klass.$typeLookup = function (pyName) {
+            var jsName = pyName.$mangled;
+            return this.prototype[jsName];
+        };
+    } else {
+        klass.$typeLookup = function (pyName) {
+            var jsName = pyName.$mangled;
+            const mro = this.prototype.tp$mro;
+            for (let i = 0; i < mro.length; ++i) {
+                const base_proto = mro[i].prototype;
+                if (base_proto.hasOwnProperty(jsName)) {
+                    return base_proto[jsName];
+                }
+            }
+            return undefined;
+        };
+    }
+
+    return klass;
 };
 
 /**
- *
+ * @param {Array} args
+ * @param {Array=} kwargs
  */
-Sk.builtin.type.makeTypeObj = function (name, newedInstanceOfType) {
-    Sk.builtin.type.makeIntoTypeObj(name, newedInstanceOfType);
-    return newedInstanceOfType;
+Sk.builtin.type.prototype.tp$init = function (args, kwargs) {
+    if (args && args.length == 1 && kwargs && kwargs.length) {
+        throw new Sk.builtin.TypeError("type.__init__() takes no keyword arguments");
+    } else if (args.length != 3 && args.length != 1) {
+        throw new Sk.builtin.TypeError("type.__init__() takes 1 or 3 arguments");
+    }
+    // according to Cpython we just call the object init method here
+    return Sk.builtin.object.prototype.tp$init.call(this, []);
 };
 
-Sk.builtin.type.makeIntoTypeObj = function (name, t) {
-    Sk.asserts.assert(name !== undefined);
-    Sk.asserts.assert(t !== undefined);
-    t.ob$type = Sk.builtin.type;
-    t.__class__ = Sk.builtin.type;
-    t.tp$name = name;
-    t["$r"] = function () {
-        var ctype;
-        var mod = t.__module__;
-        var cname = "";
-        if (mod) {
-            cname = mod.v + ".";
-        }
-        ctype = "class";
-        if (!mod && !t.sk$klass && !Sk.__future__.class_repr) {
-            ctype = "type";
-        }
-        return new Sk.builtin.str("<" + ctype + " '" + cname + t.tp$name + "'>");
-    };
-    t.tp$str = undefined;
-    t.tp$getattr = Sk.builtin.type.prototype.tp$getattr;
-    t.tp$setattr = Sk.builtin.object.prototype.GenericSetAttr;
-    t.tp$richcompare = Sk.builtin.type.prototype.tp$richcompare;
-    t.sk$type = true;
-
-    return t;
-};
-
-Sk.builtin.type.ob$type = Sk.builtin.type;
-Sk.builtin.type.tp$name = "type";
-Sk.builtin.type.sk$type = true;
-Sk.builtin.type["$r"] = function () {
-    if(Sk.__future__.class_repr) {
-        return new Sk.builtin.str("<class 'type'>");
+Sk.builtin.type.prototype.$r = function () {
+    let mod = this.prototype.__module__;
+    let cname = "";
+    let ctype = "class";
+    if (mod && Sk.builtin.checkString(mod)) {
+        cname = mod.v + ".";
     } else {
-        return new Sk.builtin.str("<type 'type'>");
+        mod = null;
     }
+    if (!mod && !this.sk$klass && !Sk.__future__.class_repr) {
+        ctype = "type";
+    }
+    return new Sk.builtin.str("<" + ctype + " '" + cname + this.prototype.tp$name + "'>");
 };
 
-//Sk.builtin.type.prototype.tp$descr_get = function() { print("in type descr_get"); };
-
-//Sk.builtin.type.prototype.tp$name = "type";
-
-// basically the same as GenericGetAttr except looks in the proto instead
 Sk.builtin.type.prototype.tp$getattr = function (pyName, canSuspend) {
-    var res;
-    var tp = this;
-    var descr;
-    var f;
+    // first check that the pyName is indeed a string
+    let res;
+    const metatype = this.ob$type;
+    // now check whether there is a descriptor on the metatype
+    const meta_attribute = metatype.$typeLookup(pyName);
 
-    if (this["$d"]) {
-        res = this["$d"].mp$lookup(pyName);
-        if (res !== undefined) {
+    let meta_get;
+    if (meta_attribute !== undefined) {
+        meta_get = meta_attribute.tp$descr_get;
+        if (meta_get !== undefined && Sk.builtin.checkDataDescr(meta_attribute)) {
+            res = meta_get.call(meta_attribute, this, metatype, canSuspend);
             return res;
         }
     }
+    const attribute = this.$typeLookup(pyName);
 
-    descr = Sk.builtin.type.typeLookup(tp, pyName);
-
-    //print("type.tpgetattr descr", descr, descr.tp$name, descr.func_code, name);
-    if (descr !== undefined && descr !== null && descr.ob$type !== undefined) {
-        f = descr.tp$descr_get;
-        // todo;if (f && descr.tp$descr_set) // is a data descriptor if it has a set
-        // return f.call(descr, this, this.ob$type);
+    if (attribute !== undefined) {
+        const local_get = attribute.tp$descr_get;
+        if (local_get !== undefined) {
+            // null indicates that the descriptor was on the target object itself or a buss
+            res = local_get.call(attribute, null, this, canSuspend);
+            return res;
+        }
+        return attribute;
+    }
+    // attribute was not found so use the meta_get if any
+    if (meta_get !== undefined) {
+        res = meta_get.call(meta_attribute, this, metatype, canSuspend);
+        return res;
     }
 
-    if (f) {
-        // non-data descriptor
-        return f.call(descr, Sk.builtin.none.none$, tp, canSuspend);
+    if (meta_attribute !== undefined) {
+        return meta_attribute;
     }
+    return;
+};
 
+Sk.builtin.type.prototype.tp$setattr = function (pyName, value, canSuspend) {
+    if (!this.sk$klass) {
+        if (value !== undefined) {
+            throw new Sk.builtin.TypeError("can't set attributes of built-in/extension type '" + this.prototype.tp$name + "'");
+        } else {
+            throw new Sk.builtin.TypeError("can't delete attributes on type object '" + this.prototype.tp$name + "'");
+        }
+    }
+    // meta types must follow single inheritance - we could change this and do
+    const descr = this.ob$type.$typeLookup(pyName);
+
+    // if it's a data descriptor then call it
     if (descr !== undefined) {
-        return descr;
+        const f = descr.tp$descr_set;
+        if (f) {
+            return f.call(descr, this, value, canSuspend);
+        }
     }
+    // for delattr
+    const jsName = pyName.$mangled;
 
+    if (value === undefined) {
+        const proto = this.prototype;
+        if (!proto.hasOwnProperty(jsName)) {
+            throw new Sk.builtin.AttributeError("type object '" + this.prototype.tp$name + "' has no attribute '" + pyName.$jsstr() + "'");
+        } else {
+            delete proto[jsName];
+            // delete the slot_func
+            // TODO what about slot funcs that are dual slots...
+            const slot_name = Sk.dunderToSkulpt[jsName];
+            if (slot_name !== undefined) {
+                delete this.prototype[slot_name];
+                if (!proto.sk$prototypical) {
+                    this.$allocateGetterSlot(jsName);
+                    // if this was a slot func and we are not prototypical
+                    // allocate a getter slot in it's place
+                }
+            }
+            return;
+        }
+    }
+    this.prototype[jsName] = value;
+    if (jsName in Sk.dunderToSkulpt) {
+        this.$allocateSlot(jsName, value);
+    }
+};
+
+Sk.builtin.type.prototype.$typeLookup = function (pyName) {
+    const proto = this.prototype;
+    const jsName = pyName.$mangled;
+    if (proto.sk$prototypical === true) {
+        return proto[jsName];
+    }
+    const mro = proto.tp$mro;
+
+    for (let i = 0; i < mro.length; ++i) {
+        const base_proto = mro[i].prototype;
+        if (base_proto.hasOwnProperty(jsName)) {
+            return base_proto[jsName];
+        }
+    }
     return undefined;
 };
 
-Sk.builtin.type.prototype.tp$setattr = function (pyName, value) {
-    // class attributes are direct properties of the object
-    var jsName = pyName.$jsstr();
-    this[jsName] = value;
-};
-
-Sk.builtin.type.typeLookup = function (type, pyName) {
-    var mro = type.tp$mro;
-    var base;
-    var res;
-    var i;
-    var jsName = pyName.$jsstr();
-
-    // todo; probably should fix this, used for builtin types to get stuff
-    // from prototype
-    if (!mro) {
-        if (type.prototype) {
-            return type.prototype[jsName];
-        }
-        return undefined;
-    }
-
-    for (i = 0; i < mro.v.length; ++i) {
-        base = mro.v[i];
-        if (base.hasOwnProperty(jsName)) {
-            return base[jsName];
-        }
-        res = base["$d"].mp$lookup(pyName);
-        if (res !== undefined) {
-            return res;
-        }
-        if (base.prototype && base.prototype[jsName] !== undefined) {
-            return base.prototype[jsName];
-        }
-    }
-
-    return undefined;
-};
-
-Sk.builtin.type.mroMerge_ = function (seqs) {
-    /*
-     var tmp = [];
-     for (var i = 0; i < seqs.length; ++i)
-     {
-     tmp.push(new Sk.builtin.list(seqs[i]));
-     }
-     print(Sk.builtin.repr(new Sk.builtin.list(tmp)).v);
-     */
-    var seq;
-    var i;
-    var next;
-    var k;
-    var sseq;
-    var j;
-    var cand;
-    var cands;
-    var res = [];
+Sk.builtin.type.prototype.$mroMerge_ = function (seqs) {
+    this.prototype.sk$prototypical = true; // assume true to start with
+    let seq, i, j;
+    const res = [];
     for (; ;) {
         for (i = 0; i < seqs.length; ++i) {
             seq = seqs[i];
@@ -617,27 +312,27 @@ Sk.builtin.type.mroMerge_ = function (seqs) {
                 break;
             }
         }
-        if (i === seqs.length) { // all empty
+        if (i === seqs.length) {
+            // all empty
             return res;
         }
-        cands = [];
+        const cands = [];
         for (i = 0; i < seqs.length; ++i) {
             seq = seqs[i];
             //print("XXX", Sk.builtin.repr(new Sk.builtin.list(seq)).v);
             if (seq.length !== 0) {
-                cand = seq[0];
+                const cand = seq[0];
                 //print("CAND", Sk.builtin.repr(cand).v);
 
                 /* eslint-disable */
-                OUTER:
-                    for (j = 0; j < seqs.length; ++j) {
-                        sseq = seqs[j];
-                        for (k = 1; k < sseq.length; ++k) {
-                            if (sseq[k] === cand) {
-                                break OUTER;
-                            }
+                OUTER: for (j = 0; j < seqs.length; ++j) {
+                    const sseq = seqs[j];
+                    for (let k = 1; k < sseq.length; ++k) {
+                        if (sseq[k] === cand) {
+                            break OUTER;
                         }
                     }
+                }
                 /* eslint-enable */
 
                 // cand is not in any sequences' tail -> constraint-free
@@ -651,9 +346,19 @@ Sk.builtin.type.mroMerge_ = function (seqs) {
             throw new Sk.builtin.TypeError("Inconsistent precedences in type hierarchy");
         }
 
-        next = cands[0];
+        const next = cands[0];
+
+        // check prototypical mro
+        if (res.length && this.prototype.sk$prototypical) {
+            let prevs_prototype = Object.getPrototypeOf(res[res.length - 1].prototype);
+            if (prevs_prototype !== next.prototype) {
+                this.prototype.sk$prototypical = false;
+            }
+        }
+
         // append next to result and remove from sequences
         res.push(next);
+
         for (i = 0; i < seqs.length; ++i) {
             seq = seqs[i];
             if (seq.length > 0 && seq[0] === next) {
@@ -661,30 +366,6 @@ Sk.builtin.type.mroMerge_ = function (seqs) {
             }
         }
     }
-};
-
-Sk.builtin.type.buildMRO_ = function (klass) {
-    // MERGE(klass + mro(bases) + bases)
-    var i;
-    var bases;
-    var all = [
-        [klass]
-    ];
-
-    //Sk.debugout("buildMRO for", klass.tp$name);
-
-    var kbases = klass["$d"].mp$subscript(Sk.builtin.type.basesStr_);
-    for (i = 0; i < kbases.v.length; ++i) {
-        all.push(Sk.builtin.type.buildMRO_(kbases.v[i]));
-    }
-
-    bases = [];
-    for (i = 0; i < kbases.v.length; ++i) {
-        bases.push(kbases.v[i]);
-    }
-    all.push(bases);
-
-    return Sk.builtin.type.mroMerge_(all);
 };
 
 /*
@@ -703,29 +384,219 @@ Sk.builtin.type.buildMRO_ = function (klass) {
  * (http://mail.python.org/pipermail/python-dev/2002-October/029176.html) when
  * discussing its addition to Python.
  */
-Sk.builtin.type.buildMRO = function (klass) {
-    return new Sk.builtin.tuple(Sk.builtin.type.buildMRO_(klass));
-};
+Sk.builtin.type.prototype.$buildMRO = function () {
+    // MERGE(klass + mro(bases) + bases)
+    const all = [[this]];
+    const kbases = this.prototype.tp$bases;
 
-Sk.builtin.type.prototype.tp$richcompare = function (other, op) {
-    var r2;
-    var r1;
-    if (other.ob$type != Sk.builtin.type) {
-        return undefined;
-    }
-    if (!this["$r"] || !other["$r"]) {
-        return undefined;
+    for (let i = 0; i < kbases.length; ++i) {
+        all.push([...kbases[i].prototype.tp$mro]);
     }
 
-    r1 = this["$r"]();
-    r2 = other["$r"]();
+    const bases = [];
+    for (let i = 0; i < kbases.length; ++i) {
+        bases.push(kbases[i]);
+    }
+    all.push(bases);
 
-    return r1.tp$richcompare(r2, op);
+    return this.$mroMerge_(all);
 };
 
-Sk.builtin.type.prototype["__format__"] = function(self, format_spec) {
-    Sk.builtin.pyCheckArgsLen("__format__", arguments.length, 1, 2);
-    return new Sk.builtin.str(self);
+Sk.builtin.type.prototype.$isSubType = function (other) {
+    return this === other || this.prototype instanceof other || (!this.prototype.sk$prototypical && this.prototype.tp$mro.includes(other));
 };
 
-Sk.builtin.type.pythonFunctions = ["__format__"];
+Sk.builtin.type.prototype.$allocateSlots = function () {
+    // only allocate certain slots
+    const proto = {...this.prototype};
+    for (let dunder in proto) {
+        if (dunder in Sk.slots) {
+            const dunderFunc = proto[dunder];
+            this.$allocateSlot(dunder, dunderFunc);
+        }
+    }
+    if (!proto.sk$prototypical) {
+        // we allocate getter slots on non-prototypical klasses that walk the MRO
+        // and who don't have the dunder already declared
+        for (let dunder in Sk.slots) {
+            if (!proto.hasOwnProperty(dunder)) {
+                this.$allocateGetterSlot(dunder);
+            }
+        }
+    }
+};
+
+Sk.builtin.type.prototype.$allocateSlot = function (dunder, dunderFunc) {
+    const slot_def = Sk.slots[dunder];
+    const slot_name = slot_def.$slot_name;
+    const proto = this.prototype;
+    proto[slot_name] = slot_def.$slot_func(dunderFunc);
+};
+
+Sk.builtin.type.prototype.$allocateGetterSlot = function (dunder) {
+    const slot_name = Sk.slots[dunder].$slot_name;
+    const proto = this.prototype;
+    if (proto.hasOwnProperty(slot_name)) {
+        return; // double slots can be problematic
+    }
+    Object.defineProperty(proto, slot_name, {
+        configurable: true,
+        get() {
+            const mro = proto.tp$mro;
+            for (let i = 1; i < mro.length; i++) {
+                const base_proto = mro[i].prototype;
+                const property = Object.getOwnPropertyDescriptor(base_proto, slot_name);
+                if (property !== undefined && property.value) {
+                    return property.value;
+                }
+            }
+        },
+    });
+};
+
+Sk.builtin.type.prototype.tp$getsets = {
+    __base__: {
+        $get: function () {
+            return this.prototype.tp$base || Sk.builtin.none.none$;
+        },
+    },
+    __bases__: {
+        $get: function () {
+            if (this.sk$tuple_bases === undefined) {
+                this.sk$tuple_bases = new Sk.builtin.tuple(this.prototype.tp$bases);
+                // make sure we always return the same tuple
+            }
+            return this.sk$tuple_bases;
+        },
+    },
+    __mro__: {
+        $get: function () {
+            if (this.sk$tuple_mro === undefined) {
+                this.sk$tuple_mro = new Sk.builtin.tuple(this.prototype.tp$mro);
+                // make sure we always return the same tuple
+            }
+            return this.sk$tuple_mro;
+        },
+    },
+    __dict__: {
+        $get: function () {
+            return new Sk.builtin.mappingproxy(this.prototype);
+        },
+    },
+    __doc__: {
+        $get: function () {
+            if (this.prototype.__doc__) {
+                return this.prototype.__doc__;
+            }
+            return Sk.builtin.none.none$;
+        },
+    },
+    __name__: {
+        $get: function () {
+            return new Sk.builtin.str(this.prototype.tp$name);
+        },
+        $set: function (value) {
+            if (!Sk.builtin.checkString(value)) {
+                throw new Sk.builtin.TypeError(
+                    "can only assign string to " + this.prototype.tp$name + ".__name__, not '" + Sk.abstr.typeName(value) + "'"
+                );
+            }
+            this.prototype.tp$name = value.$jsstr();
+        },
+    },
+    __module__: {
+        $get: function () {
+            let mod = this.prototype.__module__;
+            if (mod && !(mod.ob$type === Sk.builtin.getset_descriptor)) {
+                return mod;
+            }
+            return new Sk.builtin.str("builtins");
+        },
+        $set: function (value) {
+            // they can set the module to whatever they like
+            this.prototype.__module__ = value;
+        },
+    },
+};
+
+Sk.builtin.type.prototype.tp$methods = /**@lends {Sk.builtin.type.prototype}*/ {
+    mro: {
+        $meth: function () {
+            return new Sk.builtin.tuple(this.$buildMRO());
+        },
+        $flags: {NoArgs: true},
+    },
+    __dir__: {
+        $meth: function __dir__() {
+            const seen = new Set();
+            const dir = [];
+            function push_or_continue(attr) {
+                if (attr in Sk.reservedWords_) {
+                    return;
+                }
+                attr = Sk.unfixReserved(attr);
+                if (attr.indexOf("$") !== -1) {
+                    return;
+                }
+                if (!seen.has(attr)) {
+                    seen.add(attr);
+                    dir.push(new Sk.builtin.str(attr));
+                }
+            }
+            if (this.prototype.sk$prototypical) {
+                for (let attr in this.prototype) {
+                    push_or_continue(attr);
+                }
+            } else {
+                const mro = this.prototype.tp$mro;
+                for (let i = 0; i < mro.length; i++) {
+                    const attrs = Object.getOwnPropertyNames(mro[i].prototype);
+                    for (let j = 0; j < attrs.length; j++) {
+                        push_or_continue(attrs[j]);
+                    }
+                }
+            }
+            return new Sk.builtin.list(dir);
+        },
+        $flags: {NoArgs: true},
+        $doc: "Specialized __dir__ implementation for types.",
+    },
+};
+
+// we could move this to the prototype but this is called before the klass constructor inheritance is set
+// this function is used to determine the class constructor inheritance.
+Sk.builtin.type.$best_base = function (bases) {
+    if (bases.length === 0) {
+        bases.push(Sk.builtin.object);
+    }
+    function solid_base(type) {
+        // if we support slots we would need to change this function - for now it just checks for the builtin.
+        if (type.sk$klass === undefined) {
+            return type;
+        }
+        return solid_base(type.prototype.tp$base);
+    }
+
+    let base, winner, candidate, base_i;
+    for (let i = 0; i < bases.length; i++) {
+        base_i = bases[i];
+        if (!Sk.builtin.checkClass(base_i)) {
+            throw new Sk.builtin.TypeError("bases must be 'type' objects");
+        } else if (base_i.sk$acceptable_as_base_class === false) {
+            throw new Sk.builtin.TypeError("type '" + base_i.prototype.tp$name + "' is not an acceptable base type");
+        }
+        candidate = solid_base(base_i); // basically the builtin I think
+        if (winner === undefined) {
+            winner = candidate;
+            base = base_i;
+        } else if (winner.$isSubType(candidate)) {
+            // carry on
+        } else if (candidate.$isSubType(winner)) {
+            winner = candidate;
+            base = base_i;
+        } else {
+            throw new Sk.builtin.TypeError("multiple bases have instance layout conficts");
+        }
+    }
+    return base;
+};

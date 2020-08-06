@@ -28,64 +28,62 @@ class BinarySearchTree:
     def __init__(self):
         self.root = None
         self.size = 0
-    
-    def put(self,key,val):
+
+    def put(self, key, val):
         if self.root:
-            self._put(key,val,self.root)
+            self._put(key, val, self.root)
         else:
-            self.root = TreeNode(key,val)
+            self.root = TreeNode(key, val)
         self.size = self.size + 1
 
-    def _put(self,key,val,currentNode):
+    def _put(self, key, val, currentNode):
         if key < currentNode.key:
             if currentNode.hasLeftChild():
-                self._put(key,val,currentNode.leftChild)
+                self._put(key, val, currentNode.leftChild)
             else:
-                currentNode.leftChild = TreeNode(key,val,parent=currentNode)
+                currentNode.leftChild = TreeNode(key, val, parent=currentNode)
         else:
             if currentNode.hasRightChild():
-                self._put(key,val,currentNode.rightChild)
+                self._put(key, val, currentNode.rightChild)
             else:
-                currentNode.rightChild = TreeNode(key,val,parent=currentNode)
-            
-    def __setitem__(self,k,v):
-        self.put(k,v)
+                currentNode.rightChild = TreeNode(key, val, parent=currentNode)
 
-    def get(self,key):
+    def __setitem__(self, k, v):
+        self.put(k, v)
+
+    def get(self, key):
         if self.root:
-            res = self._get(key,self.root)
+            res = self._get(key, self.root)
             if res:
                 return res.payload
             else:
                 return None
         else:
             return None
-        
-    def _get(self,key,currentNode):
+
+    def _get(self, key, currentNode):
         if not currentNode:
             return None
         elif currentNode.key == key:
             return currentNode
         elif key < currentNode.key:
-            return self._get(key,currentNode.leftChild)
+            return self._get(key, currentNode.leftChild)
         else:
-            return self._get(key,currentNode.rightChild)
-            
-        
-    def __getitem__(self,key):
+            return self._get(key, currentNode.rightChild)
+
+    def __getitem__(self, key):
         res = self.get(key)
         if res:
             return res
         else:
             raise KeyError('Error, key not in tree')
-            
 
-    def __contains__(self,key):
-        if self._get(key,self.root):
+    def __contains__(self, key):
+        if self._get(key, self.root):
             return True
         else:
             return False
-        
+
     def length(self):
         return self.size
 
@@ -94,13 +92,13 @@ class BinarySearchTree:
 
     def __iter__(self):
         return self.root.__iter__()
-    
-    def delete(self,key):
+
+    def delete(self, key):
         if self.size > 1:
-            nodeToRemove = self._get(key,self.root)
+            nodeToRemove = self._get(key, self.root)
             if nodeToRemove:
                 self.remove(nodeToRemove)
-                self.size = self.size-1
+                self.size = self.size - 1
             else:
                 raise KeyError('Error, key not in tree')
         elif self.size == 1 and self.root.key == key:
@@ -109,21 +107,21 @@ class BinarySearchTree:
         else:
             raise KeyError('Error, key not in tree')
 
-    def __delitem__(self,key):
+    def __delitem__(self, key):
         self.delete(key)
-    
-    def remove(self,currentNode):
-        if currentNode.isLeaf(): #leaf
+
+    def remove(self, currentNode):
+        if currentNode.isLeaf():  # leaf
             if currentNode == currentNode.parent.leftChild:
                 currentNode.parent.leftChild = None
             else:
                 currentNode.parent.rightChild = None
-        elif currentNode.hasBothChildren(): #interior
+        elif currentNode.hasBothChildren():  # interior
             succ = currentNode.findSuccessor()
             succ.spliceOut()
             currentNode.key = succ.key
             currentNode.payload = succ.payload
-        else: # this node has one child
+        else:  # this node has one child
             if currentNode.hasLeftChild():
                 if currentNode.isLeftChild():
                     currentNode.leftChild.parent = currentNode.parent
@@ -133,9 +131,9 @@ class BinarySearchTree:
                     currentNode.parent.rightChild = currentNode.leftChild
                 else:
                     currentNode.replaceNodeData(currentNode.leftChild.key,
-                                       currentNode.leftChild.payload,
-                                       currentNode.leftChild.leftChild,
-                                       currentNode.leftChild.rightChild)
+                                                currentNode.leftChild.payload,
+                                                currentNode.leftChild.leftChild,
+                                                currentNode.leftChild.rightChild)
             else:
                 if currentNode.isLeftChild():
                     currentNode.rightChild.parent = currentNode.parent
@@ -145,14 +143,14 @@ class BinarySearchTree:
                     currentNode.parent.rightChild = currentNode.rightChild
                 else:
                     currentNode.replaceNodeData(currentNode.rightChild.key,
-                                       currentNode.rightChild.payload,
-                                       currentNode.rightChild.leftChild,
-                                       currentNode.rightChild.rightChild)
+                                                currentNode.rightChild.payload,
+                                                currentNode.rightChild.leftChild,
+                                                currentNode.rightChild.rightChild)
 
     def inorder(self):
         self._inorder(self.root)
 
-    def _inorder(self,tree):
+    def _inorder(self, tree):
         if tree != None:
             self._inorder(tree.leftChild)
             print(tree.key)
@@ -165,33 +163,33 @@ class BinarySearchTree:
         if tree:
             self._postorder(tree.rightChild)
             self._postorder(tree.leftChild)
-            print(tree.key)            
+            print(tree.key)
 
     def preorder(self):
-        self._preorder(self,self.root)
+        self._preorder(self, self.root)
 
-    def _preorder(self,tree):
+    def _preorder(self, tree):
         if tree:
-            print(tree.key)            
+            print(tree.key)
             self._preorder(tree.leftChild)
             self._preorder(tree.rightChild)
 
-                
+
 class TreeNode:
-    def __init__(self,key,val,left=None,right=None,parent=None):
+    def __init__(self, key, val, left=None, right=None, parent=None):
         self.key = key
         self.payload = val
         self.leftChild = left
         self.rightChild = right
         self.parent = parent
         self.balanceFactor = 0
-        
+
     def hasLeftChild(self):
         return self.leftChild
 
     def hasRightChild(self):
         return self.rightChild
-    
+
     def isLeftChild(self):
         return self.parent and self.parent.leftChild == self
 
@@ -209,8 +207,8 @@ class TreeNode:
 
     def hasBothChildren(self):
         return self.rightChild and self.leftChild
-    
-    def replaceNodeData(self,key,value,lc,rc):
+
+    def replaceNodeData(self, key, value, lc, rc):
         self.key = key
         self.payload = value
         self.leftChild = lc
@@ -219,7 +217,7 @@ class TreeNode:
             self.leftChild.parent = self
         if self.hasRightChild():
             self.rightChild.parent = self
-        
+
     def findSuccessor(self):
         succ = None
         if self.hasRightChild():
@@ -233,7 +231,6 @@ class TreeNode:
                     succ = self.parent.findSuccessor()
                     self.parent.rightChild = self
         return succ
-
 
     def spliceOut(self):
         if self.isLeaf():
@@ -271,5 +268,3 @@ class TreeNode:
             if self.hasRightChild():
                 for elem in self.rightChild:
                     yield elem
-
-            

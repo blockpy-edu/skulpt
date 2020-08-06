@@ -16,10 +16,12 @@ def win_dumb_prize():
 try:
     win_dumb_prize()
 except Exception as e:
-    print(e)
+    print(str(e))
+    print(repr(e))
     result = sys.exc_info()
     print("Exception", result[1])
     print("Traceback", result[2])
     print("Traceback Line number", result[2].tb_lineno)
     import traceback
+    print("Imported traceback")
     print("ExtractedFrames", traceback.extract_tb(result[2]))

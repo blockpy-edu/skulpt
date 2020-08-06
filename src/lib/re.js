@@ -121,7 +121,7 @@ var $builtinmodule = function (name) {
     };
 
     _split.co_varnames = ["pattern", "string", "maxsplit", "flags"];
-    _split.$defaults = [ new Sk.builtin.int_(0), new Sk.builtin.int_(0) ];
+    _split.$defaults = [new Sk.builtin.int_(0), new Sk.builtin.int_(0)];
 
     mod.split = new Sk.builtin.func(_split);
 
@@ -188,7 +188,7 @@ var $builtinmodule = function (name) {
     };
 
     _findall.co_varnames = ["pattern", "string", "flags"];
-    _findall.$defaults = [ new Sk.builtin.int_(0) ];
+    _findall.$defaults = [new Sk.builtin.int_(0)];
 
     mod.findall = new Sk.builtin.func(_findall);
 
@@ -198,6 +198,7 @@ var $builtinmodule = function (name) {
             self.thematch = thematch;
             self.re = pattern;
             self.string = string;
+            return Sk.builtin.none.none$;
         });
 
         $loc.groups = new Sk.builtin.func(function (self) {
@@ -276,7 +277,7 @@ var $builtinmodule = function (name) {
     };
 
     _search.co_varnames = ["pattern", "string", "flags"];
-    _search.$defaults = [ new Sk.builtin.int_(0) ];
+    _search.$defaults = [new Sk.builtin.int_(0)];
 
     mod.search = new Sk.builtin.func(_search);
 
@@ -306,7 +307,7 @@ var $builtinmodule = function (name) {
     };
 
     _match.co_varnames = ["pattern", "string", "flags"];
-    _match.$defaults = [ new Sk.builtin.int_(0) ];
+    _match.$defaults = [new Sk.builtin.int_(0)];
 
     mod.match = new Sk.builtin.func(_match);
 
@@ -320,11 +321,12 @@ var $builtinmodule = function (name) {
             } else {
                 self.flags = flags;
             }
+            return Sk.builtin.none.none$;
         });
 
-        _repr = new Sk.builtin.func( function (self) {
+        _repr = new Sk.builtin.func(function (self) {
             var ret = "re.compile('" + Sk.ffi.remapToPy(self.re) + "')";
-            return Sk.ffi.remapToPy(ret.substring(0,212));
+            return Sk.ffi.remapToPy(ret.substring(0, 212));
         });
 
         $loc.__str__ = _repr;
@@ -332,7 +334,7 @@ var $builtinmodule = function (name) {
         $loc.__repr__ = _repr;
 
         // Given a string, start, and end position, return sliced string
-        _slice = function(string, pos, endpos) {
+        _slice = function (string, pos, endpos) {
             // Per docs, ^ should match index after newlines.
             // this matches the first
             var str = Sk.ffi.remapToJs(string);
@@ -358,7 +360,7 @@ var $builtinmodule = function (name) {
         };
 
         _re_search.co_varnames = ["self", "string", "pos", "endpos"];
-        _re_search.$defaults = [ new Sk.builtin.int_(0), Sk.builtin.none.none$ ];
+        _re_search.$defaults = [new Sk.builtin.int_(0), Sk.builtin.none.none$];
 
         $loc.search = new Sk.builtin.func(_re_search);
 
@@ -372,7 +374,7 @@ var $builtinmodule = function (name) {
         };
 
         _re_match.co_varnames = ["self", "string", "pos", "endpos"];
-        _re_match.$defaults = [ new Sk.builtin.int_(0), Sk.builtin.none.none$ ];
+        _re_match.$defaults = [new Sk.builtin.int_(0), Sk.builtin.none.none$];
 
         $loc.match = new Sk.builtin.func(_re_match);
 
@@ -390,7 +392,7 @@ var $builtinmodule = function (name) {
         };
 
         _re_split.co_varnames = ["self", "string", "maxsplit"];
-        _re_split.$defaults = [ new Sk.builtin.int_(0) ];
+        _re_split.$defaults = [new Sk.builtin.int_(0)];
 
         $loc.split = new Sk.builtin.func(_re_split);
 
@@ -403,7 +405,7 @@ var $builtinmodule = function (name) {
         };
 
         _re_findall.co_varnames = ["self", "string", "pos", "endpos"];
-        _re_findall.$defaults = [ new Sk.builtin.int_(0), Sk.builtin.none.none$ ];
+        _re_findall.$defaults = [new Sk.builtin.int_(0), Sk.builtin.none.none$];
 
         $loc.findall = new Sk.builtin.func(_re_findall);
 
@@ -427,7 +429,8 @@ var $builtinmodule = function (name) {
     });
 
     // No need to purge since we don't cache
-    mod.purge = new Sk.builtin.func(function () {});
+    mod.purge = new Sk.builtin.func(function () {
+    });
 
     return mod;
 };

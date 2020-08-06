@@ -1,7 +1,7 @@
 /*! https://mths.be/fromcodepoint v0.2.1 by @mathias */
 if (!String.fromCodePoint) {
-    (function() {
-        var defineProperty = (function() {
+    (function () {
+        var defineProperty = (function () {
             // IE 8 only supports `Object.defineProperty` on DOM elements
             var result;
             try {
@@ -13,7 +13,7 @@ if (!String.fromCodePoint) {
         }());
         var stringFromCharCode = String.fromCharCode;
         var floor = Math.floor;
-        var fromCodePoint = function(_) {
+        var fromCodePoint = function (_) {
             var MAX_SIZE = 0x4000;
             var codeUnits = [];
             var highSurrogate;

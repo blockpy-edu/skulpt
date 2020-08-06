@@ -4,7 +4,7 @@
  * @extends Sk.builtin.object
  */
 
-Sk.builtin.filter_ = function filter_ (fun, iterable) {
+Sk.builtin.filter_ = function filter_(fun, iterable) {
     var it;
     var getitem;
     var result;

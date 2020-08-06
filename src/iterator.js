@@ -1,16 +1,16 @@
 /**
-  * Builds an iterator that outputs the items from the inputted object
-  * @constructor
-  * @param {*} obj must support iter protocol (has __iter__ and next methods), if sentinel defined:
-  * obj must be callable
-  * @param {*=} sentinel optional if defined returns an object that makes a call to obj until
-  * sentinel is reached
-  * @extends Sk.builtin.object
-  *
-  * @description
-  * Constructor for Python iterator.
-  *
-  */
+ * Builds an iterator that outputs the items from the inputted object
+ * @constructor
+ * @param {*} obj must support iter protocol (has __iter__ and next methods), if sentinel defined:
+ * obj must be callable
+ * @param {*=} sentinel optional if defined returns an object that makes a call to obj until
+ * sentinel is reached
+ * @extends Sk.builtin.object
+ *
+ * @description
+ * Constructor for Python iterator.
+ *
+ */
 Sk.builtin.iterator = function (obj, sentinel) {
     var objit;
     if (obj instanceof Sk.builtin.generator) {
@@ -46,7 +46,7 @@ Sk.builtin.iterator.prototype.__iter__ = new Sk.builtin.func(function (self) {
     return self.tp$iter();
 });
 
-Sk.builtin.iterator.prototype.tp$iter =  function () {
+Sk.builtin.iterator.prototype.tp$iter = function () {
     return this;
 };
 
@@ -60,9 +60,9 @@ Sk.builtin.iterator.prototype.tp$iternext = function (canSuspend) {
     }
 
     if (this.getitem) {
-        r = Sk.misceval.tryCatch(function() {
+        r = Sk.misceval.tryCatch(function () {
             return Sk.misceval.callsimOrSuspendArray(self.getitem, [self.obj, Sk.ffi.remapToPy(self.idx++)]);
-        }, function(e) {
+        }, function (e) {
             if (e instanceof Sk.builtin.StopIteration || e instanceof Sk.builtin.IndexError) {
                 return undefined;
             } else {

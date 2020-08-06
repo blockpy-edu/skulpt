@@ -50,9 +50,9 @@ var $builtinmodule = function (name) {
     /**
      * Hold the execution of skulpt until an external signal has been
      * triggered.
-     * 
+     *
      * @returns
-     */    
+     */
     mod.pause = new Sk.builtin.func(function () {
         Sk.builtin.pyCheckArgsLen("pause", arguments.length, 0, 0);
         var susp = new Sk.misceval.Suspension();
@@ -64,14 +64,15 @@ var $builtinmodule = function (name) {
             promise: new Promise(function (resolve, reject) {
                 if (Sk.signals != null && Sk.signals.addEventListener) {
                     // Define handler here, in order to remove it later
-                    function handleSignal (signal) {
+                    function handleSignal(signal) {
                         Sk.signals.removeEventListener(handleSignal);
                         resolve();
                     }
+
                     Sk.signals.addEventListener(handleSignal);
                 } else {
-                    console.warn('signal.pause() not supported');
-                    Sk.misceval.print_('signal.pause() not supported')
+                    console.warn("signal.pause() not supported");
+                    Sk.misceval.print_("signal.pause() not supported");
                     // if signal has not been configured, just resume immediatelly
                     resolve();
                 }
@@ -81,7 +82,7 @@ var $builtinmodule = function (name) {
     });
 
     mod.signal = new Sk.builtin.func(function () {
-        throw new Sk.builtin.NotImplementedError('signal.signal is not supported.');
+        throw new Sk.builtin.NotImplementedError("signal.signal is not supported.");
     });
 
     return mod;

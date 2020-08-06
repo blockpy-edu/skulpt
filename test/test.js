@@ -63,7 +63,7 @@ function testTokenize(name)
     }
     catch (e)
     {
-        got += Sk.builtins['str'](e).v + "\n";
+        got += Sk.misceval.objectRepr(e) + "\n";
     }
     if (expect !== got)
     {
@@ -213,6 +213,7 @@ function testRun(name, nocatch, debugMode)
         sysargv: [ name + '.py' ],
         read: (fname) => { return fs.readFileSync(fname, "utf8"); },
         debugging: debugMode,
+        __future__: Sk.python2,
         syspath: [ justpath ]
     });
 
@@ -241,7 +242,7 @@ function testRun(name, nocatch, debugMode)
             }
             else
             {
-                got = "EXCEPTION: " + Sk.builtins['str'](e).v + "\n";
+                got = "EXCEPTION: " + e.toString() + "\n";
             }
         });
 
@@ -320,8 +321,8 @@ function testInteractive(name)
         {
             try {
                 var ret = eval(js);
-                if (ret && ret.tp$repr !== undefined)
-                    got += ret.tp$repr().v + "\n";
+                if (ret && ret.$r !== undefined)
+                    got += ret.$r().v + "\n";
             }
             catch (e) { got += "EXCEPTION: " + e.name + "\n" }
             //console.log("made new context");

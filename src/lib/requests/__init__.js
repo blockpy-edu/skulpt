@@ -1,5 +1,5 @@
 var $builtinmodule = function (name) {
-    var request = {__name__: Sk.builtin.str("requests")};
+    var request = {__name__: new Sk.builtin.str("requests")};
 
 
     //~ Classes .................................................................
@@ -23,7 +23,7 @@ var $builtinmodule = function (name) {
             }
             self.currentLine = 0;
             self.pos$ = 0;
-            Sk.abstr.sattr(self, Sk.builtin.str("text"), Sk.ffi.remapToPy(self.data$), true);
+            Sk.abstr.sattr(self, new Sk.builtin.str("text"), Sk.ffi.remapToPy(self.data$), true);
         });
 
 
@@ -31,7 +31,7 @@ var $builtinmodule = function (name) {
         $loc.__str__ = new Sk.builtin.func(function (self) {
             return Sk.ffi.remapToPy("<Response>");
         });
-        
+
         $loc.__repr__ = $loc.__str__;
 
         // ------------------------------------------------------------
@@ -44,7 +44,7 @@ var $builtinmodule = function (name) {
                 }
                 return new Sk.builtin.str(this.$lines[this.$index++]);
             }, {
-                $obj  : self,
+                $obj: self,
                 $index: 0,
                 $lines: allLines
             });
@@ -88,7 +88,7 @@ var $builtinmodule = function (name) {
             }
             return new Sk.builtin.list(arr);
         });
-        
+
         // ------------------------------------------------------------
         $loc.json = new Sk.builtin.func(function (self) {
             return Sk.ffi.remapToPy(JSON.parse(self.data$));
@@ -116,18 +116,18 @@ var $builtinmodule = function (name) {
         if (Sk.requestsGet) {
             return Sk.misceval.callsim(request.Response, Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout));
         }
-        var prom = new Promise(function(resolve, reject) {
+        var prom = new Promise(function (resolve, reject) {
             if (Sk.requestsGet) {
-                Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout).then(function(result) {
+                Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout).then(function (result) {
                     resolve(Sk.misceval.callsim(request.Response, result));
-                }, function(err) {
+                }, function (err) {
                     console.log("Err1");
                     reject(err);
                     //resolve(Sk.misceval.callsim(request.Response, err));
                 });
             } else {
                 var xmlhttp = new XMLHttpRequest();
-                
+
                 xmlhttp.addEventListener("loadend", function (e) {
                     resolve(Sk.misceval.callsim(request.Response, xmlhttp.responseText));
                 });
@@ -146,7 +146,7 @@ var $builtinmodule = function (name) {
 
         var susp = new Sk.misceval.Suspension();
 
-        susp.resume = function() {
+        susp.resume = function () {
             console.log("err2", susp);
             if (susp.data["error"]) {
                 //throw new Sk.builtin.IOError(susp.data["error"].message);
@@ -155,13 +155,13 @@ var $builtinmodule = function (name) {
                 return resolution;
             }
         };
-        
+
         susp.data = {
             type: "Sk.promise",
-            promise: prom.then(function(value) {
+            promise: prom.then(function (value) {
                 resolution = value;
                 return value;
-            }, function(err) {
+            }, function (err) {
                 console.log("err3", err);
                 resolution = "";
                 //throw err;

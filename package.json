@@ -26,6 +26,7 @@
     "watch": "webpack --watch --mode development",
     "test": "node test/testwrapper.js && node test/testunit.js --python3",
     "start": "node support/run/runfile.js",
+    "precompile": "node support/precompile/precompile.js",
     "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js -o",
     "postprofile": "node --prof-process v8.log",
     "standaloneparser": "webpack src/standalone_parser.js -o dist/python_parser.js"
@@ -44,33 +45,35 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
-    "acorn": "^6.1.1",
-    "babel-minify": "^0.5.0",
+    "acorn": "^6.4.1",
+    "babel-minify": "^0.5.1",
     "chalk": "^2.4.2",
     "clean-webpack-plugin": "^2.0.2",
-    "closure-webpack-plugin": "^2.0.1",
-    "commander": "^2.20.0",
+    "closure-webpack-plugin": "^2.3.0",
+    "commander": "^2.20.3",
     "compression-webpack-plugin": "^2.0.0",
-    "copy-webpack-plugin": "^5.0.3",
-    "ejs": "^2.6.1",
+    "copy-webpack-plugin": "^5.1.1",
+    "ejs": "^2.7.4",
     "eslint": "^5.16.0",
-    "eslint-loader": "^2.1.2",
+    "eslint-loader": "^2.2.1",
     "express": "^4.17.0",
-    "git-revision-webpack-plugin": "^3.0.3",
+    "git-revision-webpack-plugin": "^3.0.6",
     "google-closure-compiler": "^20190415.0.0",
-    "js-beautify": "^1.10.0",
-    "jsdoc": "~3.5.5",
+    "js-beautify": "^1.11.0",
+    "jsdoc": "^3.6.3",
     "micro-strptime": "^0.2.3",
-    "open": "^6.3.0",
-    "readline-sync": "^1.4.9",
+    "open": "^6.4.0",
+    "readline-sync": "^1.4.10",
     "setimmediate": "^1.0.5",
-    "shelljs": "^0.8.3",
+    "shelljs": "^0.8.4",
     "strftime": "^0.10.0",
-    "webpack": "^4.35.2",
-    "webpack-cli": "^3.3.5"
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12"
   },
   "engines": {
-    "node": ">=8.10"
+    "node": ">=10.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "jsbi": "^3.1.3"
+  }
 }

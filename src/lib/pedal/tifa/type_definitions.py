@@ -418,7 +418,6 @@ class DictType(Type):
         self.literals.append(literal_key)
         self.values.append(type)
 
-
     def load_attr(self, attr, tifa, callee=None, callee_position=None):
         if attr == 'items':
             def _items(tifa, function_type, callee, args, position):
@@ -562,7 +561,7 @@ TYPE_STRINGS = {
 
 
 def get_tifa_type_from_str(value, self):
-    #if value in custom_types:
+    # if value in custom_types:
     #    return custom_types[value]
     if value.lower() in TYPE_STRINGS:
         return TYPE_STRINGS[value.lower()]()
@@ -571,7 +570,7 @@ def get_tifa_type_from_str(value, self):
         if variable.exists:
             state = self.load_variable(value)
             return state.type
-        #custom_types.add(value)
+        # custom_types.add(value)
         return UnknownType()
         # TODO: handle custom types
 

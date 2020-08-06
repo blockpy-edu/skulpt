@@ -37,6 +37,7 @@ def add_test(class_, name, python_file,
              grader_code, grader_path, grader_args, student_path):
     seed = find_seed(python_file)
     grader_args = [substitute_args(arg, student_path, seed) for arg in grader_args]
+
     def _inner_test(self):
         captured_output = StringIO()
         with redirect_stdout(captured_output):
@@ -48,7 +49,7 @@ def add_test(class_, name, python_file,
                     clear_report()
                     grader_exec = compile(grader_code, grader_path, 'exec')
                     exec(grader_exec, globals())
-                    #print(repr(MAIN_REPORT.feedback[0].mistake['error']))
+                    # print(repr(MAIN_REPORT.feedback[0].mistake['error']))
         actual_output = captured_output.getvalue()
         if expected_output is None:
             print("File not found:", expected_output_path)
@@ -57,7 +58,9 @@ def add_test(class_, name, python_file,
             print("\tCreated missing file with current output")
         else:
             self.assertEqual(actual_output, expected_output)
+
     setattr(class_, 'test_' + name, _inner_test)
+
 
 def find_seed(python_code):
     try:
@@ -75,6 +78,7 @@ def find_seed(python_code):
     except SyntaxError:
         return 0
     return 0
+
 
 # Load reference solutions
 def add_all_tests(grader_path, reference_solutions_dir, grader_args, limit):
@@ -95,7 +99,7 @@ def add_all_tests(grader_path, reference_solutions_dir, grader_args, limit):
             else:
                 output = None
             add_test(TestReferenceSolutions, filename[:-3], python,
-                     text_path, output, 
+                     text_path, output,
                      grader_code, grader_path, grader_args, path)
 
 
@@ -116,20 +120,20 @@ if __name__ == "__main__":
                         default='test_reference_solution.py,$_STUDENT_MAIN,$_STUDENT_NAME')
     parser.add_argument('--limit', '-l', help='Limit to a specific file.', default=None)
     args = parser.parse_args()
-    
+
     # Turn the reference solutions path into an absolute filename
     if os.path.isabs(args.path):
         reference_solutions_path = args.path
     else:
         reference_solutions_path = os.path.join(os.path.dirname(args.grader), args.path)
-    
+
     # If no reference solutions folder, let's make it
     if not os.path.exists(reference_solutions_path):
         os.mkdir(reference_solutions_path)
-    
+
     # Fix up the passed in args
     grader_args = args.args.split(",")
-    
+
     # Check that we actually have some files to try out
     if not os.listdir(reference_solutions_path):
         print("No reference solutions found")

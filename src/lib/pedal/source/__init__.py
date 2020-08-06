@@ -91,6 +91,7 @@ def get_program(report=None):
         report = MAIN_REPORT
     return report['source']['code']
 
+
 def set_source_file(filename, sections=False, independent=False, report=None):
     if report is None:
         report = MAIN_REPORT

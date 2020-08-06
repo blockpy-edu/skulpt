@@ -54,11 +54,13 @@ class FunctionNotAllowed(Exception):
 def disabled_builtin(name):
     def _disabled_version(*args, **kwargs):
         raise FunctionNotAllowed("You are not allowed to call '{}'.".format(name))
+
     return _disabled_version
 
 
 _OPEN_FORBIDDEN_NAMES = re.compile(r"(^[./])|(\.py$)")
 _OPEN_FORBIDDEN_MODES = re.compile(r"[wa+]")
+
 
 # TODO: Turn this into a function that lets us more elegantly specify valid and
 # invalid filenames/paths
@@ -71,6 +73,7 @@ def _restricted_open(name, mode='r', buffering=-1):
         raise RuntimeError("You are not allowed to 'open' files for writing.")
     else:
         return _original_builtins['open'](name, mode, buffering)
+
 
 # TODO: Allow this to be flexible
 
@@ -201,6 +204,7 @@ class MockTurtle(MockModule):
         # TODO: it'd be awesome to have a way to construct a representation
         #       of the drawing result that we could autograde!
     """
+
     def __init__(self):
         super().__init__()
 

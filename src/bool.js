@@ -5,44 +5,85 @@
  * @description
  * Constructor for Python bool. Also used for builtin bool() function.
  *
- * Where possible, do not create a new instance but use the constants 
+ * Where possible, do not create a new instance but use the constants
  * Sk.builtin.bool.true$ or Sk.builtin.bool.false$. These are defined in src/constant.js
  *
- * @extends {Sk.builtin.object}
- * 
+ * @extends {Sk.builtin.int_}
+ *
  * @param  {(Object|number|boolean)} x Value to evaluate as true or false
  * @return {Sk.builtin.bool} Sk.builtin.bool.true$ if x is true, Sk.builtin.bool.false$ otherwise
  */
-Sk.builtin.bool = function (x) {
-    Sk.builtin.pyCheckArgsLen("bool", arguments.length, 1);
-    if (Sk.misceval.isTrue(x)) {
-        return Sk.builtin.bool.true$;
-    } else {
-        return Sk.builtin.bool.false$;
+Sk.builtin.bool = Sk.abstr.buildNativeClass("bool", {
+    constructor: function bool(x) {
+        if (Sk.misceval.isTrue(x)) {
+            return Sk.builtin.bool.true$;
+        } else {
+            return Sk.builtin.bool.false$;
+        }
+    },
+    base: Sk.builtin.int_,
+    slots: {
+        tp$doc:
+            "bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",
+        tp$new: function (args, kwargs) {
+            Sk.abstr.checkNoKwargs("bool", kwargs);
+            Sk.abstr.checkArgsLen("bool", args, 0, 1);
+            return new Sk.builtin.bool(args[0]); //technically we don't need new but easier to keep consistent
+        },
+        $r: function () {
+            return this.v ? new Sk.builtin.str("True") : new Sk.builtin.str("False");
+        },
+
+        tp$as_number: true,
+        nb$and: function (other) {
+            if (other.ob$type === Sk.builtin.bool) {
+                return new Sk.builtin.bool(this.v & other.v);
+            }
+            return Sk.builtin.int_.prototype.nb$and.call(this, other);
+        },
+        nb$or: function (other) {
+            if (other.ob$type === Sk.builtin.bool) {
+                return new Sk.builtin.bool(this.v | other.v);
+            }
+            return Sk.builtin.int_.prototype.nb$or.call(this, other);
+        },
+        nb$xor: function (other) {
+            if (other.ob$type === Sk.builtin.bool) {
+                return new Sk.builtin.bool(this.v ^ other.v);
+            }
+            return Sk.builtin.int_.prototype.nb$xor.call(this, other);
+        },
+    },
+    flags: {
+        sk$acceptable_as_base_class: false,
+    },
+    methods: {
+        __format__: {
+            $meth: function () {
+                return this.$r();
+            },
+            $flags: {OneArg: true},
+        }
     }
-};
-
-Sk.abstr.setUpInheritance("bool", Sk.builtin.bool, Sk.builtin.int_);
-
-Sk.builtin.bool.prototype["$r"] = function () {
-    if (this.v) {
-        return new Sk.builtin.str("True");
-    }
-    return new Sk.builtin.str("False");
-};
-
-Sk.builtin.bool.prototype.tp$hash = function () {
-    return new Sk.builtin.int_(this.v);
-};
-
-Sk.builtin.bool.prototype.__int__ = new Sk.builtin.func(function(self) {
-    var v = Sk.builtin.asnum$(self);
-
-    return new Sk.builtin.int_(v);
 });
-
-Sk.builtin.bool.prototype.__float__ = new Sk.builtin.func(function(self) {
-    return new Sk.builtin.float_(Sk.ffi.remapToJs(self));
-});
-
 Sk.exportSymbol("Sk.builtin.bool", Sk.builtin.bool);
+
+/**
+ * Python bool True constant.
+ * @type {Sk.builtin.bool}
+ * @member {Sk.builtin.bool}
+ * @suppress {checkTypes}
+ */
+Sk.builtin.bool.true$ = Object.create(Sk.builtin.bool.prototype, {
+    v: {value: 1, enumerable: true},
+});
+
+/**
+ * Python bool False constant.
+ * @type {Sk.builtin.bool}
+ * @member {Sk.builtin.bool}
+ * @suppress {checkTypes}
+ */
+Sk.builtin.bool.false$ = Object.create(Sk.builtin.bool.prototype, {
+    v: {value: 0, enumerable: true},
+});

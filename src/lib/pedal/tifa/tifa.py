@@ -8,7 +8,7 @@ from pedal.tifa.type_definitions import (UnknownType, RecursedType,
                                          NumType, NoneType, BoolType, TupleType,
                                          ListType, StrType, GeneratorType,
                                          DictType, ModuleType, SetType,
-                                         # FileType, DayType, TimeType,
+    # FileType, DayType, TimeType,
                                          type_from_json, type_to_literal, get_tifa_type,
                                          LiteralNum, LiteralBool,
                                          LiteralNone, LiteralStr,
@@ -118,7 +118,7 @@ class Tifa(ast.NodeVisitor):
             self.report['tifa']['error'] = error
             self.report.attach('tifa_error', category='Analyzer', tool='TIFA',
                                mistake={
-                                   'message': "Could not process code: "+str(error),
+                                   'message': "Could not process code: " + str(error),
                                    'error': error
                                })
             return self.report['tifa']
@@ -332,7 +332,7 @@ class Tifa(ast.NodeVisitor):
                 if potential_name is not None and result is None:
                     result = potential_name
             return result
-    
+
     def visit_AnnAssign(self, node):
         """
         TODO: Implement!
@@ -670,7 +670,7 @@ class Tifa(ast.NodeVisitor):
                     return_state = self.load_variable("*return", call_position)
                     return_value = return_state.type
                     if node.returns:
-                        #self.visit(node.returns)
+                        # self.visit(node.returns)
                         returns = get_tifa_type(node.returns, self)
                         if not are_types_equal(return_value, returns, True):
                             self.report_issue("Multiple Return Types",
@@ -794,14 +794,12 @@ class Tifa(ast.NodeVisitor):
             self.visit(generator)
         return ListType(self.visit(node.elt))
 
-
     def visit_NameConstant(self, node):
         value = node.value
         if isinstance(value, bool):
             return BoolType()
         else:
             return NoneType()
-
 
     def visit_Name(self, node):
         name = node.id

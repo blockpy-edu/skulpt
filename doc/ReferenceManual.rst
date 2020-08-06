@@ -161,7 +161,7 @@ Misc
     Slot("__new__", "tp$new", "new"),
     Slot("__init__", "tp$init", "init"),
     Slot("__str__", "tp$print", "print"),
-    Slot("__repr__", "tp$repr", "repr",
+    Slot("__repr__", "$r", "repr",
          opcode="UNARY_CONVERT"),
 
     Slot("__hash__", "tp$hash", "hash"),
@@ -244,13 +244,13 @@ Misc
          opcode="UNARY_NEGATIVE"),
     Slot("__pos__", "nb$positive", "unary",
          opcode="UNARY_POSITIVE"),
-    Slot("__abs__", "nb$absolute", "unary"),
-    Slot("__nonzero__", "nb$nonzero", "inquiry"),  # inverse of UNARY_NOT opcode
+    Slot("__abs__", "nb$abs", "unary"),
+    Slot("__nonzero__", "nb$bool", "inquiry"),  # inverse of UNARY_NOT opcode
     Slot("__invert__", "nb$invert", "unary",
          opcode="UNARY_INVERT"),
     Slot("__coerce__", "nb$coerce", "coercion"),  # not needed
     Slot("__int__", "nb$int", "unary"),  # expects exact int as return
-    Slot("__long__", "nb$long", "unary"),  # expects exact long as return
+    Slot("__long__", "nb$lng", "unary"),  # expects exact long as return
     Slot("__float__", "nb$float", "unary"),  # expects exact float as return
     Slot("__oct__", "nb$oct", "unary"),
     Slot("__hex__", "nb$hex", "unary"),

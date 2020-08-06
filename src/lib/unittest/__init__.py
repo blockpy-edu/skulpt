@@ -5,7 +5,68 @@ the unittest module from cpython.
 
 '''
 
-class TestCase:
+
+class _AssertRaisesContext(object):
+    """A context manager used to implement TestCase.assertRaises* methods."""
+
+    def __init__(self, expected, test_case):
+        self.test_case = test_case
+        self.expected = expected
+
+    def _is_subtype(self, expected, basetype):
+        if isinstance(expected, tuple):
+            return all(_is_subtype(e, basetype) for e in expected)
+        return isinstance(expected, type) and issubclass(expected, basetype)
+
+    def handle(self, args, kwargs):
+        """
+        If args is empty, assertRaises is being used as a
+        context manager, so return self.
+        If args is not empty, call a callable passing positional and keyword
+        arguments.
+        """
+        try:
+            if not self._is_subtype(self.expected, BaseException):
+                raise TypeError('assertRaises() arg 1 must be an exception type or tuple of exception types')
+            if not args:
+                return self
+
+            callable_obj = args[0]
+            args = args[1:]
+            with self:
+                callable_obj(*args, **kwargs)
+
+        finally:
+            # bpo-23890: manually break a reference cycle
+            self = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        res = True
+        feedback = ""
+        try:
+            act_exc = exc_type.__name__
+        except AttributeError:
+            act_exc = str(exc_type)
+        try:
+            exp_exc = self.expected.__name__
+        except AttributeError:
+            exp_exc = str(self.expected)
+
+        if exc_type is None:
+            res = False
+            feedback = "{} not raised".format(exp_exc)
+        elif not issubclass(exc_type, self.expected):
+            res = False
+            feedback = "Expected {} but got {}".format(exp_exc, act_exc)
+
+        self.test_case.appendResult(res, act_exc, exp_exc, feedback)
+        return True
+
+
+class TestCase(object):
     def __init__(self):
         self.numPassed = 0
         self.numFailed = 0
@@ -16,21 +77,17 @@ class TestCase:
         testNames = {}
         for name in dir(self):
             if name[:4] == 'test' and name not in testNames:
-                self.tlist.append(getattr(self,name))
-                testNames[name]=True
+                self.tlist.append(getattr(self, name))
+                testNames[name] = True
 
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
-    
-    def cleanName(self,funcName):
-    # work around skulpts lack of an __name__
-        funcName = str(funcName)
-        funcName = funcName[13:]
-        funcName = funcName[:funcName.find('<')-3]
-        return funcName
+
+    def cleanName(self, funcName):
+        return funcName.__func__.__name__
 
     def main(self):
 
@@ -55,48 +112,48 @@ class TestCase:
         self.showSummary()
 
     def assertEqual(self, actual, expected, feedback=""):
-        res = actual==expected
+        res = actual == expected
         if not res and feedback == "":
-            feedback = "Expected %s to equal %s" % (str(actual),str(expected))
-        self.appendResult(res, actual ,expected, feedback)
+            feedback = "Expected %s to equal %s" % (str(actual), str(expected))
+        self.appendResult(res, actual, expected, feedback)
 
     def assertNotEqual(self, actual, expected, feedback=""):
         res = actual != expected
         if not res and feedback == "":
-            feedback = "Expected %s to not equal %s" % (str(actual),str(expected))
+            feedback = "Expected %s to not equal %s" % (str(actual), str(expected))
         self.appendResult(res, actual, expected, feedback)
 
-    def assertTrue(self,x, feedback=""):
+    def assertTrue(self, x, feedback=""):
         res = bool(x) is True
         if not res and feedback == "":
             feedback = "Expected %s to be True" % (str(x))
         self.appendResult(res, x, True, feedback)
 
-    def assertFalse(self,x, feedback=""):
+    def assertFalse(self, x, feedback=""):
         res = not bool(x)
         if not res and feedback == "":
             feedback = "Expected %s to be False" % (str(x))
         self.appendResult(res, x, False, feedback)
 
-    def assertIs(self,a,b, feedback=""):
+    def assertIs(self, a, b, feedback=""):
         res = a is b
         if not res and feedback == "":
-            feedback = "Expected %s to be the same object as %s" % (str(a),str(b))
+            feedback = "Expected %s to be the same object as %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertIsNot(self,a,b, feedback=""):
+    def assertIsNot(self, a, b, feedback=""):
         res = a is not b
         if not res and feedback == "":
-            feedback = "Expected %s to not be the same object as %s" % (str(a),str(b))
+            feedback = "Expected %s to not be the same object as %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertIsNone(self,x, feedback=""):
+    def assertIsNone(self, x, feedback=""):
         res = x is None
         if not res and feedback == "":
             feedback = "Expected %s to be None" % (str(x))
         self.appendResult(res, x, None, feedback)
 
-    def assertIsNotNone(self,x, feedback=""):
+    def assertIsNotNone(self, x, feedback=""):
         res = x is not None
         if not res and feedback == "":
             feedback = "Expected %s to not be None" % (str(x))
@@ -105,38 +162,38 @@ class TestCase:
     def assertIn(self, a, b, feedback=""):
         res = a in b
         if not res and feedback == "":
-            feedback = "Expected %s to be in %s" % (str(a),str(b))
+            feedback = "Expected %s to be in %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
     def assertNotIn(self, a, b, feedback=""):
         res = a not in b
         if not res and feedback == "":
-            feedback = "Expected %s to not be in %s" % (str(a),str(b))
+            feedback = "Expected %s to not be in %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertIsInstance(self,a,b, feedback=""):
-        res = isinstance(a,b)
+    def assertIsInstance(self, a, b, feedback=""):
+        res = isinstance(a, b)
         if not res and feedback == "":
             feedback = "Expected %s to be an instance of %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertNotIsInstance(self,a,b, feedback=""):
-        res = not isinstance(a,b)
+    def assertNotIsInstance(self, a, b, feedback=""):
+        res = not isinstance(a, b)
         if not res and feedback == "":
-            feedback = "Expected %s to not be an instance of %s" % (str(a),str(b))
+            feedback = "Expected %s to not be an instance of %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
     def assertAlmostEqual(self, a, b, places=7, feedback="", delta=None):
 
         if delta is not None:
-            res = abs(a-b) <= delta
+            res = abs(a - b) <= delta
         else:
             if places is None:
                 places = 7
-            res = round(a-b, places) == 0
-        
+            res = round(a - b, places) == 0
+
         if not res and feedback == "":
-            feedback = "Expected %s to equal %s" % (str(a),str(b))
+            feedback = "Expected %s to equal %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
     def assertNotAlmostEqual(self, a, b, places=7, feedback="", delta=None):
@@ -147,65 +204,52 @@ class TestCase:
             if places is None:
                 places = 7
 
-            res = round(a-b, places) != 0
+            res = round(a - b, places) != 0
 
         if not res and feedback == "":
-            feedback = "Expected %s to not equal %s" % (str(a),str(b))
+            feedback = "Expected %s to not equal %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertGreater(self,a,b, feedback=""):
+    def assertGreater(self, a, b, feedback=""):
         res = a > b
         if not res and feedback == "":
-            feedback = "Expected %s to be greater than %s" % (str(a),str(b))
+            feedback = "Expected %s to be greater than %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertGreaterEqual(self,a,b, feedback=""):
+    def assertGreaterEqual(self, a, b, feedback=""):
         res = a >= b
         if not res and feedback == "":
-            feedback = "Expected %s to be >= %s" % (str(a),str(b))
+            feedback = "Expected %s to be >= %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
     def assertLess(self, a, b, feedback=""):
         res = a < b
         if not res and feedback == "":
-            feedback = "Expected %s to be less than %s" % (str(a),str(b))
+            feedback = "Expected %s to be less than %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def assertLessEqual(self,a,b, feedback=""):
+    def assertLessEqual(self, a, b, feedback=""):
         res = a <= b
         if not res and feedback == "":
-            feedback = "Expected %s to be <= %s" % (str(a),str(b))
+            feedback = "Expected %s to be <= %s" % (str(a), str(b))
         self.appendResult(res, a, b, feedback)
 
-    def appendResult(self,res,actual,expected,feedback):
+    def appendResult(self, res, actual, expected, feedback):
         if res:
             msg = 'Pass'
             self.assertPassed += 1
         else:
-            msg = 'Fail: ' +  feedback
+            msg = 'Fail: ' + feedback
             print(msg)
             self.assertFailed += 1
 
-    def assertRaises(self, exception, callable=None, *args, **kwds):
-        # with is currently not supported hence we just try and catch
-        if callable is None:
-            raise NotImplementedError("assertRaises does currently not support assert contexts")
-        if kwds:
-            raise NotImplementedError("assertRaises does currently not support **kwds")
-
-        res = False
-        actualerror = str(exception())
+    def assertRaises(self, expected_exception, *args, **kwargs):
+        context = _AssertRaisesContext(expected_exception, self)
         try:
-            callable(*args)
-        except exception as ex:
-            res = True
-        except Exception as inst:
-            actualerror = str(inst)
-            print("ACT = ", actualerror, str(exception()))
-        else:
-            actualerror = "No Error"
-
-        self.appendResult(res, str(exception()), actualerror, "")
+            return context.handle(args, kwargs)
+        finally:
+            # bpo-23890: manually break a reference cycle
+            context = None
 
     def fail(self, msg=None):
         if msg is None:
@@ -216,14 +260,13 @@ class TestCase:
         self.assertFailed += 1
 
     def showSummary(self):
-        pct = self.numPassed / (self.numPassed+self.numFailed) * 100
-        print("Ran %d tests, passed: %d failed: %d\n" % (self.numPassed+self.numFailed,
-                                               self.numPassed, self.numFailed))
-
+        pct = self.numPassed / (self.numPassed + self.numFailed) * 100
+        print("Ran %d tests, passed: %d failed: %d\n" % (self.numPassed + self.numFailed,
+                                                         self.numPassed, self.numFailed))
 
 
 def main(verbosity=1):
-    glob = globals() # globals() still needs work
+    glob = globals()  # globals() still needs work
     for name in glob:
         if type(glob[name]) == type and issubclass(glob[name], TestCase):
             try:

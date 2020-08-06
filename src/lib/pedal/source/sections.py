@@ -2,18 +2,19 @@ from pedal.report import MAIN_REPORT
 import ast
 
 
-#def move_to_section(section_number, name, report=None):
+# def move_to_section(section_number, name, report=None):
 #    pass
 
 def _calculate_section_number(section_index):
-    return int((section_index+1)/2)
+    return int((section_index + 1) / 2)
+
 
 def next_section(name="", report=None):
     if report is None:
         report = MAIN_REPORT
     report.execute_hooks('source.next_section.before')
     source = report['source']
-    #if not report['source']['success']:
+    # if not report['source']['success']:
     #    return False
     source['section'] += 2
     section_index = source['section']
@@ -24,7 +25,7 @@ def next_section(name="", report=None):
         if source['independent']:
             source['code'] = ''.join(sections[section_index])
             old_code = ''.join(sections[:section_index])
-            source['line_offset'] = len(old_code.split("\n"))-1
+            source['line_offset'] = len(old_code.split("\n")) - 1
         else:
             source['code'] = ''.join(sections[:section_index + 1])
         report.group = section_index
@@ -34,6 +35,7 @@ def next_section(name="", report=None):
                                "section was not found. Tried to load section "
                                "{count}, but there were only {found} sections."
                                ).format(count=section_number, found=found))
+
 
 def check_section_exists(section_number, report=None):
     """
@@ -59,7 +61,7 @@ def verify_section(report=None):
     if report is None:
         report = MAIN_REPORT
     source = report['source']
-    #if not source['success']:
+    # if not source['success']:
     #    return False
     code = source['code']
     try:
@@ -69,7 +71,7 @@ def verify_section(report=None):
         report.attach('Syntax error', category='Syntax', tool='Source',
                       group=source['section'],
                       mistake={'message': "Invalid syntax on line "
-                                          + str(e.lineno+source['line_offset'])+"\n",
+                                          + str(e.lineno + source['line_offset']) + "\n",
                                'error': e,
                                'position': {"line": e.lineno}})
         source['success'] = False

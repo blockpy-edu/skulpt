@@ -4,11 +4,18 @@ Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
 2011, 2012, 2013, 2014, 2015 Python Software Foundation; All Rights Reserved
 """
 import types
+
+
 class Error(Exception):
     pass
-error = Error 
+
+
+error = Error
+
+
 class _EmptyClass:
     pass
+
 
 def copy(x):
     cls = type(x)
@@ -17,7 +24,7 @@ def copy(x):
     copier = getattr(cls, "__copy__", None)
     if copier:
         return copier(x)
-    if cls in (type(None), int, float, bool, long, str, tuple, type):
+    if cls in (type(None), int, float, bool, str, tuple, type):
         return x
     if (cls == list) or (cls == dict) or (cls == set) or (cls == slice):
         return cls(x)
@@ -28,7 +35,8 @@ def copy(x):
     except:
         reductor = False
     if getstate or setstate or initargs:
-        raise NotImplementedError("Skulpt does not yet support copying with user-defined __getstate__, __setstate__ or __getinitargs__()")
+        raise NotImplementedError(
+            "Skulpt does not yet support copying with user-defined __getstate__, __setstate__ or __getinitargs__()")
     reductor = getattr(x, "__reduce_ex__", None)
     if reductor:
         rv = reductor(4)
@@ -44,6 +52,7 @@ def copy(x):
     if isinstance(rv, str):
         return x
     return _reconstruct(x, rv, 0)
+
 
 def _copy_inst(x):
     if hasattr(x, '__copy__'):
@@ -64,7 +73,9 @@ def _copy_inst(x):
         y.__dict__.update(state)
     return y
 
+
 d = _deepcopy_dispatch = {}
+
 
 def deepcopy(x, memo=None, _nil=[]):
     """Deep copy operation on arbitrary Python objects.
@@ -84,7 +95,8 @@ def deepcopy(x, memo=None, _nil=[]):
     except:
         reductor = False
     if getstate or setstate or initargs:
-        raise NotImplementedError("Skulpt does not yet support copying with user-defined __getstate__, __setstate__ or __getinitargs__()")
+        raise NotImplementedError(
+            "Skulpt does not yet support copying with user-defined __getstate__, __setstate__ or __getinitargs__()")
     copier = _deepcopy_dispatch.get(cls)
     if copier:
         y = copier(x, memo)
@@ -94,7 +106,7 @@ def deepcopy(x, memo=None, _nil=[]):
     else:
         try:
             issc = issubclass(cls, type)
-        except TypeError: # cls is not a class (old Boost; see SF #502085)
+        except TypeError:  # cls is not a class (old Boost; see SF #502085)
             issc = 0
         if issc:
             y = _deepcopy_atomic(x, memo)
@@ -115,11 +127,14 @@ def deepcopy(x, memo=None, _nil=[]):
                             "un(deep)copyable object of type %s" % cls)
                 y = _reconstruct(x, rv, 1, memo)
     memo[idx] = y
-    _keep_alive(x, memo) # Make sure x lives at least as long as d
+    _keep_alive(x, memo)  # Make sure x lives at least as long as d
     return y
+
 
 def _deepcopy_atomic(x, memo):
     return x
+
+
 d[type(None)] = _deepcopy_atomic
 # d[type(Ellipsis)] = _deepcopy_atomic
 d[type(NotImplemented)] = _deepcopy_atomic
@@ -136,6 +151,8 @@ d[str] = _deepcopy_atomic
 d[type] = _deepcopy_atomic
 # d[types.BuiltinFunctionType] = _deepcopy_atomic
 d[types.FunctionType] = _deepcopy_atomic
+
+
 # d[weakref.ref] = _deepcopy_atomic
 
 def _deepcopy_list(x, memo):
@@ -144,15 +161,21 @@ def _deepcopy_list(x, memo):
     for a in x:
         y.append(deepcopy(a, memo))
     return y
+
+
 d[list] = _deepcopy_list
+
 
 def _deepcopy_set(x, memo):
     result = set([])  # make empty set
     memo[id(x)] = result  # register this set in the memo for loop checking
-    for a in x:   # go through elements of set
+    for a in x:  # go through elements of set
         result.add(deepcopy(a, memo))  # add the copied elements into the new set
-    return result # return the new set
+    return result  # return the new set
+
+
 d[set] = _deepcopy_set
+
 
 def _deepcopy_tuple(x, memo):
     y = [deepcopy(a, memo) for a in x]
@@ -169,7 +192,10 @@ def _deepcopy_tuple(x, memo):
     else:
         y = x
     return y
+
+
 d[tuple] = _deepcopy_tuple
+
 
 def _deepcopy_dict(x, memo):
     y = {}
@@ -177,6 +203,8 @@ def _deepcopy_dict(x, memo):
     for key, value in x.items():
         y[deepcopy(key, memo)] = deepcopy(value, memo)
     return y
+
+
 d[dict] = _deepcopy_dict
 
 # def _deepcopy_method(x, memo): # Copy instance methods
@@ -184,9 +212,10 @@ d[dict] = _deepcopy_dict
 #     return y
 d[types.MethodType] = _deepcopy_atomic
 
+
 def _deepcopy_inst(x, memo):
     if hasattr(x, '__deepcopy__'):
-         return x.__deepcopy__(memo)
+        return x.__deepcopy__(memo)
     if hasattr(x, '__getinitargs__'):
         args = x.__getinitargs__()
         args = deepcopy(args, memo)
@@ -205,7 +234,10 @@ def _deepcopy_inst(x, memo):
     else:
         y.__dict__.update(state)
         return y
+
+
 d["InstanceType"] = _deepcopy_inst
+
 
 def _keep_alive(x, memo):
     """Keeps a reference to the object x in the memo.
@@ -220,7 +252,8 @@ def _keep_alive(x, memo):
         memo[id(memo)].append(x)
     except KeyError:
         # aha, this is the first one :-)
-        memo[id(memo)]=[x]
+        memo[id(memo)] = [x]
+
 
 def _reconstruct(x, info, deep, memo=None):
     if isinstance(info, str):
@@ -277,9 +310,11 @@ def _reconstruct(x, info, deep, memo=None):
             y[key] = value
     return y
 
+
 del d
 
 del types
+
 
 # Helper for instance creation without calling __init__
 class _EmptyClass:

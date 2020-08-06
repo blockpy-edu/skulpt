@@ -4,8 +4,8 @@ Sk.builtin.classmethod = function classmethod(f) {
         return new Sk.builtin.classmethod(f);
     }
     this["$d"] = new Sk.builtin.dict([]);
-    this["$d"].mp$ass_subscript(Sk.builtin.str("f"), f);
-    this["$d"].mp$ass_subscript(Sk.builtin.str("__dict__"), this.$d);
+    this["$d"].mp$ass_subscript(new Sk.builtin.str("f"), f);
+    this["$d"].mp$ass_subscript(new Sk.builtin.str("__dict__"), this.$d);
     var __get__ = new Sk.builtin.func(function __get__(self, obj, klass) {
         Sk.builtin.pyCheckArgsLen("__get__", arguments.length, 1, 2, false, true);
         if (obj === Sk.builtin.none.none$ && klass === Sk.builtin.none.none$) {
@@ -17,7 +17,7 @@ Sk.builtin.classmethod = function classmethod(f) {
         }
 
         var newFunction = new Sk.builtins.function(function(args) {
-            var f = Sk.abstr.gattr(self, Sk.builtin.str("f"), true);
+            var f = Sk.abstr.gattr(self, new Sk.builtin.str("f"), true);
             var fArgs = [klass];
             Sk.misceval.iterFor(Sk.abstr.iter(args), function (e) {
                 fArgs.push(e);
@@ -33,7 +33,7 @@ Sk.builtin.classmethod = function classmethod(f) {
     __get__.co_name = new Sk.builtin.str("__get__");
     __get__.$defaults = [Sk.builtin.none.none$];
     __get__.co_varnames = ["self", "obj", "klass"];
-    this["$d"].mp$ass_subscript(Sk.builtin.str("__get__"), __get__);
+    this["$d"].mp$ass_subscript(new Sk.builtin.str("__get__"), __get__);
     this.__class__ = Sk.builtin.classmethod;
     //return Sk.misceval.buildClass({}, this, "classmethod", [Sk.builtin.object]);
     return this;
@@ -43,7 +43,7 @@ Sk.builtin.classmethod.co_varnames = ["f"];
 Sk.abstr.setUpInheritance("classmethod", Sk.builtin.classmethod, Sk.builtin.object);
 
 /*var fields = new Sk.builtin.dict([]);
-fields.mp$ass_subscript(Sk.builtin.str("__module__"), new Sk.builtin.str("classmethod"));
+fields.mp$ass_subscript(new Sk.builtin.str("__module__"), new Sk.builtin.str("classmethod"));
 Sk.builtin.classmethod = Sk.builtin.type(new Sk.builtin.str("classmethod"), new Sk.builtin.tuple([Sk.builtin.object]), fields);*/
 //Sk.builtin.classmethod = Sk.builtin.type.makeIntoTypeObj("classmethod", Sk.builtin.classmethod);
 

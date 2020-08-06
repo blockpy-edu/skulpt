@@ -83,12 +83,14 @@ class RangeTest(unittest.TestCase):
         self.assertRaises(TypeError, range, 0, "spam")
         self.assertRaises(TypeError, range, 0, 42, "spam")
 
+        self.assertRaises(TypeError, range, "2", 4)
+
         self.assertEqual(len(range(0, sys.maxsize, sys.maxsize-1)), 2)
 
     def test_large_operands(self):
-        # x = range(10**20, 10**20+10, 3)
-        # self.assertEqual(len(x), 4)
-        # self.assertEqual(len(list(x)), 4)
+        x = range(10**20, 10**20+10, 3)
+        self.assertEqual(len(x), 4)
+        self.assertEqual(len(list(x)), 4)
 
         x = range(10**20+10, 10**20, 3)
         self.assertEqual(len(x), 0)
@@ -98,9 +100,9 @@ class RangeTest(unittest.TestCase):
         self.assertEqual(len(x), 0)
         self.assertEqual(len(list(x)), 0)
 
-        # x = range(10**20+10, 10**20, -3)
-        # self.assertEqual(len(x), 4)
-        # self.assertEqual(len(list(x)), 4)
+        x = range(10**20+10, 10**20, -3)
+        self.assertEqual(len(x), 4)
+        self.assertEqual(len(list(x)), 4)
 
         # Now test range() with longs
         self.assertEqual(list(range(-2**100)), [])
@@ -112,30 +114,30 @@ class RangeTest(unittest.TestCase):
         b = int(100 * sys.maxsize)
         c = int(50 * sys.maxsize)
 
-        # self.assertEqual(list(range(a, a+2)), [a, a+1])
-        # self.assertEqual(list(range(a+2, a, -1)), [a+2, a+1])
-        # self.assertEqual(list(range(a+4, a, -2)), [a+4, a+2])
+        self.assertEqual(list(range(a, a+2)), [a, a+1])
+        self.assertEqual(list(range(a+2, a, -1)), [a+2, a+1])
+        self.assertEqual(list(range(a+4, a, -2)), [a+4, a+2])
 
-        # seq = list(range(a, b, c))
-        # self.assertIn(a, seq)
-        # self.assertNotIn(b, seq)
-        # self.assertEqual(len(seq), 2)
-        # self.assertEqual(seq[0], a)
-        # self.assertEqual(seq[-1], a+c)
+        seq = list(range(a, b, c))
+        self.assertIn(a, seq)
+        self.assertNotIn(b, seq)
+        self.assertEqual(len(seq), 2)
+        self.assertEqual(seq[0], a)
+        self.assertEqual(seq[-1], a+c)
 
-        # seq = list(range(b, a, -c))
-        # self.assertIn(b, seq)
-        # self.assertNotIn(a, seq)
-        # self.assertEqual(len(seq), 2)
-        # self.assertEqual(seq[0], b)
-        # self.assertEqual(seq[-1], b-c)
+        seq = list(range(b, a, -c))
+        self.assertIn(b, seq)
+        self.assertNotIn(a, seq)
+        self.assertEqual(len(seq), 2)
+        self.assertEqual(seq[0], b)
+        self.assertEqual(seq[-1], b-c)
 
         seq = list(range(-a, -b, -c))
-        # self.assertIn(-a, seq)
+        self.assertIn(-a, seq)
         self.assertNotIn(-b, seq)
-        # self.assertEqual(len(seq), 2)
-        # self.assertEqual(seq[0], -a)
-        # self.assertEqual(seq[-1], -a-c)
+        self.assertEqual(len(seq), 2)
+        self.assertEqual(seq[0], -a)
+        self.assertEqual(seq[-1], -a-c)
 
     def test_large_range(self):
         # Check long ranges (len > sys.maxsize)
@@ -218,14 +220,14 @@ class RangeTest(unittest.TestCase):
         class BadExc(Exception):
             pass
 
-        # class BadCmp:
-        #     def __eq__(self, other):
-        #         if other == 2:
-        #             raise BadExc()
-        #         return False
+        class BadCmp:
+            def __eq__(self, other):
+                if other == 2:
+                    raise BadExc()
+                return False
 
-        # a = range(4)
-        # self.assertRaises(BadExc, a.index, BadCmp())
+        a = range(4)
+        self.assertRaises(BadExc, a.index, BadCmp())
 
         a = range(-2, 3)
         self.assertEqual(a.index(0), 2)
@@ -254,14 +256,14 @@ class RangeTest(unittest.TestCase):
                 self.n = int(n)
             def __index__(self):
                 return self.n
-        # self.assertEqual(list(range(I(bignum), I(bignum + 1))), [bignum])
-        # self.assertEqual(list(range(I(smallnum), I(smallnum + 1))), [smallnum])
+        self.assertEqual(list(range(I(bignum), I(bignum + 1))), [bignum])
+        self.assertEqual(list(range(I(smallnum), I(smallnum + 1))), [smallnum])
 
         # User-defined class with a failing __index__ method
         class IX:
             def __index__(self):
                 raise RuntimeError
-        # self.assertRaises(RuntimeError, range, IX())
+        self.assertRaises(RuntimeError, range, IX())
 
         # User-defined class with an invalid __index__ method
         class IN:
@@ -284,10 +286,10 @@ class RangeTest(unittest.TestCase):
 
         # self.assertEqual(len(range(sys.maxsize, sys.maxsize+10)), 10)
 
-    # def test_repr(self):
-    #     self.assertEqual(repr(range(1)), 'range(0, 1)')
-    #     self.assertEqual(repr(range(1, 2)), 'range(1, 2)')
-    #     self.assertEqual(repr(range(1, 2, 3)), 'range(1, 2, 3)')
+    def test_repr(self):
+        self.assertEqual(repr(range(1)), 'range(0, 1)')
+        self.assertEqual(repr(range(1, 2)), 'range(1, 2)')
+        self.assertEqual(repr(range(1, 2, 3)), 'range(1, 2, 3)')
 
     def test_odd_bug(self):
         # This used to raise a "SystemError: NULL result without error"
@@ -318,7 +320,7 @@ class RangeTest(unittest.TestCase):
         # used for ints, not for instances of subclasses of int.
         class C3(int):
             def __eq__(self, other): return True
-        # self.assertIn(C3(11), range(10))
+        self.assertIn(C3(11), range(10))
         # self.assertIn(C3(11), list(range(10)))
 
     def test_strided_limits(self):
@@ -375,25 +377,65 @@ class RangeTest(unittest.TestCase):
     #         test_id = "reversed(range({}, {}, {}))".format(start, end, step)
     #         self.assert_iterators_equal(iter1, iter2, test_id, limit=100)
 
-    # def test_slice(self):
-    #     def check(start, stop, step=None):
-    #         i = slice(start, stop, step)
-    #         self.assertEqual(list(r[i]), list(r)[i])
-    #         self.assertEqual(len(r[i]), len(list(r)[i]))
-    #     for r in [range(10),
-    #               range(0),
-    #               range(1, 9, 3),
-    #               range(8, 0, -3),
-    #               range(sys.maxsize+1, sys.maxsize+10),
-    #               ]:
-    #         check(0, 2)
-    #         check(0, 20)
-    #         check(1, 2)
-    #         check(20, 30)
-    #         check(-30, -20)
-    #         check(-1, 100, 2)
-    #         check(0, -1)
-    #         check(-1, -3, -1)
+    def test_slice1(self):
+        def check(start, stop, step=None):
+            i = slice(start, stop, step)
+            self.assertEqual(list(r[i]), list(r)[i])
+            self.assertEqual(len(r[i]), len(list(r)[i]))
+        for r in [range(10),
+                  range(0),
+                  range(1, 9, 3),
+                  range(8, 0, -3),
+                  range(sys.maxsize+1, sys.maxsize+10),
+                  ]:
+            check(0, 2)
+            check(0, 20)
+            check(1, 2)
+            check(20, 30)
+            check(-30, -20)
+            check(-1, 100, 2)
+            check(0, -1)
+            check(-1, -3, -1)
+
+    def test_slice2(self):
+        self.assertEqual(slice(1), slice(None, 1, None))
+        a = range(10)[slice(0, 5, 2)]
+        self.assertEqual(a, range(0,5,2))
+        b = slice(1,2)
+        self.assertEqual(b,  slice(1, 2, None))
+        self.assertEqual(slice(1,2,3), slice(1,2,3))
+        l = range(10)
+        self.assertEqual(l[slice(1,6,2,)], range(1, 6, 2))
+        self.assertEqual(l[slice(-6)], range(0, 4))
+        self.assertEqual(l[slice(-1,-6,-3)], range(9, 4, -3))
+        a = range(30)
+        b = a[-10::5]
+        self.assertEqual(b, range(20, 30, 5))
+        c = a[-10::-6]
+        self.assertEqual(c, range(20, -1, -6))
+        a = tuple(range(30))
+        b = a[-10::5]
+        self.assertEqual(b, (20, 25))
+        c = a[-10::-6]
+        self.assertEqual(c, (20, 14, 8, 2))
+        self.assertEqual(range(4)[0], 0)
+        self.assertEqual(range(4)[1], 1)
+        self.assertEqual(range(4)[-1], 3)
+        self.assertEqual(range(0,5,3)[0], 0)
+        self.assertEqual(range(0,5,3)[1], 3)
+        self.assertEqual(range(0,5,3)[-1], 3)
+        self.assertEqual(range(-8,-4)[0], -8)
+        self.assertEqual(range(-8,-4)[1], -7)
+        self.assertEqual(range(-8,-4)[-1], -5)
+        self.assertEqual(range(-4,-8,-1)[0], -4)
+        self.assertEqual(range(-4,-8,-1)[1], -5)                         
+        self.assertEqual(range(-4,-8,-1)[-1], -7)
+        l = range(9)
+        self.assertEqual(l[-10:], range(0, 9))
+        self.assertEqual(l[8:-10:-1], range(8, -1, -1))
+        def foo(x):
+            x[4] = 4
+        self.assertRaises(TypeError, foo, l)
 
     def test_contains(self):
         r = range(10)
@@ -429,23 +471,23 @@ class RangeTest(unittest.TestCase):
         self.assertNotIn(10, r)
         self.assertNotIn("", r)
 
-    # def test_reverse_iteration(self):
-    #     for r in [range(10),
-    #               range(0),
-    #               range(1, 9, 3),
-    #               range(8, 0, -3),
-    #               range(sys.maxsize+1, sys.maxsize+10),
-    #               ]:
-    #         self.assertEqual(list(reversed(r)), list(r)[::-1])
+    def test_reverse_iteration(self):
+        for r in [range(10),
+                  range(0),
+                  range(1, 9, 3),
+                  range(8, 0, -3),
+                  range(sys.maxsize+1, sys.maxsize+10),
+                  ]:
+            self.assertEqual(list(reversed(r)), list(r)[::-1])
 
-    # def test_issue11845(self):
-    #     r = range(*slice(1, 18, 2).indices(20))
-    #     values = {None, 0, 1, -1, 2, -2, 5, -5, 19, -19,
-    #               20, -20, 21, -21, 30, -30, 99, -99}
-    #     for i in values:
-    #         for j in values:
-    #             for k in values - {0}:
-    #                 r[i:j:k]
+    def test_issue11845(self):
+        r = range(*slice(1, 18, 2).indices(20))
+        values = {None, 0, 1, -1, 2, -2, 5, -5, 19, -19,
+                  20, -20, 21, -21, 30, -30, 99, -99}
+        for i in values:
+            for j in values:
+                for k in values - {0}:
+                    r[i:j:k]
 
     def test_comparison(self):
         test_ranges = [range(0), range(0, -1), range(1, 1, 3),
@@ -484,30 +526,59 @@ class RangeTest(unittest.TestCase):
         #                     range(2**200, 2**201 + 1, 2**100))
 
         # # Order comparisons are not implemented for ranges.
-        # self.assertRaises(TypeError, lambda: range(0) < range(0))
-        # self.assertRaises(TypeError, lambda: range(0) > range(0))
-        # self.assertRaises(TypeError, lambda: range(0) <= range(0))
-        # self.assertRaises(TypeError, lambda: range(0) >= range(0))
+        self.assertRaises(TypeError, lambda: range(0) < range(0))
+        self.assertRaises(TypeError, lambda: range(0) > range(0))
+        self.assertRaises(TypeError, lambda: range(0) <= range(0))
+        self.assertRaises(TypeError, lambda: range(0) >= range(0))
 
 
-    # def test_attributes(self):
-    #     # test the start, stop and step attributes of range objects
-    #     self.assert_attrs(range(0), 0, 0, 1)
-    #     self.assert_attrs(range(10), 0, 10, 1)
-    #     self.assert_attrs(range(-10), 0, -10, 1)
-    #     self.assert_attrs(range(0, 10, 1), 0, 10, 1)
-    #     self.assert_attrs(range(0, 10, 3), 0, 10, 3)
-    #     self.assert_attrs(range(10, 0, -1), 10, 0, -1)
-    #     self.assert_attrs(range(10, 0, -3), 10, 0, -3)
-    #
-    # def assert_attrs(self, rangeobj, start, stop, step):
-    #     self.assertEqual(rangeobj.start, start)
-    #     self.assertEqual(rangeobj.stop, stop)
-    #     self.assertEqual(rangeobj.step, step)
-    #
-    #     self.assertRaises(AttributeError, rangeobj, start, 0)
-    #     self.assertRaises(AttributeError, rangeobj, stop, 10)
-    #     self.assertRaises(AttributeError, rangeobj, step, 1)
+    def test_attributes(self):
+        # test the start, stop and step attributes of range objects
+        self.assert_attrs(range(0), 0, 0, 1)
+        self.assert_attrs(range(10), 0, 10, 1)
+        self.assert_attrs(range(-10), 0, -10, 1)
+        self.assert_attrs(range(0, 10, 1), 0, 10, 1)
+        self.assert_attrs(range(0, 10, 3), 0, 10, 3)
+        self.assert_attrs(range(10, 0, -1), 10, 0, -1)
+        self.assert_attrs(range(10, 0, -3), 10, 0, -3)
+    
+    def assert_attrs(self, rangeobj, start, stop, step):
+        self.assertEqual(rangeobj.start, start)
+        self.assertEqual(rangeobj.stop, stop)
+        self.assertEqual(rangeobj.step, step)
+    
+        with self.assertRaises(AttributeError):
+            rangeobj.start = 0
+        with self.assertRaises(AttributeError):
+            rangeobj.stop = 10
+        with self.assertRaises(AttributeError):
+            rangeobj.step = 1
+
+        # with self.assertRaises(AttributeError):
+        #     del rangeobj.start
+        # with self.assertRaises(AttributeError):
+        #     del rangeobj.stop
+        # with self.assertRaises(AttributeError):
+        #     del rangeobj.step
+
+    def test_str(self):
+        self.assertEqual(str(range(4))[:5], "range")
+        self.assertEqual(str(range(-44))[:5], "range")
+        self.assertEqual(str(range(0,5,3))[:5], "range")
+        self.assertEqual(str(range(-8,-4))[:5], "range")
+        self.assertEqual(str(range(-4,-8))[:5], "range")
+        self.assertEqual(str(range(-4,-8,-1))[:5], "range")
+        self.assertEqual(str(range(-8,-4,-1))[:5], "range")
+
+
+    def test_len(self):
+        self.assertEqual(len(range(4)), 4)
+        self.assertEqual(len(range(-4)), 0)
+        self.assertEqual(len(range(0,5,3)), 2)
+        self.assertEqual(len(range(-8,-4)), 4)
+        self.assertEqual(len(range(-4,-8)), 0)
+        self.assertEqual(len(range(-4,-8,-1)), 4)
+        self.assertEqual(len(range(-8,-4,-1)), 0)
 
 if __name__ == "__main__":
     unittest.main()

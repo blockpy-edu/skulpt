@@ -24,6 +24,7 @@ __version__ = 'SPARK-0.7 (pre-alpha-5)'
 import re
 import string
 
+
 def _namelist(instance):
     namelist, namedict, classlist = [], {}, [instance.__class__]
     for c in classlist:
@@ -35,14 +36,15 @@ def _namelist(instance):
                 namedict[name] = 1
     return namelist
 
+
 class GenericScanner:
     def __init__(self, flags=0):
         pattern = self.reflect()
-        self.re = re.compile(pattern, re.VERBOSE|flags)
+        self.re = re.compile(pattern, re.VERBOSE | flags)
 
         self.index2func = {}
         for name, number in self.re.groupindex.items():
-            self.index2func[number-1] = getattr(self, 't_' + name)
+            self.index2func[number - 1] = getattr(self, 't_' + name)
 
     def makeRE(self, name):
         doc = getattr(self, name).__doc__
@@ -59,7 +61,8 @@ class GenericScanner:
         return string.join(rv, '|')
 
     def error(self, s, pos):
-        print "Lexical error at position %s" % pos
+        print
+        "Lexical error at position %s" % pos
         raise SystemExit
 
     def tokenize(self, s):
@@ -78,8 +81,10 @@ class GenericScanner:
 
     def t_default(self, s):
         r'( . | \n )+'
-        print "Specification error: unmatched input"
+        print
+        "Specification error: unmatched input"
         raise SystemExit
+
 
 #
 #  Extracted from GenericParser and made global so that [un]picking works.
@@ -88,6 +93,7 @@ class _State:
     def __init__(self, stateno, items):
         self.T, self.complete, self.items = [], [], items
         self.stateno = stateno
+
 
 class GenericParser:
     #
@@ -129,7 +135,7 @@ class GenericParser:
             self.makeNewRules()
             self.ruleschanged = 0
             self.edges, self.cores = {}, {}
-            self.states = { 0: self.makeState0() }
+            self.states = {0: self.makeState0()}
             self.makeState(0, self._BOF)
         #
         #  XXX - should find a better way to do this..
@@ -156,7 +162,7 @@ class GenericParser:
         self.rule2func = {}
         self.rule2name = {}
         self.collectRules()
-        start = D['rules'][self._START][0][1][1]        # Blech.
+        start = D['rules'][self._START][0][1][1]  # Blech.
         self.augment(start)
         D['rule2func'] = self.rule2func
         D['makeSet'] = self.makeSet_fast
@@ -167,7 +173,8 @@ class GenericParser:
     #  thee not with this; nor shall thee toucheth the _preprocess
     #  argument to addRule.
     #
-    def preprocess(self, rule, func):       return rule, func
+    def preprocess(self, rule, func):
+        return rule, func
 
     def addRule(self, doc, func, _preprocess=1):
         fn = func
@@ -176,12 +183,12 @@ class GenericParser:
         index = []
         for i in range(len(rules)):
             if rules[i] == '::=':
-                index.append(i-1)
+                index.append(i - 1)
         index.append(len(rules))
 
-        for i in range(len(index)-1):
+        for i in range(len(index) - 1):
             lhs = rules[index[i]]
-            rhs = rules[index[i]+2:index[i+1]]
+            rhs = rules[index[i] + 2:index[i + 1]]
             rule = (lhs, tuple(rhs))
 
             if _preprocess:
@@ -190,7 +197,7 @@ class GenericParser:
             if self.rules.has_key(lhs):
                 self.rules[lhs].append(rule)
             else:
-                self.rules[lhs] = [ rule ]
+                self.rules[lhs] = [rule]
             self.rule2func[rule] = fn
             self.rule2name[rule] = func.__name__[2:]
         self.ruleschanged = 1
@@ -269,37 +276,38 @@ class GenericParser:
             while i < n:
                 sym = rhs[i]
                 if not self.rules.has_key(sym) or \
-                   not self.nullable[sym]:
+                        not self.nullable[sym]:
                     candidate = 0
                     i = i + 1
                     continue
 
                 newrhs = list(rhs)
-                newrhs[i] = self._NULLABLE+sym
+                newrhs[i] = self._NULLABLE + sym
                 newrule = (lhs, tuple(newrhs))
-                worklist.append((newrule, i+1,
+                worklist.append((newrule, i + 1,
                                  candidate, oldrule))
                 candidate = 0
                 i = i + 1
             else:
                 if candidate:
-                    lhs = self._NULLABLE+lhs
+                    lhs = self._NULLABLE + lhs
                     rule = (lhs, rhs)
                 if self.newrules.has_key(lhs):
                     self.newrules[lhs].append(rule)
                 else:
-                    self.newrules[lhs] = [ rule ]
+                    self.newrules[lhs] = [rule]
                 self.new2old[rule] = oldrule
 
     def typestring(self, token):
         return None
 
     def error(self, token):
-        print "Syntax error at or near `%s' token" % token
+        print
+        "Syntax error at or near `%s' token" % token
         raise SystemExit
 
     def parse(self, tokens):
-        sets = [ [(1,0), (2,0)] ]
+        sets = [[(1, 0), (2, 0)]]
         self.links = {}
 
         if self.ruleschanged:
@@ -309,7 +317,7 @@ class GenericParser:
             self.makeNewRules()
             self.ruleschanged = 0
             self.edges, self.cores = {}, {}
-            self.states = { 0: self.makeState0() }
+            self.states = {0: self.makeState0()}
             self.makeState(0, self._BOF)
 
         for i in xrange(len(tokens)):
@@ -322,17 +330,17 @@ class GenericParser:
             sets.append([])
             self.makeSet(None, sets, len(tokens))
 
-        #_dump(tokens, sets, self.states)
+        # _dump(tokens, sets, self.states)
 
         finalitem = (self.finalState(tokens), 0)
         if finalitem not in sets[-2]:
             if len(tokens) > 0:
-                self.error(tokens[i-1])
+                self.error(tokens[i - 1])
             else:
                 self.error(None)
 
         return self.buildTree(self._START, finalitem,
-                              tokens, len(sets)-2)
+                              tokens, len(sets) - 2)
 
     def isnullable(self, sym):
         #
@@ -358,8 +366,8 @@ class GenericParser:
         kitems = []
         for rule, pos in self.states[state].items:
             lhs, rhs = rule
-            if rhs[pos:pos+1] == (sym,):
-                kitems.append((rule, self.skip(rule, pos+1)))
+            if rhs[pos:pos + 1] == (sym,):
+                kitems.append((rule, self.skip(rule, pos + 1)))
         core = kitems
 
         core.sort()
@@ -371,7 +379,7 @@ class GenericParser:
         #  \epsilon-nonkernel state together; we'll need it right away.
         #
         k = self.cores[tcore] = len(self.states)
-        K, NK = _State(k, kitems), _State(k+1, [])
+        K, NK = _State(k, kitems), _State(k + 1, [])
         self.states[k] = K
         predicted = {}
 
@@ -469,7 +477,7 @@ class GenericParser:
             self.links[key].append((predecessor, causal))
 
     def makeSet(self, token, sets, i):
-        cur, next = sets[i], sets[i+1]
+        cur, next = sets[i], sets[i + 1]
 
         ttype = token is not None and self.typestring(token) or None
         if ttype is not None:
@@ -483,10 +491,10 @@ class GenericParser:
             add = fn(state, arg)
             for k in add:
                 if k is not None:
-                    self.add(next, (k, parent), i+1, ptr)
+                    self.add(next, (k, parent), i + 1, ptr)
                     nk = self.goto(k, None)
                     if nk is not None:
-                        self.add(next, (nk, i+1))
+                        self.add(next, (nk, i + 1))
 
             if parent == i:
                 continue
@@ -512,7 +520,7 @@ class GenericParser:
         #  then duplicates and inlines code to boost speed at the
         #  cost of extreme ugliness.
         #
-        cur, next = sets[i], sets[i+1]
+        cur, next = sets[i], sets[i + 1]
         ttype = token is not None and self.typestring(token) or None
 
         for item in cur:
@@ -521,33 +529,33 @@ class GenericParser:
             if ttype is not None:
                 k = self.edges.get((state, ttype), None)
                 if k is not None:
-                    #self.add(next, (k, parent), i+1, ptr)
-                    #INLINED --v
+                    # self.add(next, (k, parent), i+1, ptr)
+                    # INLINED --v
                     new = (k, parent)
-                    key = (new, i+1)
+                    key = (new, i + 1)
                     if new not in next:
                         self.links[key] = []
                         next.append(new)
                     self.links[key].append((ptr, None))
-                    #INLINED --^
-                    #nk = self.goto(k, None)
+                    # INLINED --^
+                    # nk = self.goto(k, None)
                     nk = self.edges.get((k, None), None)
                     if nk is not None:
-                        #self.add(next, (nk, i+1))
-                        #INLINED --v
-                        new = (nk, i+1)
+                        # self.add(next, (nk, i+1))
+                        # INLINED --v
+                        new = (nk, i + 1)
                         if new not in next:
                             next.append(new)
-                        #INLINED --^
+                        # INLINED --^
             else:
                 add = self.gotoST(state, token)
                 for k in add:
                     if k is not None:
-                        self.add(next, (k, parent), i+1, ptr)
-                        #nk = self.goto(k, None)
+                        self.add(next, (k, parent), i + 1, ptr)
+                        # nk = self.goto(k, None)
                         nk = self.edges.get((k, None), None)
                         if nk is not None:
-                            self.add(next, (nk, i+1))
+                            self.add(next, (nk, i + 1))
 
             if parent == i:
                 continue
@@ -556,30 +564,30 @@ class GenericParser:
                 lhs, rhs = rule
                 for pitem in sets[parent]:
                     pstate, pparent = pitem
-                    #k = self.goto(pstate, lhs)
+                    # k = self.goto(pstate, lhs)
                     k = self.edges.get((pstate, lhs), None)
                     if k is not None:
                         why = (item, i, rule)
                         pptr = (pitem, parent)
-                        #self.add(cur, (k, pparent),
+                        # self.add(cur, (k, pparent),
                         #        i, pptr, why)
-                        #INLINED --v
+                        # INLINED --v
                         new = (k, pparent)
                         key = (new, i)
                         if new not in cur:
                             self.links[key] = []
                             cur.append(new)
                         self.links[key].append((pptr, why))
-                        #INLINED --^
-                        #nk = self.goto(k, None)
+                        # INLINED --^
+                        # nk = self.goto(k, None)
                         nk = self.edges.get((k, None), None)
                         if nk is not None:
-                            #self.add(cur, (nk, i))
-                            #INLINED --v
+                            # self.add(cur, (nk, i))
+                            # INLINED --v
                             new = (nk, i)
                             if new not in cur:
                                 cur.append(new)
-                            #INLINED --^
+                            # INLINED --^
 
     def predecessor(self, key, causal):
         for p, c in self.links[key]:
@@ -604,12 +612,12 @@ class GenericParser:
             rule = self.ambiguity(self.newrules[nt])
         else:
             rule = self.newrules[nt][0]
-        #print rule
+        # print rule
 
         rhs = rule[1]
         attr = [None] * len(rhs)
 
-        for i in range(len(rhs)-1, -1, -1):
+        for i in range(len(rhs) - 1, -1, -1):
             attr[i] = self.deriveEpsilon(rhs[i])
         return self.rule2func[self.new2old[rule]](attr)
 
@@ -623,19 +631,19 @@ class GenericParser:
         rule = choices[0]
         if len(choices) > 1:
             rule = self.ambiguity(choices)
-        #print rule
+        # print rule
 
         rhs = rule[1]
         attr = [None] * len(rhs)
 
-        for i in range(len(rhs)-1, -1, -1):
+        for i in range(len(rhs) - 1, -1, -1):
             sym = rhs[i]
             if not self.newrules.has_key(sym):
                 if sym != self._BOF:
-                    attr[i] = tokens[k-1]
+                    attr[i] = tokens[k - 1]
                     key = (item, k)
                     item, k = self.predecessor(key, None)
-            #elif self.isnullable(sym):
+            # elif self.isnullable(sym):
             elif self._NULLABLE == sym[0:len(self._NULLABLE)]:
                 attr[i] = self.deriveEpsilon(sym)
             else:
@@ -660,7 +668,7 @@ class GenericParser:
             sortlist.append((len(rhs), name))
             name2index[name] = i
         sortlist.sort()
-        list = map(lambda (a,b): b, sortlist)
+        list = map(lambda (a, b): b, sortlist)
         return rules[name2index[self.resolve(list)]]
 
     def resolve(self, list):
@@ -670,6 +678,7 @@ class GenericParser:
         #  should effectively resolve in favor of a "shift".
         #
         return list[0]
+
 
 #
 #  GenericASTBuilder automagically constructs a concrete/abstract syntax tree
@@ -686,8 +695,8 @@ class GenericASTBuilder(GenericParser):
 
     def preprocess(self, rule, func):
         rebind = lambda lhs, self=self: \
-                        lambda args, lhs=lhs, self=self: \
-                                self.buildASTNode(args, lhs)
+            lambda args, lhs=lhs, self=self: \
+                self.buildASTNode(args, lhs)
         lhs, rhs = rule
         return rule, rebind(lhs)
 
@@ -700,12 +709,14 @@ class GenericASTBuilder(GenericParser):
                 children.append(self.terminal(arg))
         return self.nonterminal(lhs, children)
 
-    def terminal(self, token):      return token
+    def terminal(self, token):
+        return token
 
     def nonterminal(self, type, args):
         rv = self.AST(type)
         rv[:len(args)] = args
         return rv
+
 
 #
 #  GenericASTTraversal is a Visitor pattern according to Design Patterns.  For
@@ -719,6 +730,7 @@ class GenericASTBuilder(GenericParser):
 
 class GenericASTTraversalPruningException:
     pass
+
 
 class GenericASTTraversal:
     def __init__(self, ast):
@@ -766,9 +778,9 @@ class GenericASTTraversal:
         else:
             self.default(node)
 
-
     def default(self, node):
         pass
+
 
 #
 #  GenericASTMatcher.  AST nodes must have "__getitem__" and "__cmp__"
@@ -784,8 +796,8 @@ class GenericASTMatcher(GenericParser):
 
     def preprocess(self, rule, func):
         rebind = lambda func, self=self: \
-                        lambda args, func=func, self=self: \
-                                self.foundMatch(args, func)
+            lambda args, func=func, self=self: \
+                self.foundMatch(args, func)
         lhs, rhs = rule
         rhslist = list(rhs)
         rhslist.reverse()
@@ -823,17 +835,25 @@ class GenericASTMatcher(GenericParser):
         #
         return list[-1]
 
+
 def _dump(tokens, sets, states):
     for i in range(len(sets)):
-        print 'set', i
+        print
+        'set', i
         for item in sets[i]:
-            print '\t', item
+            print
+            '\t', item
             for (lhs, rhs), pos in states[item[0]].items:
-                print '\t\t', lhs, '::=',
-                print string.join(rhs[:pos]),
-                print '.',
-                print string.join(rhs[pos:])
+                print
+                '\t\t', lhs, '::=',
+                print
+                string.join(rhs[:pos]),
+                print
+                '.',
+                print
+                string.join(rhs[pos:])
         if i < len(tokens):
             print
-            print 'token', str(tokens[i])
+            print
+            'token', str(tokens[i])
             print

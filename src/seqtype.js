@@ -30,7 +30,7 @@ Sk.builtin.seqtype.prototype["__len__"] = new Sk.builtin.func(function (self) {
 
     Sk.builtin.pyCheckArgsLen("__len__", arguments.length, 0, 0, false, true);
 
-    return new Sk.builtin.int_(self.sq$length());    
+    return new Sk.builtin.int_(self.sq$length());
 
 });
 
@@ -128,6 +128,6 @@ Sk.builtin.seqtype.prototype["__rmul__"] = new Sk.builtin.func(function (self, n
 
     Sk.builtin.pyCheckArgsLen("__rmul__", arguments.length, 1, 1, false, true);
 
-    return self.sq$repeat(n);    
+    return self.sq$repeat(n);
 
 });

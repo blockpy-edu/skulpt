@@ -1,10 +1,13 @@
 from reprlib import recursive_repr
 
+
 def wraps(wrapped):
     def make_wrapper(wrapper):
         wrapper.__name__ = wrapped.__name__
         return wrapper
+
     return make_wrapper
+
 
 # Purely functional, no descriptor behaviour
 class partial:
@@ -22,7 +25,7 @@ class partial:
             args = func.args + args
             keywords = keywords.copy()
             keywords.update(func.keywords)
-            #keywords = {**func.keywords, **keywords}
+            # keywords = {**func.keywords, **keywords}
             func = func.func
 
         self = super(partial, cls).__new__(cls)
@@ -33,7 +36,7 @@ class partial:
         return self
 
     def __call__(self, *args, **keywords):
-        #keywords = {**self.keywords, **keywords}
+        # keywords = {**self.keywords, **keywords}
         keywords = keywords.copy()
         keywords.update(self.keywords)
         return self.func(*self.args, *args, **keywords)
@@ -43,7 +46,7 @@ class partial:
         qualname = type(self).__qualname__
         args = [repr(self.func)]
         args.extend(repr(x) for x in self.args)
-        args.extend("{k}={v!r}".format(k=k,v=v) for (k, v) in self.keywords.items())
+        args.extend("{k}={v!r}".format(k=k, v=v) for (k, v) in self.keywords.items())
         if type(self).__module__ == "functools":
             return "functools.{qualname}({j_args})".format(
                 qualname=qualname, j_args=', '.join(args)
@@ -54,7 +57,7 @@ class partial:
 
     def __reduce__(self):
         return type(self), (self.func,), (self.func, self.args,
-               self.keywords or None, self.__dict__ or None)
+                                          self.keywords or None, self.__dict__ or None)
 
     def __setstate__(self, state):
         if not isinstance(state, tuple):
@@ -63,14 +66,14 @@ class partial:
             raise TypeError("expected 4 items in state, got {l_state}".format(l_state=len(state)))
         func, args, kwds, namespace = state
         if (not callable(func) or not isinstance(args, tuple) or
-           (kwds is not None and not isinstance(kwds, dict)) or
-           (namespace is not None and not isinstance(namespace, dict))):
+                (kwds is not None and not isinstance(kwds, dict)) or
+                (namespace is not None and not isinstance(namespace, dict))):
             raise TypeError("invalid partial state")
 
-        args = tuple(args) # just in case it's a subclass
+        args = tuple(args)  # just in case it's a subclass
         if kwds is None:
             kwds = {}
-        elif type(kwds) is not dict: # XXX does it need to be *exactly* dict?
+        elif type(kwds) is not dict:  # XXX does it need to be *exactly* dict?
             kwds = dict(kwds)
         if namespace is None:
             namespace = {}

@@ -640,12 +640,12 @@ def key_order_unchained(keys):
     construct = None
     find_chain = ""
     for a_slice in range(len(keys)):
-        find_chain += "_var{a2}_ = _var{a1}_[__str{a1}__]\n".format(a2=a_slice+1, a1=a_slice)
+        find_chain += "_var{a2}_ = _var{a1}_[__str{a1}__]\n".format(a2=a_slice + 1, a1=a_slice)
     if find_match(find_chain):
         construct = ""
         count = 0
         for key in keys:
-            construct += "_var{a2}_ = _var{a1}_['{key}']\n".format(a2=count+1, a1=count, key=key)
+            construct += "_var{a2}_ = _var{a1}_['{key}']\n".format(a2=count + 1, a1=count, key=key)
             count += 1
 
     if construct:

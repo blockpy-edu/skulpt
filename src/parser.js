@@ -14,7 +14,7 @@
  *
  * can throw SyntaxError
  */
-function Parser (filename, grammar) {
+function Parser(filename, grammar) {
     this.filename = filename;
     this.grammar = grammar;
     this.comments = {};
@@ -43,24 +43,24 @@ Parser.prototype.setup = function (start) {
     //print("START:"+start);
 
     newnode =
-    {
-        type    : start,
-        value   : null,
-        context : null,
-        children: []
-    };
+        {
+            type: start,
+            value: null,
+            context: null,
+            children: []
+        };
     stackentry =
-    {
-        dfa  : this.grammar.dfas[start],
-        state: 0,
-        node : newnode
-    };
+        {
+            dfa: this.grammar.dfas[start],
+            state: 0,
+            node: newnode
+        };
     this.stack = [stackentry];
     this.used_names = {};
     Sk._setupTokenRegexes();
 };
 
-function findInDfa (a, obj) {
+function findInDfa(a, obj) {
     var i = a.length;
     while (i--) {
         if (a[i][0] === obj[0] && a[i][1] === obj[1]) {
@@ -71,7 +71,7 @@ function findInDfa (a, obj) {
 }
 
 // Add a comment
-Parser.prototype.addcomment = function(value, start, end, line) {
+Parser.prototype.addcomment = function (value, start, end, line) {
     this.comments[start] = value;
 };
 
@@ -172,7 +172,7 @@ Parser.prototype.classify = function (type, value, context) {
         ilabel = this.grammar.keywords.hasOwnProperty(value) && this.grammar.keywords[value];
 
         /* Check for handling print as an builtin function */
-        if(value === "print" && (this.p_flags & Parser.CO_FUTURE_PRINT_FUNCTION || Sk.__future__.print_function === true)) {
+        if (value === "print" && (this.p_flags & Parser.CO_FUTURE_PRINT_FUNCTION || Sk.__future__.print_function === true)) {
             ilabel = false; // ilabel determines if the value is a keyword
         }
 
@@ -186,7 +186,7 @@ Parser.prototype.classify = function (type, value, context) {
         // throw new Sk.builtin.SyntaxError("bad token", type, value, context);
         // Questionable modification to put line number in position 2
         // like everywhere else and filename in position 1.
-        let descr = "#"+type;
+        let descr = "#" + type;
         for (let i in Sk.token.tokens) {
             if (Sk.token.tokens[i] == type) {
                 descr = i;
@@ -206,21 +206,21 @@ Parser.prototype.shift = function (type, value, newstate, context) {
     var node = this.stack[this.stack.length - 1].node;
     //print("context", context);
     var newnode = {
-        type      : type,
-        value     : value,
-        lineno    : context[0][0],
+        type: type,
+        value: value,
+        lineno: context[0][0],
         col_offset: context[0][1],
-        end_lineno : context[1][0],
+        end_lineno: context[1][0],
         end_col_offset: context[1][1],
-        children  : null
+        children: null
     };
     if (newnode) {
         node.children.push(newnode);
     }
     this.stack[this.stack.length - 1] = {
-        dfa  : dfa,
+        dfa: dfa,
         state: newstate,
-        node : node
+        node: node
     };
 };
 
@@ -229,23 +229,23 @@ Parser.prototype.push = function (type, newdfa, newstate, context) {
     var dfa = this.stack[this.stack.length - 1].dfa;
     var node = this.stack[this.stack.length - 1].node;
     var newnode = {
-        type      : type,
-        value     : null,
-        lineno    : context[0][0],
+        type: type,
+        value: null,
+        lineno: context[0][0],
         col_offset: context[0][1],
-        end_lineno : context[1][0],
+        end_lineno: context[1][0],
         end_col_offset: context[1][1],
-        children  : []
+        children: []
     };
     this.stack[this.stack.length - 1] = {
-        dfa  : dfa,
+        dfa: dfa,
         state: newstate,
-        node : node
+        node: node
     };
     this.stack.push({
-        dfa  : newdfa,
+        dfa: newdfa,
         state: 0,
-        node : newnode
+        node: newnode
     });
 };
 
@@ -281,7 +281,7 @@ Parser.prototype.pop = function () {
  * @param {string} filename
  * @param {string=} style root of parse tree (optional)
  */
-function makeParser (filename, style) {
+function makeParser(filename, style) {
     if (style === undefined) {
         style = "file_input";
     }
@@ -296,8 +296,8 @@ function makeParser (filename, style) {
 }
 
 
-Sk.parse = function parse (filename, input) {
-    
+Sk.parse = function parse(filename, input) {
+
     var T_COMMENT = Sk.token.tokens.T_COMMENT;
     var T_NL = Sk.token.tokens.T_NL;
     var T_OP = Sk.token.tokens.T_OP;
@@ -315,12 +315,12 @@ Sk.parse = function parse (filename, input) {
     function readline(input) {
         var lines = input.split("\n").reverse();//.map(function (l) { return l + "\n"; });
 
-        return function() {
+        return function () {
             if (lines.length === 0) {
                 throw new Sk.builtin.Exception("EOF");
             }
 
-            return lines.pop()+"\n";
+            return lines.pop() + "\n";
         };
     }
 
@@ -345,7 +345,7 @@ Sk.parse = function parse (filename, input) {
                 lineno += 1;
                 column = 0;
             }
-            
+
             if (tokenInfo.type === T_COMMENT) {
                 parser.addcomment(tokenInfo.string, tokenInfo.start, tokenInfo.end, tokenInfo.line);
             }
@@ -373,7 +373,7 @@ Sk.parse = function parse (filename, input) {
     return result;
 };
 
-Sk.parseTreeDump = function parseTreeDump (n, indent) {
+Sk.parseTreeDump = function parseTreeDump(n, indent) {
     //return JSON.stringify(n, null, 2);
     var i;
     var ret;

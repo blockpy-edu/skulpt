@@ -1,25 +1,25 @@
-const fs = require('fs');
-const path = require('path');
-const program = require('commander');
-const chalk = require('chalk');
-const reqskulpt = require('./require-skulpt').requireSkulpt;
+const fs = require("fs");
+const path = require("path");
+const program = require("commander");
+const chalk = require("chalk");
+const reqskulpt = require("./require-skulpt").requireSkulpt;
 
 function run (python3, opt, filename) {
     // Import Skulpt
     var skulpt = reqskulpt(opt);
     if (skulpt === null) {
-	process.exit(1);
+        process.exit(1);
     }
 
-    Sk.js_beautify = require('js-beautify').js;
+    Sk.js_beautify = require("js-beautify").js;
 
     var pyver, starttime, endtime, elapsed;
     var input = fs.readFileSync(filename, "utf8");
 
     if (python3) {
-	pyver = Sk.python3;
+        pyver = Sk.python3;
     } else {
-	pyver = Sk.python2;
+        pyver = Sk.python2;
     }
 
     console.log("-----");
@@ -33,7 +33,7 @@ function run (python3, opt, filename) {
             let submittedPromise = new Promise((resolve) => {
                 resolveText = resolve;
             });
-            setTimeout(()=>{resolveText(Sk.builtin.str("quit"));}, 2000);
+            setTimeout(()=>{resolveText(new Sk.builtin.str("quit"));}, 2000);
             return submittedPromise;
             /*return process.stdin.on("data", function (data) {
                 return data;
@@ -45,13 +45,13 @@ function run (python3, opt, filename) {
     });
 
     Sk.misceval.asyncToPromise(function() {
-	starttime = Date.now();
-	return Sk.importMain(path.basename(filename, ".py"), true, true);
+        starttime = Date.now();
+        return Sk.importMain(path.basename(filename, ".py"), true, true);
     }).then(function () {
-	endtime = Date.now();
-	console.log("-----");
-	elapsed = (endtime - starttime) / 1000;
-	console.log("Run time: " + elapsed.toString() + "s");
+        endtime = Date.now();
+        console.log("-----");
+        elapsed = (endtime - starttime) / 1000;
+        console.log("Run time: " + elapsed.toString() + "s");
     }, function(e) {
         console.error(e);
         if (e.message) {
@@ -62,13 +62,13 @@ function run (python3, opt, filename) {
             console.log(e.nativeError.stack);
         } else {
             console.log(e.toString());
-            console.log(e.stack)
+            console.log(e.stack);
         }
     });
 }
 
 program
-    .option('-o, --opt', 'use optimized skulpt')
+    .option("-o, --opt", "use optimized skulpt")
     .parse(process.argv);
 
 if (program.args.length != 2) {

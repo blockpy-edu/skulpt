@@ -2,6 +2,7 @@ from pedal.cait.cait_api import parse_program
 from pedal.report.imperative import gently, explain
 from pedal.report.imperative import gently_r, explain_r
 
+
 def is_top_level(ast_node):
     ast = parse_program()
     for element in ast.body:
@@ -144,7 +145,7 @@ def prevent_literal(*literals):
     str_values = [s.s for s in ast.find_all("Str")]
     num_values = [n.n for n in ast.find_all("Num")]
     negative_values = find_negatives(ast)
-    name_values = ([name.id for name in ast.find_all("Name")]+
+    name_values = ([name.id for name in ast.find_all("Name")] +
                    [name.value for name in ast.find_all("NameConstant")])
     for literal in literals:
         if isinstance(literal, (int, float)):
@@ -181,7 +182,7 @@ def ensure_literal(*literals):
     str_values = [s.s for s in ast.find_all("Str")]
     num_values = [n.n for n in ast.find_all("Num")]
     negative_values = find_negatives(ast)
-    name_values = ([str(name.id) for name in ast.find_all("Name")]+
+    name_values = ([str(name.id) for name in ast.find_all("Name")] +
                    [str(name.value) for name in ast.find_all("NameConstant")])
     for literal in literals:
         if literal in (True, False, None):

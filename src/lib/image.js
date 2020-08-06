@@ -54,19 +54,19 @@ $builtinmodule = function (name) {
                 susp.data = {
                     type: "Sk.promise",
                     promise: new Promise(function (resolve, reject) {
-                        var newImg = new Image();
-                        newImg.crossOrigin = "";
-                        newImg.onerror = function () {
-                            reject(Error("Failed to load URL: " + newImg.src));
-                        };
-                        newImg.onload = function () {
-                            self.image = this;
-                            initializeImage(self);
-                            resolve();
-                        };
-                        // look for mapping from imagename to url and possible an image proxy server
-                        newImg.src = remapImageIdToURL(imageId);
-                    }
+                            var newImg = new Image();
+                            newImg.crossOrigin = "";
+                            newImg.onerror = function () {
+                                reject(Error("Failed to load URL: " + newImg.src));
+                            };
+                            newImg.onload = function () {
+                                self.image = this;
+                                initializeImage(self);
+                                resolve();
+                            };
+                            // look for mapping from imagename to url and possible an image proxy server
+                            newImg.src = remapImageIdToURL(imageId);
+                        }
                     )
                 };
                 return susp;
@@ -130,7 +130,7 @@ $builtinmodule = function (name) {
 
             for (i = 0; i < self.image.height * self.image.width; i++) {
                 arr[i] = Sk.misceval.callsimArray(self.getPixel, [self,
-                                                                  i % self.image.width, Math.floor(i / self.image.width)]);
+                    i % self.image.width, Math.floor(i / self.image.width)]);
             }
             return new Sk.builtin.tuple(arr);
         };
@@ -197,16 +197,16 @@ $builtinmodule = function (name) {
                     if ((self.updateCount % self.updateInterval) === 0) {
                         if (self.lastx + self.updateInterval >= self.width) {
                             self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      0, self.lasty, self.width, 2);
+                                0, self.lasty, self.width, 2);
                         } else if (self.lasty + self.updateInterval >= self.height) {
                             self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      self.lastx, 0, 2, self.height);
+                                self.lastx, 0, 2, self.height);
                         } else {
                             self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      Math.min(x, self.lastx),
-                                                      Math.min(y, self.lasty),
-                                                      Math.max(Math.abs(x - self.lastx), 1),
-                                                      Math.max(Math.abs(y - self.lasty), 1));
+                                Math.min(x, self.lastx),
+                                Math.min(y, self.lasty),
+                                Math.max(Math.abs(x - self.lastx), 1),
+                                Math.max(Math.abs(y - self.lasty), 1));
                         }
                         self.lastx = x;
                         self.lasty = y;

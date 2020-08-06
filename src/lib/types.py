@@ -17,7 +17,7 @@ NoneType = type(None)
 TypeType = type
 ObjectType = object
 IntType = int
-LongType = long
+# LongType = long
 FloatType = float
 BooleanType = bool
 try:
@@ -41,28 +41,41 @@ TupleType = tuple
 ListType = list
 DictType = DictionaryType = dict
 
+
 def _f(): pass
+
+
 FunctionType = type(_f)
-LambdaType = type(lambda: None)         # Same as FunctionType
-#CodeType = type(_f.func_code)
+LambdaType = type(lambda: None)  # Same as FunctionType
+
+
+# CodeType = type(_f.func_code)
 
 def _g():
     yield 1
+
+
 GeneratorType = type(_g())
+
 
 class _C:
     def _m(self): pass
+
+
 ClassType = type(_C)
-UnboundMethodType = type(_C._m)         # Same as MethodType
+UnboundMethodType = type(_C._m)  # Same as MethodType
 _x = _C()
 InstanceType = type(_x)
 MethodType = type(_x._m)
 BuiltinFunctionType = type(len)
-BuiltinMethodType = type([].append)     # Same as BuiltinFunctionType
+BuiltinMethodType = type([].append)  # Same as BuiltinFunctionType
 
 ModuleType = type(sys)
 FileType = file
-XRangeType = xrange
+try:
+    XRangeType = xrange
+except NameError:
+    pass
 
 # try:
 #     raise TypeError
@@ -82,5 +95,5 @@ NotImplementedType = type(NotImplemented)
 # GetSetDescriptorType = type(FunctionType.func_code)
 # MemberDescriptorType = type(FunctionType.func_globals)
 
-del sys, _f, _g, _C, _x                           # Not for export
+del sys, _f, _g, _C, _x  # Not for export
 __all__ = list(n for n in globals() if n[:1] != '_')

@@ -17,6 +17,7 @@ module.exports = {
                     console.log(chalk.blue("Using skulpt.js"));
                 } catch (err) {
                     skulpt = null;
+                    console.error(err);
                     console.log(chalk.red("No skulpt distribution, run 'npm run build' or 'npm run devbuild' first."));
                 }
             }

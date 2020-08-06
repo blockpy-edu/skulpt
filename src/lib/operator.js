@@ -8,32 +8,32 @@ var $builtinmodule = function (name) {
     var mod = {};
 
     mod.lt = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'Lt'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "Lt"));
     });
     mod.__lt__ = mod.lt;
 
     mod.le = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'LtE'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "LtE"));
     });
     mod.__le__ = mod.le;
 
     mod.eq = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'Eq'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "Eq"));
     });
     mod.__eq__ = mod.eq;
 
     mod.ne = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'NotEq'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "NotEq"));
     });
     mod.__ne__ = mod.ne;
 
     mod.ge = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'GtE'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "GtE"));
     });
     mod.__ge__ = mod.ge;
 
     mod.gt = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'Gt'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "Gt"));
     });
     mod.__gt__ = mod.gt;
 
@@ -46,15 +46,15 @@ var $builtinmodule = function (name) {
     });
 
     mod.is_ = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'Is'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "Is"));
     });
 
     mod.is_not = new Sk.builtin.func(function (a, b) {
-        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, 'IsNot'));
+        return Sk.builtin.bool(Sk.misceval.richCompareBool(a, b, "IsNot"));
     });
 
     mod.abs = new Sk.builtin.func(function (obj) {
-        return Sk.misceval.callsimArray(Sk.builtin.abs, [obj]);
+        return Sk.builtin.abs(obj);
     });
     mod.__abs__ = mod.abs;
 
@@ -90,7 +90,7 @@ var $builtinmodule = function (name) {
     // I've gone ahead and created this function for completeness' sake, but expect any use of it to
     // result in an error.
     mod.inv = new Sk.builtin.func(function (obj) {
-        return Sk.abstr.numberUnaryOp(obj, 'Invert');
+        return Sk.abstr.numberUnaryOp(obj, "Invert");
     });
     mod.__inv__ = mod.inv;
     mod.invert = mod.inv;

@@ -31,11 +31,11 @@ Phases are reset between sections.
 
 '''
 
-
 from pedal.report.imperative import MAIN_REPORT
 from pedal.assertions.setup import (_setup_assertions, AssertionException,
                                     _add_relationships, _add_phase)
 from functools import wraps
+
 
 def contextualize_calls():
     pass
@@ -76,15 +76,18 @@ def finish_section(number, *functions, next_section=False):
             print("\tNEXT SECTION")
         return result
 
+
 def section(*args):
     '''
     TODO: Deprecate?
     '''
     _setup_assertions(MAIN_REPORT)
+
     def wrap(f):
         _add_phase(phase_name, _handle_entry)
         MAIN_REPORT['assertions']['phases'].append((section_number, f))
         return f
+
     section_number = -1
     if len(args) >= 1 and callable(args[0]):
         if len(args) >= 2:
@@ -93,6 +96,7 @@ def section(*args):
     elif len(args) >= 1:
         section_number = args[0]
     return wrap
+
 
 def phase(phase_name, before=None, after=None):
     '''
@@ -105,6 +109,7 @@ def phase(phase_name, before=None, after=None):
                                   should be after.
     '''
     _setup_assertions(MAIN_REPORT)
+
     def wrap(f):
         @wraps(f)
         def _handle_entry(*args, **kwargs):
@@ -113,14 +118,18 @@ def phase(phase_name, before=None, after=None):
             value = f(*args, **kwargs)
             MAIN_REPORT['assertions']['exceptions'] = old_exception_state
             return value
+
         _add_phase(phase_name, _handle_entry)
         _add_relationships(phase_name, before)
         _add_relationships(after, phase_name)
         return _handle_entry
+
     return wrap
-    
+
+
 def stop_on_failure(f):
     _setup_assertions(MAIN_REPORT)
+
     @wraps(f)
     def wrapped(*args, **kwargs):
         old_exception_state = MAIN_REPORT['assertions']['exceptions']
@@ -132,11 +141,13 @@ def stop_on_failure(f):
             pass
         MAIN_REPORT['assertions']['exceptions'] = old_exception_state
         return value
+
     return wrapped
 
 
 def try_all():
     _setup_assertions(MAIN_REPORT)
+
     @wraps(f)
     def wrapped(*args, **kwargs):
         old_exception_state = MAIN_REPORT['assertions']['exceptions']
@@ -144,6 +155,7 @@ def try_all():
         value = f(*args, **kwargs)
         MAIN_REPORT['assertions']['exceptions'] = old_exception_state
         return value
+
     return wrapped
 
 

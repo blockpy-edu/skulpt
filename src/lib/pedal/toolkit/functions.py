@@ -136,10 +136,10 @@ def match_signature(name, length, *parameters):
 
 
 TEST_TABLE_HEADER = "<table class='blockpy-feedback-unit table table-sm table-bordered table-hover'>"
-TEST_TABLE_OUTPUT = TEST_TABLE_HEADER+(
+TEST_TABLE_OUTPUT = TEST_TABLE_HEADER + (
     "<tr class='table-active'><th></th><th>Arguments</th><th>Expected</th><th>Actual</th></tr>"
 )
-TEST_TABLE_UNITS = TEST_TABLE_HEADER+(
+TEST_TABLE_UNITS = TEST_TABLE_HEADER + (
     "<tr class='table-active'><th></th><th>Arguments</th><th>Returned</th><th>Expected</th></tr>"
 )
 GREEN_CHECK = "<td class='green-check-mark'>&#10004;</td>"
@@ -354,7 +354,7 @@ def check_coverage(report=None):
     visitor.visit(student_ast)
     lines_in_code = set(visitor.lines)
     if lines_executed < lines_in_code:
-        return lines_in_code - lines_executed, len(lines_executed)/len(lines_in_code)
+        return lines_in_code - lines_executed, len(lines_executed) / len(lines_in_code)
     else:
         return False, 1
 

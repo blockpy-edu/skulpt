@@ -1,7 +1,8 @@
 import unittest
 import random
 import sys
-
+import math
+from operator import neg
 
 def add_one(num):
     """function for testing"""
@@ -97,6 +98,12 @@ class BuiltinTest(unittest.TestCase):
     def test_all(self):
         self.assertEqual(all([2, 4, 6]), True)
         self.assertEqual(all([2, None, 6]), False)
+        self.assertTrue(all([1,2,3]))
+        self.assertFalse(all([1,2,0]))
+        self.assertTrue(all(('a','b','c')))
+        self.assertFalse(all(('a','','c')))
+        self.assertFalse(all([0,False,1,True]))
+        self.assertFalse(all({0:True,1:False}))
         # self.assertRaises(RuntimeError, all, [2, TestFailingBool(), 6])
         self.assertRaises(RuntimeError, all, TestFailingIter())
         self.assertRaises(TypeError, all, 10)               # Non-iterable
@@ -112,6 +119,14 @@ class BuiltinTest(unittest.TestCase):
     def test_any(self):
         self.assertEqual(any([None, None, None]), False)
         self.assertEqual(any([None, 4, None]), True)
+        self.assertTrue(any([1,2,0]))
+        self.assertFalse(any(["","",""]))
+        self.assertTrue(any(('a','','c')))
+        self.assertFalse(any([]))
+        self.assertTrue(any([True,1,5.0,-33,'hello',(3,4,5),[-6,7,10.0],{17:'true',-11:True},False]))
+        self.assertFalse(any([None,False,0,0.0,'',(),[],{}]))
+        self.assertFalse(any((0,0.0,)))
+        self.assertFalse(any({0:False,0.0:None}))
         # self.assertRaises(RuntimeError, any, [None, TestFailingBool(), 6])
         self.assertRaises(RuntimeError, any, TestFailingIter())
         self.assertRaises(TypeError, any, 10)               # Non-iterable
@@ -167,6 +182,7 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(bin(2**65-1), '0b' + '1' * 65)
         self.assertEqual(bin(-(2**65)), '-0b1' + '0' * 65)
         self.assertEqual(bin(-(2**65-1)), '-0b' + '1' * 65)
+        self.assertEqual(str(0b1010), '10')
 
     def test_callable(self):
         self.assertTrue(callable(len))
@@ -189,6 +205,18 @@ class BuiltinTest(unittest.TestCase):
         # self.assertEqual(chr(1114111), '􏿿')
         # self.assertEqual(chr(256), 'Ā')
         self.assertEqual(chr(255), 'ÿ')
+        self.assertRaises(ValueError, chr, -3)
+
+    def test_ord(self):
+        self.assertEqual(ord('H'), 72)
+        self.assertEqual(ord('h'), 104)
+        self.assertEqual(ord('e'), 101)
+        self.assertEqual(ord('!'), 33)
+        correct = True
+        for x in range(256):
+            if x != ord(chr(x)):
+                correct = False
+        self.assertTrue(correct)
 
     # def test_construct_singletons(self):
     #     for const in None, Ellipsis, NotImplemented:
@@ -278,7 +306,22 @@ class BuiltinTest(unittest.TestCase):
 
         # test that object has a __dir__()
         # self.assertEqual(sorted([].__dir__()), dir([]))
+        class A(object):
+            def __init__(self):
+                self.a = 1
+                self.b = 2
+                self.c = 3
 
+        class B(A):
+            def __init__(self):
+                A.__init__(self)
+                self.d = 4
+
+        class C(B):
+            def __init__(self):
+                B.__init__(self)
+            def __dir__(self):
+                return ['a','b','c','d']
 
     def test_divmod(self):
         self.assertEqual(divmod(12, 7), (1, 5))
@@ -335,6 +378,7 @@ class BuiltinTest(unittest.TestCase):
             return 1
         filter(identity, Squares(5))
         self.assertRaises(TypeError, filter)
+        self.assertRaises(TypeError, filter, None, 8)
         class BadSeq(object):
             def __getitem__(self, index):
                 if index<4:
@@ -348,7 +392,11 @@ class BuiltinTest(unittest.TestCase):
         # test bltinmodule.c::filtertuple()
         self.assertEqual(list(filter(None, (1, 2))), [1, 2])
         self.assertEqual(list(filter(lambda x: x>=3, (1, 2, 3, 4))), [3, 4])
+        d = filter(lambda x: x ==1, [1])
+        self.assertEqual(type(d), filter)
+        self.assertEqual(str(d), '<filter object>')
         # self.assertRaises(TypeError, list, filter(42, (1, 2)))
+
 
     def test_format(self):
         # Test the basic machinery of the format() builtin.  Don't test
@@ -516,6 +564,17 @@ class BuiltinTest(unittest.TestCase):
         # self.assertRaises(AttributeError, getattr, sys, chr(sys.maxunicode))
         # unicode surrogates are not encodable to the default encoding (utf8)
         self.assertRaises(AttributeError, getattr, 1, "\uDAD1\uD51E")
+        class F():
+            def __init__(self):
+                self.a = 1
+                self.b = 2
+                self.d = 4
+
+        f = F()
+        self.assertEqual(getattr(f,'a'), 1)
+        self.assertEqual(getattr(f,'b'), 2)
+        self.assertEqual(getattr(f,'c',3), 3)
+        self.assertEqual(getattr(f,'d'), 4)
 
     def test_hasattr(self):
         self.assertTrue(hasattr(sys, 'stdout'))
@@ -534,9 +593,39 @@ class BuiltinTest(unittest.TestCase):
                 raise ValueError
         self.assertRaises(ValueError, hasattr, B(), "b")
 
+        class F():
+            def __init__(self):
+                self.a = 1
+                self.b = 2
+                self.d = 4
+
+        f = F()
+
+        self.assertTrue(hasattr(f,'a'))
+        self.assertFalse(hasattr(f,'c'))
+        self.assertFalse(hasattr(f,'D'))
+        flag = False
+        try:
+            a = hasattr(f,b)
+        except:
+            self.assertTrue(hasattr(f, 'b'))
+            flag = True
+        self.assertTrue(flag)
+        self.assertTrue(hasattr(str,'center'))
+        self.assertTrue(hasattr(str,'ljust'))
+        self.assertTrue(hasattr(math,'pi'))
+        flag2 = False
+        try:
+            a = hasattr(math,None)
+        except:
+            flag2 = True
+        self.assertTrue(flag2)
+        self.assertFalse(hasattr(F,'a'))
+
     def test_hex(self):
         self.assertEqual(hex(16), '0x10')
         self.assertEqual(hex(-16), '-0x10')
+        self.assertEqual(hex(72), '0x48')
         self.assertRaises(TypeError, hex, {})
 
     def test_id(self):
@@ -683,6 +772,7 @@ class BuiltinTest(unittest.TestCase):
         # )
         self.assertRaises(TypeError, map)
         self.assertRaises(TypeError, map, lambda x: x, 42)
+        self.assertRaises(TypeError, map, lambda x: x, False)
         class BadSeq:
             def __iter__(self):
                 raise ValueError
@@ -691,7 +781,21 @@ class BuiltinTest(unittest.TestCase):
         def badfunc(x):
             raise RuntimeError
         # self.assertRaises(RuntimeError, list, map(badfunc, range(5)))
-
+        l1 = [1,3,2]
+        l2 = [9,1,4]
+        def foo(x,y):
+            return x + y
+        f = map(foo, l1, l2)
+        a = []
+        for i in f:
+            a.append(i)
+        z = map(foo, l1, l2)
+        self.assertEqual(a, [10, 4, 6])
+        def foo1(x):
+            return x
+        self.assertRaises(TypeError, foo1, l1, l2)
+        self.assertEqual(type(f), map)
+        self.assertEqual(str(f), '<map object>')
 
     def test_max(self):
         self.assertEqual(max('123123'), '3')
@@ -703,33 +807,75 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(max(1, 2.0, 3), 3)
         self.assertEqual(max(1.0, 2, 3), 3)
 
-        self.assertRaises(TypeError, max)
+        # with self.assertRaisesRegex(
+        #     TypeError,
+        #     'max expected at least 1 argument, got 0'
+        # ):
+        #     max()
+
+        with self.assertRaises(TypeError):
+            # assertRaisesRegex not supported
+            max()
+
         self.assertRaises(TypeError, max, 42)
         self.assertRaises(ValueError, max, ())
-
         class BadSeq:
             def __getitem__(self, index):
                 raise ValueError
-
         self.assertRaises(ValueError, max, BadSeq())
 
-        # self.assertEqual(max((), default=None), None)  # zero elem iterable
-        # self.assertEqual(max((1,), default=None), 1)  # one elem iterable
-        # self.assertEqual(max((1, 2), default=None), 2)  # two elem iterable
+        # for stmt in (
+        #     "max(key=int)",                 # no args
+        #     "max(default=None)",
+        #     "max(1, 2, default=None)",      # require container for default
+        #     "max(default=None, key=int)",
+        #     "max(1, key=int)",              # single arg not iterable
+        #     "max(1, 2, keystone=int)",      # wrong keyword
+        #     "max(1, 2, key=int, abc=int)",  # two many keywords
+        #     "max(1, 2, key=1)",             # keyfunc is not callable
+        #     ):
+        #     try:
+        #         exec(stmt, globals())
+        #     except TypeError:
+        #         pass
+        #     else:
+        #         self.fail(stmt)
+        # exec not supported - rewritten tests:
+        with self.assertRaises(TypeError):
+            max(key=int)
+        with self.assertRaises(TypeError):
+            max(default=None)         
+        with self.assertRaises(TypeError):
+            max(1, 2, default=None)
+        with self.assertRaises(TypeError):
+            max(default=None, key=int)
+        with self.assertRaises(TypeError):
+            max(1, key=int)       
+        with self.assertRaises(TypeError):
+            max(1, 2, keystone=int)       
+        with self.assertRaises(TypeError):
+            max(1, 2, key=int, abc=int)
+        with self.assertRaises(TypeError):
+            max(1, 2, key=1)         
+
+        self.assertEqual(max((1,), key=neg), 1)     # one elem iterable
+        self.assertEqual(max((1,2), key=neg), 1)    # two elem iterable
+        self.assertEqual(max(1, 2, key=neg), 1)     # two elems
+
+        self.assertEqual(max((), default=None), None)    # zero elem iterable
+        self.assertEqual(max((1,), default=None), 1)     # one elem iterable
+        self.assertEqual(max((1,2), default=None), 2)    # two elem iterable
+
+        self.assertEqual(max((), default=1, key=neg), 1)
+        self.assertEqual(max((1, 2), default=3, key=neg), 1)
+
+        self.assertEqual(max((1, 2), key=None), 2)
 
         data = [random.randrange(200) for i in range(100)]
         keys = dict((elem, random.randrange(50)) for elem in data)
         f = keys.__getitem__
-        # self.assertEqual(max(data, key=f),
-        #                  sorted(reversed(data), key=f)[-1])
-
-        class BadSeq:
-            def __getitem__(self, i):
-                if i == 5:
-                    raise ValueError
-                else:
-                    return i
-        # self.assertRaises(ValueError, list, zip(BadSeq(), BadSeq()))
+        self.assertEqual(max(data, key=f),
+                         sorted(reversed(data), key=f)[-1])
 
     def test_min(self):
         self.assertEqual(min('123123'), '1')
@@ -741,9 +887,74 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(min(1, 2.0, 3), 1)
         self.assertEqual(min(1.0, 2, 3), 1.0)
 
-        self.assertRaises(TypeError, min)
+        # with self.assertRaisesRegex(
+        #     TypeError,
+        #     'min expected at least 1 argument, got 0'
+        # ):
+        #     min()
+        with self.assertRaises(TypeError):
+            # assertRaisesRegex not supported
+            min()
+
         self.assertRaises(TypeError, min, 42)
         self.assertRaises(ValueError, min, ())
+        class BadSeq:
+            def __getitem__(self, index):
+                raise ValueError
+        self.assertRaises(ValueError, min, BadSeq())
+
+        # for stmt in (
+        #     "min(key=int)",                 # no args
+        #     "min(default=None)",
+        #     "min(1, 2, default=None)",      # require container for default
+        #     "min(default=None, key=int)",
+        #     "min(1, key=int)",              # single arg not iterable
+        #     "min(1, 2, keystone=int)",      # wrong keyword
+        #     "min(1, 2, key=int, abc=int)",  # two many keywords
+        #     "min(1, 2, key=1)",             # keyfunc is not callable
+        #     ):
+        #     try:
+        #         exec(stmt, globals())
+        #     except TypeError:
+        #         pass
+        #     else:
+        #         self.fail(stmt)
+        # exec not supported rewritten tests:
+        with self.assertRaises(TypeError):
+            min(key=int)
+        with self.assertRaises(TypeError):
+            min(default=None)         
+        with self.assertRaises(TypeError):
+            min(1, 2, default=None)
+        with self.assertRaises(TypeError):
+            min(default=None, key=int)
+        with self.assertRaises(TypeError):
+            min(1, key=int)       
+        with self.assertRaises(TypeError):
+            min(1, 2, keystone=int)       
+        with self.assertRaises(TypeError):
+            min(1, 2, key=int, abc=int)
+        with self.assertRaises(TypeError):
+            min(1, 2, key=1)   
+ 
+        self.assertEqual(min((1,), key=neg), 1)     # one elem iterable
+        self.assertEqual(min((1,2), key=neg), 2)    # two elem iterable
+        self.assertEqual(min(1, 2, key=neg), 2)     # two elems
+
+        self.assertEqual(min((), default=None), None)    # zero elem iterable
+        self.assertEqual(min((1,), default=None), 1)     # one elem iterable
+        self.assertEqual(min((1,2), default=None), 1)    # two elem iterable
+
+        self.assertEqual(min((), default=1, key=neg), 1)
+        self.assertEqual(min((1, 2), default=1, key=neg), 2)
+
+        self.assertEqual(min((1, 2), key=None), 1)
+
+        data = [random.randrange(200) for i in range(100)]
+        keys = dict((elem, random.randrange(50)) for elem in data)
+        f = keys.__getitem__
+        self.assertEqual(min(data, key=f),
+                         sorted(data, key=f)[0])
 
     def test_neg(self):
         x = -sys.maxsize-1
@@ -780,6 +991,7 @@ class BuiltinTest(unittest.TestCase):
     def test_oct(self):
         self.assertEqual(oct(100), '0o144')
         self.assertEqual(oct(-100), '-0o144')
+        self.assertEqual(oct(72), '0o110')
         self.assertRaises(TypeError, oct, ())
 
     def test_pow(self):
@@ -792,11 +1004,14 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(pow(2,10), 1024)
         self.assertEqual(pow(2,20), 1024*1024)
         self.assertEqual(pow(2,30), 1024*1024*1024)
+        self.assertEqual(pow(4, 5), 1024)
+        self.assertEqual(pow(4, 5, None), 1024)
 
         self.assertEqual(pow(-2,0), 1)
         self.assertEqual(pow(-2,1), -2)
         self.assertEqual(pow(-2,2), 4)
         self.assertEqual(pow(-2,3), -8)
+        self.assertEqual(pow(2, 9999, 13), 8)
 
         self.assertAlmostEqual(pow(0.,0), 1.)
         self.assertAlmostEqual(pow(0.,1), 0.)
@@ -812,6 +1027,7 @@ class BuiltinTest(unittest.TestCase):
         self.assertAlmostEqual(pow(-2.,1), -2.)
         self.assertAlmostEqual(pow(-2.,2), 4.)
         self.assertAlmostEqual(pow(-2.,3), -8.)
+
 
         for x in 2, 2.0:
             for y in 10, 10.0:
@@ -830,6 +1046,9 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(ValueError, pow, 1, 2, 0)
 
         self.assertRaises(TypeError, pow)
+        self.assertRaises(TypeError, pow, [1,2], '34', 5)
+        self.assertRaises(TypeError, pow, 4.0, 5.0, 3)
+        self.assertRaises(ValueError, pow, 4, -3, 2)
 
     def test_range(self):
         # self.assertEqual(str(range(5)), 'range(0, 5)')
@@ -968,6 +1187,55 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(type(round(-8, 0)), int)
         self.assertEqual(type(round(-8, 1)), int)
 
+        # a list of the numbers that Skulpt has trouble rounding correctly
+        bugs = [-0.5,-0.025,-0.055,0.045,-0.0025,-0.0035,0.0045,0.0055,-250,-350,-450,-550]
+        roundedbugs = [round(i) for i in bugs]
+        self.assertEqual(roundedbugs, [0, 0, 0, 0, 0, 0, 0, 0, -250, -350, -450, -550])
+        diffs = []
+        def helper(iterable,expect,n=None):
+            if n:
+                for i in iterable:
+                    r = round(i,n)
+                    if abs(r-expect) > (1/10.0**(n+1)) and i not in bugs:
+                        diffs.extend([i, expect, r])
+            else:
+                for i in iterable:
+                    r = round(i)
+                    if abs(r-expect) > 0.000001 and i not in bugs:
+                        diffs.extend([i, expect, r])
+
+        helper([x/10.0 for x in range(-5,-15,-1)],-1)
+        helper([x/10.0 for x in range(4,-5,-1)],0)
+        helper([x/10.0 for x in range(5,15)],1)
+        helper([x/100.0 for x in range(-50,-150,-1)],-1)
+        helper([x/100.0 for x in range(40,-50,-1)],0)
+        helper([x/100.0 for x in range(50,150)],1)
+        helper([x/1000.0 for x in range(-25,-35,-1)],-0.03,2)
+        helper([x/1000.0 for x in range(-35,-46,-1)],-0.04,2)
+        helper([x/1000.0 for x in range(-46,-55,-1)],-0.05,2)
+        helper([x/1000.0 for x in range(-55,-65,-1)],-0.06,2)
+        helper([x/1000.0 for x in range(25,35)],0.03,2)
+        helper([x/1000.0 for x in range(35,46)],0.04,2)
+        helper([x/1000.0 for x in range(46,55)],0.05,2)
+        helper([x/1000.0 for x in range(55,65)],0.06,2)
+        helper([x/10000.0 for x in range(-25,-35,-1)],-0.003,3)
+        helper([x/10000.0 for x in range(-35,-46,-1)],-0.004,3)
+        helper([x/10000.0 for x in range(-46,-56,-1)],-0.005,3)
+        helper([x/10000.0 for x in range(-56,-65,-1)],-0.006,3)
+        helper([x/10000.0 for x in range(25,35)],0.003,3)
+        helper([x/10000.0 for x in range(35,46)],0.004,3)
+        helper([x/10000.0 for x in range(46,56)],0.005,3)
+        helper([x/10000.0 for x in range(56,65)],0.006,3)
+        helper(range(-250,-350,-1),-300,-2)
+        helper(range(-350,-450,-1),-400,-2)
+        helper(range(-450,-550,-1),-500,-2)
+        helper(range(-550,-650,-1),-600,-2)
+        helper(range(250,350),300,-2)
+        helper(range(350,450),400,-2)
+        helper(range(450,550),500,-2)
+        helper(range(550,650),600,-2)
+        #self.assertEqual(diffs, [0.5, 1, 0, 0.5, 1, 0, 250, 300, 200, 450, 500, 400])
+
         # # test new kwargs
         # self.assertEqual(round(number=-8.0, ndigits=-1), -10.0)
 
@@ -1004,6 +1272,10 @@ class BuiltinTest(unittest.TestCase):
         self.assertEqual(sys.spam, 1)
         self.assertRaises(TypeError, setattr, sys, 1, 'spam')
         self.assertRaises(TypeError, setattr)
+        for builtin_type in (int, float, Exception, object, type, super):
+            self.assertRaises(TypeError, setattr, builtin_type, 'foo', 'bar')
+            with self.assertRaises(TypeError):
+                builtin_type.foo = 'bar'
 
     # test_str(): see test_unicode.py and test_bytes.py for str() tests.
 
@@ -1023,6 +1295,14 @@ class BuiltinTest(unittest.TestCase):
         self.assertRaises(TypeError, sum, [[1], [2], [3]])
         self.assertRaises(TypeError, sum, [{2:3}])
         self.assertRaises(TypeError, sum, [{2:3}]*2, {2:3})
+
+        d = {1:2,3:4}
+        self.assertEqual(sum({}),0)
+        self.assertEqual(sum({},5), 5)
+        self.assertEqual(sum({1:2,3:4}), 4)
+        self.assertEqual(sum(d.keys()), 4)
+        self.assertEqual(sum(d.values()), 6)
+        self.assertEqual(sum(d,5), 9)
 
         class BadSeq:
             def __getitem__(self, index):
@@ -1066,11 +1346,11 @@ class BuiltinTest(unittest.TestCase):
 
     def test_zip(self):
         self.assertEqual(list(zip(str1, str2)), [('A', 'x'), ('B', 'y')])
-        # self.assertEqual(str(zip(str1, str2))[1:11], "zip object")
-        # self.assertEqual(str(type(zip(str1, str2))), "<class 'zip'>")
+        self.assertEqual(str(zip(str1, str2))[1:11], "zip object")
+        self.assertEqual(str(type(zip(str1, str2))), "<class 'zip'>")
         self.assertEqual(list(zip(lst1, str3, str4)), [(1, 'A', 'a'), (2, 'B', 'b'), (3, 'C', 'c'), (4, 'D', 'd'), (5, 'E', 'e')])
-        # self.assertEqual(str(zip(lst1, str3, str4))[1:11], "zip object")
-        # self.assertEqual(str(type(zip(lst1, str3, str4))), "<class 'zip'>")
+        self.assertEqual(str(zip(lst1, str3, str4))[1:11], "zip object")
+        self.assertEqual(str(type(zip(lst1, str3, str4))), "<class 'zip'>")
         lst1b, str3b, str4b = zip(*zip(lst1, str3, str4))
         self.assertEqual(list(lst1b), lst1)
         self.assertEqual(''.join(str3b), str3)
@@ -1105,8 +1385,17 @@ class BuiltinTest(unittest.TestCase):
                     raise IndexError
                 else:
                     return i
-        self.assertEqual(list(zip(SequenceWithoutALength(), range(2**23))), list(enumerate(range(5))))
-
+        self.assertEqual(list(zip(SequenceWithoutALength(), range(2**10))), list(enumerate(range(5))))
+        a = zip([1], [2])
+        self.assertEqual(type(a), zip)
+        l = [1,2,3,4]
+        t = (1,2,3,4)
+        d = {1:2,3:4}
+        s = "1234"
+        z = zip(l,t,s)
+        self.assertEqual(list(zip(*z)), [(1, 2, 3, 4), (1, 2, 3, 4), ('1', '2', '3', '4')])
+        z = zip(l,t,s,d)
+        self.assertEqual(list(zip(*z)), [(1, 2), (1, 2), ('1', '2'), (1, 3)])
 
 class DepreciatedTest(unittest.TestCase):
 
@@ -1136,9 +1425,6 @@ class DepreciatedTest(unittest.TestCase):
     #
     # def test_reduce(self):
     #     self.assertRaises(NameError, lambda: reduce(lambda x, y: x + y, [1, 2, 3, 4, 5]))
-
-    def test_reload(self):
-        self.assertRaises(NameError, lambda: reload(math))
 
     # def test_unichr(self):
     #     self.assertRaises(NameError, lambda: unichr(97))
@@ -1188,7 +1474,6 @@ class DivTest(unittest.TestCase):
 #         self.assertRaises(TypeError, lambda: (1, 2) > 'foo')
 #         self.assertRaises(TypeError, lambda: [1, 2] > (1, 2))
 
-
 class TestSorted(unittest.TestCase):
 
     def test_baddecorator(self):
@@ -1209,6 +1494,58 @@ class TestSorted(unittest.TestCase):
         random.shuffle(copy)
         self.assertEqual(data, sorted(copy, reverse=1))
         self.assertNotEqual(data, copy)
+
+        b = "rksdubtheyn"
+        self.assertEqual(sorted(b, key = lambda x: ord(x)), ['b', 'd', 'e', 'h', 'k', 'n', 'r', 's', 't', 'u', 'y'])
+        c = [2,1,-4,3,0,6]
+        c.sort(reverse=True)
+        self.assertEqual(c, [6, 3, 2, 1, 0, -4])
+        c.sort()
+        self.assertEqual(c, [-4, 0, 1, 2, 3, 6])
+
+        def makeset(lst):
+            result = {}
+            for a in lst:
+                if not (a in result.keys()):
+                    result[a] = []
+
+                result[a].append(True)
+            return result
+
+        def sorttest(lst1):
+            lst2 = lst1[:]
+            lst2.sort()
+            assert len(lst1) == len(lst2)
+            assert makeset(lst1) == makeset(lst2)
+            position = {}
+            i = 0
+            err = False
+            for a in lst1:
+                if not (a in position.keys()):
+                    position[a] = []
+                position[a].append(i)
+                i += 1
+            for i in range(len(lst2)-1):
+                a, b = lst2[i], lst2[i+1]
+                if not a <= b:
+                    print("resulting list is not sorted")
+                    err = True
+                if a == b:
+                    if not position[a][0] < position[b][-1]:
+                        print("not stable")
+                        err = True
+            if not err:
+                return 1
+            else:
+                return 0
+        sum0 = 0
+        for v in range(20):
+            up = 1 + int(v * random.random() * 2.7)
+            lst1 = [random.randrange(0, up) for i in range(v)]
+            sum0 += sorttest(lst1)
+        self.assertEqual(sum0, 20)
+
+
 
     def test_bad_arguments(self):
         # Issue #29327: The first argument is positional-only.
@@ -1246,6 +1583,15 @@ class TestType(unittest.TestCase):
         class B:
             def ham(self):
                 return 'ham%d' % self
+
+        # test __dict__ is not self referencing
+        b = B()
+        self.assertEqual(b.__dict__, {})
+        b.x = 3
+        self.assertEqual(b.__dict__, {'x':3})
+        self.assertIn('x', b.__dict__)
+        self.assertNotIn('__dict__', b.__dict__)
+        
         # C = type('C', (B, int), {'spam': lambda self: 'spam%s' % self})
         # self.assertEqual(C.__name__, 'C')
         # self.assertEqual(C.__qualname__, 'C')
@@ -1293,7 +1639,7 @@ class TestType(unittest.TestCase):
     # def test_bad_slots(self):
     #     self.assertRaises(TypeError, lambda: type('A', (int,), {'__slots__': 'x'}))
     #     self.assertRaises(TypeError, lambda: type('A', (), {'__slots__': ''}))
-    #     self.assertRaises(TypeError, lambda: type('A', (), {'__slots__': '42'}))
+    #     self.assertRaises(TypeError, lambda: type('A', (), {'__s lots__': '42'}))
     #     self.assertRaises(TypeError, lambda: type('A', (), {'__slots__': 'x\x00y'}))
     #     self.assertRaises(ValueError, lambda: type('A', (), {'__slots__': 'x', 'x': 0}))
     #     self.assertRaises(TypeError, lambda: type('A', (), {'__slots__': ('__dict__', '__dict__')}))

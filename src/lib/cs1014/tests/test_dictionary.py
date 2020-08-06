@@ -223,7 +223,8 @@ class DictionaryMistakeTest(MistakeTest):
 
     def test_wrong_keys(self):
         # TODO: Check output string
-        keys = ['Date', "Temperature", "Wind", "Min Temp", "Max Temp", "Avg Temp", "Direction", "Speed", "Month", "Year",
+        keys = ['Date', "Temperature", "Wind", "Min Temp", "Max Temp", "Avg Temp", "Direction", "Speed", "Month",
+                "Year",
                 "Week of", "Full", "State", "Code", "City", "Location"]
         self.to_source("total = 0\n"
                        "for reports in weather_reports:\n"

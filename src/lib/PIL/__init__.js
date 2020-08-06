@@ -1,4 +1,4 @@
-var $builtinmodule = function(name) {
+var $builtinmodule = function (name) {
     var mod, sampleWrapper;
     mod = {__name__: "PIL"};
 
@@ -18,30 +18,30 @@ var $builtinmodule = function(name) {
     // checking FrameManager.willRenderNext()
     function InstantPromise(err, result) {
         this.lastResult = result;
-        this.lastError  = err;
+        this.lastError = err;
     }
 
-    InstantPromise.prototype.then = function(cb) {
+    InstantPromise.prototype.then = function (cb) {
         if (this.lastError) {
             return this;
         }
 
         try {
             this.lastResult = cb(this.lastResult);
-        } catch(e) {
+        } catch (e) {
             this.lastResult = undefined;
-            this.lastError  = e;
+            this.lastError = e;
         }
 
         return this.lastResult instanceof Promise ? this.lastResult : this;
     };
 
-    InstantPromise.prototype.catch = function(cb) {
+    InstantPromise.prototype.catch = function (cb) {
         if (this.lastError) {
             try {
                 this.lastResult = cb(this.lastError);
-                this.lastError  = undefined;
-            } catch(e) {
+                this.lastError = undefined;
+            } catch (e) {
                 this.lastResult = undefined;
                 this.lastError = e;
             }
@@ -50,12 +50,12 @@ var $builtinmodule = function(name) {
         return this.lastResult instanceof Promise ? this.lastResult : this;
     };
 
-    var buildImage = function(imageData) {
+    var buildImage = function (imageData) {
 
     };
 
     function getAsset(name) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             if (Sk.PIL.assets[name] !== undefined) {
                 //return Sk.PIL.assets[name];
                 resolve(Sk.PIL.assets[name]);
@@ -74,7 +74,7 @@ var $builtinmodule = function(name) {
         });
     }
 
-    var image = function($gbl, $loc) {
+    var image = function ($gbl, $loc) {
         // open(filename) or open(url)
         // show()
 
@@ -82,7 +82,7 @@ var $builtinmodule = function(name) {
             //
         });
 
-        $loc.open = new Sk.builtin.func(function(self, file_or_url) {
+        $loc.open = new Sk.builtin.func(function (self, file_or_url) {
             Sk.builtin.pyCheckArgs("open", arguments, 2, 2);
             Sk.builtin.pyCheckType("file_or_url", "string", Sk.builtin.checkString(file_or_url));
             self.file_or_url = file_or_url;
@@ -90,7 +90,7 @@ var $builtinmodule = function(name) {
             var imagePromise = getAsset(Sk.ffi.remapToJs(file_or_url));
             var susp = new Sk.misceval.Suspension();
             self.image = Sk.builtin.none.none$;
-            susp.resume = function() {
+            susp.resume = function () {
                 if (susp.data["error"]) {
                     //throw new Sk.builtin.IOError(susp.data["error"].message);
                     throw susp.data["error"];
@@ -101,7 +101,7 @@ var $builtinmodule = function(name) {
             };
             susp.data = {
                 type: "Sk.promise",
-                promise: imagePromise.then(function(value) {
+                promise: imagePromise.then(function (value) {
                     console.log("PROMISED");
                     self.image = value;
                     self.canvas = document.createElement("canvas");
@@ -113,7 +113,7 @@ var $builtinmodule = function(name) {
                     self.pixels = self.canvas.getContext("2d").getImageData(0, 0, self.image.width, self.image.height).data;
                     console.log(self.pixels);
                     return value;
-                }, function(err) {
+                }, function (err) {
                     self.image = "";
                     throw err;
                     //return err;
@@ -123,7 +123,7 @@ var $builtinmodule = function(name) {
             return susp;
         });
 
-        $loc.show = new Sk.builtin.func(function(self) {
+        $loc.show = new Sk.builtin.func(function (self) {
             if (Sk.console === undefined) {
                 throw new Sk.builtin.NameError("Can not resolve drawing area. Sk.console is undefined!");
             }

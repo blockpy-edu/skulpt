@@ -12,10 +12,11 @@ import tokenize
 
 __all__ = ["getline", "clearcache", "checkcache"]
 
+
 def getline(filename, lineno, module_globals=None):
     lines = getlines(filename, module_globals)
     if 1 <= lineno <= len(lines):
-        return lines[lineno-1]
+        return lines[lineno - 1]
     else:
         return ''
 
@@ -69,7 +70,7 @@ def checkcache(filename=None):
             continue
         size, mtime, lines, fullname = entry
         if mtime is None:
-            continue   # no-op for files loaded via a __loader__
+            continue  # no-op for files loaded via a __loader__
         try:
             stat = os.stat(fullname)
         except OSError:
@@ -110,7 +111,7 @@ def updatecache(filename, module_globals=None):
                     return []
                 cache[filename] = (
                     len(data), None,
-                    [line+'\n' for line in data.splitlines()], fullname
+                    [line + '\n' for line in data.splitlines()], fullname
                 )
                 return cache[filename][2]
 

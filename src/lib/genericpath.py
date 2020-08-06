@@ -82,6 +82,7 @@ def commonprefix(m):
             return s1[:i]
     return s1
 
+
 # Are two stat buffers (obtained from stat, fstat or lstat)
 # describing the same file?
 def samestat(s1, s2):
@@ -131,11 +132,12 @@ def _splitext(p, sep, altsep, extsep):
         # skip all leading dots
         filenameIndex = sepIndex + 1
         while filenameIndex < dotIndex:
-            if p[filenameIndex:filenameIndex+1] != extsep:
+            if p[filenameIndex:filenameIndex + 1] != extsep:
                 return p[:dotIndex], p[dotIndex:]
             filenameIndex += 1
 
     return p, p[:0]
+
 
 def _check_arg_types(funcname, *args):
     hasstr = hasbytes = False

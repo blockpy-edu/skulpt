@@ -3,7 +3,7 @@
  * @param {Object} iterable
  * @extends Sk.builtin.object
  */
-Sk.builtin.zip_ = function zip_ () {
+Sk.builtin.zip_ = function zip_() {
     var i;
     var iters;
     var next;
@@ -19,7 +19,7 @@ Sk.builtin.zip_ = function zip_ () {
             iters.push(Sk.abstr.iter(arguments[i]));
         } catch (e) {
             if (e instanceof Sk.builtin.TypeError) {
-                throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");         
+                throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");
             } else {
                 throw e;
             }

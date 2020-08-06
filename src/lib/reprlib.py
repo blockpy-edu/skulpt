@@ -5,6 +5,7 @@ __all__ = ["Repr", "repr", "recursive_repr"]
 from itertools import islice
 from _thread import get_ident
 
+
 def recursive_repr(fillvalue='...'):
     'Decorator to make a repr function return fillvalue for a recursive call'
 
@@ -31,6 +32,7 @@ def recursive_repr(fillvalue='...'):
         return wrapper
 
     return decorating_function
+
 
 class Repr:
 
@@ -119,18 +121,18 @@ class Repr:
     def repr_str(self, x, level):
         s = original_repr(x[:self.maxstring])
         if len(s) > self.maxstring:
-            i = max(0, (self.maxstring-3)//2)
-            j = max(0, self.maxstring-3-i)
-            s = original_repr(x[:i] + x[len(x)-j:])
-            s = s[:i] + '...' + s[len(s)-j:]
+            i = max(0, (self.maxstring - 3) // 2)
+            j = max(0, self.maxstring - 3 - i)
+            s = original_repr(x[:i] + x[len(x) - j:])
+            s = s[:i] + '...' + s[len(s) - j:]
         return s
 
     def repr_int(self, x, level):
-        s = original_repr(x) # XXX Hope this isn't too slow...
+        s = original_repr(x)  # XXX Hope this isn't too slow...
         if len(s) > self.maxlong:
-            i = max(0, (self.maxlong-3)//2)
-            j = max(0, self.maxlong-3-i)
-            s = s[:i] + '...' + s[len(s)-j:]
+            i = max(0, (self.maxlong - 3) // 2)
+            j = max(0, self.maxlong - 3 - i)
+            s = s[:i] + '...' + s[len(s) - j:]
         return s
 
     def repr_instance(self, x, level):
@@ -141,9 +143,9 @@ class Repr:
         except Exception:
             return '<%s instance at %#x>' % (x.__class__.__name__, id(x))
         if len(s) > self.maxother:
-            i = max(0, (self.maxother-3)//2)
-            j = max(0, self.maxother-3-i)
-            s = s[:i] + '...' + s[len(s)-j:]
+            i = max(0, (self.maxother - 3) // 2)
+            j = max(0, self.maxother - 3 - i)
+            s = s[:i] + '...' + s[len(s) - j:]
         return s
 
 
@@ -155,6 +157,7 @@ def _possibly_sorted(x):
         return sorted(x)
     except Exception:
         return list(x)
+
 
 original_repr = repr
 aRepr = Repr()

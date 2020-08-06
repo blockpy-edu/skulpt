@@ -95,7 +95,7 @@ class AstMap:
                 value = AstSymbol(std_node.astNode.name, std_node)
             else:  # TODO: Little skulpt artifact that doesn't raise Attribute Errors...
                 raise AttributeError
-#            value = AstSymbol(std_node.astNode.name, std_node)
+        #            value = AstSymbol(std_node.astNode.name, std_node)
         except AttributeError:
             node = std_node
             if type(node.astNode).__name__ != "Call":

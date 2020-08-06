@@ -55,7 +55,7 @@ try:
     from numbers import Number
 except:
     Number = (bool, int, float, complex)
-    
+
 try:
     bytes
 except NameError:
@@ -65,12 +65,14 @@ try:
     frozenset()
 except:
     frozenset = tuple()
-    
+
+
 def make_type_name(value):
     try:
         return type(value).__name__
     except Exception:
         return str(type(value))[8:-2]
+
 
 def get_line_code():
     # Load in extract_stack, or provide shim for environments without it.
@@ -105,26 +107,32 @@ MESSAGE_GENERIC_FAILURE = (
 MESSAGE_GENERIC_SUCCESS = (
     "TEST PASSED{context}")
 
+
 class StudentTestReport:
     def __init__(self):
         self.reset()
+
     def __repr__(self):
         return str(self)
+
     def __str__(self):
         return ('<failures={failures}'
                 ',successes={successes}'
                 ',tests={tests},lines={lines}>'
-        ).format(
+                ).format(
             failures=self.failures, successes=self.successes, tests=self.tests,
             lines=', '.join(self.lines)
         )
+
     def reset(self):
         self.failures = 0
         self.successes = 0
         self.tests = 0
         self.lines = []
-    
+
+
 student_tests = StudentTestReport()
+
 
 def assert_equal(x, y, precision=4, exact_strings=False, *args):
     """
@@ -170,9 +178,11 @@ def assert_equal(x, y, precision=4, exact_strings=False, *args):
     student_tests.successes += 1
     return True
 
+
 # Hack to allow anyone with an assert_equal reference to get the results
 #   since they are global across all calls. Weird strategy!
 assert_equal.student_tests = student_tests
+
 
 def _is_equal(x, y, precision, exact_strings, *args):
     """
@@ -197,7 +207,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
     >>> _is_equal(12.3456, 12.34568w5)
      False
     """
-    
+
     # Check if generators
     if isinstance(x, LIST_GENERATOR_TYPES):
         x = list(x)
@@ -207,7 +217,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
         y = list(y)
     elif isinstance(y, SET_GENERATOR_TYPES):
         y = set(y)
-    
+
     if isinstance(x, float) and isinstance(y, float):
         error = 10 ** (-precision)
         return abs(x - y) < error

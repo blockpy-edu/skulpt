@@ -7,21 +7,22 @@ class BinaryTree:
     """
     A recursive implementation of Binary Tree
     Using links and Nodes approach.
-    """    
-    def __init__(self,rootObj):
+    """
+
+    def __init__(self, rootObj):
         self.key = rootObj
         self.leftChild = None
         self.rightChild = None
 
-    def insertLeft(self,newNode):
+    def insertLeft(self, newNode):
         if self.leftChild == None:
             self.leftChild = BinaryTree(newNode)
         else:
             t = BinaryTree(newNode)
             t.left = self.leftChild
             self.leftChild = t
-    
-    def insertRight(self,newNode):
+
+    def insertRight(self, newNode):
         if self.rightChild == None:
             self.rightChild = BinaryTree(newNode)
         else:
@@ -38,10 +39,10 @@ class BinaryTree:
     def getLeftChild(self):
         return self.leftChild
 
-    def setRootVal(self,obj):
+    def setRootVal(self, obj):
         self.key = obj
 
-    def getRootVal(self,):
+    def getRootVal(self, ):
         return self.key
 
     def inorder(self):
@@ -57,7 +58,6 @@ class BinaryTree:
         if self.rightChild:
             self.rightChild.postorder()
         print(self.key)
-
 
     def preorder(self):
         print(self.key)
@@ -76,23 +76,25 @@ class BinaryTree:
             print(')')
 
     def postordereval(self):
-        opers = {'+':operator.add, '-':operator.sub, '*':operator.mul, '/':operator.truediv}
+        opers = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
         res1 = None
         res2 = None
         if self.leftChild:
-            res1 = self.leftChild.postordereval()  #// \label{peleft}
+            res1 = self.leftChild.postordereval()  # // \label{peleft}
         if self.rightChild:
-            res2 = self.rightChild.postordereval() #// \label{peright}
+            res2 = self.rightChild.postordereval()  # // \label{peright}
         if res1 and res2:
-            return opers[self.key](res1,res2) #// \label{peeval}
+            return opers[self.key](res1, res2)  # // \label{peeval}
         else:
             return self.key
+
 
 def inorder(tree):
     if tree != None:
         inorder(tree.getLeftChild())
         print(tree.getRootVal())
         inorder(tree.getRightChild())
+
 
 def printexp(tree):
     if tree.leftChild:
@@ -101,7 +103,8 @@ def printexp(tree):
     print(tree.getRootVal())
     if tree.rightChild:
         printexp(tree.getRightChild())
-        print(')') 
+        print(')')
+
 
 def printexp(tree):
     sVal = ""
@@ -111,23 +114,25 @@ def printexp(tree):
         sVal = sVal + printexp(tree.getRightChild()) + ')'
     return sVal
 
+
 def postordereval(tree):
-    opers = {'+':operator.add, '-':operator.sub, '*':operator.mul, '/':operator.truediv}
+    opers = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
     res1 = None
     res2 = None
     if tree:
-        res1 = postordereval(tree.getLeftChild())  #// \label{peleft}
-        res2 = postordereval(tree.getRightChild()) #// \label{peright}
+        res1 = postordereval(tree.getLeftChild())  # // \label{peleft}
+        res2 = postordereval(tree.getRightChild())  # // \label{peright}
         if res1 and res2:
-            return opers[tree.getRootVal()](res1,res2) #// \label{peeval}
+            return opers[tree.getRootVal()](res1, res2)  # // \label{peeval}
         else:
             return tree.getRootVal()
+
 
 def height(tree):
     if tree == None:
         return -1
     else:
-        return 1 + max(height(tree.leftChild),height(tree.rightChild))
+        return 1 + max(height(tree.leftChild), height(tree.rightChild))
 
 # t = BinaryTree(7)
 # t.insertLeft(3)

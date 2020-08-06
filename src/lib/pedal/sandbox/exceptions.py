@@ -8,17 +8,21 @@ except NameError:
     class TimeoutError(Exception):
         pass
 
+
 class SandboxException(Exception):
     """
     Generic base exception for sandbox errors.
     """
 
+
 class SandboxStudentCodeException(SandboxException):
     """
     Caused by an error in student code
     """
+
     def __init__(self, actual):
         self.actual = actual
+
 
 class SandboxPreventModule(Exception):
     """
@@ -86,7 +90,11 @@ def _add_context_to_error(e, message):
     elif hasattr(e, 'args') and e.args:
         e.args = tuple([e.args[0] + message])
     return e
-x=sys.stdout
+
+
+x = sys.stdout
+
+
 class SandboxTraceback:
     """
     Class for reformatting tracebacks to have more pertinent information.
@@ -133,8 +141,8 @@ class SandboxTraceback:
         for frame in tb_e.stack:
             if frame.filename == os.path.basename(self.student_filename):
                 frame.lineno += self.line_offset
-            if frame.lineno-1 < len(self.original_code_lines):
-                frame._line = self.original_code_lines[frame.lineno-1]
+            if frame.lineno - 1 < len(self.original_code_lines):
+                frame._line = self.original_code_lines[frame.lineno - 1]
             else:
                 frame._line = "*line missing*"
         lines = [self._clean_traceback_line(line)

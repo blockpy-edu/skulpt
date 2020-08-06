@@ -22,4 +22,3 @@ def unnecessary_cast(needed_casts):
         if user_cast not in needed_casts and user_cast in known_casts:
             return explain_r(message.format(user_cast), code, label=tldr)
     return False
-

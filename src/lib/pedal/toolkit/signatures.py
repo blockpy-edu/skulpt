@@ -108,8 +108,8 @@ def parse_type(node):
     elif node.ast_name == "List":
         return "[{}]".format(", ".join([parse_type(n) for n in node.elts]))
     elif node.ast_name == "Dict":
-        return "{"+(", ".join(["{}: {}".format(parse_type(k), parse_type(v))
-                                            for k,v in zip(node.keys, node.values)]))+"}"
+        return "{" + (", ".join(["{}: {}".format(parse_type(k), parse_type(v))
+                                 for k, v in zip(node.keys, node.values)])) + "}"
     elif node.ast_name == "Subscript":
         return parse_type(node.value) + "[{}]".format(parse_type_slice(node.slice))
     elif node.ast_name == "BoolOp":
@@ -138,7 +138,7 @@ def parse_type_value(value, parse_strings=False):
             return "()"
         else:
             return "({})".format("".join(["{}, ".format(parse_type_value(v))
-                                     for v in value]))
+                                          for v in value]))
     elif isinstance(value, dict):
         if value == {}:
             return "{}"
@@ -286,7 +286,8 @@ def type_check(left, right):
     left = normalize_type(left)
     right = normalize_type(right)
     return check_piece(left, right)
-    
+
+
 def find_colon(str):
     parens_stack = []
     for i, character in enumerate(str):
@@ -297,11 +298,14 @@ def find_colon(str):
         elif character == ':' and not parens_stack:
             return i
     return 0
-    
+
+
 ARGS = ('args:', 'arg:', 'argument:', 'arguments:',
         'parameters:', 'params:', 'parameter:', 'param:')
 ARG_PATTERN = r'(.+)\s*\((.+)\)\s*:(.+)'
 RETURNS = ('returns:', 'return:')
+
+
 def parse_docstring(doc):
     # First line's indentation may be different from rest - trust first
     # non empty line after the first one.
@@ -354,6 +358,7 @@ def parse_docstring(doc):
                     returns.append(return_type.strip())
     return body, args, ' or '.join(returns)
 
+
 def function_signature(function_name, returns=None, yields=None,
                        prints=None, raises=None, report=None, root=None,
                        **kwargs):
@@ -398,7 +403,7 @@ def function_signature(function_name, returns=None, yields=None,
         return failing_parameters, type_check(parsed_returns, returns)
     else:
         return failing_parameters, False
-    
+
 
 def class_signature(class_name, report=None, root=None, **attributes):
     """

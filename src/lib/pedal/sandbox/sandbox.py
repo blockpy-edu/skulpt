@@ -92,6 +92,7 @@ class DataSandbox:
     def __repr__(self):
         return ""
 
+
 class Sandbox(DataSandbox):
     """
 
@@ -556,13 +557,13 @@ class Sandbox(DataSandbox):
                 contexts = self.call_contexts[self.call_id]
                 if context is not None:
                     contexts.append(context)
-                context = '\n'.join(contexts)#[1:])
+                context = '\n'.join(contexts)  # [1:])
             if context.strip():
                 context = self.CONTEXT_MESSAGE.format(context=context)
                 inputs = self.input_contexts[self.call_id]
                 if inputs is not None and inputs:
                     inputs = "\n".join(inputs)
-                    context += "\n"+self.INPUT_CONTEXT_MESSAGE.format(inputs=inputs)
+                    context += "\n" + self.INPUT_CONTEXT_MESSAGE.format(inputs=inputs)
             else:
                 context = self.FILE_CONTEXT_MESSAGE.format(filename=self.report['source']['filename'])
             self.exception = _add_context_to_error(self.exception, context)
@@ -636,7 +637,7 @@ class Sandbox(DataSandbox):
                                         context, keep_context, as_filename,
                                         code)
                 return self
-        
+
         if as_filename is None:
             as_filename = os.path.basename(self.report['source']['filename'])
             # todo: earlier version of inputs being made?

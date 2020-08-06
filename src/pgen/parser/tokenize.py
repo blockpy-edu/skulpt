@@ -34,16 +34,22 @@ from codecs import BOM_UTF8, lookup
 
 # Meredydd changed - why were we using a Python 2 token table from the
 # filesystem that disagrees with our local token.py?
-#from lib2to3.pgen2.token import *
+# from lib2to3.pgen2.token import *
 # from import token
 # __all__ = [x for x in dir(token) if x[0] != '_'] + ["tokenize",
 #            "generate_tokens", "untokenize"]
 # del token
 from token import *
 
+
 def group(*choices): return '(' + '|'.join(choices) + ')'
+
+
 def any(*choices): return group(*choices) + '*'
+
+
 def maybe(*choices): return group(*choices) + '?'
+
 
 Whitespace = r'[ \f\t]*'
 Comment = r'#[^\r\n]*'
@@ -138,20 +144,24 @@ for t in ("'", '"',
           "ur'", 'ur"', "Ur'", 'Ur"',
           "uR'", 'uR"', "UR'", 'UR"',
           "br'", 'br"', "Br'", 'Br"',
-          "bR'", 'bR"', "BR'", 'BR"', ):
+          "bR'", 'bR"', "BR'", 'BR"',):
     single_quoted[t] = t
 
 tabsize = 8
 
+
 class TokenError(Exception): pass
+
 
 class StopTokenizing(Exception): pass
 
-def printtoken(type, token, xxx_todo_changeme, xxx_todo_changeme1, line): # for testing
+
+def printtoken(type, token, xxx_todo_changeme, xxx_todo_changeme1, line):  # for testing
     (srow, scol) = xxx_todo_changeme
     (erow, ecol) = xxx_todo_changeme1
     print("%d,%d-%d,%d:\t%s\t%s" % \
-        (srow, scol, erow, ecol, tok_name[type], repr(token)))
+          (srow, scol, erow, ecol, tok_name[type], repr(token)))
+
 
 def tokenize(readline, tokeneater=printtoken):
     """
@@ -171,10 +181,12 @@ def tokenize(readline, tokeneater=printtoken):
     except StopTokenizing:
         pass
 
+
 # backwards compatible interface
 def tokenize_loop(readline, tokeneater):
     for token_info in generate_tokens(readline):
         tokeneater(*token_info)
+
 
 class Untokenizer:
 
@@ -232,7 +244,9 @@ class Untokenizer:
                 startline = False
             toks_append(tokval)
 
+
 cookie_re = re.compile("coding[:=]\s*([-\w.]+)")
+
 
 def detect_encoding(readline):
     """
@@ -253,6 +267,7 @@ def detect_encoding(readline):
     """
     bom_found = False
     encoding = None
+
     def read_or_stop():
         try:
             return readline()
@@ -301,6 +316,7 @@ def detect_encoding(readline):
 
     return 'utf-8', [first, second]
 
+
 def untokenize(iterable):
     """Transform tokens back into Python source code.
 
@@ -321,6 +337,7 @@ def untokenize(iterable):
     """
     ut = Untokenizer()
     return ut.untokenize(iterable)
+
 
 def generate_tokens(readline):
     """
@@ -344,7 +361,7 @@ def generate_tokens(readline):
     contline = None
     indents = [0]
 
-    while 1:                                   # loop over lines in stream
+    while 1:  # loop over lines in stream
         try:
             line = readline()
         except StopIteration:
@@ -352,7 +369,7 @@ def generate_tokens(readline):
         lnum = lnum + 1
         pos, max = 0, len(line)
 
-        if contstr:                            # continued string
+        if contstr:  # continued string
             if not line:
                 raise TokenError("EOF in multi-line string", strstart)
             endmatch = endprog.match(line)
@@ -364,7 +381,7 @@ def generate_tokens(readline):
                 contline = None
             elif needcont and line[-2:] != '\\\n' and line[-3:] != '\\\r\n':
                 yield (ERRORTOKEN, contstr + line,
-                           strstart, (lnum, len(line)), contline)
+                       strstart, (lnum, len(line)), contline)
                 contstr = ''
                 contline = None
                 continue
@@ -376,15 +393,19 @@ def generate_tokens(readline):
         elif parenlev == 0 and not continued:  # new statement
             if not line: break
             column = 0
-            while pos < max:                   # measure leading whitespace
-                if line[pos] == ' ': column = column + 1
-                elif line[pos] == '\t': column = (column/tabsize + 1)*tabsize
-                elif line[pos] == '\f': column = 0
-                else: break
+            while pos < max:  # measure leading whitespace
+                if line[pos] == ' ':
+                    column = column + 1
+                elif line[pos] == '\t':
+                    column = (column / tabsize + 1) * tabsize
+                elif line[pos] == '\f':
+                    column = 0
+                else:
+                    break
                 pos = pos + 1
             if pos == max: break
 
-            if line[pos] in '#\r\n':           # skip comments or blank lines
+            if line[pos] in '#\r\n':  # skip comments or blank lines
                 if line[pos] == '#':
                     comment_token = line[pos:].rstrip('\r\n')
                     nl_pos = pos + len(comment_token)
@@ -397,7 +418,7 @@ def generate_tokens(readline):
                            (lnum, pos), (lnum, len(line)), line)
                 continue
 
-            if column > indents[-1]:           # count indents or dedents
+            if column > indents[-1]:  # count indents or dedents
                 indents.append(column)
                 yield (INDENT, line[:pos], (lnum, 0), (lnum, pos), line)
             while column < indents[-1]:
@@ -408,20 +429,20 @@ def generate_tokens(readline):
                 indents = indents[:-1]
                 yield (DEDENT, '', (lnum, pos), (lnum, pos), line)
 
-        else:                                  # continued statement
+        else:  # continued statement
             if not line:
                 raise TokenError("EOF in multi-line statement", (lnum, 0))
             continued = 0
 
         while pos < max:
             pseudomatch = pseudoprog.match(line, pos)
-            if pseudomatch:                                # scan for tokens
+            if pseudomatch:  # scan for tokens
                 start, end = pseudomatch.span(1)
                 spos, epos, pos = (lnum, start), (lnum, end), end
                 token, initial = line[start:end], line[start]
 
                 if initial in numchars or \
-                   (initial == '.' and token != '.'):      # ordinary number
+                        (initial == '.' and token != '.'):  # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
                     newline = NEWLINE
@@ -434,47 +455,53 @@ def generate_tokens(readline):
                 elif token in triple_quoted:
                     endprog = endprogs[token]
                     endmatch = endprog.match(line, pos)
-                    if endmatch:                           # all on one line
+                    if endmatch:  # all on one line
                         pos = endmatch.end(0)
                         token = line[start:pos]
                         yield (STRING, token, spos, (lnum, pos), line)
                     else:
-                        strstart = (lnum, start)           # multiple lines
+                        strstart = (lnum, start)  # multiple lines
                         contstr = line[start:]
                         contline = line
                         break
                 elif initial in single_quoted or \
-                    token[:2] in single_quoted or \
-                    token[:3] in single_quoted:
-                    if token[-1] == '\n':                  # continued string
+                        token[:2] in single_quoted or \
+                        token[:3] in single_quoted:
+                    if token[-1] == '\n':  # continued string
                         strstart = (lnum, start)
                         endprog = (endprogs[initial] or endprogs[token[1]] or
                                    endprogs[token[2]])
                         contstr, needcont = line[start:], 1
                         contline = line
                         break
-                    else:                                  # ordinary string
+                    else:  # ordinary string
                         yield (STRING, token, spos, epos, line)
-                elif initial in namechars:                 # ordinary name
+                elif initial in namechars:  # ordinary name
                     yield (NAME, token, spos, epos, line)
-                elif initial == '\\':                      # continued stmt
+                elif initial == '\\':  # continued stmt
                     # This yield is new; needed for better idempotency:
                     yield (NL, token, spos, (lnum, pos), line)
                     continued = 1
                 else:
-                    if initial in '([{': parenlev = parenlev + 1
-                    elif initial in ')]}': parenlev = parenlev - 1
+                    if initial in '([{':
+                        parenlev = parenlev + 1
+                    elif initial in ')]}':
+                        parenlev = parenlev - 1
                     yield (OP, token, spos, epos, line)
             else:
                 yield (ERRORTOKEN, line[pos],
-                           (lnum, pos), (lnum, pos+1), line)
+                       (lnum, pos), (lnum, pos + 1), line)
                 pos = pos + 1
 
-    for indent in indents[1:]:                 # pop remaining indent levels
+    for indent in indents[1:]:  # pop remaining indent levels
         yield (DEDENT, '', (lnum, 0), (lnum, 0), '')
     yield (ENDMARKER, '', (lnum, 0), (lnum, 0), '')
 
-if __name__ == '__main__':                     # testing
+
+if __name__ == '__main__':  # testing
     import sys
-    if len(sys.argv) > 1: tokenize(open(sys.argv[1]).readline)
-    else: tokenize(sys.stdin.readline)
+
+    if len(sys.argv) > 1:
+        tokenize(open(sys.argv[1]).readline)
+    else:
+        tokenize(sys.stdin.readline)

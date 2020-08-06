@@ -64,7 +64,7 @@ Sk.ffi.remapToPy = function (obj) {
         return new Sk.builtin.func(obj);
     }
 
-    Sk.asserts.fail("unhandled remap type " + typeof(obj));
+    Sk.asserts.fail("unhandled remap type " + typeof (obj));
 };
 Sk.exportSymbol("Sk.ffi.remapToPy", Sk.ffi.remapToPy);
 
@@ -80,17 +80,16 @@ Sk.ffi.remapToJs = function (obj) {
     var i;
     var kAsJs;
     var v;
-    var iter, k;
+    var k;
     var ret;
     if (obj instanceof Sk.builtin.dict) {
         ret = {};
-        for (iter = obj.tp$iter(), k = iter.tp$iternext();
-            k !== undefined;
-            k = iter.tp$iternext()) {
-            v = obj.mp$subscript(k);
-            if (v === undefined) {
-                v = null;
-            }
+        const entries = obj.entries;
+        let item;
+        for (let keyhash in entries) {
+            item = entries[keyhash];
+            k = item.lhs;
+            v = item.rhs;
             kAsJs = Sk.ffi.remapToJs(k);
             // todo; assert that this is a reasonble lhs?
             ret[kAsJs] = Sk.ffi.remapToJs(v);

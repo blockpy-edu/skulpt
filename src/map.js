@@ -3,7 +3,7 @@
  * @param {Object} iterable
  * @extends Sk.builtin.object
  */
-Sk.builtin.map_ = function map_ (fun, seq) {
+Sk.builtin.map_ = function map_(fun, seq) {
     var next;
     var args;
     var getnext;

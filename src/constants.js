@@ -1,39 +1,10 @@
-Sk.builtin.str.$emptystr = new Sk.builtin.str("");
 
-/**
- * Python bool True constant.
- * @type {Sk.builtin.bool}
- * @memberOf Sk.builtin.bool
- */
-Sk.builtin.bool.true$ = /** @type {Sk.builtin.bool} */ (Object.create(Sk.builtin.bool.prototype, {v: {value: 1, enumerable: true}}));
-
-/**
- * Python bool False constant.
- * @type {Sk.builtin.bool}
- * @memberOf Sk.builtin.bool
- */
-Sk.builtin.bool.false$ = /** @type {Sk.builtin.bool} */ (Object.create(Sk.builtin.bool.prototype, {v: {value: 0, enumerable: true}}));
 
 /* Constants used for kwargs */
 
-// Sk.builtin.int_
-Sk.builtin.int_.co_varnames = [ "number", "base" ];
-Sk.builtin.int_.$defaults = [ 0, Sk.builtin.none.none$ ];
-
-// Sk.builtin.lng
-Sk.builtin.lng.co_varnames = [ "number", "base" ];
-Sk.builtin.lng.$defaults = [ 0, Sk.builtin.none.none$ ];
-
-// Sk.builtin.sorted
-Sk.builtin.sorted.co_varnames = ["list", "cmp", "key", "reverse"];
-Sk.builtin.sorted.$defaults = [Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.bool.false$];
-
-// Sk.builtin.dict.fromkeys
-Sk.builtin.dict.$fromkeys.co_name = new Sk.builtin.str("fromkeys");
-Sk.builtin.dict.prototype["fromkeys"] = new Sk.builtin.func(Sk.builtin.dict.$fromkeys);
-
 // String constants
 Sk.builtin.str.$empty = new Sk.builtin.str("");
+Sk.builtin.str.$emptystr = Sk.builtin.str.$empty;
 
 Sk.builtin.str.$default_factory = new Sk.builtin.str("default_factory");
 Sk.builtin.str.$imag = new Sk.builtin.str("imag");
@@ -62,15 +33,16 @@ Sk.builtin.str.$ge = new Sk.builtin.str("__ge__");
 Sk.builtin.str.$getattr = new Sk.builtin.str("__getattr__");
 Sk.builtin.str.$getattribute = new Sk.builtin.str("__getattribute__");
 Sk.builtin.str.$getitem = new Sk.builtin.str("__getitem__");
+Sk.builtin.str.$class_getitem = new Sk.builtin.str("__class_getitem__");
 Sk.builtin.str.$gt = new Sk.builtin.str("__gt__");
 Sk.builtin.str.$le = new Sk.builtin.str("__le__");
 Sk.builtin.str.$len = new Sk.builtin.str("__len__");
 Sk.builtin.str.$lt = new Sk.builtin.str("__lt__");
+Sk.builtin.str.$module = new Sk.builtin.str("__module__");
 Sk.builtin.str.$name = new Sk.builtin.str("__name__");
 Sk.builtin.str.$ne = new Sk.builtin.str("__ne__");
 Sk.builtin.str.$new = new Sk.builtin.str("__new__");
-Sk.builtin.str.$next2 = new Sk.builtin.str("next");
-Sk.builtin.str.$next3 = new Sk.builtin.str("__next__");
+Sk.builtin.str.$next = new Sk.builtin.str("__next__");
 Sk.builtin.str.$path = new Sk.builtin.str("__path__");
 Sk.builtin.str.$package = new Sk.builtin.str("__package__");
 Sk.builtin.str.$repr = new Sk.builtin.str("__repr__");
@@ -83,119 +55,11 @@ Sk.builtin.str.$trunc = new Sk.builtin.str("__trunc__");
 Sk.builtin.str.$write = new Sk.builtin.str("write");
 
 Sk.misceval.op2method_ = {
-    "Eq"   : Sk.builtin.str.$eq,
+    "Eq": Sk.builtin.str.$eq,
     "NotEq": Sk.builtin.str.$ne,
-    "Gt"   : Sk.builtin.str.$gt,
-    "GtE"  : Sk.builtin.str.$ge,
-    "Lt"   : Sk.builtin.str.$lt,
-    "LtE"  : Sk.builtin.str.$le
+    "Gt": Sk.builtin.str.$gt,
+    "GtE": Sk.builtin.str.$ge,
+    "Lt": Sk.builtin.str.$lt,
+    "LtE": Sk.builtin.str.$le
 };
 
-var builtinNames = [
-    "int_",
-    "float_",
-    "bool",
-    "dict",
-    "list",
-    "str",
-    "lng",
-    "sorted",
-    "range",
-    "round",
-    "len",
-    "min",
-    "max",
-    "sum",
-    "zip",
-    "abs",
-    "fabs",
-    "ord",
-    "chr",
-    "hex",
-    "oct",
-    "bin",
-    "dir",
-    "repr",
-    "open",
-    "isinstance",
-    "hash",
-    "getattr",
-    "hasattr",
-    "id",
-    "map",
-    "filter",
-    "reduce",
-    "sorted",
-    "any",
-    "all",
-    "input",
-    "raw_input",
-    "setattr",
-    "quit",
-    "quit",
-    "divmod",
-    "format",
-    "globals",
-    "issubclass",
-
-    "BaseException",
-    "Exception",
-    "StandardError",
-    "AssertionError",
-    "AttributeError",
-    "ImportError",
-    "IndentationError",
-    "IndexError",
-    "KeyError",
-    "NameError",
-    "UnboundLocalError",
-    "OverflowError",
-    "SyntaxError",
-    "RuntimeError",
-    "OSError",
-    "SuspensionError",
-    "SystemExit",
-    "TypeError",
-    "ValueError",
-    "ZeroDivisionError",
-    "TimeLimitError",
-    "IOError",
-    "NotImplementedError",
-    "NegativePowerError",
-    "ExternalError",
-    "OperationError",
-    "SystemError",
-    "StopIteration",
-];
-
-for (var i = 0; i < builtinNames.length; i++) {
-    var renamed = builtinNames[i];
-    if (renamed.endsWith("_")) {
-        renamed = renamed.slice(0, -1);
-    }
-    Sk.builtin[builtinNames[i]].co_name = new Sk.builtin.str(renamed);
-    Sk.builtin[builtinNames[i]].__name__ = new Sk.builtin.str(renamed);
-}
-
-Sk.builtin.str.prototype["split"].co_varnames = ["sep", "maxsplit"];
-Sk.builtin.str.prototype["split"].$defaults = [Sk.builtin.none.none$, Sk.builtin.int_(-1)];
-Sk.builtin.str.prototype["split"].co_kwargs = true;
-Sk.builtin.str.prototype["rsplit"].co_varnames = ["sep", "maxsplit"];
-Sk.builtin.str.prototype["rsplit"].$defaults = [Sk.builtin.none.none$, Sk.builtin.int_(-1)];
-Sk.builtin.str.prototype["rsplit"].co_kwargs = true;
-
-var builtinStringMethods = [
-    "capitalize", "center", "count", "encode", "endswith", "expandtabs",
-    "find", "format", "index", "isalnum", "isalpha",
-    "isdigit", "islower", "isnumeric", "isspace",
-    "istitle", "isupper", "join", "ljust", "lower", "lstrip",
-    "partition", "replace", "rfind", "rindex", "rjust", "rpartition", "rsplit",
-    "rstrip", "split", "splitlines", "startswith", "strip", "swapcase", "title",
-    "upper", "zfill"
-];
-for (i = 0; i < builtinStringMethods.length; i++) {
-    renamed = builtinStringMethods[i];
-    Sk.builtin.str.prototype[renamed].co_name = new Sk.builtin.str(renamed);
-    Sk.builtin.str.prototype[renamed].__name__ = new Sk.builtin.str(renamed);
-    Sk.builtin.str.prototype[renamed].tp$name = renamed;
-}

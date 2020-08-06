@@ -1,137 +1,92 @@
 /**
  * @constructor
  *
- * @param {Sk.builtin.func|Sk.builtin.method} func
- * @param {Object} self
- * @param {Sk.builtin.type|Sk.builtin.none} klass
- * @param {boolean=} builtin
- * 
- * co_varnames and co_name come from generated code, must access as dict.
+ * @param {Sk.builtin.func} func
+ * @param {Sk.builtin.object} self
+ *
  */
-Sk.builtin.method = function (func, self, klass, builtin) {
-    if (!(this instanceof Sk.builtin.method)) {
-        Sk.builtin.pyCheckArgsLen("method", arguments.length, 2, 3);
-        if (!Sk.builtin.checkCallable(func)) {
-            throw new Sk.builtin.TypeError("First argument must be callable");
-        }
-        if (self.ob$type === undefined) {
-            throw new Sk.builtin.TypeError("Second argument must be object of known type");
-        }
-        return new Sk.builtin.method(func, self, klass);
-    }
-    this.tp$name = func.tp$name;
-    this.im_func = func;
-    this.im_self = self || Sk.builtin.none.none$;
-    this.im_class = klass || Sk.builtin.none.none$;
-    this.im_builtin = builtin;
-    this["$d"] = {
-        im_func: func,
-        im_self: self,
-        im_class: klass
-    };
-};
-
-Sk.exportSymbol("Sk.builtin.method", Sk.builtin.method);
-Sk.abstr.setUpInheritance("instancemethod", Sk.builtin.method, Sk.builtin.object);
-
-Sk.builtin.method.prototype.tp$name = "method";
-
-Sk.builtin.method.prototype.ob$eq = function (other) {
-    if (((this.im_self == Sk.builtin.none.none$) && (other.im_self != Sk.builtin.none.none$)) ||  ((other.im_self == Sk.builtin.none.none$) && (this.im_self != Sk.builtin.none.none$))) {
-        return false;
-    }
-    try {
-        return Sk.misceval.richCompareBool(this.im_self, other.im_self, "Eq", false) && (this.im_func == other.im_func);
-    } catch (x) {
-        return false;
-    }
-};
-
-Sk.builtin.method.prototype.ob$ne = function (other) {
-    return !(this.ob$eq(other));
-};
-
-Sk.builtin.method.prototype.tp$hash = function () {
-    var selfhash, funchash;
-
-    if (this.im_self == Sk.builtin.none.none$) {
-        selfhash = 0;
-    } else {
-        selfhash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_self));
-    }
-    funchash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_func));
-
-    return new Sk.builtin.int_(selfhash + funchash);
-};
-
-Sk.builtin.method.prototype.tp$call = function (args, kw) {
-    // Sk.asserts.assert(this.im_func instanceof Sk.builtin.func);
-
-    // 'args' and 'kw' get mucked around with heavily in applyOrSuspend();
-    // changing it here is OK.
-    if (this.im_self !== Sk.builtin.none.none$) {
-        args.unshift(this.im_self);
-    }
-
-    // if there is no first argument or
-    // if the first argument is not a subclass of the class this method belongs to we throw an error
-    // unless it's a builtin method, because they shouldn't have been __get__ and left in this unbound
-    // state.
-    if (this.im_self === Sk.builtin.none.none$) {
-        var getMessage = (function (reason) {
-            return "unbound method " + this.tp$name + "() must be called with " + Sk.abstr.typeName(this.im_class) + " instance as first argument (got " + reason + " instead)";
-        }).bind(this);
-
-        if (args.length > 0) {
-            if (this.im_class != Sk.builtin.none.none$ && !Sk.builtin.issubclass(args[0].ob$type, this.im_class) && !this.im_builtin) {
-                throw new Sk.builtin.TypeError(getMessage(Sk.abstr.typeName(args[0].ob$type) + " instance"));
+Sk.builtin.method = Sk.abstr.buildNativeClass("method", {
+    constructor: function method(func, self) {
+        Sk.asserts.assert(this instanceof Sk.builtin.method, "bad call to method constructor, use 'new'");
+        this.im_func = func;
+        this.im_self = self;
+    },
+    slots: {
+        $r: function () {
+            const def_name = "?";
+            const func = this.im_func;
+            const self = this.im_self;
+            return new Sk.builtin.str("<bound method " + (func.$qualname || def_name) + " of " + Sk.misceval.objectRepr(self) + ">");
+        },
+        tp$hash: function () {
+            const selfhash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_self));
+            const funchash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_func));
+            return new Sk.builtin.int_(selfhash + funchash);
+        },
+        tp$call: function (args, kwargs) {
+            return this.im_func.tp$call([this.im_self, ...args], kwargs);
+        },
+        tp$new: function (args, kwargs) {
+            Sk.abstr.checkNoKwargs("method", kwargs);
+            Sk.abstr.checkArgsLen("method", args, 2, 2);
+            const func = args[0];
+            const self = args[1];
+            if (!Sk.builtin.checkCallable(func)) {
+                throw new Sk.builtin.TypeError("first argument must be callable");
             }
-        } else {
-            throw new Sk.builtin.TypeError(getMessage("nothing"));
-        }
-    }
-
-    // A method call is just a call to this.im_func with 'self' on the beginning of the args.
-    // Do the necessary.
-    return this.im_func.tp$call(args, kw);
-};
-
-Sk.builtin.method.prototype.tp$descr_get = function (obj, objtype) {
-    Sk.asserts.assert(obj !== undefined && objtype !== undefined);
-    return new Sk.builtin.method(this, obj, objtype, this.im_builtin);
-};
-
-Sk.builtin.method.pythonFunctions = ["__get__"];
-
-Sk.builtin.method.prototype.__get__ = function __get__(self, instance, owner) {
-    Sk.builtin.pyCheckArgsLen("__get__", arguments.length, 1, 2, false, true);
-    if (instance === Sk.builtin.none.none$ && owner === Sk.builtin.none.none$) {
-        throw new Sk.builtin.TypeError("__get__(None, None) is invalid");
-    }
-
-    // if the owner is specified it needs to be a a subclass of im_self
-    if (owner && owner !== Sk.builtin.none.none$) {
-        if (Sk.builtin.issubclass(owner, self.im_class)) {
-            return self.tp$descr_get(instance, owner);
-        }
-
-        // if it's not we're not bound
-        return self;
-    }
-
-    // use the original type to get a bound object
-    return self.tp$descr_get(instance, Sk.builtin.none.none$);
-};
-
-Sk.builtin.method.prototype["$r"] = function () {
-    if (this.im_builtin) {
-        return new Sk.builtin.str("<built-in method " + this.tp$name + " of type object>");
-    }
-
-    if (this.im_self === Sk.builtin.none.none$) {
-        return new Sk.builtin.str("<unbound method " + Sk.abstr.typeName(this.im_class) + "." + this.tp$name + ">");
-    }
-
-    var owner = this.im_class !== Sk.builtin.none.none$ ? Sk.abstr.typeName(this.im_class) : "?";
-    return new Sk.builtin.str("<bound method " + owner  + "." + this.tp$name + " of " + Sk.ffi.remapToJs(Sk.misceval.objectRepr(this.im_self)) + ">");
-};
+            if (Sk.builtin.checkNone(self)) {
+                throw new Sk.builtin.TypeError("self must not be None");
+            }
+            return new Sk.builtin.method(func, self);
+        },
+        tp$richcompare: function (other, op) {
+            if ((op != "Eq" && op != "NotEq") || !(other instanceof Sk.builtin.method)) {
+                return Sk.builtin.NotImplemented.NotImplemented$;
+            }
+            let eq;
+            try {
+                eq = Sk.misceval.richCompareBool(this.im_self, other.im_self, "Eq", false) && this.im_func == other.im_func;
+            } catch (x) {
+                eq = false;
+            }
+            if (op == "Eq") {
+                return eq;
+            } else {
+                return !eq;
+            }
+        },
+        tp$descr_get: function (obj, obtype) {
+            return this;
+        },
+        tp$getattr: function (pyName, canSuspend) {
+            const descr = Sk.abstr.lookupSpecial(this, pyName); // true means we should mangle this pyName
+            if (descr !== undefined) {
+                const f = descr.tp$descr_get;
+                if (f !== undefined) {
+                    return f.call(descr, this, this.ob$type);
+                } else {
+                    return descr;
+                }
+            }
+            return this.im_func.tp$getattr(pyName, canSuspend);
+        },
+    },
+    getsets: {
+        __func__: {
+            $get: function () {
+                return this.im_func;
+            },
+        },
+        __self__: {
+            $get: function () {
+                return this.im_self;
+            },
+        },
+        __doc__: {
+            $get: function () {
+                return this.im_func.tp$getattr(Sk.builtin.str.$doc);
+            },
+        },
+    },
+    flags: {sk$suitable_as_base_class: false},
+});

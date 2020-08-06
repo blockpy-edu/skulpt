@@ -31,9 +31,11 @@ Notes:
 
 __all__ = ["StringIO"]
 
+
 def _complain_ifclosed(closed):
     if closed:
         raise ValueError("I/O operation on closed file")
+
 
 class StringIO:
     """class StringIO([buffer])
@@ -47,7 +49,8 @@ class StringIO:
     cannot be interpreted as 7-bit ASCII (that use the 8th bit) will cause
     a UnicodeError to be raised when getvalue() is called.
     """
-    def __init__(self, buf = ''):
+
+    def __init__(self, buf=''):
         # Force self.buf to be a string or unicode
         if not isinstance(buf, str):
             buf = str(buf)
@@ -89,7 +92,7 @@ class StringIO:
         _complain_ifclosed(self.closed)
         return False
 
-    def seek(self, pos, mode = 0):
+    def seek(self, pos, mode=0):
         """Set the file's current position.
 
         The mode argument is optional and defaults to 0 (absolute file
@@ -113,7 +116,7 @@ class StringIO:
         _complain_ifclosed(self.closed)
         return self.pos
 
-    def read(self, n = -1):
+    def read(self, n=-1):
         """Read at most size bytes from the file
         (less if the read hits EOF before obtaining size bytes).
 
@@ -128,7 +131,7 @@ class StringIO:
         if n is None or n < 0:
             newpos = self.len
         else:
-            newpos = min(self.pos+n, self.len)
+            newpos = min(self.pos + n, self.len)
         r = self.buf[self.pos:newpos]
         self.pos = newpos
         return r
@@ -154,7 +157,7 @@ class StringIO:
         if i < 0:
             newpos = self.len
         else:
-            newpos = i+1
+            newpos = i + 1
         if length is not None and length >= 0:
             if self.pos + length < newpos:
                 newpos = self.pos + length
@@ -162,7 +165,7 @@ class StringIO:
         self.pos = newpos
         return r
 
-    def readlines(self, sizehint = 0):
+    def readlines(self, sizehint=0):
         """Read until EOF using readline() and return a list containing the
         lines thus read.
 
@@ -219,7 +222,7 @@ class StringIO:
             self.len = self.pos = spos + len(s)
             return
         if spos > slen:
-            self.buflist.append('\0'*(spos - slen))
+            self.buflist.append('\0' * (spos - slen))
             slen = spos
         newpos = spos + len(s)
         if spos < slen:

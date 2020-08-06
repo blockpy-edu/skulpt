@@ -19,7 +19,7 @@ var $builtinmodule = function (name) {
             self.lineList = self.data$.split("\n");
             self.lineList = self.lineList.slice(0, -1);
             for (var i = 0; i < self.lineList.length; i++) {
-                self.lineList[i] = self.lineList[i] + '\n';
+                self.lineList[i] = self.lineList[i] + "\n";
             }
             self.currentLine = 0;
             self.pos$ = 0;
@@ -28,7 +28,7 @@ var $builtinmodule = function (name) {
 
         // ------------------------------------------------------------
         $loc.__str__ = new Sk.builtin.func(function (self) {
-            return Sk.ffi.remapToPy('<Response>');
+            return Sk.ffi.remapToPy("<Response>");
         });
 
 
@@ -42,7 +42,7 @@ var $builtinmodule = function (name) {
                 }
                 return new Sk.builtin.str(this.$lines[this.$index++]);
             }, {
-                $obj  : self,
+                $obj: self,
                 $index: 0,
                 $lines: allLines
             });
@@ -90,7 +90,7 @@ var $builtinmodule = function (name) {
     };
 
     request.Response =
-        Sk.misceval.buildClass(request, response, 'Response', []);
+        Sk.misceval.buildClass(request, response, "Response", []);
 
 
     //~ Module functions ........................................................
@@ -106,7 +106,7 @@ var $builtinmodule = function (name) {
      * constructs a Response.
      */
     request.urlopen = new Sk.builtin.func(function (url, data, timeout) {
-        var prom = new Promise(function(resolve, reject) {
+        var prom = new Promise(function (resolve, reject) {
             var xmlhttp = new XMLHttpRequest();
 
             xmlhttp.addEventListener("loadend", function (e) {
@@ -126,16 +126,16 @@ var $builtinmodule = function (name) {
 
         var susp = new Sk.misceval.Suspension();
 
-        susp.resume = function() {
+        susp.resume = function () {
             return resolution;
         };
 
         susp.data = {
             type: "Sk.promise",
-            promise: prom.then(function(value) {
+            promise: prom.then(function (value) {
                 resolution = value;
                 return value;
-            }, function(err) {
+            }, function (err) {
                 resolution = "";
                 return err;
             })

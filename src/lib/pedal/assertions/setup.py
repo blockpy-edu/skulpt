@@ -3,14 +3,16 @@ import sys
 from pedal.report.imperative import MAIN_REPORT
 from pedal.sandbox.exceptions import SandboxStudentCodeException
 
+
 class AssertionException(Exception):
     def __str__(self):
         return self.args[0]
 
+
 def _topological_sort(names, orderings):
     visited = set()
     stack = []
-    
+
     def dfs(name):
         visited.add(name)
         if name in orderings:
@@ -18,12 +20,12 @@ def _topological_sort(names, orderings):
                 if neighbor not in visited:
                     dfs(neighbor)
         stack.insert(0, name)
-    
+
     for name in names[::-1]:
         if name not in visited:
             dfs(name)
     return stack
-    
+
 
 def resolve_all(set_success=False, report=None):
     from pprint import pprint
@@ -34,7 +36,7 @@ def resolve_all(set_success=False, report=None):
     phase_functions = report['assertions']['phase_functions']
     phase_names = report['assertions']['phases']
     phase_names = _topological_sort(phase_names, orderings)
-    #pprint(orderings)
+    # pprint(orderings)
     phase_success = False
     for phase_name in phase_names:
         phase_success = True
@@ -47,14 +49,15 @@ def resolve_all(set_success=False, report=None):
                 phase_success = False
         if not phase_success:
             break
-        
-    #for f in report.feedback:
+
+    # for f in report.feedback:
     #    print("\t", f, f.mistake, f.misconception)
     if not report['assertions']['failures'] and phase_success and set_success:
         report.set_success()
-    
+
     _reset_phases(report)
-    
+
+
 def _add_phase(phase_name, function, report=None):
     if report is None:
         report = MAIN_REPORT
@@ -64,7 +67,8 @@ def _add_phase(phase_name, function, report=None):
         phase_functions[phase_name] = []
         phases.append(phase_name)
     phase_functions[phase_name].append(function)
-        
+
+
 def _add_relationships(befores, afters, report=None):
     if report is None:
         report = MAIN_REPORT
@@ -84,8 +88,8 @@ def _add_relationships(befores, afters, report=None):
             if not isinstance(after, str):
                 after = after.__name__
             relationships[before].append(after)
-            
-            
+
+
 def _reset_phases(report=None):
     if report is None:
         report = MAIN_REPORT

@@ -21,12 +21,14 @@ from pedal.questions.loader import load_question, SETTING_SHOW_CASE_DETAILS
 class QuestionGrader:
     def _get_functions_with_filter(self, filter='grade_'):
         return [getattr(self, method_name) for method_name in dir(self)
-                   if method_name.startswith(filter) and
-                      callable(getattr(self, method_name))]
+                if method_name.startswith(filter) and
+                callable(getattr(self, method_name))]
+
     def _test(self, question):
         methods = self._get_functions_with_filter()
         for method in methods:
             method(question)
+
 
 class Question:
     def __init__(self, name, instructions, tests, seed=None, report=None):
@@ -38,10 +40,10 @@ class Question:
             report = MAIN_REPORT
         self.report = report
         self.answered = False
-    
+
     def answer(self):
         self.answered = True
-    
+
     def ask(self):
         if isinstance(self.tests, QuestionGrader):
             self.tests._test(self)
@@ -56,7 +58,7 @@ def show_question(instructions, report=None):
     if report is None:
         report = MAIN_REPORT
     report.attach('Question', category='Instructions', tool='Questions',
-                   group=report.group, priority='instructions', hint=instructions)
+                  group=report.group, priority='instructions', hint=instructions)
 
 
 class Pool:
@@ -80,14 +82,14 @@ class Pool:
             if self.seed is None:
                 force = self.report['questions']['seed']
                 if isinstance(force, str):
-                    force = _name_hash(force+self.name)
+                    force = _name_hash(force + self.name)
                 # Assume iterable; could be check that throws better error
                 if not isinstance(force, int):
                     force = force[self.position]
             else:
                 force = self.seed
         return self.choices[force % len(self.choices)]
-    
+
     @property
     def answered(self):
         for choice in self.choices:

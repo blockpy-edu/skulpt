@@ -31,7 +31,7 @@ Sk.builtin.PyType_IsSubtype = function PyType_IsSubtype(a, b) {
  * @constructor
  * Sk.builtin.super_
  */
-Sk.builtin.super_ = function super_ (a_type, self) {
+Sk.builtin.super_ = function super_(a_type, self) {
     Sk.builtin.pyCheckArgsLen("super", arguments.length, 1);
 
     if (!(this instanceof Sk.builtin.super_)) {
@@ -43,7 +43,7 @@ Sk.builtin.super_ = function super_ (a_type, self) {
     return this;
 };
 
-Sk.builtin.super_.__init__ = new Sk.builtin.func(function(self, a_type, other_self) {
+Sk.builtin.super_.__init__ = new Sk.builtin.func(function (self, a_type, other_self) {
     self.obj = other_self;
     self.type = a_type;
 
@@ -55,8 +55,8 @@ Sk.builtin.super_.__init__ = new Sk.builtin.func(function(self, a_type, other_se
 
     if (!other_self) {
         throw new Sk.builtin.NotImplementedError("unbound super not supported because " +
-                "skulpts implementation of type descriptors aren't brilliant yet, see this " +
-                "question for more information https://stackoverflow.com/a/30190341/117242");
+            "skulpts implementation of type descriptors aren't brilliant yet, see this " +
+            "question for more information https://stackoverflow.com/a/30190341/117242");
     }
 
     if (!Sk.builtin.PyType_IsSubtype(self.obj.ob$type, self.type)) {

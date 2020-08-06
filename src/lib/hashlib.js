@@ -397,6 +397,7 @@ var $builtinmodule = function (name) {
     var HASH = function ($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, data) {
             self.data$ = data.v;
+            return Sk.builtin.none.none$;
         });
         $loc.__str__ = new Sk.builtin.func(function (self) {
             return Sk.ffi.remapToPy("<_hashlib.HASH>");
@@ -406,7 +407,7 @@ var $builtinmodule = function (name) {
 
         $loc.digest = new Sk.builtin.func(function (self) {
             var codes = [];
-            for (var i=0; i < self.data$.length; i++) {
+            for (var i = 0; i < self.data$.length; i++) {
                 codes.push(new Sk.builtin.int_(self.data$.charCodeAt(i)));
             }
             return new Sk.builtin.list(codes);

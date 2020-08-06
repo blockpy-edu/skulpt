@@ -173,7 +173,8 @@ def check_for_plot_r(plt_type, data):
                 "code": "wrong_plt_data",
                 "label": "Plot Data Incorrect"}
     elif data_found:
-        return {"message": "You have plotted the right data, but you appear to have not plotted it as a {}.".format(plt_type),
+        return {"message": "You have plotted the right data, but you appear to have not plotted it as a {}.".format(
+            plt_type),
                 "code": "wrong_plt_type",
                 "label": "Wrong Plot Type"
                 }

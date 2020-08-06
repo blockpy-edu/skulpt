@@ -118,7 +118,8 @@ class Grammar(object):
         return (
                 "Sk.ParseTables = {\n" +
                 "sym:\n" +
-                pformat(self.symbol2number).replace("'","") + # NOTE don't quote LHS, closure compiler won't rename through strings as props
+                pformat(self.symbol2number).replace("'",
+                                                    "") +  # NOTE don't quote LHS, closure compiler won't rename through strings as props
                 ",\n" +
                 "number2symbol:\n" +
                 pformat(self.number2symbol) +
@@ -142,7 +143,7 @@ class Grammar(object):
                 str(self.start) +
                 "\n};\n"
             # ick, tuple -> list and None -> null
-            ).replace("(", "[").replace(")", "]").replace("None", "null")
+        ).replace("(", "[").replace(")", "]").replace("None", "null")
 
 
 # Map from operator to number (since tokenize doesn't do this)

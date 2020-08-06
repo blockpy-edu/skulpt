@@ -1,3 +1,3 @@
-var $builtinmodule = function() {
-  return {};
+var $builtinmodule = function () {
+    return {};
 };

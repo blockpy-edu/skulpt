@@ -9,7 +9,7 @@ __all__ = ['tok_name', 'ISTERMINAL', 'ISNONTERMINAL', 'ISEOF']
 #
 #    ./python Lib/token.py
 
-#--start constants--
+# --start constants--
 ENDMARKER = 0
 NAME = 1
 NUMBER = 2
@@ -72,18 +72,21 @@ NL = 57
 ERRORTOKEN = 58
 N_TOKENS = 59
 NT_OFFSET = 256
-#--end constants--
+# --end constants--
 
 tok_name = {value: name
             for name, value in globals().items()
             if isinstance(value, int) and not name.startswith('_')}
 __all__.extend(tok_name.values())
 
+
 def ISTERMINAL(x):
     return x < NT_OFFSET
 
+
 def ISNONTERMINAL(x):
     return x >= NT_OFFSET
+
 
 def ISEOF(x):
     return x == ENDMARKER
@@ -113,7 +116,7 @@ def _main():
         if match:
             name, val = match.group(1, 2)
             val = int(val)
-            tokens[val] = name          # reverse so we can sort them...
+            tokens[val] = name  # reverse so we can sort them...
     keys = sorted(tokens.keys())
     # load the output skeleton from the target:
     try:

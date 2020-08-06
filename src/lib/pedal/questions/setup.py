@@ -2,8 +2,10 @@ from pedal.report.imperative import MAIN_REPORT
 
 import hashlib
 
+
 def _name_hash(name):
     return hashlib.md5(name.encode('utf8')).digest()[0]
+
 
 def _setup_questions(report):
     '''
@@ -16,6 +18,7 @@ def _setup_questions(report):
         report['questions'] = {
             'seed': 0
         }
+
 
 def set_seed(seed_value, report=None):
     '''

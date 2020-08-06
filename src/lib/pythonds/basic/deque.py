@@ -2,7 +2,7 @@
 # Introduction to Data Structures and Algorithms in Python
 # Copyright 2005
 # 
-#deque.py
+# deque.py
 
 
 class Deque:
@@ -16,7 +16,7 @@ class Deque:
         self.items.append(item)
 
     def addRear(self, item):
-        self.items.insert(0,item)
+        self.items.insert(0, item)
 
     def removeFront(self):
         return self.items.pop()

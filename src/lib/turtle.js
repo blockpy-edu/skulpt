@@ -19,23 +19,23 @@ var $builtinmodule = function (name) {
     }
 
     function generateTurtleModule(_target) {
-        var _module              = {__name__: Sk.builtin.str("turtle")},
+        var _module = {__name__: new Sk.builtin.str("turtle")},
             _durationSinceRedraw = 0,
-            _focus               = true,
-            OPTIMAL_FRAME_RATE   = 1000/30,
-            SHAPES               = {},
-            TURTLE_COUNT         = 0,
-            Types                = {},
-            _defaultSetup        = {
-                target     : "turtle", // DOM element or id of parent container
-                width      : 400, // if set to 0 it will use the target width
-                height     : 400, // if set to 0 it will use the target height
-                worldWidth : 0, // if set to 0 it will use config.width
+            _focus = true,
+            OPTIMAL_FRAME_RATE = 1000 / 30,
+            SHAPES = {},
+            TURTLE_COUNT = 0,
+            Types = {},
+            _defaultSetup = {
+                target: "turtle", // DOM element or id of parent container
+                width: 400, // if set to 0 it will use the target width
+                height: 400, // if set to 0 it will use the target height
+                worldWidth: 0, // if set to 0 it will use config.width
                 worldHeight: 0, // if set to 0 it will use config.height
-                animate    : true, // enabled/disable all animated rendering
-                bufferSize : 0, // default turtle buffer size
-                allowUndo  : true, // enable ability to use the undo buffer
-                assets     : {}
+                animate: true, // enabled/disable all animated rendering
+                bufferSize: 0, // default turtle buffer size
+                allowUndo: true, // enable ability to use the undo buffer
+                assets: {}
             },
             _frameRequest,
             _frameRequestTimeout,
@@ -51,14 +51,14 @@ var $builtinmodule = function (name) {
             _target.setAttribute("tabindex", 0);
         }
 
-        Types.FLOAT = function(value) {
+        Types.FLOAT = function (value) {
             return Sk.builtin.float_(value);
         };
-        Types.COLOR = function(value) {
+        Types.COLOR = function (value) {
             if (typeof value === "string") {
                 return new Sk.builtin.str(value);
             } else {
-                for(var i = 0; i < 3; i++) {
+                for (var i = 0; i < 3; i++) {
                     value[i] = Sk.builtin.assk$(value[i]);
                 }
                 if (value.length === 4) {
@@ -67,7 +67,7 @@ var $builtinmodule = function (name) {
                 return new Sk.builtin.tuple(value);
             }
         };
-        Types.TURTLE_LIST = function(value) {
+        Types.TURTLE_LIST = function (value) {
             var skValues = [];
             for (var i = 0; i < value.length; i++) {
                 skValues.push(value[i].skInstance);
@@ -75,31 +75,31 @@ var $builtinmodule = function (name) {
             return new Sk.builtin.tuple(skValues);
         };
 
-        SHAPES.arrow    = [[-10,0],[10,0],[0,10]];
-        SHAPES.square   = [[ 10,-10],[10,10],[-10,10],[-10, -10]];
-        SHAPES.triangle = [[10,-5.77],[0,11.55],[-10,-5.77]];
-        SHAPES.classic  = [[0,0],[-5,-9],[0,-7],[5,-9]];
-        SHAPES.turtle   = [
-            [0,16],[-2,14],[-1,10],[-4,7],[-7,9],[-9,8],[-6,5],[-7,1],[-5,-3],[-8,-6],
-            [-6,-8],[-4,-5],[0,-7],[4,-5],[6,-8],[8,-6],[5,-3],[7,1],[6,5],[9,8],[7,9],
-            [4,7],[1,10],[2,14]
+        SHAPES.arrow = [[-10, 0], [10, 0], [0, 10]];
+        SHAPES.square = [[10, -10], [10, 10], [-10, 10], [-10, -10]];
+        SHAPES.triangle = [[10, -5.77], [0, 11.55], [-10, -5.77]];
+        SHAPES.classic = [[0, 0], [-5, -9], [0, -7], [5, -9]];
+        SHAPES.turtle = [
+            [0, 16], [-2, 14], [-1, 10], [-4, 7], [-7, 9], [-9, 8], [-6, 5], [-7, 1], [-5, -3], [-8, -6],
+            [-6, -8], [-4, -5], [0, -7], [4, -5], [6, -8], [8, -6], [5, -3], [7, 1], [6, 5], [9, 8], [7, 9],
+            [4, 7], [1, 10], [2, 14]
         ];
 
         SHAPES.circle = [
-            [10,0],[9.51,3.09],[8.09,5.88],[5.88,8.09],[3.09,9.51],[0,10],[-3.09,9.51],
-            [-5.88,8.09],[-8.09,5.88],[-9.51,3.09],[-10,0],[-9.51,-3.09],[-8.09,-5.88],
-            [-5.88,-8.09],[-3.09,-9.51],[-0,-10],[3.09,-9.51],[5.88,-8.09],[8.09,-5.88],
-            [9.51,-3.09]
+            [10, 0], [9.51, 3.09], [8.09, 5.88], [5.88, 8.09], [3.09, 9.51], [0, 10], [-3.09, 9.51],
+            [-5.88, 8.09], [-8.09, 5.88], [-9.51, 3.09], [-10, 0], [-9.51, -3.09], [-8.09, -5.88],
+            [-5.88, -8.09], [-3.09, -9.51], [-0, -10], [3.09, -9.51], [5.88, -8.09], [8.09, -5.88],
+            [9.51, -3.09]
         ];
 
-        _config = (function() {
+        _config = (function () {
             var key;
 
             if (!Sk.TurtleGraphics) {
                 Sk.TurtleGraphics = {};
             }
 
-            for(key in _defaultSetup) {
+            for (key in _defaultSetup) {
                 if (!Sk.TurtleGraphics.hasOwnProperty(key)) {
                     Sk.TurtleGraphics[key] = _defaultSetup[key];
                 }
@@ -110,16 +110,16 @@ var $builtinmodule = function (name) {
 
         function getAsset(name) {
             var assets = _config.assets,
-                asset  = (typeof assets === "function") ? assets(name) : assets[name];
+                asset = (typeof assets === "function") ? assets(name) : assets[name];
 
             if (typeof asset === "string") {
-                return new Promise(function(resolve, reject) {
+                return new Promise(function (resolve, reject) {
                     var img = new Image();
-                    img.onload = function() {
+                    img.onload = function () {
                         _config.assets[name] = this;
                         resolve(img);
                     };
-                    img.onerror = function() {
+                    img.onerror = function () {
                         reject(new Error("Missing asset: " + asset));
                     };
                     img.src = asset;
@@ -141,30 +141,30 @@ var $builtinmodule = function (name) {
         // checking FrameManager.willRenderNext()
         function InstantPromise(err, result) {
             this.lastResult = result;
-            this.lastError  = err;
+            this.lastError = err;
         }
 
-        InstantPromise.prototype.then = function(cb) {
+        InstantPromise.prototype.then = function (cb) {
             if (this.lastError) {
                 return this;
             }
 
             try {
                 this.lastResult = cb(this.lastResult);
-            } catch(e) {
+            } catch (e) {
                 this.lastResult = undefined;
-                this.lastError  = e;
+                this.lastError = e;
             }
 
             return this.lastResult instanceof Promise ? this.lastResult : this;
         };
 
-        InstantPromise.prototype.catch = function(cb) {
+        InstantPromise.prototype.catch = function (cb) {
             if (this.lastError) {
                 try {
                     this.lastResult = cb(this.lastError);
-                    this.lastError  = undefined;
-                } catch(e) {
+                    this.lastError = undefined;
+                } catch (e) {
                     this.lastResult = undefined;
                     this.lastError = e;
                 }
@@ -178,6 +178,7 @@ var $builtinmodule = function (name) {
         }
 
         var _frameManager;
+
         function getFrameManager() {
             if (!_frameManager) {
                 _frameManager = new FrameManager();
@@ -185,11 +186,11 @@ var $builtinmodule = function (name) {
             return _frameManager;
         }
 
-        (function(proto) {
+        (function (proto) {
             var browserFrame;
-            (function(frame) {
+            (function (frame) {
                 if (frame) {
-                    browserFrame = function(method) {
+                    browserFrame = function (method) {
                         return (_frameRequest = frame(method));
                     };
                 }
@@ -197,7 +198,7 @@ var $builtinmodule = function (name) {
 
             function animationFrame(delay) {
                 if (!_config.animate) {
-                    return function(method) {
+                    return function (method) {
                         method();
                     };
                 }
@@ -206,7 +207,7 @@ var $builtinmodule = function (name) {
                     return browserFrame;
                 }
 
-                return function(method) {
+                return function (method) {
                     _frameRequestTimeout = window.setTimeout(
                         method,
                         delay || OPTIMAL_FRAME_RATE
@@ -215,33 +216,33 @@ var $builtinmodule = function (name) {
                 };
             }
 
-            proto.willRenderNext = function() {
-                return !!(this._buffer && this._frameCount+1 === this.frameBuffer());
+            proto.willRenderNext = function () {
+                return !!(this._buffer && this._frameCount + 1 === this.frameBuffer());
             };
 
-            proto.turtles = function() {
+            proto.turtles = function () {
                 return this._turtles;
             };
 
-            proto.addTurtle = function(turtle) {
+            proto.addTurtle = function (turtle) {
                 this._turtles.push(turtle);
             };
 
-            proto.reset = function() {
+            proto.reset = function () {
                 if (this._turtles) {
-                    for(var i = this._turtles.length; --i >= 0;) {
+                    for (var i = this._turtles.length; --i >= 0;) {
                         this._turtles[i].reset();
                     }
                 }
-                this._turtles        = [];
-                this._frames         = [];
-                this._frameCount     = 0;
-                this._buffer         = 1;
-                this._rate           = 0;
+                this._turtles = [];
+                this._frames = [];
+                this._frameCount = 0;
+                this._buffer = 1;
+                this._rate = 0;
                 this._animationFrame = animationFrame();
             };
 
-            proto.addFrame = function(method, countAsFrame) {
+            proto.addFrame = function (method, countAsFrame) {
                 var instant = false;
 
                 if (countAsFrame) {
@@ -252,17 +253,17 @@ var $builtinmodule = function (name) {
 
                 instant = (
                     !_config.animate ||
-                (this._buffer && this._frameCount === this.frameBuffer())
+                    (this._buffer && this._frameCount === this.frameBuffer())
                 );
 
                 return instant ? this.update() : new InstantPromise();
             };
 
-            proto.frames = function() {
+            proto.frames = function () {
                 return this._frames;
             };
 
-            proto.frameBuffer = function(buffer) {
+            proto.frameBuffer = function (buffer) {
                 if (typeof buffer === "number") {
                     this._buffer = buffer | 0;
                     if (buffer && buffer <= this._frameCount) {
@@ -272,7 +273,7 @@ var $builtinmodule = function (name) {
                 return this._buffer;
             };
 
-            proto.refreshInterval = function(rate) {
+            proto.refreshInterval = function (rate) {
                 if (typeof rate === "number") {
                     this._rate = rate | 0;
                     this._animationFrame = animationFrame(rate);
@@ -280,23 +281,23 @@ var $builtinmodule = function (name) {
                 return this._rate;
             };
 
-            proto.update = function() {
+            proto.update = function () {
                 return (this._frames && this._frames.length) ?
                     this.requestAnimationFrame() :
                     new InstantPromise();
             };
 
-            proto.requestAnimationFrame = function() {
-                var frames         = this._frames,
+            proto.requestAnimationFrame = function () {
+                var frames = this._frames,
                     animationFrame = this._animationFrame,
-                    turtles        = this._turtles,
-                    sprites        = getScreen().spriteLayer(),
+                    turtles = this._turtles,
+                    sprites = getScreen().spriteLayer(),
                     turtle, i;
 
-                this._frames     = [];
+                this._frames = [];
                 this._frameCount = 0;
 
-                return new Promise(function(resolve) {
+                return new Promise(function (resolve) {
                     animationFrame(function paint() {
                         for (i = 0; i < frames.length; i++) {
                             if (frames[i]) {
@@ -319,16 +320,16 @@ var $builtinmodule = function (name) {
         function MouseHandler() {
             var self = this;
 
-            this._target   = getTarget();
+            this._target = getTarget();
             this._managers = {};
             this._handlers = {
-                mousedown : function(e) {
+                mousedown: function (e) {
                     self.onEvent("mousedown", e);
                 },
-                mouseup : function(e) {
+                mouseup: function (e) {
                     self.onEvent("mouseup", e);
                 },
-                mousemove : function(e) {
+                mousemove: function (e) {
                     self.onEvent("mousemove", e);
                 }
             };
@@ -337,21 +338,23 @@ var $builtinmodule = function (name) {
             }
         }
 
-        (function(proto) {
-            proto.onEvent = function(type, e) {
-                var managers     = this._managers[type],
+        (function (proto) {
+            proto.onEvent = function (type, e) {
+                var managers = this._managers[type],
                     moveManagers = this._managers["mousemove"],
-                    computed     = false,
+                    computed = false,
                     x, y, localX, localY, i;
 
                 function computeCoordinates() {
-                    if (computed) {return;}
+                    if (computed) {
+                        return;
+                    }
                     var world = getScreen();
-                    var rect  = world.spriteLayer().canvas.getBoundingClientRect();
-                    x         = e.clientX - rect.left | 0;
-                    y         = e.clientY - rect.top  | 0;
-                    localX    = x * world.xScale + world.llx;
-                    localY    = y * world.yScale + world.ury;
+                    var rect = world.spriteLayer().canvas.getBoundingClientRect();
+                    x = e.clientX - rect.left | 0;
+                    y = e.clientY - rect.top | 0;
+                    localX = x * world.xScale + world.llx;
+                    localY = y * world.yScale + world.ury;
                     computed = true;
                 }
 
@@ -369,18 +372,18 @@ var $builtinmodule = function (name) {
                     for (i = managers.length; --i >= 0;) {
                         if (type === "mousemove" && managers[i].canMove() && managers[i].test(x, y, localX, localY)) {
                             managers[i].trigger([localX, localY]);
-                        }else if(type==="mousedown" && managers[i].test(x, y, localX, localY)){//For onclick event
+                        } else if (type === "mousedown" && managers[i].test(x, y, localX, localY)) {//For onclick event
                             managers[i].trigger([localX, localY]);
                         }
                     }
                 }
             };
 
-            proto.reset = function() {
+            proto.reset = function () {
                 this._managers = {};
             };
 
-            proto.addManager = function(type, manager) {
+            proto.addManager = function (type, manager) {
                 if (!this._managers[type]) {
                     this._managers[type] = [];
                 }
@@ -391,19 +394,21 @@ var $builtinmodule = function (name) {
         })(MouseHandler.prototype);
 
         function EventManager(type, target) {
-            this._type     = type;
-            this._target   = target;
+            this._type = type;
+            this._target = target;
             this._handlers = undefined;
             getMouseHandler().addManager(type, this);
         }
 
-        (function(proto) {
-            proto.reset = function() {
+        (function (proto) {
+            proto.reset = function () {
                 this._handlers = undefined;
             };
 
-            proto.canMove = function(value) {
-                if (!this._target || !this._target.hitTest) {return false;}
+            proto.canMove = function (value) {
+                if (!this._target || !this._target.hitTest) {
+                    return false;
+                }
 
                 if (value !== undefined) {
                     this._target.hitTest.hit = value;
@@ -412,13 +417,13 @@ var $builtinmodule = function (name) {
                 return this._target.hitTest.hit;
             };
 
-            proto.test = function(x, y, localX, localY) {
+            proto.test = function (x, y, localX, localY) {
                 return this._target && this._target.hitTest ?
                     this._target.hitTest(x, y, localX, localY) :
                     !!this._target;
             };
 
-            proto.trigger = function(args) {
+            proto.trigger = function (args) {
                 var handlers = this._handlers,
                     i;
 
@@ -429,12 +434,13 @@ var $builtinmodule = function (name) {
                 }
             };
 
-            proto.addHandler = function(handler, add) {
+            proto.addHandler = function (handler, add) {
                 var handlers = this._handlers;
 
                 if (!add && handlers && handlers.length) {
-                // remove all existing handlers
-                    while (handlers.shift()) {/* noop */}
+                    // remove all existing handlers
+                    while (handlers.shift()) {/* noop */
+                    }
                 }
 
                 if (typeof handler !== "function") {
@@ -461,52 +467,52 @@ var $builtinmodule = function (name) {
 
         Turtle.RADIANS = 2 * Math.PI;
 
-        (function(proto) {
-            proto.hitTest = function(mouseX, mouseY, localX, localY) {
+        (function (proto) {
+            proto.hitTest = function (mouseX, mouseY, localX, localY) {
                 var context = getScreen().hitTestLayer();
                 clearLayer(context);
                 drawTurtle(this.getState(), context);
-                var pixel = context.getImageData(mouseX,mouseY,1,1).data;
+                var pixel = context.getImageData(mouseX, mouseY, 1, 1).data;
                 // check alpha first since it is most likely to have a value
-                return pixel[3] ||pixel[0] || pixel[1] || pixel[2];
+                return pixel[3] || pixel[0] || pixel[1] || pixel[2];
             };
 
-            proto.addUpdate = function(method, countAsFrame, stateChanges) {
-                var self  = this,
+            proto.addUpdate = function (method, countAsFrame, stateChanges) {
+                var self = this,
                     state = this.getState(),
-                    args  = Array.prototype.slice.call(arguments, stateChanges ? 2 : 3);
+                    args = Array.prototype.slice.call(arguments, stateChanges ? 2 : 3);
 
-                return getFrameManager().addFrame(function() {
+                return getFrameManager().addFrame(function () {
                     if (method) {
                         method.apply(state, args);
                     }
                     if (stateChanges) {
-                        for(var key in stateChanges) {
+                        for (var key in stateChanges) {
                             state[key] = stateChanges[key];
                         }
                     }
                 }, countAsFrame);
             };
 
-            proto.getState = function() {
+            proto.getState = function () {
                 var self = this;
 
                 if (!this._state) {
                     this._state = {
-                        x       : this._x,
-                        y       : this._y,
-                        angle   : this._angle,
-                        radians : this._radians,
-                        shape   : this._shape,
-                        color   : this._color,
-                        fill    : this._fill,
-                        filling : this._filling,
-                        size    : this._size,
-                        speed   : this._computed_speed,
-                        down    : this._down,
-                        shown   : this._shown,
-                        colorMode : this._colorMode,
-                        context : function() {
+                        x: this._x,
+                        y: this._y,
+                        angle: this._angle,
+                        radians: this._radians,
+                        shape: this._shape,
+                        color: this._color,
+                        fill: this._fill,
+                        filling: this._filling,
+                        size: this._size,
+                        speed: this._computed_speed,
+                        down: this._down,
+                        shown: this._shown,
+                        colorMode: this._colorMode,
+                        context: function () {
                             return self.getPaper();
                         }
                     };
@@ -514,32 +520,32 @@ var $builtinmodule = function (name) {
                 return this._state;
             };
 
-            proto.translate = function(startX, startY, dx, dy, beginPath, isCircle) {
+            proto.translate = function (startX, startY, dx, dy, beginPath, isCircle) {
                 var self = this;
                 return translate(this, startX, startY, dx, dy, beginPath, isCircle)
-                    .then(function(coords) {
+                    .then(function (coords) {
                         self._x = coords[0];
                         self._y = coords[1];
                     });
             };
 
-            proto.rotate = function(startAngle, delta, isCircle) {
+            proto.rotate = function (startAngle, delta, isCircle) {
                 var self = this;
                 return rotate(this, startAngle, delta, isCircle)
-                    .then(function(heading) {
-                        self._angle   = heading.angle;
+                    .then(function (heading) {
+                        self._angle = heading.angle;
                         self._radians = heading.radians;
                     });
             };
 
-            proto.queueMoveBy = function(startX, startY, theta, distance) {
+            proto.queueMoveBy = function (startX, startY, theta, distance) {
                 var dx = Math.cos(theta) * distance,
                     dy = Math.sin(theta) * distance;
 
                 return this.translate(startX, startY, dx, dy, true);
             };
 
-            proto.queueTurnTo = function(startAngle, endAngle) {
+            proto.queueTurnTo = function (startAngle, endAngle) {
                 endAngle = endAngle % this._fullCircle;
                 if (endAngle < 0) {
                     endAngle += this._fullCircle;
@@ -547,40 +553,40 @@ var $builtinmodule = function (name) {
                 return this.rotate(startAngle, endAngle - startAngle);
             };
 
-            proto.getManager = function(type) {
+            proto.getManager = function (type) {
                 if (!this._managers[type]) {
                     this._managers[type] = new EventManager(type, this);
                 }
                 return this._managers[type];
             };
 
-            proto.getPaper = function() {
+            proto.getPaper = function () {
                 return this._paper || (this._paper = createLayer(2));
             };
 
-            proto.reset = function() {
-                this._x          = 0;
-                this._y          = 0;
-                this._radians    = 0;
-                this._angle      = 0;
-                this._shown      = true;
-                this._down       = true;
-                this._color      = "black";
-                this._fill       = "black";
-                this._shape      = "classic";
-                this._size       = 1;
-                this._filling    = false;
+            proto.reset = function () {
+                this._x = 0;
+                this._y = 0;
+                this._radians = 0;
+                this._angle = 0;
+                this._shown = true;
+                this._down = true;
+                this._color = "black";
+                this._fill = "black";
+                this._shape = "classic";
+                this._size = 1;
+                this._filling = false;
                 this._undoBuffer = [];
-                this._speed      = 3;
+                this._speed = 3;
                 this._computed_speed = 5;
-                this._colorMode  = 1.0;
-                this._state      = undefined;
+                this._colorMode = 1.0;
+                this._state = undefined;
 
-                for(var key in this._managers) {
+                for (var key in this._managers) {
                     this._managers[key].reset();
                 }
 
-                this._isRadians  = false;
+                this._isRadians = false;
                 this._fullCircle = 360;
                 this._bufferSize = typeof _config.bufferSize === "number" ?
                     _config.bufferSize :
@@ -590,12 +596,12 @@ var $builtinmodule = function (name) {
                 this._paper = undefined;
             };
 
-            proto.$degrees = function(fullCircle) {
+            proto.$degrees = function (fullCircle) {
                 fullCircle = (typeof fullCircle === "number") ?
                     Math.abs(fullCircle) :
                     360;
 
-                this._isRadians  = false;
+                this._isRadians = false;
                 if (!fullCircle || !this._fullCircle) {
                     this._angle = this._radians = 0;
                 } else {
@@ -605,16 +611,16 @@ var $builtinmodule = function (name) {
                 return this.addUpdate(
                     undefined,
                     false,
-                    {angle:this._angle, radians: this._radians}
+                    {angle: this._angle, radians: this._radians}
                 );
             };
-            proto.$degrees.minArgs     = 0;
+            proto.$degrees.minArgs = 0;
             proto.$degrees.co_varnames = ["fullcircle"];
-            proto.$degrees.returnType  = Types.FLOAT;
+            proto.$degrees.returnType = Types.FLOAT;
 
-            proto.$radians = function() {
+            proto.$radians = function () {
                 if (!this._isRadians) {
-                    this._isRadians     = true;
+                    this._isRadians = true;
                     this._angle = this._radians;
                     this._fullCircle = Turtle.RADIANS;
                 }
@@ -623,82 +629,82 @@ var $builtinmodule = function (name) {
             };
             proto.$radians.returnType = Types.FLOAT;
 
-            proto.$position = proto.$pos = function() {
+            proto.$position = proto.$pos = function () {
                 return [this.$xcor(), this.$ycor()];
             };
-            proto.$position.returnType = function(value) {
+            proto.$position.returnType = function (value) {
                 return new Sk.builtin.tuple([
                     Sk.builtin.float_(value[0]),
                     Sk.builtin.float_(value[1])
                 ]);
             };
 
-            proto.$towards = function(x,y) {
-                var coords  = getCoordinates(x,y),
+            proto.$towards = function (x, y) {
+                var coords = getCoordinates(x, y),
                     radians = Math.PI + Math.atan2(this._y - coords.y, this._x - coords.x),
-                    angle   = radians * (this._fullCircle / Turtle.RADIANS);
+                    angle = radians * (this._fullCircle / Turtle.RADIANS);
 
                 return angle;
             };
             proto.$towards.co_varnames = ["x", "y"];
-            proto.$towards.minArgs     = 1;
-            proto.$towards.returnType  = Types.FLOAT;
+            proto.$towards.minArgs = 1;
+            proto.$towards.returnType = Types.FLOAT;
 
-            proto.$distance = function(x,y) {
-                var coords = getCoordinates(x,y),
-                    dx     = coords.x - this._x,
-                    dy     = coords.y - this._y;
+            proto.$distance = function (x, y) {
+                var coords = getCoordinates(x, y),
+                    dx = coords.x - this._x,
+                    dy = coords.y - this._y;
 
                 return Math.sqrt(dx * dx + dy * dy);
             };
             proto.$distance.co_varnames = ["x", "y"];
-            proto.$distance.minArgs     = 1;
-            proto.$distance.returnType  = Types.FLOAT;
+            proto.$distance.minArgs = 1;
+            proto.$distance.returnType = Types.FLOAT;
 
-            proto.$heading = function() {
+            proto.$heading = function () {
                 return Math.abs(this._angle) < 1e-13 ? 0 : this._angle;
             };
             proto.$heading.returnType = Types.FLOAT;
 
-            proto.$xcor = function() {
+            proto.$xcor = function () {
                 return Math.abs(this._x) < 1e-13 ? 0 : this._x;
             };
             proto.$xcor.returnType = Types.FLOAT;
 
-            proto.$ycor = function() {
+            proto.$ycor = function () {
                 return Math.abs(this._y) < 1e-13 ? 0 : this._y;
             };
             proto.$ycor.returnType = Types.FLOAT;
 
-            proto.$forward = proto.$fd = function(distance) {
+            proto.$forward = proto.$fd = function (distance) {
                 pushUndo(this);
                 return this.queueMoveBy(this._x, this._y, this._radians, distance);
             };
             proto.$forward.co_varnames = proto.$fd.co_varnames = ["distance"];
 
-            proto.$undo = function() {
+            proto.$undo = function () {
                 popUndo(this);
             };
 
-            proto.$undobufferentries = function() {
+            proto.$undobufferentries = function () {
                 return this._undoBuffer.length;
             };
 
-            proto.$setundobuffer = function(size) {
+            proto.$setundobuffer = function (size) {
                 this._bufferSize = typeof size === "number" ?
                     Math.min(Math.abs(size), 1000) :
                     0;
             };
             proto.$setundobuffer.co_varnames = ["size"];
 
-            proto.$backward = proto.$back = proto.$bk = function(distance) {
+            proto.$backward = proto.$back = proto.$bk = function (distance) {
                 pushUndo(this);
                 return this.queueMoveBy(this._x, this._y, this._radians, -distance);
             };
             proto.$backward.co_varnames = proto.$back.co_varnames = proto.$bk.co_varnames = ["distance"];
 
-            proto.$goto_$rw$ = proto.$setpos = proto.$setposition = function(x,y) {
-                var coords = getCoordinates(x,y);
+            proto.$goto_$rw$ = proto.$setpos = proto.$setposition = function (x, y) {
+                var coords = getCoordinates(x, y);
 
                 pushUndo(this);
 
@@ -711,72 +717,72 @@ var $builtinmodule = function (name) {
             proto.$goto_$rw$.co_varnames = proto.$setpos.co_varnames = proto.$setposition.co_varnames = ["x", "y"];
             proto.$goto_$rw$.minArgs = proto.$setpos.minArgs = proto.$setposition.minArgs = 1;
 
-            proto.$setx = function(x) {
+            proto.$setx = function (x) {
                 return this.translate(this._x, this._y, x - this._x, 0, true);
             };
             proto.$setx.co_varnames = ["x"];
 
 
-            proto.$sety = function(y) {
+            proto.$sety = function (y) {
                 return this.translate(this._x, this._y, 0, y - this._y, true);
             };
             proto.$sety.co_varnames = ["y"];
 
-            proto.$home = function() {
-                var self  = this,
+            proto.$home = function () {
+                var self = this,
                     angle = this._angle;
 
                 pushUndo(this);
                 return self.translate(this._x, this._y, -this._x, -this._y, true)
-                    .then(function(position) {
+                    .then(function (position) {
                         return self.queueTurnTo(angle, 0);
                     })
-                    .then(function(heading) {
+                    .then(function (heading) {
                         return undefined;
                     });
             };
 
-            proto.$right = proto.$rt = function(angle) {
+            proto.$right = proto.$rt = function (angle) {
                 pushUndo(this);
                 return this.rotate(this._angle, -angle);
             };
             proto.$right.co_varnames = proto.$rt.co_varnames = ["angle"];
 
-            proto.$left = proto.$lt = function(angle) {
+            proto.$left = proto.$lt = function (angle) {
                 pushUndo(this);
                 return this.rotate(this._angle, angle);
             };
             proto.$left.co_varnames = proto.$lt.co_varnames = ["angle"];
 
-            proto.$setheading = proto.$seth = function(angle) {
+            proto.$setheading = proto.$seth = function (angle) {
                 pushUndo(this);
                 return this.queueTurnTo(this._angle, angle);
             };
             proto.$setheading.co_varnames = proto.$seth.co_varnames = ["angle"];
 
             function circleRotate(turtle, angle, radians) {
-                return function() {
+                return function () {
                     return turtle.addUpdate(
                         undefined,
-                        false,{angle:angle, radians:radians}
+                        false, {angle: angle, radians: radians}
                     );
                 };
             }
 
             function circleSegment(turtle, x, y, dx, dy, beginPath) {
-                return function() {
+                return function () {
                     return turtle.translate(x, y, dx, dy, beginPath, true);
                 };
             }
 
-            proto.$circle = function(radius, extent, steps) {
-                var self      = this,
-                    x         = this._x,
-                    y         = this._y,
-                    angle     = this._angle,
-                    heading   = {},
-                    states    = [],
-                    scale     = 1/getScreen().lineScale,
+            proto.$circle = function (radius, extent, steps) {
+                var self = this,
+                    x = this._x,
+                    y = this._y,
+                    angle = this._angle,
+                    heading = {},
+                    states = [],
+                    scale = 1 / getScreen().lineScale,
                     beginPath = true,
                     endAngle, frac, w, w2, l, i, dx, dy, promise;
 
@@ -787,12 +793,12 @@ var $builtinmodule = function (name) {
                 }
 
                 if (steps === undefined) {
-                    frac  = Math.abs(extent)/self._fullCircle;
-                    steps = 1 + ((Math.min(11+Math.abs(radius*scale)/6, 59)*frac) | 0);
+                    frac = Math.abs(extent) / self._fullCircle;
+                    steps = 1 + ((Math.min(11 + Math.abs(radius * scale) / 6, 59) * frac) | 0);
                 }
-                w  = extent / steps;
+                w = extent / steps;
                 w2 = 0.5 * w;
-                l  = 2 * radius * Math.sin(w*Math.PI/self._fullCircle);
+                l = 2 * radius * Math.sin(w * Math.PI / self._fullCircle);
 
                 if (radius < 0) {
                     l = -l;
@@ -807,7 +813,7 @@ var $builtinmodule = function (name) {
 
                 angle += w2;
 
-                for(i = 0; i < steps; i++) {
+                for (i = 0; i < steps; i++) {
                     calculateHeading(self, angle + w * i, heading);
                     dx = Math.cos(heading.radians) * l;
                     dy = Math.sin(heading.radians) * l;
@@ -819,9 +825,9 @@ var $builtinmodule = function (name) {
                     beginPath = false;
                 }
 
-                promise = promise.then(function() {
+                promise = promise.then(function () {
                     calculateHeading(self, endAngle, heading);
-                    self._angle   = heading.angle;
+                    self._angle = heading.angle;
                     self._radians = heading.radians;
                     return self.addUpdate(undefined, true, heading);
                 });
@@ -829,27 +835,27 @@ var $builtinmodule = function (name) {
                 return promise;
             };
             proto.$circle.co_varnames = ["radius", "extent", "steps"];
-            proto.$circle.minArgs     = 1;
+            proto.$circle.minArgs = 1;
 
-            proto.$penup = proto.$up = proto.$pu = function() {
+            proto.$penup = proto.$up = proto.$pu = function () {
                 this._down = false;
-                return this.addUpdate(undefined, false, {down:false});
+                return this.addUpdate(undefined, false, {down: false});
             };
 
-            proto.$pendown = proto.$down = proto.$pd = function() {
+            proto.$pendown = proto.$down = proto.$pd = function () {
                 this._down = true;
-                return this.addUpdate(undefined, false, {down:true});
+                return this.addUpdate(undefined, false, {down: true});
             };
 
-            proto.$isdown = function() {
+            proto.$isdown = function () {
                 return this._down;
             };
 
-            proto.$speed = function(speed) {
+            proto.$speed = function (speed) {
                 if (speed !== undefined) {
-                    this._speed          = Math.max(0, Math.min(1000, speed));
+                    this._speed = Math.max(0, Math.min(1000, speed));
                     this._computed_speed = Math.max(0, speed * 2 - 1);
-                    return this.addUpdate(undefined, false, {speed:this._computed_speed});
+                    return this.addUpdate(undefined, false, {speed: this._computed_speed});
                 }
 
                 return this._speed;
@@ -857,10 +863,10 @@ var $builtinmodule = function (name) {
             proto.$speed.minArgs = 0;
             proto.$speed.co_varnames = ["speed"];
 
-            proto.$pencolor = function(r,g,b,a) {
+            proto.$pencolor = function (r, g, b, a) {
                 if (r !== undefined) {
-                    this._color = createColor(this._colorMode,r,g,b,a);
-                    return this.addUpdate(undefined, this._shown, {color : this._color});
+                    this._color = createColor(this._colorMode, r, g, b, a);
+                    return this.addUpdate(undefined, this._shown, {color: this._color});
                 }
 
                 return hexToRGB(this._color);
@@ -869,10 +875,10 @@ var $builtinmodule = function (name) {
             proto.$pencolor.minArgs = 0;
             proto.$pencolor.returnType = Types.COLOR;
 
-            proto.$fillcolor = function(r,g,b,a) {
+            proto.$fillcolor = function (r, g, b, a) {
                 if (r !== undefined) {
-                    this._fill = createColor(this._colorMode,r,g,b,a);
-                    return this.addUpdate(undefined, this._shown, {fill : this._fill});
+                    this._fill = createColor(this._colorMode, r, g, b, a);
+                    return this.addUpdate(undefined, this._shown, {fill: this._fill});
                 }
 
                 return hexToRGB(this._fill);
@@ -881,55 +887,57 @@ var $builtinmodule = function (name) {
             proto.$fillcolor.minArgs = 0;
             proto.$fillcolor.returnType = Types.COLOR;
 
-            proto.$color = function(color, fill, b, a) {
+            proto.$color = function (color, fill, b, a) {
                 if (color !== undefined) {
                     if (fill === undefined || b !== undefined) {
                         this._color = createColor(this._colorMode, color, fill, b, a);
-                        this._fill  = this._color;
+                        this._fill = this._color;
                     } else {
                         this._color = createColor(this._colorMode, color);
-                        this._fill  = createColor(this._colorMode, fill);
+                        this._fill = createColor(this._colorMode, fill);
                     }
                     return this.addUpdate(undefined, this._shown, {
-                        color : this._color,
-                        fill  : this._fill
+                        color: this._color,
+                        fill: this._fill
                     });
                 }
                 return [this.$pencolor(), this.$fillcolor()];
             };
             proto.$color.minArgs = 0;
             proto.$color.co_varnames = ["color", "fill", "b", "a"];
-            proto.$color.returnType = function(value) {
+            proto.$color.returnType = function (value) {
                 return new Sk.builtin.tuple([
                     Types.COLOR(value[0]),
                     Types.COLOR(value[1])
                 ]);
             };
 
-            proto.$fill = function(flag) {
+            proto.$fill = function (flag) {
                 var self = this;
 
                 if (flag !== undefined) {
                     flag = !!flag;
-                    if (flag === this._filling) {return;}
+                    if (flag === this._filling) {
+                        return;
+                    }
                     this._filling = flag;
                     if (flag) {
                         pushUndo(this);
                         return this.addUpdate(undefined, false, {
-                            filling      : true,
-                            fillBuffer : [{x : this._x, y : this._y}]
+                            filling: true,
+                            fillBuffer: [{x: this._x, y: this._y}]
                         });
                     } else {
                         pushUndo(this);
                         return this.addUpdate(
-                            function() {
+                            function () {
                                 this.fillBuffer.push(this);
                                 drawFill.call(this);
                             },
                             true,
                             {
-                                filling      : false,
-                                fillBuffer : undefined
+                                filling: false,
+                                fillBuffer: undefined
                             }
                         );
                     }
@@ -940,22 +948,22 @@ var $builtinmodule = function (name) {
             proto.$fill.co_varnames = ["flag"];
             proto.$fill.minArgs = 0;
 
-            proto.$begin_fill = function() {
+            proto.$begin_fill = function () {
                 return this.$fill(true);
             };
 
-            proto.$end_fill = function() {
+            proto.$end_fill = function () {
                 return this.$fill(false);
             };
 
-            proto.$stamp = function() {
+            proto.$stamp = function () {
                 pushUndo(this);
-                return this.addUpdate(function() {
+                return this.addUpdate(function () {
                     drawTurtle(this, this.context());
                 }, true);
             };
 
-            proto.$dot = function(size, color, g, b, a) {
+            proto.$dot = function (size, color, g, b, a) {
                 pushUndo(this);
                 size = Sk.builtin.asnum$(size);
                 size = (typeof size === "number") ?
@@ -970,7 +978,7 @@ var $builtinmodule = function (name) {
             };
             proto.$dot.co_varnames = ["size", "color", "g", "b", "a"];
 
-            proto.$write = function(message, move, align, font) {
+            proto.$write = function (message, move, align, font) {
                 var self = this,
                     promise, face, size, type, width;
 
@@ -1000,9 +1008,9 @@ var $builtinmodule = function (name) {
                 if (move && (align === "left" || align === "center")) {
                     width = measureText(message, font);
                     if (align === "center") {
-                        width = width/2;
+                        width = width / 2;
                     }
-                    promise = promise.then(function() {
+                    promise = promise.then(function () {
                         var state = self.getState();
                         return self.translate(state.x, state.y, width, 0, true);
                     });
@@ -1011,12 +1019,12 @@ var $builtinmodule = function (name) {
                 return promise;
             };
             proto.$write.co_varnames = ["message", "move", "align", "font"];
-            proto.$write.minArgs     = 1;
+            proto.$write.minArgs = 1;
 
-            proto.$pensize = proto.$width = function(size) {
+            proto.$pensize = proto.$width = function (size) {
                 if (size !== undefined) {
                     this._size = size;
-                    return this.addUpdate(undefined, this._shown, {size : size});
+                    return this.addUpdate(undefined, this._shown, {size: size});
                 }
 
                 return this._size;
@@ -1024,113 +1032,113 @@ var $builtinmodule = function (name) {
             proto.$pensize.minArgs = proto.$width.minArgs = 0;
             proto.$pensize.co_varnames = proto.$width.co_varnames = ["width"];
 
-            proto.$showturtle = proto.$st = function() {
+            proto.$showturtle = proto.$st = function () {
                 this._shown = true;
-                return this.addUpdate(undefined, true, {shown : true});
+                return this.addUpdate(undefined, true, {shown: true});
             };
 
-            proto.$hideturtle = proto.$ht = function() {
+            proto.$hideturtle = proto.$ht = function () {
                 this._shown = false;
-                return this.addUpdate(undefined, true, {shown : false});
+                return this.addUpdate(undefined, true, {shown: false});
             };
 
-            proto.$isvisible = function() {
+            proto.$isvisible = function () {
                 return this._shown;
             };
 
-            proto.$shape = function(shape) {
+            proto.$shape = function (shape) {
                 if (shape && SHAPES[shape]) {
                     this._shape = shape;
-                    return this.addUpdate(undefined, this._shown, {shape : shape});
+                    return this.addUpdate(undefined, this._shown, {shape: shape});
                 }
 
                 return this._shape;
             };
-            proto.$shape.minArgs     = 0;
+            proto.$shape.minArgs = 0;
             proto.$shape.co_varnames = ["name"];
             //colormode supported
-            proto.$colormode = function(cmode){
-                if(cmode !== undefined){
-                    if(cmode === 255) {
+            proto.$colormode = function (cmode) {
+                if (cmode !== undefined) {
+                    if (cmode === 255) {
                         this._colorMode = 255;
                     } else {
                         this._colorMode = 1.0;
-                    }   
-                    return this.addUpdate(undefined, this._shown, {colorMode : this._colorMode});         
+                    }
+                    return this.addUpdate(undefined, this._shown, {colorMode: this._colorMode});
                 }
 
                 return this._colorMode;
             };
-            proto.$colormode.minArgs     = 0;
+            proto.$colormode.minArgs = 0;
             proto.$colormode.co_varnames = ["cmode"];
-            proto.$colormode.returnType = function(value) {
+            proto.$colormode.returnType = function (value) {
                 return value === 255 ? Sk.builtin.int_(255) : Sk.builtin.float_(1.0);
             };
 
-            proto.$window_width = function() {
+            proto.$window_width = function () {
                 return this._screen.$window_width();
             };
 
-            proto.$window_height = function() {
+            proto.$window_height = function () {
                 return this._screen.$window_height();
             };
 
-            proto.$tracer = function(n, delay) {
+            proto.$tracer = function (n, delay) {
                 return this._screen.$tracer(n, delay);
             };
-            proto.$tracer.minArgs     = 0;
+            proto.$tracer.minArgs = 0;
             proto.$tracer.co_varnames = ["n", "delay"];
 
-            proto.$update = function() {
+            proto.$update = function () {
                 return this._screen.$update();
             };
 
-            proto.$delay = function(delay) {
+            proto.$delay = function (delay) {
                 return this._screen.$delay(delay);
             };
-            proto.$delay.minArgs     = 0;
+            proto.$delay.minArgs = 0;
             proto.$delay.co_varnames = ["delay"];
 
-            proto.$reset = function() {
+            proto.$reset = function () {
                 this.reset();
                 return this.$clear();
             };
 
-            proto.$mainloop = proto.$done = function() {
+            proto.$mainloop = proto.$done = function () {
                 return this._screen.$mainloop();
             };
 
-            proto.$clear = function() {
-                return this.addUpdate(function() {
+            proto.$clear = function () {
+                return this.addUpdate(function () {
                     clearLayer(this.context());
                 }, true);
             };
             proto.$dot.minArgs = 0;
 
-            proto.$onclick = function(method, btn, add) {
+            proto.$onclick = function (method, btn, add) {
                 this.getManager("mousedown").addHandler(method, add);
             };
             proto.$onclick.minArgs = 1;
             proto.$onclick.co_varnames = ["method", "btn", "add"];
 
-            proto.$onrelease = function(method, btn, add) {
+            proto.$onrelease = function (method, btn, add) {
                 this.getManager("mouseup").addHandler(method, add);
             };
             proto.$onrelease.minArgs = 1;
             proto.$onrelease.co_varnames = ["method", "btn", "add"];
 
-            proto.$ondrag = function(method, btn, add) {
+            proto.$ondrag = function (method, btn, add) {
                 this.getManager("mousemove").addHandler(method, add);
             };
             proto.$ondrag.minArgs = 1;
             proto.$ondrag.co_varnames = ["method", "btn", "add"];
 
-            proto.$getscreen = function() {
+            proto.$getscreen = function () {
                 return Sk.misceval.callsimArray(_module.Screen);
             };
             proto.$getscreen.isSk = true;
 
-            proto.$clone = function() {
+            proto.$clone = function () {
 
                 var newTurtleInstance = Sk.misceval.callsimOrSuspendArray(_module.Turtle);
 
@@ -1160,53 +1168,53 @@ var $builtinmodule = function (name) {
 
                 return newTurtleInstance;
             };
-            proto.$clone.returnType = function(value) {
-            // When I return the instance here, I'm not sure if it ends up with the right "Turtle" python type.
+            proto.$clone.returnType = function (value) {
+                // When I return the instance here, I'm not sure if it ends up with the right "Turtle" python type.
                 return value;
             };
 
-            proto.$getturtle = proto.$getpen = function() {
+            proto.$getturtle = proto.$getpen = function () {
                 return this.skInstance;
             };
             proto.$getturtle.isSk = true;
         })(Turtle.prototype);
 
         function Screen() {
-            var w,h;
-            this._frames    = 1;
-            this._delay     = undefined;
-            this._bgcolor   = "none";
-            this._mode      = "standard";
-            this._managers  = {};
+            var w, h;
+            this._frames = 1;
+            this._delay = undefined;
+            this._bgcolor = "none";
+            this._mode = "standard";
+            this._managers = {};
             this._keyLogger = {};
 
             w = (_config.worldWidth || _config.width || getWidth()) / 2;
             h = (_config.worldHeight || _config.height || getHeight()) / 2;
 
-            this.setUpWorld(-w,-h,w,h);
+            this.setUpWorld(-w, -h, w, h);
         }
 
-        (function(proto) {
-            proto.spriteLayer = function() {
+        (function (proto) {
+            proto.spriteLayer = function () {
                 return this._sprites || (this._sprites = createLayer(3));
             };
 
-            proto.bgLayer = function() {
+            proto.bgLayer = function () {
                 return this._background || (this._background = createLayer(1));
             };
 
-            proto.hitTestLayer = function() {
-                return this._hitTest || (this._hitTest = createLayer(0,true));
+            proto.hitTestLayer = function () {
+                return this._hitTest || (this._hitTest = createLayer(0, true));
             };
 
-            proto.getManager = function(type) {
+            proto.getManager = function (type) {
                 if (!this._managers[type]) {
                     this._managers[type] = new EventManager(type, this);
                 }
                 return this._managers[type];
             };
 
-            proto.reset = function() {
+            proto.reset = function () {
                 var key;
 
                 this._keyListeners = undefined;
@@ -1232,7 +1240,7 @@ var $builtinmodule = function (name) {
                     this._timer = undefined;
                 }
 
-                for(key in this._managers) {
+                for (key in this._managers) {
                     this._managers[key].reset();
                 }
 
@@ -1243,19 +1251,19 @@ var $builtinmodule = function (name) {
                 this._background = undefined;
             };
 
-            proto.setUpWorld = function(llx, lly, urx, ury) {
+            proto.setUpWorld = function (llx, lly, urx, ury) {
                 var world = this;
 
-                world.llx       = llx;
-                world.lly       = lly;
-                world.urx       = urx;
-                world.ury       = ury;
-                world.xScale    = (urx - llx) / getWidth();
-                world.yScale    = -1 * (ury - lly) / getHeight();
+                world.llx = llx;
+                world.lly = lly;
+                world.urx = urx;
+                world.ury = ury;
+                world.xScale = (urx - llx) / getWidth();
+                world.yScale = -1 * (ury - lly) / getHeight();
                 world.lineScale = Math.min(Math.abs(world.xScale), Math.abs(world.yScale));
             };
 
-            proto.$setup = function(width, height, startX, startY) {
+            proto.$setup = function (width, height, startX, startY) {
                 if (isNaN(parseFloat(width))) {
                     width = getWidth();
                 }
@@ -1270,7 +1278,7 @@ var $builtinmodule = function (name) {
                     height = getHeight() * height;
                 }
 
-                this._width  = width;
+                this._width = width;
                 this._height = height;
 
                 this._xOffset = (startX !== undefined && !isNaN(parseInt(startX))) ?
@@ -1285,14 +1293,14 @@ var $builtinmodule = function (name) {
                     return this._setworldcoordinates(this.llx, this.lly, this.urx, this.ury);
                 }
 
-                return this._setworldcoordinates(-width/2, -height/2, width/2, height/2);
+                return this._setworldcoordinates(-width / 2, -height / 2, width / 2, height / 2);
             };
-            proto.$setup.minArgs     = 0;
+            proto.$setup.minArgs = 0;
             proto.$setup.co_varnames = ["width", "height", "startx", "starty"];
 
-            proto.$register_shape = proto.$addshape = function(name, points) {
+            proto.$register_shape = proto.$addshape = function (name, points) {
                 if (!points) {
-                    return getAsset(name).then(function(asset) {
+                    return getAsset(name).then(function (asset) {
                         SHAPES[name] = asset;
                     });
                 } else {
@@ -1301,11 +1309,11 @@ var $builtinmodule = function (name) {
             };
             proto.$register_shape.minArgs = 1;
 
-            proto.$getshapes = function() {
+            proto.$getshapes = function () {
                 return Object.keys(SHAPES);
             };
 
-            proto.$tracer = function(frames, delay) {
+            proto.$tracer = function (frames, delay) {
                 if (frames !== undefined || delay !== undefined) {
                     if (typeof delay === "number") {
                         this._delay = delay;
@@ -1324,7 +1332,7 @@ var $builtinmodule = function (name) {
             proto.$tracer.co_varnames = ["frames", "delay"];
             proto.$tracer.minArgs = 0;
 
-            proto.$delay = function(delay) {
+            proto.$delay = function (delay) {
                 if (delay !== undefined) {
                     return this.$tracer(undefined, delay);
                 }
@@ -1333,8 +1341,8 @@ var $builtinmodule = function (name) {
             };
             proto.$delay.co_varnames = ["delay"];
 
-            proto._setworldcoordinates = function(llx, lly, urx, ury) {
-                var world     = this,
+            proto._setworldcoordinates = function (llx, lly, urx, ury) {
+                var world = this,
                     turtles = getFrameManager().turtles();
 
                 this.setUpWorld(llx, lly, urx, ury);
@@ -1350,55 +1358,55 @@ var $builtinmodule = function (name) {
                 return this.$clear();
             };
 
-            proto.$setworldcoordinates = function(llx, lly, urx, ury) {
+            proto.$setworldcoordinates = function (llx, lly, urx, ury) {
                 this._mode = "world";
                 return this._setworldcoordinates(llx, lly, urx, ury);
             };
             proto.$setworldcoordinates.co_varnames = ["llx", "lly", "urx", "ury"];
             proto.minArgs = 4;
 
-            proto.$clear = proto.$clearscreen = function() {
+            proto.$clear = proto.$clearscreen = function () {
                 this.reset();
                 return this.$reset();
             };
 
-            proto.$update = function() {
+            proto.$update = function () {
                 return getFrameManager().update();
             };
 
-            proto.$reset = proto.$resetscreen = function() {
+            proto.$reset = proto.$resetscreen = function () {
                 var self = this,
                     turtles = getFrameManager().turtles();
 
-                return getFrameManager().addFrame(function() {
+                return getFrameManager().addFrame(function () {
                     applyWorld(self, self._sprites);
                     applyWorld(self, self._background);
-                    for(var i = 0; i < turtles.length; i++) {
+                    for (var i = 0; i < turtles.length; i++) {
                         turtles[i].reset();
                         applyWorld(self, turtles[i]._paper);
                     }
                 }, true);
             };
 
-            proto.$window_width = function() {
+            proto.$window_width = function () {
                 return getWidth();
             };
 
-            proto.$window_height = function() {
+            proto.$window_height = function () {
                 return getHeight();
             };
             proto.$delay.minArgs = 0;
 
-            proto.$turtles = function() {
+            proto.$turtles = function () {
                 return getFrameManager().turtles();
             };
             proto.$turtles.returnType = Types.TURTLE_LIST;
 
-            proto.$bgpic = function(name) {
+            proto.$bgpic = function (name) {
                 var self;
                 if (name) {
                     self = this;
-                    return getAsset(name).then(function(asset) {
+                    return getAsset(name).then(function (asset) {
                         clearLayer(self.bgLayer(), undefined, asset);
                     });
                 }
@@ -1408,7 +1416,7 @@ var $builtinmodule = function (name) {
             proto.$bgpic.minArgs = 0;
             proto.$bgpic.co_varnames = ["name"];
 
-            proto.$bgcolor = function(color, g, b, a) {
+            proto.$bgcolor = function (color, g, b, a) {
                 if (color !== undefined) {
                     this._bgcolor = createColor(this._colorMode, color, g, b, a);
                     clearLayer(this.bgLayer(), this._bgcolor);
@@ -1422,82 +1430,90 @@ var $builtinmodule = function (name) {
             proto.$bgcolor.returnType = Types.COLOR;
 
             // no-op - just defined for consistency with python version
-            proto.$mainloop = proto.$done = function() {
+            proto.$mainloop = proto.$done = function () {
                 return undefined;
             };
 
-            proto.$bye = function() {
+            proto.$bye = function () {
                 return Sk.TurtleGraphics.reset();
             };
 
-            proto.$exitonclick = function() {
+            proto.$exitonclick = function () {
                 this._exitOnClick = true;
-                return this.getManager("mousedown").addHandler(function() {
+                return this.getManager("mousedown").addHandler(function () {
                     resetTurtle();
                 }, false);
             };
 
-            proto.$onclick = function(method, btn, add) {
-                if (this._exitOnClick) {return;}
+            proto.$onclick = function (method, btn, add) {
+                if (this._exitOnClick) {
+                    return;
+                }
                 this.getManager("mousedown").addHandler(method, add);
             };
             proto.$onclick.minArgs = 1;
             proto.$onclick.co_varnames = ["method", "btn", "add"];
 
             var KEY_MAP = {
-                "8"  : /^back(space)?$/i,
-                "9"  : /^tab$/i,
-                "13" : /^(enter|return)$/i,
-                "16" : /^shift$/i,
-                "17" : /^(ctrl|control)$/i,
-                "18" : /^alt$/i,
-                "27" : /^esc(ape)?$/i,
-                "32" : /^space$/i,
-                "33" : /^page[\s\-]?up$/i,
-                "34" : /^page[\s\-]?down$/i,
-                "35" : /^end$/i,
-                "36" : /^home$/i,
-                "37" : /^left([\s\-]?arrow)?$/i,
-                "38" : /^up([\s\-]?arrow)?$/i,
-                "39" : /^right([\s\-]?arrow)?$/i,
-                "40" : /^down([\s\-]?arrow)?$/i,
-                "45" : /^insert$/i,
-                "46" : /^del(ete)?$/i
+                "8": /^back(space)?$/i,
+                "9": /^tab$/i,
+                "13": /^(enter|return)$/i,
+                "16": /^shift$/i,
+                "17": /^(ctrl|control)$/i,
+                "18": /^alt$/i,
+                "27": /^esc(ape)?$/i,
+                "32": /^space$/i,
+                "33": /^page[\s\-]?up$/i,
+                "34": /^page[\s\-]?down$/i,
+                "35": /^end$/i,
+                "36": /^home$/i,
+                "37": /^left([\s\-]?arrow)?$/i,
+                "38": /^up([\s\-]?arrow)?$/i,
+                "39": /^right([\s\-]?arrow)?$/i,
+                "40": /^down([\s\-]?arrow)?$/i,
+                "45": /^insert$/i,
+                "46": /^del(ete)?$/i
             };
 
-            proto._createKeyRepeater = function(key, code) {
+            proto._createKeyRepeater = function (key, code) {
                 var self = this;
                 // set a timeout for 333ms and if key has not yet been
                 // released, fire another event and continue firing
                 // at a rate of ~20 times per second until key is released
-                self._keyLogger[code] = window.setTimeout(function() {
-                // trigger the first repeat after the longer delay
+                self._keyLogger[code] = window.setTimeout(function () {
+                    // trigger the first repeat after the longer delay
                     self._keyListeners[key]();
                     // set up the repeat interval with the quick delay
-                    self._keyLogger[code] = window.setInterval(function() {
+                    self._keyLogger[code] = window.setInterval(function () {
                         self._keyListeners[key]();
                     }, 50);
                 }, 333);
             };
 
-            proto._createKeyDownListener = function() {
+            proto._createKeyDownListener = function () {
                 var self = this;
 
-                if (this._keyDownListener) {return;}
+                if (this._keyDownListener) {
+                    return;
+                }
 
-                this._keyDownListener = function(e) {
-                    if (!focusTurtle()) {return;}
+                this._keyDownListener = function (e) {
+                    if (!focusTurtle()) {
+                        return;
+                    }
 
-                    var code    = e.charCode || e.keyCode,
+                    var code = e.charCode || e.keyCode,
                         pressed = String.fromCharCode(code).toLowerCase(),
                         key, inKeyMap;
 
-                    if (self._keyLogger[code]) {return;}
+                    if (self._keyLogger[code]) {
+                        return;
+                    }
 
                     for (key in self._keyListeners) {
                         inKeyMap = (key.length > 1 && KEY_MAP[code] && KEY_MAP[code].test(key));
                         if (key === pressed || inKeyMap) {
-                        // trigger the intial keydown handler
+                            // trigger the intial keydown handler
                             self._keyListeners[key]();
                             self._createKeyRepeater(key, code);
                             e.preventDefault();
@@ -1509,40 +1525,44 @@ var $builtinmodule = function (name) {
                 getTarget().addEventListener("keydown", this._keyDownListener);
             };
 
-            proto._createKeyUpListener = function() {
+            proto._createKeyUpListener = function () {
                 var self = this;
 
-                if (this._keyUpListener) {return;}
+                if (this._keyUpListener) {
+                    return;
+                }
 
-                this._keyUpListener = function(e) {
+                this._keyUpListener = function (e) {
                     var interval = self._keyLogger[e.charCode || e.keyCode];
                     if (interval !== undefined) {
                         e.preventDefault();
                         window.clearInterval(interval);
                         window.clearTimeout(interval);
-                        delete(self._keyLogger[e.charCode || e.keyCode]);
+                        delete (self._keyLogger[e.charCode || e.keyCode]);
                     }
                 };
 
                 getTarget().addEventListener("keyup", this._keyUpListener);
             };
 
-            proto.$listen = function() {
+            proto.$listen = function () {
                 this._createKeyUpListener();
                 this._createKeyDownListener();
             };
 
-            proto.$onkey = function(method, keyValue) {
+            proto.$onkey = function (method, keyValue) {
                 if (typeof keyValue === "function") {
                     var temp = method;
-                    method   = keyValue;
+                    method = keyValue;
                     keyValue = temp;
                 }
 
                 keyValue = String(keyValue).toLowerCase();
 
                 if (method && typeof method === "function") {
-                    if (!this._keyListeners) {this._keyListeners = {};}
+                    if (!this._keyListeners) {
+                        this._keyListeners = {};
+                    }
                     this._keyListeners[keyValue] = method;
                 } else {
                     delete this._keyListeners[keyValue];
@@ -1551,20 +1571,20 @@ var $builtinmodule = function (name) {
             proto.$onkey.minArgs = 2;
             proto.$onkey.co_varnames = ["method", "keyValue"];
 
-            proto.$onscreenclick = function(method, btn, add) {
+            proto.$onscreenclick = function (method, btn, add) {
                 this.getManager("mousedown").addHandler(method, add);
             };
             proto.$onscreenclick.minArgs = 1;
             proto.$onscreenclick.co_varnames = ["method", "btn", "add"];
 
-            proto.$ontimer = function(method, interval) {
+            proto.$ontimer = function (method, interval) {
                 if (this._timer) {
                     window.clearTimeout(this._timer);
                     this._timer = undefined;
                 }
 
                 if (method && typeof interval === "number") {
-                    this._timer = window.setTimeout(method, Math.max(0, interval|0));
+                    this._timer = window.setTimeout(method, Math.max(0, interval | 0));
                 }
             };
             proto.$ontimer.minArgs = 0;
@@ -1600,33 +1620,33 @@ var $builtinmodule = function (name) {
         function getWidth() {
             return (
                 (_screenInstance && _screenInstance._width) ||
-            _config.width ||
-            getTarget().clientWidth ||
-            _defaultSetup.width
+                _config.width ||
+                getTarget().clientWidth ||
+                _defaultSetup.width
             ) | 0;
         }
 
         function getHeight() {
             return (
                 (_screenInstance && _screenInstance._height) ||
-            _config.height ||
-            getTarget().clientHeight ||
-            _defaultSetup.height
+                _config.height ||
+                getTarget().clientHeight ||
+                _defaultSetup.height
             ) | 0;
         }
 
         function createLayer(zIndex, isHidden) {
             var canvas = document.createElement("canvas"),
-                width  = getWidth(),
+                width = getWidth(),
                 height = getHeight(),
                 offset = getTarget().firstChild ? (-height) + "px" : "0",
                 context;
 
-            canvas.width          = width;
-            canvas.height         = height;
+            canvas.width = width;
+            canvas.height = height;
             canvas.style.position = "relative";
-            canvas.style.display  = "block";
-            canvas.style.setProperty("margin-top",offset);
+            canvas.style.display = "block";
+            canvas.style.setProperty("margin-top", offset);
             canvas.style.setProperty("z-index", zIndex);
             if (isHidden) {
                 canvas.style.display = "none";
@@ -1655,14 +1675,16 @@ var $builtinmodule = function (name) {
         }
 
         function applyWorld(world, context) {
-            var llx    = world.llx,
-                lly    = world.lly,
-                urx    = world.urx,
-                ury    = world.ury,
+            var llx = world.llx,
+                lly = world.lly,
+                urx = world.urx,
+                ury = world.ury,
                 xScale = world.xScale,
                 yScale = world.yScale;
 
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
 
             clearLayer(context);
 
@@ -1689,19 +1711,19 @@ var $builtinmodule = function (name) {
                 turtle._undoBuffer = [];
             }
 
-            while(turtle._undoBuffer.length > turtle._bufferSize) {
+            while (turtle._undoBuffer.length > turtle._bufferSize) {
                 turtle._undoBuffer.shift();
             }
 
-            undoState  = {};
+            undoState = {};
             properties = "x y angle radians color fill down filling shown shape size".split(" ");
-            for(i = 0; i < properties.length; i++) {
+            for (i = 0; i < properties.length; i++) {
                 undoState[properties[i]] = turtle["_" + properties[i]];
             }
 
             turtle._undoBuffer.push(undoState);
 
-            return turtle.addUpdate(function() {
+            return turtle.addUpdate(function () {
                 undoState.fillBuffer = this.fillBuffer ? this.fillBuffer.slice() : undefined;
                 if (turtle._paper && turtle._paper.canvas) {
                     undoState.image = turtle._paper.canvas.toDataURL();
@@ -1710,6 +1732,7 @@ var $builtinmodule = function (name) {
         }
 
         var undoImage = new Image();
+
         function popUndo(turtle) {
             var undoState;
 
@@ -1723,12 +1746,14 @@ var $builtinmodule = function (name) {
                 return;
             }
 
-            for(var key in undoState) {
-                if (key === "image" || key === "fillBuffer") {continue;}
+            for (var key in undoState) {
+                if (key === "image" || key === "fillBuffer") {
+                    continue;
+                }
                 turtle["_" + key] = undoState[key];
             }
 
-            return turtle.addUpdate(function() {
+            return turtle.addUpdate(function () {
                 var img;
                 if (undoState.image) {
                     undoImage.src = undoState.image;
@@ -1747,10 +1772,12 @@ var $builtinmodule = function (name) {
         }
 
         function clearLayer(context, color, image) {
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
 
             context.save();
-            context.setTransform(1,0,0,1,0,0);
+            context.setTransform(1, 0, 0, 1, 0, 0);
             if (color) {
                 context.fillStyle = color;
                 context.fillRect(0, 0, context.canvas.width, context.canvas.height);
@@ -1766,37 +1793,39 @@ var $builtinmodule = function (name) {
         }
 
         function drawTurtle(state, context) {
-            var shape  = SHAPES[state.shape],
-                world  = getScreen(),
-                width  = getWidth(),
+            var shape = SHAPES[state.shape],
+                world = getScreen(),
+                width = getWidth(),
                 height = getHeight(),
                 xScale = world.xScale,
                 yScale = world.yScale,
                 x, y, bearing;
 
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
 
-            x       = Math.cos(state.radians) / xScale;
-            y       = Math.sin(state.radians) / yScale;
-            bearing = Math.atan2(y, x) - Math.PI/2;
+            x = Math.cos(state.radians) / xScale;
+            y = Math.sin(state.radians) / yScale;
+            bearing = Math.atan2(y, x) - Math.PI / 2;
 
             context.save();
             context.translate(state.x, state.y);
-            context.scale(xScale,yScale);
+            context.scale(xScale, yScale);
 
             if (shape.nodeName) {
                 context.rotate(bearing + Math.PI);
                 var iw = shape.naturalWidth;
                 var ih = shape.naturalHeight;
-                context.drawImage(shape, 0, 0, iw, ih, -iw/2, -ih/2, iw, ih);
+                context.drawImage(shape, 0, 0, iw, ih, -iw / 2, -ih / 2, iw, ih);
             } else {
                 context.rotate(bearing);
                 context.beginPath();
-                context.lineWidth   = 1;
+                context.lineWidth = 1;
                 context.strokeStyle = state.color;
-                context.fillStyle   = state.fill;
+                context.fillStyle = state.fill;
                 context.moveTo(shape[0][0], shape[0][1]);
-                for(var i = 1; i < shape.length; i++) {
+                for (var i = 1; i < shape.length; i++) {
                     context.lineTo(shape[i][0], shape[i][1]);
                 }
                 context.closePath();
@@ -1809,21 +1838,24 @@ var $builtinmodule = function (name) {
 
         function drawDot(size, color) {
             var context = this.context(),
-                screen  = getScreen(),
-                xScale  = screen.xScale,
-                yScale  = screen.yScale;
+                screen = getScreen(),
+                xScale = screen.xScale,
+                yScale = screen.yScale;
 
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
             context.beginPath();
             context.moveTo(this.x, this.y);
-            size = size * Math.min(Math.abs(xScale),Math.abs(yScale));
-            context.arc(this.x, this.y, size/2, 0, Turtle.RADIANS);
+            size = size * Math.min(Math.abs(xScale), Math.abs(yScale));
+            context.arc(this.x, this.y, size / 2, 0, Turtle.RADIANS);
             context.closePath();
             context.fillStyle = color || this.color;
             context.fill();
         }
 
         var textMeasuringContext = document.createElement("canvas").getContext("2d");
+
         function measureText(message, font) {
             if (font) {
                 textMeasuringContext.font = font;
@@ -1834,7 +1866,9 @@ var $builtinmodule = function (name) {
         function drawText(message, align, font) {
             var context = this.context();
 
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
 
             context.save();
             if (font) {
@@ -1844,26 +1878,28 @@ var $builtinmodule = function (name) {
                 context.textAlign = align;
             }
 
-            context.scale(1,-1);
+            context.scale(1, -1);
             context.fillStyle = this.fill;
             context.fillText(message, this.x, -this.y);
             context.restore();
         }
 
         function drawLine(loc, beginPath, endPath) {
-        // TODO: make steps in path use square ends of lines
-        // and open and close path at the right times.
-        // See if we can minimize calls to stroke
+            // TODO: make steps in path use square ends of lines
+            // and open and close path at the right times.
+            // See if we can minimize calls to stroke
             var context = this.context();
 
-            if (!context) {return;}
+            if (!context) {
+                return;
+            }
 
             if (beginPath) {
                 context.beginPath();
                 context.moveTo(this.x, this.y);
             }
 
-            context.lineWidth   = this.size * getScreen().lineScale;
+            context.lineWidth = this.size * getScreen().lineScale;
             context.strokeStyle = this.color;
             context.lineTo(loc.x, loc.y);
             context.stroke();
@@ -1871,28 +1907,30 @@ var $builtinmodule = function (name) {
 
         function drawFill() {
             var context = this.context(),
-                path  = this.fillBuffer,
+                path = this.fillBuffer,
                 i;
 
-            if (!context || !path || !path.length) {return;}
+            if (!context || !path || !path.length) {
+                return;
+            }
 
             context.save();
             context.beginPath();
-            context.moveTo(path[0].x,path[0].y);
-            for(i = 1; i < path.length; i++) {
+            context.moveTo(path[0].x, path[0].y);
+            for (i = 1; i < path.length; i++) {
                 context.lineTo(path[i].x, path[i].y);
             }
             context.closePath();
             context.fillStyle = this.fill;
             context.fill();
-            for(i = 1; i < path.length; i++) {
+            for (i = 1; i < path.length; i++) {
                 if (!path[i].stroke) {
                     continue;
                 }
 
                 context.beginPath();
-                context.moveTo(path[i-1].x, path[i-1].y);
-                context.lineWidth   = path[i].size * getScreen().lineScale;
+                context.moveTo(path[i - 1].x, path[i - 1].y);
+                context.lineWidth = path[i].size * getScreen().lineScale;
                 context.strokeStyle = path[i].color;
                 context.lineTo(path[i].x, path[i].y);
                 context.stroke();
@@ -1901,79 +1939,79 @@ var $builtinmodule = function (name) {
         }
 
         function partialTranslate(turtle, x, y, beginPath, countAsFrame) {
-            return function() {
+            return function () {
                 return turtle.addUpdate(
-                    function(loc) {
+                    function (loc) {
                         if (this.down) {
                             drawLine.call(this, loc, beginPath);
                         }
                     },
                     countAsFrame,
-                    {x : x, y : y},
+                    {x: x, y: y},
                     beginPath
                 );
             };
         }
 
         function translate(turtle, startX, startY, dx, dy, beginPath, isCircle) {
-        // speed is in pixels per ms
-            var speed   = turtle._computed_speed,
-                screen  = getScreen(),
-                xScale  = Math.abs(screen.xScale),
-                yScale  = Math.abs(screen.yScale),
-                x       = startX,
-                y       = startY,
-                pixels  = Math.sqrt(dx * dx * xScale + dy * dy * yScale),
+            // speed is in pixels per ms
+            var speed = turtle._computed_speed,
+                screen = getScreen(),
+                xScale = Math.abs(screen.xScale),
+                yScale = Math.abs(screen.yScale),
+                x = startX,
+                y = startY,
+                pixels = Math.sqrt(dx * dx * xScale + dy * dy * yScale),
                 // TODO: allow fractional frame updates?
-                frames  = speed ? Math.round(Math.max(1, pixels / speed)) : 1,
-                xStep   = dx / frames,
-                yStep   = dy / frames,
+                frames = speed ? Math.round(Math.max(1, pixels / speed)) : 1,
+                xStep = dx / frames,
+                yStep = dy / frames,
                 promise = getFrameManager().willRenderNext() ?
                     Promise.resolve() :
                     new InstantPromise(),
                 countAsFrame = (!speed && isCircle) ? false : true,
                 i;
 
-            turtle.addUpdate(function() {
+            turtle.addUpdate(function () {
                 if (this.filling) {
                     this.fillBuffer.push({
-                        x        : this.x,
-                        y      : this.y,
-                        stroke : this.down,
-                        color  : this.color,
-                        size   : this.size
+                        x: this.x,
+                        y: this.y,
+                        stroke: this.down,
+                        color: this.color,
+                        size: this.size
                     });
                 }
             }, false);
 
-            for(i = 0; i < frames; i++) {
-                x = startX + xStep * (i+1);
-                y = startY + yStep * (i+1);
+            for (i = 0; i < frames; i++) {
+                x = startX + xStep * (i + 1);
+                y = startY + yStep * (i + 1);
                 promise = promise.then(
                     partialTranslate(turtle, x, y, beginPath, countAsFrame)
                 );
                 beginPath = false;
             }
 
-            return promise.then(function() {
+            return promise.then(function () {
                 return [startX + dx, startY + dy];
             });
         }
 
         function partialRotate(turtle, angle, radians, countAsFrame) {
-            return function() {
-                return turtle.addUpdate(undefined, countAsFrame, {angle:angle, radians:radians});
+            return function () {
+                return turtle.addUpdate(undefined, countAsFrame, {angle: angle, radians: radians});
             };
         }
 
         function rotate(turtle, startAngle, delta, isCircle) {
-            var speed        = turtle._computed_speed,
-                degrees    = delta / turtle._fullCircle * 360,
-                frames     = speed ? Math.round(Math.max(1, Math.abs(degrees) / speed)) : 1,
-                dAngle     = delta / frames,
-                heading    = {},
+            var speed = turtle._computed_speed,
+                degrees = delta / turtle._fullCircle * 360,
+                frames = speed ? Math.round(Math.max(1, Math.abs(degrees) / speed)) : 1,
+                dAngle = delta / frames,
+                heading = {},
                 countAsFrame = (!speed && isCircle) ? false : true,
-                promise    = getFrameManager().willRenderNext() ?
+                promise = getFrameManager().willRenderNext() ?
                     Promise.resolve() :
                     new InstantPromise(),
                 i;
@@ -1981,14 +2019,14 @@ var $builtinmodule = function (name) {
             // TODO: request how many frames are remaining and only queue up
             // a single rotation per screen update
 
-            for(i = 0; i < frames; i++) {
-                calculateHeading(turtle, startAngle + dAngle * (i+1), heading);
+            for (i = 0; i < frames; i++) {
+                calculateHeading(turtle, startAngle + dAngle * (i + 1), heading);
                 promise = promise.then(
                     partialRotate(turtle, heading.angle, heading.radians, countAsFrame)
                 );
             }
 
-            return promise.then(function() {
+            return promise.then(function () {
                 return calculateHeading(turtle, startAngle + delta);
             });
         }
@@ -1998,7 +2036,7 @@ var $builtinmodule = function (name) {
                 y = (x && (x.y || x._y || x[1])) || 0;
                 x = (x && (x.x || x._x || x[0])) || 0;
             }
-            return {x:x, y:y};
+            return {x: x, y: y};
         }
 
         // Modified solution of Tim Down's version from stackoverflow
@@ -2017,8 +2055,8 @@ var $builtinmodule = function (name) {
                 }
             } else if (/^#?[a-f\d]{3}|[a-f\d]{6}$/i.exec(hex)) {
                 if (hex.length === 4) {
-                // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-                    hex = hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, function(m, r, g, b) {
+                    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+                    hex = hex.replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, function (m, r, g, b) {
                         return r + r + g + g + b + b;
                     });
                 }
@@ -2036,7 +2074,7 @@ var $builtinmodule = function (name) {
             return result;
         }
 
-        function createColor(turtleColorMode,color, g, b, a) {
+        function createColor(turtleColorMode, color, g, b, a) {
             var i;
 
             if (g !== undefined) {
@@ -2044,21 +2082,21 @@ var $builtinmodule = function (name) {
             }
 
             if (color.constructor === Array && color.length) {
-                if(turtleColorMode === 255){//mode is 255
-                    for(i = 0; i < 3; i++) {
-                        if(typeof color[i] === "number") {
+                if (turtleColorMode === 255) {//mode is 255
+                    for (i = 0; i < 3; i++) {
+                        if (typeof color[i] === "number") {
                             color[i] = Math.max(0, Math.min(255, parseInt(color[i])));
-                        } else { 
+                        } else {
                             throw new Sk.builtin.ValueError("bad color sequence");
                         }
                     }
                 } else {//In python,if the colormode not equals 255,it should be 1.0
-                    for(i = 0; i < 3; i++) {
-                        if(typeof color[i] === "number") {
-                            if(color[i] <= 1){
+                    for (i = 0; i < 3; i++) {
+                        if (typeof color[i] === "number") {
+                            if (color[i] <= 1) {
                                 color[i] = Math.max(0, Math.min(255, parseInt(255 * color[i])));
                             } else {
-                            //Raise TurtleGraphicsError,Here use ValueError instead
+                                //Raise TurtleGraphicsError,Here use ValueError instead
                                 throw new Sk.builtin.ValueError("bad color sequence");
                             }
                         } else {
@@ -2070,7 +2108,7 @@ var $builtinmodule = function (name) {
                     color[3] = Math.max(0, Math.min(1, color[i]));
                     color = "rgba(" + color.join(",") + ")";
                 } else {
-                    color = "rgb(" + color.slice(0,3).join(",") + ")";
+                    color = "rgb(" + color.slice(0, 3).join(",") + ")";
                 }
             } else if (typeof color === "string" && !color.match(/\s*url\s*\(/i)) {
                 color = color.replace(/\s+/g, "");
@@ -2082,7 +2120,7 @@ var $builtinmodule = function (name) {
         }
 
         function calculateHeading(turtle, value, heading) {
-            var angle   = turtle._angle   || 0,
+            var angle = turtle._angle || 0,
                 radians = turtle._radians || 0;
 
             heading || (heading = {});
@@ -2091,32 +2129,34 @@ var $builtinmodule = function (name) {
                 if (turtle._isRadians) {
                     angle = radians = value % Turtle.RADIANS;
                 } else if (turtle._fullCircle) {
-                    angle   = (value % turtle._fullCircle);
+                    angle = (value % turtle._fullCircle);
                     radians = angle / turtle._fullCircle * Turtle.RADIANS;
                 } else {
                     angle = radians = 0;
                 }
 
                 if (angle < 0) {
-                    angle   += turtle._fullCircle;
+                    angle += turtle._fullCircle;
                     radians += Turtle.RADIANS;
                 }
             }
 
-            heading.angle   = angle;
+            heading.angle = angle;
             heading.radians = radians;
 
             return heading;
         }
 
         function pythonToJavascriptFunction(pyValue, scope) {
-            return function() {
+            return function () {
                 var argsJs = Array.prototype.slice.call(arguments),
                     argsPy = argsJs.map(
-                        function(argJs) {return Sk.ffi.remapToPy(argJs);}
+                        function (argJs) {
+                            return Sk.ffi.remapToPy(argJs);
+                        }
                     );
 
-                if (typeof(scope) !== "undefined") {
+                if (typeof (scope) !== "undefined") {
                     argsPy.unshift(scope);
                 }
 
@@ -2128,20 +2168,20 @@ var $builtinmodule = function (name) {
 
         function addModuleMethod(klass, module, method, scopeGenerator) {
             var publicMethodName = method.replace(/^\$/, ""),
-                displayName      = publicMethodName.replace(/_\$[a-z]+\$$/i, ""),
-                maxArgs          = klass.prototype[method].length,
-                minArgs          = klass.prototype[method].minArgs,
-                co_varnames      = klass.prototype[method].co_varnames || [],
-                returnType       = klass.prototype[method].returnType,
-                isSk             = klass.prototype[method].isSk,
+                displayName = publicMethodName.replace(/_\$[a-z]+\$$/i, ""),
+                maxArgs = klass.prototype[method].length,
+                minArgs = klass.prototype[method].minArgs,
+                co_varnames = klass.prototype[method].co_varnames || [],
+                returnType = klass.prototype[method].returnType,
+                isSk = klass.prototype[method].isSk,
                 wrapperFn;
 
             if (minArgs === undefined) {
                 minArgs = maxArgs;
             }
 
-            wrapperFn = function() {
-                var args     = Array.prototype.slice.call(arguments, 0),
+            wrapperFn = function () {
+                var args = Array.prototype.slice.call(arguments, 0),
                     instance = scopeGenerator ? scopeGenerator() : args.shift().instance,
                     i, result, susp, resolution, lengthError;
 
@@ -2181,7 +2221,7 @@ var $builtinmodule = function (name) {
 
                 try {
                     result = instance[method].apply(instance, args);
-                } catch(e) {
+                } catch (e) {
                     if (window && window.console) {
                         window.console.log("wrapped method failed");
                         window.console.log(e.stack);
@@ -2194,7 +2234,7 @@ var $builtinmodule = function (name) {
                 }
 
                 if (result instanceof Promise) {
-                    result = result.catch(function(e) {
+                    result = result.catch(function (e) {
                         if (window && window.console) {
                             window.console.log("promise failed");
                             window.console.log(e.stack);
@@ -2204,7 +2244,7 @@ var $builtinmodule = function (name) {
 
                     susp = new Sk.misceval.Suspension();
 
-                    susp.resume = function() {
+                    susp.resume = function () {
                         return (resolution === undefined) ?
                             Sk.builtin.none.none$ :
                             Sk.ffi.remapToPy(resolution);
@@ -2212,7 +2252,7 @@ var $builtinmodule = function (name) {
 
                     susp.data = {
                         type: "Sk.promise",
-                        promise: result.then(function(value) {
+                        promise: result.then(function (value) {
                             resolution = value;
                             return value;
                         })
@@ -2220,8 +2260,12 @@ var $builtinmodule = function (name) {
 
                     return susp;
                 } else {
-                    if (result === undefined) {return Sk.builtin.none.none$;}
-                    if (isSk) {return result;}
+                    if (result === undefined) {
+                        return Sk.builtin.none.none$;
+                    }
+                    if (isSk) {
+                        return result;
+                    }
                     if (typeof returnType === "function") {
                         return returnType(result);
                     }
@@ -2238,7 +2282,7 @@ var $builtinmodule = function (name) {
             }
 
             if (!scopeGenerator) {
-            // make room for the "self" argument
+                // make room for the "self" argument
                 wrapperFn.co_varnames.unshift("self");
             }
 
@@ -2251,7 +2295,7 @@ var $builtinmodule = function (name) {
                 self.instance.skInstance = self;
             });
 
-            for(var key in Turtle.prototype) {
+            for (var key in Turtle.prototype) {
                 if (/^\$[a-z_]+/.test(key)) {
                     addModuleMethod(Turtle, $loc, key);
                 }
@@ -2263,14 +2307,14 @@ var $builtinmodule = function (name) {
                 self.instance = getScreen();
             });
 
-            for(var key in Screen.prototype) {
+            for (var key in Screen.prototype) {
                 if (/^\$[a-z_]+/.test(key)) {
                     addModuleMethod(Screen, $loc, key);
                 }
             }
         }
 
-        for(var key in Turtle.prototype) {
+        for (var key in Turtle.prototype) {
             if (/^\$[a-z_]+/.test(key)) {
                 addModuleMethod(Turtle, _module, key, ensureAnonymous);
             }
@@ -2324,10 +2368,10 @@ var $builtinmodule = function (name) {
             }
 
             _durationSinceRedraw = 0;
-            _screenInstance      = undefined;
-            _anonymousTurtle     = undefined;
-            _mouseHandler        = undefined;
-            TURTLE_COUNT         = 0;
+            _screenInstance = undefined;
+            _anonymousTurtle = undefined;
+            _mouseHandler = undefined;
+            TURTLE_COUNT = 0;
         }
 
         function stopTurtle() {
@@ -2338,19 +2382,19 @@ var $builtinmodule = function (name) {
             }
 
             _durationSinceRedraw = 0;
-            _screenInstance      = undefined;
-            _anonymousTurtle     = undefined;
-            _mouseHandler        = undefined;
-            TURTLE_COUNT         = 0;
+            _screenInstance = undefined;
+            _anonymousTurtle = undefined;
+            _mouseHandler = undefined;
+            TURTLE_COUNT = 0;
         }
 
         return {
-            skModule : _module,
-            reset    : resetTurtle,
-            stop     : stopTurtle,
-            focus    : focusTurtle,
-            Turtle   : Turtle,
-            Screen   : Screen
+            skModule: _module,
+            reset: resetTurtle,
+            stop: stopTurtle,
+            focus: focusTurtle,
+            Turtle: Turtle,
+            Screen: Screen
         };
     }
 
@@ -2365,12 +2409,12 @@ var $builtinmodule = function (name) {
     }
 
     Sk.TurtleGraphics.module = currentTarget.turtleInstance.skModule;
-    Sk.TurtleGraphics.reset  = currentTarget.turtleInstance.reset;
-    Sk.TurtleGraphics.stop   = currentTarget.turtleInstance.stop;
-    Sk.TurtleGraphics.focus  = currentTarget.turtleInstance.focus;
+    Sk.TurtleGraphics.reset = currentTarget.turtleInstance.reset;
+    Sk.TurtleGraphics.stop = currentTarget.turtleInstance.stop;
+    Sk.TurtleGraphics.focus = currentTarget.turtleInstance.focus;
     Sk.TurtleGraphics.raw = {
-        Turtle : currentTarget.turtleInstance.Turtle,
-        Screen : currentTarget.turtleInstance.Screen
+        Turtle: currentTarget.turtleInstance.Turtle,
+        Screen: currentTarget.turtleInstance.Screen
     };
 
     return currentTarget.turtleInstance.skModule;

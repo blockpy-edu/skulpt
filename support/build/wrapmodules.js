@@ -6,7 +6,7 @@ const beautify = require('js-beautify');
 
 const reqskulpt = require('../run/require-skulpt').requireSkulpt;
 var skulpt = reqskulpt();
-Sk.configure({__future__: Sk.python3});
+//Sk.configure({__future__: Sk.python3});
 
 var WHITE_LIST = ['tifa.py', 'sandbox.py', 'stretchy_tree_matching.py'];
 function endsWithAny(string, suffixes) {
@@ -50,7 +50,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                 } else if (stat.isFile()) {
                     let ext = path.extname(file);
                     if (exts.includes(ext)) {
-                        let contents = fs.readFileSync(fullname, "utf8");
+                        let contents = fs.readFileSync(fullname, 'utf8');
                         if (minifyjs && (ext === ".js")) {
                             let result = minify(contents);
                             contents = result.code;
