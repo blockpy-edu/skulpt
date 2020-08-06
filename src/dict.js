@@ -1,4 +1,3 @@
-
 /** @typedef {Sk.builtin.object} */ var pyObject;
 /** @typedef {Sk.builtin.type|Function} */ var typeObject;
 
@@ -20,7 +19,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
         if (L === undefined) {
             L = [];
         }
-        Sk.asserts.assert(Array.isArray(L) && this instanceof Sk.builtin.dict, "bad call to dict constructor");
+        Sk.asserts.assert(Array.isArray(L) && L.length % 2 === 0 && this instanceof Sk.builtin.dict, "bad call to dict constructor");
 
         this.size = 0;
         this.entries = {};
@@ -320,7 +319,6 @@ Sk.builtin.dict.prototype.quick$lookup = function (pyName) {
     }
     return;
 };
-
 
 /**
  * NB:

@@ -6,7 +6,7 @@ the unittest module from cpython.
 '''
 
 
-class _AssertRaisesContext(object):
+class _AssertRaisesContext:
     """A context manager used to implement TestCase.assertRaises* methods."""
 
     def __init__(self, expected, test_case):
@@ -66,7 +66,7 @@ class _AssertRaisesContext(object):
         return True
 
 
-class TestCase(object):
+class TestCase:
     def __init__(self):
         self.numPassed = 0
         self.numFailed = 0

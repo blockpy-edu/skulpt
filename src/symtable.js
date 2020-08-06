@@ -491,6 +491,9 @@ SymbolTable.prototype.visitStmt = function (s) {
             if (s.decorator_list) {
                 this.SEQExpr(s.decorator_list);
             }
+            if (s.args.kw_defaults) {
+                this.SEQExpr(s.args.kw_defaults);
+            }
             this.enterBlock(s.name.v, FunctionBlock, s, s.lineno);
             this.visitArguments(s.args, s.lineno);
             this.SEQStmt(s.body);
