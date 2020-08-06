@@ -639,6 +639,14 @@ Sk.exportSymbol("Sk.abstr.objectDelItem", Sk.abstr.objectDelItem);
 Sk.abstr.objectGetItem = function (o, key, canSuspend) {
     if (o.mp$subscript) {
         return o.mp$subscript(key, canSuspend);
+    } else if (Sk.builtin.checkClass(o)) {
+        if (o === Sk.builtin.type) {
+            return o;
+        }
+        let f = Sk.abstr.lookupSpecial(o, Sk.builtin.str.$class_getitem);
+        if (f) {
+            return Sk.misceval.callsimOrSuspendArray(f, [o, key]);
+        }
     }
     throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(o) + "' does not support indexing");
 };

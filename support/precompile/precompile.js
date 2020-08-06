@@ -81,6 +81,6 @@ for (let filename in result) {
     let contents = result[filename];
     output.push("Sk.builtinFiles.files['"+filename+"'] = "+JSON.stringify(contents));
 }
-fs.writeFileSync(OUTPUT_FILE, output.join("\n"), "utf8");
+fs.writeFileSync(OUTPUT_FILE, output.join("\n"), "utf8", {flag: "w"});
 
 console.log(Object.keys(result));
