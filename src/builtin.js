@@ -1117,7 +1117,7 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
             new_globals_copy.__package__ = Sk.builtin.none.none$;
         }
         var backupGlobals = Sk.globals;
-        console.log(Sk.globals);
+        //console.log(Sk.globals);
         Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
         var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
         var pyName = new Sk.builtin.str(name);
@@ -1127,7 +1127,7 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
         try {
             Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
         } catch (e) {
-            console.log("SYSTEMATIC ERROR");
+            //console.log("SYSTEMATIC ERROR");
             caughtError = e;
         }
         Sk.globals = backupGlobals;
