@@ -95,14 +95,14 @@ var $builtinmodule = function (name) {
                     //throw new Sk.builtin.IOError(susp.data["error"].message);
                     throw susp.data["error"];
                 } else {
-                    console.log("RESUMED");
+                    //console.log("RESUMED");
                     return self.image;
                 }
             };
             susp.data = {
                 type: "Sk.promise",
                 promise: imagePromise.then(function (value) {
-                    console.log("PROMISED");
+                    //console.log("PROMISED");
                     self.image = value;
                     self.canvas = document.createElement("canvas");
                     self.canvas.width = self.image.width;
