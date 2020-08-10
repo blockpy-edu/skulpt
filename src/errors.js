@@ -239,13 +239,42 @@ Sk.abstr.setUpInheritance("OverflowError", Sk.builtin.OverflowError, Sk.builtin.
  */
 Sk.builtin.SyntaxError = function (...args) {
     Sk.builtin.Exception.apply(this, args);
-    this.text = arguments.length >= 1 ? Sk.ffi.remapToPy(arguments[0]) : Sk.builtin.none.none$;
-    this.msg = this.text;
+    this.msg = arguments.length >= 1 ? Sk.ffi.remapToPy(arguments[0]) : Sk.builtin.none.none$;
     this.filename = arguments.length >= 2 ? Sk.ffi.remapToPy(arguments[1]) : Sk.builtin.none.none$;
     this.lineno = arguments.length >= 3 ? Sk.ffi.remapToPy(arguments[2]) : Sk.builtin.none.none$;
     this.offset = arguments.length >= 4 ? Sk.ffi.remapToPy(arguments[3]) : Sk.builtin.none.none$;
+    try {
+        this.text = Sk.parse.linecache[arguments[1]][arguments[2]-1];
+    } catch (e) {
+        this.text = "";
+    }
+    /*this.tp$setattr(new Sk.builtin.str("filename"), this.filename);
+    this.tp$setattr(new Sk.builtin.str("lineno"), this.lineno);
+    this.tp$setattr(new Sk.builtin.str("offset"), this.offset);*/
 };
 Sk.abstr.setUpInheritance("SyntaxError", Sk.builtin.SyntaxError, Sk.builtin.Exception);
+Sk.abstr.setUpGetSets(Sk.builtin.SyntaxError, {
+    filename: {
+        $get: function () { return this.filename; },
+        $set: function(v) { this.filename = v; }
+    },
+    lineno: {
+        $get: function () { return this.lineno; },
+        $set: function(v) { this.lineno = v; }
+    },
+    offset: {
+        $get: function () { return this.offset; },
+        $set: function(v) { this.offset = v; }
+    },
+    text: {
+        $get: function () { return this.text; },
+        $set: function(v) { this.text = v; }
+    },
+    msg: {
+        $get: function () { return this.msg; },
+        $set: function(v) { this.msg = v; }
+    },
+});
 
 /**
  * @constructor
@@ -475,6 +504,15 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
             _name = Sk.ffi.remapToJs(name);
         }
 
+        let line = this.trace.source;
+        if (line == null) {
+            if (this.trace.filename != null && this.trace.lineno != null) {
+                if (Sk.parse.linecache[this.trace.filename]) {
+                    line = Sk.parse.linecache[this.trace.filename][this.trace.lineno-1];
+                }
+            }
+        }
+
         switch (_name) {
             case "f_back":
                 return Sk.builtin.none.none$;
@@ -489,7 +527,7 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
             case "f_lineno":
                 return Sk.ffi.remapToPy(this.trace.lineno);
             case "f_line":
-                return Sk.ffi.remapToPy(this.trace.source);
+                return Sk.ffi.remapToPy(line);
             case "f_locals":
                 return Sk.builtin.none.none$;
             case "f_trace":
