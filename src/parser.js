@@ -295,7 +295,6 @@ function makeParser(filename, style) {
     return p;
 }
 
-
 Sk.parse = function parse(filename, input) {
 
     var T_COMMENT = Sk.token.tokens.T_COMMENT;
@@ -313,7 +312,9 @@ Sk.parse = function parse(filename, input) {
      * @returns {function(): string}
      */
     function readline(input) {
-        var lines = input.split("\n").reverse();//.map(function (l) { return l + "\n"; });
+        let lines = input.split("\n");
+        Sk.parse.linecache[filename] = lines.slice();
+        lines = lines.reverse();
 
         return function () {
             if (lines.length === 0) {
@@ -373,6 +374,8 @@ Sk.parse = function parse(filename, input) {
     return result;
 };
 
+Sk.parse.linecache = {};
+
 Sk.parseTreeDump = function parseTreeDump(n, indent) {
     //return JSON.stringify(n, null, 2);
     var i;
@@ -395,3 +398,4 @@ Sk.parseTreeDump = function parseTreeDump(n, indent) {
 Sk.exportSymbol("Sk.Parser", Parser);
 Sk.exportSymbol("Sk.parse", Sk.parse);
 Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
+Sk.exportSymbol("Sk.parse.linecache", Sk.parse.linecache);
