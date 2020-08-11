@@ -2293,6 +2293,7 @@ var $builtinmodule = function (name) {
             $loc.__init__ = new Sk.builtin.func(function (self) {
                 self.instance = new Turtle();
                 self.instance.skInstance = self;
+                return Sk.builtin.none.none$;
             });
 
             for (var key in Turtle.prototype) {
@@ -2305,6 +2306,7 @@ var $builtinmodule = function (name) {
         function ScreenWrapper($gbl, $loc) {
             $loc.__init__ = new Sk.builtin.func(function (self) {
                 self.instance = getScreen();
+                return Sk.builtin.none.none$;
             });
 
             for (var key in Screen.prototype) {
