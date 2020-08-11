@@ -15,12 +15,19 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
             return Sk.builtin.none.none$;
         },
         tp$getattr: function (pyName, canSuspend) {
+            let customGetAttr = this.$d["__getattr__"];
+            if (customGetAttr) {
+                const ret = Sk.misceval.callsimArray(customGetAttr, [pyName]);
+                if (ret !== undefined) {
+                    return ret;
+                }
+            }
             var jsMangled = pyName.$mangled;
             const ret = this.$d[jsMangled];
             if (ret !== undefined) {
                 return ret;
             }
-            // technically this is the wrong way round but its seems performance wise better 
+            // technically this is the wrong way round but its seems performance wise better
             // to just return the module elements before checking for descriptors
             const descr = this.ob$type.$typeLookup(pyName);
             if (descr !== undefined) {
