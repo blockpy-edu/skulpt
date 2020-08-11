@@ -242,6 +242,13 @@ Sk.timeoutMsg = function () {
 };
 Sk.exportSymbol("Sk.timeoutMsg", Sk.timeoutMsg);
 
+
+/**
+ * If the timer needs to be paused, store it here.
+ * @type {number}
+ */
+Sk.execPaused = 0;
+
 /*
  *  Hard execution timeout, throws an error. Set to null to disable
  */
