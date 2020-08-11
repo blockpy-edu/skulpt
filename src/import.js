@@ -167,12 +167,20 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         topLevelModuleToReturn = Sk.importModuleInternal_(parentModName, dumpJS, undefined, undefined, relativeToPackage, returnUndefinedOnTopLevelNotFound, canSuspend);
     }
 
+    let sysmodules = Sk.sysmodules;
+    try {
+        let sys = sysmodules.mp$subscript(new Sk.builtin.str("sys"));
+        if (sys != undefined) {
+            sysmodules = sys.tp$getattr(new Sk.builtin.str("modules"));
+        }
+    } catch (x) {}
+
     ret = Sk.misceval.chain(topLevelModuleToReturn, function (topLevelModuleToReturn_) {
         topLevelModuleToReturn = topLevelModuleToReturn_;
 
         // if leaf is already in sys.modules, early out
         try {
-            prev = Sk.sysmodules.mp$subscript(new Sk.builtin.str(modname));
+            prev = sysmodules.mp$subscript(new Sk.builtin.str(modname));
             // if we're a dotted module, return the top level, otherwise ourselves
             return topLevelModuleToReturn || prev;
         } catch (x) {
@@ -189,7 +197,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
                 if (!topLevelModuleToReturn) {
                     return undefined;
                 }
-                parentModule = Sk.sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + parentModName));
+                parentModule = sysmodules.mp$subscript(new Sk.builtin.str(absolutePackagePrefix + parentModName));
                 searchFileName = modNameSplit[modNameSplit.length - 1];
                 searchPath = parentModule.tp$getattr(Sk.builtin.str.$path);
             }
@@ -259,7 +267,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
             }
 
             // Now we know this module exists, we can add it to the cache
-            Sk.sysmodules.mp$ass_subscript(new Sk.builtin.str(modname), module);
+            sysmodules.mp$ass_subscript(new Sk.builtin.str(modname), module);
 
             module.$js = co.code; // todo; only in DEBUG?
             finalcode = co.code;
