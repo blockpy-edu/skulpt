@@ -1088,7 +1088,7 @@ var extractDict = function (obj) {
         }
         kAsJs = Sk.ffi.remapToJs(k);
         // todo; assert that this is a reasonble lhs?
-        ret[kAsJs] = v;
+        ret[Sk.fixReserved(kAsJs)] = v;
     }
     return ret;
 };

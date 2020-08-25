@@ -170,7 +170,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
 
             return susp;
         } else {
-            Sk.execPaused = Date.now() - Sk.execPaused;
+            Sk.misceval.unpauseTimer();
             return new Sk.builtin.str(x);
         }
     } else {

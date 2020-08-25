@@ -420,6 +420,8 @@ Sk.importMainWithBody = function (name, dumpJS, body, canSuspend, sysmodules) {
         Sk.sysmodules = sysmodules;
     }
     Sk.realsyspath = undefined;
+    Sk.execPausedAmount = 0;
+    Sk.execPaused = 0;
 
     Sk.resetCompiler();
 

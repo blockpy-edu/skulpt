@@ -1326,6 +1326,7 @@ Sk.exportSymbol("Sk.misceval.pauseTimer", Sk.misceval.pauseTimer);
 
 Sk.misceval.unpauseTimer = function () {
     Sk.execPaused = Date.now() - Sk.execPaused;
+    Sk.execPausedAmount += Sk.execPaused;
 };
 Sk.exportSymbol("Sk.misceval.unpauseTimer", Sk.misceval.unpauseTimer);
 

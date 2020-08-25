@@ -44,7 +44,7 @@ function buildPythonFile(ret, fullname, contents) {
     }
     internalName = internalName.replace(/\.py$/, ".js");
     contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
-    //contents = minify(contents).code;
+    contents = minify(contents).code;
     ret[internalName] = contents;
 }
 

@@ -248,6 +248,7 @@ Sk.exportSymbol("Sk.timeoutMsg", Sk.timeoutMsg);
  * @type {number}
  */
 Sk.execPaused = 0;
+Sk.execPausedAmount = 0;
 
 /*
  *  Hard execution timeout, throws an error. Set to null to disable

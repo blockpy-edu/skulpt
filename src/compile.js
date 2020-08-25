@@ -232,8 +232,9 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
     var output = "";
     if (Sk.execLimit !== null || Sk.yieldLimit !== null && this.u.canSuspend) {
         output += "var $dateNow = Date.now();";
+        //output += "console.log($dateNow, Sk.execStart, Sk.execPaused, Sk.execPausedAmount, $dateNow-Sk.execStart-Sk.execPausedAmount, Sk.execLimit, );";
         if (Sk.execLimit !== null) {
-            output += ("if (Sk.execLimit !== null && $dateNow - Sk.execStart - Sk.execPaused > Sk.execLimit){" +
+            output += ("if (Sk.execLimit !== null && $dateNow - Sk.execStart - Sk.execPausedAmount > Sk.execLimit){" +
                 "throw new Sk.builtin.TimeoutError(Sk.timeoutMsg())}");
         }
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
@@ -576,7 +577,7 @@ Compiler.prototype.ccall = function (e) {
         // so we should probably add self to the mangling
         // TODO: feel free to ignore the above
         out("if (typeof self === \"undefined\" || self.toString().indexOf(\"Window\") > 0) { throw new Sk.builtin.RuntimeError(\"super(): no arguments\") };");
-        positionalArgs = "[$gbl.__class__,self]";
+        positionalArgs = "[__class__,self]";
     }
     out("$ret = (", func, ".tp$call)?", func, ".tp$call(", positionalArgs, ",", keywordArgs, ") : Sk.misceval.applyOrSuspend(", func, ",undefined,undefined,", keywordArgs, ",", positionalArgs, ");");
 
@@ -1969,7 +1970,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
 
     // inject __class__ cell when running python3
     if (Sk.__future__.python3 && class_for_super) {
-        this.u.varDeclsCode += "$gbl.__class__=$gbl." + class_for_super.v + ";";
+        this.u.varDeclsCode += "let __class__=$gbl." + class_for_super.v + ";";
     }
 
     // finally, set up the block switch that the jump code expects

@@ -609,3 +609,7 @@ Sk.builtin.type.$best_base = function (bases) {
     }
     return base;
 };
+
+Sk.builtin.type.prototype.__class_getitem__ = function(self, key) {
+    return self;
+};

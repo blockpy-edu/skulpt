@@ -297,8 +297,10 @@ var $builtinmodule = function (name) {
                 this._frames = [];
                 this._frameCount = 0;
 
+                Sk.misceval.pauseTimer();
                 return new Promise(function (resolve) {
                     animationFrame(function paint() {
+                        Sk.misceval.unpauseTimer();
                         for (i = 0; i < frames.length; i++) {
                             if (frames[i]) {
                                 frames[i]();

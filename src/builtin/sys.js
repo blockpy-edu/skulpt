@@ -53,6 +53,7 @@ var $builtinmodule = function (name) {
     sys.resetTimeout = new Sk.builtin.func(function () {
         Sk.execStart = new Date();
         Sk.execPaused = 0;
+        Sk.execPausedAmount = 0;
     });
 
     sys.getYieldLimit = new Sk.builtin.func(function () {
