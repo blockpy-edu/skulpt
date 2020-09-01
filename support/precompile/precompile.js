@@ -3,7 +3,9 @@
 
 const program = require("commander");
 
-program.parse(process.argv);
+program
+    .option("-m, --minify", "minify the resulting code")
+    .parse(process.argv);
 
 if (program.args.length !== 3) {
     console.log(chalk.red("error: must specify output directory, input directory, and module name"));
@@ -26,7 +28,7 @@ const path = require("path");
 const minify = require("babel-minify");
 const beautify = require("js-beautify");
 
-function buildPythonFile(ret, fullname, contents) {
+function buildPythonFile(ret, fullname, contents, shouldMinify) {
     var internalName = fullname;
     while (internalName.startsWith(SOURCE_DIR)) {
         internalName = internalName.slice(SOURCE_DIR.length);
@@ -44,7 +46,9 @@ function buildPythonFile(ret, fullname, contents) {
     }
     internalName = internalName.replace(/\.py$/, ".js");
     contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
-    contents = minify(contents).code;
+    if (shouldMinify) {
+        contents = minify(contents).code;
+    }
     ret[internalName] = contents;
 }
 
@@ -65,7 +69,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                     if (exts.includes(ext)) {
                         let contents = fs.readFileSync(fullname, "utf8");
                         if (ext === ".py") {
-                            buildPythonFile(ret, fullname, contents);
+                            buildPythonFile(ret, fullname, contents, minifyjs);
                         }
                     }
                 }
@@ -75,7 +79,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
 }
 
 var result = {};
-processDirectories([SOURCE_DIR+MODULE_NAME], true, ".py", result, true, []);
+processDirectories([SOURCE_DIR+MODULE_NAME], true, ".py", result, program.minify, []);
 let output = [];
 for (let filename in result) {
     let contents = result[filename];
