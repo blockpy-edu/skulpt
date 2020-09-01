@@ -1,15 +1,6 @@
 var $builtinmodule = function (name) {
     var mod = {__name__: new Sk.builtin.str("_ast")};
 
-    function mangleAppropriately(name) {
-        switch (name) {
-            case "name":
-                return "name_$rn$";
-            default:
-                return name;
-        }
-    }
-
     /**
      * Consumes an AST Node (JS version). Return a list of tuples of
      * ``(fieldname, value)`` for each field in ``node._fields`` that is
@@ -349,7 +340,7 @@ var $builtinmodule = function (name) {
                     } else {
                         value = convertValue(value);
                     }
-                    field = mangleAppropriately(field);
+                    //field = mangleAppropriately(field);
                     Sk.abstr.sattr(self, new Sk.builtin.str(field), value, true);
                     // TODO: Figure out why name is getting manged, and make it stop!
                     self._fields.push(new Sk.builtin.tuple([new Sk.builtin.str(field), value]));
