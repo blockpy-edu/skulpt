@@ -528,7 +528,16 @@ Sk.builtin.isinstance = function isinstance(obj, type) {
 
     // Normal case
     if (!(type instanceof Sk.builtin.tuple)) {
-        return obj.ob$type.$isSubType(type) ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
+        // Overridden __class__
+        var objType;
+        var __class__ = obj.tp$getattr(Sk.builtin.str.$class);
+        if (__class__ !== undefined) {
+            objType = __class__;
+        } else {
+            objType = obj.ob$type;
+        }
+
+        return objType.$isSubType(type) ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
     }
     // Handle tuple type argument
     for (let i = 0; i < type.v.length; ++i) {
