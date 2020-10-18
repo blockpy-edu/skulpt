@@ -8,6 +8,21 @@ Sk.sysmodules = new Sk.builtin.dict([]);
 Sk.realsyspath = undefined;
 
 /**
+ * Retrieves sysmodules, going through any artificial sys modules that we may have.
+ * @returns {Object}
+ */
+Sk.getSysModulesPolitely = function() {
+    let sysmodules = Sk.sysmodules;
+    try {
+        let sys = sysmodules.mp$subscript(new Sk.builtin.str("sys"));
+        if (sys != undefined) {
+            sysmodules = sys.tp$getattr(new Sk.builtin.str("modules"));
+        }
+    } catch (x) {}
+    return sysmodules;
+}
+
+/**
  * @param {string} name to look for
  * @param {string} ext extension to use (.py or .js)
  * @param {Object=} searchPath an iterable set of path strings
@@ -167,13 +182,7 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
         topLevelModuleToReturn = Sk.importModuleInternal_(parentModName, dumpJS, undefined, undefined, relativeToPackage, returnUndefinedOnTopLevelNotFound, canSuspend);
     }
 
-    let sysmodules = Sk.sysmodules;
-    try {
-        let sys = sysmodules.mp$subscript(new Sk.builtin.str("sys"));
-        if (sys != undefined) {
-            sysmodules = sys.tp$getattr(new Sk.builtin.str("modules"));
-        }
-    } catch (x) {}
+    let sysmodules = Sk.getSysModulesPolitely();
 
     ret = Sk.misceval.chain(topLevelModuleToReturn, function (topLevelModuleToReturn_) {
         topLevelModuleToReturn = topLevelModuleToReturn_;
@@ -532,7 +541,9 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
             var leafModule;
             var importChain;
 
-            leafModule = Sk.sysmodules.mp$subscript(
+            let sysmodules = Sk.getSysModulesPolitely();
+
+            leafModule = sysmodules.mp$subscript(
                 new Sk.builtin.str((relativeToPackageName || "") +
                     ((relativeToPackageName && name) ? "." : "") +
                     name));

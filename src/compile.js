@@ -110,19 +110,16 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         lineno = ast.lineno;
         col_offset = ast.col_offset;
         sourceLine = this.getSourceLine(lineno);
-        /*out("\n//\n// line ", lineno, ":\n// ", sourceLine, "\n// ");
-        for (i = 0; i < col_offset; ++i) {
-            out(" ");
-        }
-        out("^\n//\n");*/
-
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         out("\n$currLineNo=Sk.currLineNo=", lineno, ";$currColNo=Sk.currColNo=", col_offset, ";");
-        out("Sk.currFilename='", this.filename, "';$currSource=", JSON.stringify(sourceLine), ";");
+        // TODO: Make filename a module-global, and update it via that quickly.
+        out("$currFilename=Sk.currFilename='", this.filename, "';$currSource=", JSON.stringify(sourceLine), ";");
+        let isDocstring = !!(ast.constructor === Sk.astnodes.Expr &&
+                             ast.value.constructor === Sk.astnodes.Str);
         // Do not trace the standard library
         if (shouldStep && (!this.filename ||
             !this.filename.startsWith("src/lib/"))) {
-            out("Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc," + lineno + "," + col_offset + "," + JSON.stringify(this.filename) + ");\n");
+            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc,${lineno}, ${col_offset}, $currFilename, ${isDocstring});\n`);
         }
     }
 };
@@ -1054,7 +1051,7 @@ Compiler.prototype.outputLocals = function (unit) {
     for (i = 0; unit.argnames && i < unit.argnames.length; ++i) {
         have[unit.argnames[i]] = true;
     }
-    unit.localnames.sort();
+    //unit.localnames.sort();
     output = [];
     for (i = 0; i < unit.localnames.length; ++i) {
         name = unit.localnames[i];
@@ -1817,10 +1814,10 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
             funcArgs.push("$kwa");
             this.u.tempsToSave.push("$kwa");
         }
-        for (i = 0; args && i < args.args.length; ++i) {
+        for (i = 0; args && i < args.args.length; i++) {
             funcArgs.push(this.nameop(args.args[i].arg, Sk.astnodes.Param));
         }
-        for (i = 0; args && args.kwonlyargs && i < args.kwonlyargs.length; ++i) {
+        for (i = 0; args && args.kwonlyargs && i < args.kwonlyargs.length; i++) {
             funcArgs.push(this.nameop(args.kwonlyargs[i].arg, Sk.astnodes.Param));
         }
         if (vararg) {
@@ -1985,13 +1982,6 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     this.u.switchCode += "switch($blk){";
     this.u.suffixCode = "}" + this.handleTraceback(true, coname.v);
     this.u.suffixCode += "});";
-    /*this.u.suffixCode = ("} }catch(err){ "+
-                         "if (err instanceof Sk.builtin.TimeoutError) {"+
-                         "Sk.execStart = Date.now();Sk.execPaused=0"+
-                         "} if (!(err instanceof Sk.builtin.BaseException)) {"+
-                         "err = new Sk.builtin.ExternalError(err);" +
-                         "} err.traceback.push({lineno: $currLineNo, colno: $currColNo, filename: '"+this.filename+"'});"+
-                         "if ($exc.length>0) { $err = err; $blk=$exc.pop(); continue; } else { throw err; }}");*/
 
 
     //
@@ -2539,6 +2529,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                 case Sk.astnodes.Load:
                 case Sk.astnodes.Param:
                     // Need to check that it is bound!
+                    // out("Sk.misceval.checkUnbound("+mangled+", '"+mangled+"');");
                     out("if (", mangled, " === undefined) { throw new Sk.builtin.UnboundLocalError('local variable \\\'", mangled, "\\\' referenced before assignment'); }\n");
                     return mangled;
                 case Sk.astnodes.Store:

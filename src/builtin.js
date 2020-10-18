@@ -1130,32 +1130,41 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
         Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
         var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
         var pyName = new Sk.builtin.str(name);
-        var sysModules = Sk.sysmodules.mp$subscript(new Sk.builtin.str("sys"));//Sk.getCurrentSysModules();
-        var modname = name;
-        var caughtError = null;
-        try {
-            Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
-        } catch (e) {
-            //console.log("SYSTEMATIC ERROR");
-            caughtError = e;
+        var loadModule = function() {
+            var sysModules = Sk.sysmodules.mp$subscript(Sk.builtin.str.$sys);
+            var modname = name;
+            var caughtError = null;
+            const res = Sk.misceval.tryCatch(() => {
+                Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
+            }, (e) => {
+                console.error("SYSTEMATIC ERROR", e);
+                caughtError = e;
+            });
+            Sk.misceval.chain(res, function() {
+                Sk.globals = backupGlobals;
+                // Only try to delete if we succeeded in creating it!
+                if (Sk.sysmodules.mp$lookup(pyName)) {
+                    Sk.sysmodules.del$item(pyName);
+                }
+                for (var key in new_globals_copy) {
+                    if (new_globals_copy.hasOwnProperty(key)) {
+                        var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
+                        Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
+                    }
+                }
+                Sk.retainGlobals = backupRG;
+                if (caughtError !== null) {
+                    throw caughtError;
+                }
+                resolve();
+            });
+        };
+        if (!Sk.sysmodules.sq$contains(Sk.builtin.str.$sys)) {
+            Sk.misceval.chain(Sk.importModule("sys", false, true),
+                              loadModule);
+        } else {
+            loadModule();
         }
-        Sk.globals = backupGlobals;
-        // Only try to delete if we succeeded in creating it!
-        if (Sk.sysmodules.mp$lookup(pyName)) {
-            Sk.sysmodules.del$item(pyName);
-            //Sk.sysmodules.mp$del_subscript(pyName);
-        }
-        for (var key in new_globals_copy) {
-            if (new_globals_copy.hasOwnProperty(key)) {
-                var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
-                Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
-            }
-        }
-        Sk.retainGlobals = backupRG;
-        if (caughtError !== null) {
-            throw caughtError;
-        }
-        resolve();
     });
 
     return Sk.misceval.promiseToSuspension(prom);
