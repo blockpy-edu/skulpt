@@ -53,6 +53,7 @@ Sk.builtin.str.$setitem = new Sk.builtin.str("__setitem__");
 Sk.builtin.str.$str = new Sk.builtin.str("__str__");
 Sk.builtin.str.$trunc = new Sk.builtin.str("__trunc__");
 Sk.builtin.str.$write = new Sk.builtin.str("write");
+Sk.builtin.str.$sys = new Sk.builtin.str("sys");
 
 Sk.misceval.op2method_ = {
     "Eq": Sk.builtin.str.$eq,
