@@ -1,17 +1,29 @@
-const fs = require('fs');
-const path = require('path');
-const minify = require('babel-minify');
-const beautify = require('js-beautify');
+const fs = require("fs");
+const path = require("path");
+const minify = require("babel-minify");
+const beautify = require("js-beautify");
 
 
-const reqskulpt = require('../run/require-skulpt').requireSkulpt;
+const reqskulpt = require("../run/require-skulpt").requireSkulpt;
 var skulpt = reqskulpt();
-//Sk.configure({__future__: Sk.python3});
+if (skulpt === null) {
+    process.exit(1);
+}
+Sk.configure({__future__: Sk.python3});
 
-var WHITE_LIST = ['tifa.py', 'sandbox.py', 'stretchy_tree_matching.py'];
+var ALLOW_LIST = ["src/lib/posixpath.py", "src/lib/traceback.py", "src/lib/io.py", "cisc108/", "unittest/"];
 function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);
+    });
+}
+function inAllowList(filename, extension) {
+    return ALLOW_LIST.some(function (entry) {
+        if (entry.endsWith('/')) {
+            return filename.startsWith('src/lib/'+entry);
+        } else {
+            return filename.endsWith(entry);
+        }
     });
 }
 
@@ -40,30 +52,26 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
         let files = fs.readdirSync(dir);
 
         files.forEach((file) => {
-            let fullname = dir + '/' + file;
+            let fullname = dir + "/" + file;
 
             if (!excludes.includes(fullname)) {
-                let stat = fs.statSync(fullname)
+                let stat = fs.statSync(fullname);
 
                 if (recursive && stat.isDirectory()) {
                     processDirectories([fullname], recursive, exts, ret, minifyjs, excludes);
                 } else if (stat.isFile()) {
                     let ext = path.extname(file);
                     if (exts.includes(ext)) {
-                        let contents = fs.readFileSync(fullname, 'utf8');
+                        let contents = fs.readFileSync(fullname, "utf8");
                         if (minifyjs && (ext === ".js")) {
                             let result = minify(contents);
                             contents = result.code;
-                        }
                         // AOT compilation
-
-                        else if (ext === ".py" &&
-                                   //endsWithAny(fullname, WHITE_LIST) &&
-                                   fullname.startsWith("src/lib/pedal/")) {
-                            return;
+                        } else if (ext === ".py" && //endsWithAny(fullname, ALLOW_LIST)
+                                   inAllowList(fullname, ext)) {
                             var co;
                             try {
-                                co = Sk.compile(contents, fullname, "exec", true, false);
+                                co = Sk.compile(contents, fullname, "exec", true, true);
                                 console.log("Compiled: "+fullname);
                             } catch (e) {
                                 console.log("Failed to compile: "+fullname);
@@ -74,7 +82,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             fullname = fullname.replace(/\.py$/, ".js");
                             contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
                             //fs.writeFileSync("dist/parts/"+file+".js", beautify(contents), 'utf8');
-                            //contents = minify(contents).code;
+                            contents = minify(contents).code;
                             //fs.writeFileSync("dist/parts/"+file+".minified.js", contents, 'utf8');
                             //fs.writeFileSync("dist/parts/"+file+".minified.beautified.js", beautify(contents), 'utf8');
                         }
@@ -100,7 +108,7 @@ function buildJsonFile(name, dirs, exts, outfile, options) {
     processDirectories(dirs, recursive, exts, ret, minifyjs, excludes);
 
     let contents = "Sk." + name + "=" + JSON.stringify(ret);
-    fs.writeFileSync(outfile, contents, 'utf8');
+    fs.writeFileSync(outfile, contents, "utf8");
     console.log("Updated " + outfile + ".");
 }
 
@@ -121,15 +129,15 @@ if (process.argv.includes("internal")) {
         fs.mkdirSync("dist/parts/");
     }
 
-    buildJsonFile("builtinFiles", ["src/builtin", "src/lib"], [".js", ".py"], "dist/skulpt-stdlib.js", opts)
+    buildJsonFile("builtinFiles", ["src/builtin", "src/lib"], [".js", ".py"], "dist/skulpt-stdlib.js", opts);
 } else if (process.argv.includes("unit2")) {
     if (!fs.existsSync("support/tmp")) {
-	fs.mkdirSync("support/tmp");
+        fs.mkdirSync("support/tmp");
     }
     buildJsonFile("unit2", ["test/unit"], [".py"], "support/tmp/unit2.js", { recursive: true });
 } else if (process.argv.includes("unit3")) {
     if (!fs.existsSync("support/tmp")) {
-	fs.mkdirSync("support/tmp");
+        fs.mkdirSync("support/tmp");
     }
     buildJsonFile("unit3", ["test/unit3"], [".py"], "support/tmp/unit3.js");
 }

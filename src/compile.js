@@ -111,15 +111,18 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         col_offset = ast.col_offset;
         sourceLine = this.getSourceLine(lineno);
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
-        out("\n$currLineNo=Sk.currLineNo=", lineno, ";$currColNo=Sk.currColNo=", col_offset, ";");
+        out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
         // TODO: Make filename a module-global, and update it via that quickly.
-        out("$currFilename=Sk.currFilename='", this.filename, "';$currSource=", JSON.stringify(sourceLine), ";");
+        // JSON.stringify(sourceLine)
+        let chompedLine = sourceLine;
+        if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
+        out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
         let isDocstring = !!(ast.constructor === Sk.astnodes.Expr &&
                              ast.value.constructor === Sk.astnodes.Str);
         // Do not trace the standard library
         if (shouldStep && (!this.filename ||
             !this.filename.startsWith("src/lib/"))) {
-            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc,${lineno}, ${col_offset}, $currFilename, ${isDocstring});\n`);
+            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc,${lineno}, ${col_offset}, $fname, ${isDocstring});\n`);
         }
     }
 };
@@ -2530,7 +2533,8 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                 case Sk.astnodes.Param:
                     // Need to check that it is bound!
                     // out("Sk.misceval.checkUnbound("+mangled+", '"+mangled+"');");
-                    out("if (", mangled, " === undefined) { throw new Sk.builtin.UnboundLocalError('local variable \\\'", mangled, "\\\' referenced before assignment'); }\n");
+                    //out("if (", mangled, " === undefined) { throw new Sk.builtin.UnboundLocalError('local variable \\\'", mangled, "\\\' referenced before assignment'); }\n");
+                    out("if (", mangled, " === undefined) { $ule('", mangled, "') }\n");
                     return mangled;
                 case Sk.astnodes.Store:
                     out(mangled, "=", dataToStore, ";");
@@ -2798,7 +2802,7 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     // Restore the global __future__ flags
     Sk.__future__ = savedFlags;
 
-    var shortCutConstants = "const $fname='" + filename + "',$moduleConstants={};";
+    var shortCutConstants = "const $fname='" + filename + "',$moduleConstants={},$ule=Sk.misceval.errorUL;";
     var constantDefinitions = [];
     for (var constant in c.consts) {
         if (c.consts.hasOwnProperty(constant)) {

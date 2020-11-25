@@ -154,7 +154,7 @@ Parser.prototype.addtoken = function (type, value, context) {
             //print("WAA");
             this.pop();
             if (this.stack.length === 0) {
-                throw new Sk.builtin.SyntaxError("too much input", this.filename);
+                throw new Sk.builtin.SyntaxError("too much input", this.filename, "", context);
             }
         } else {
             // no transition
@@ -305,6 +305,7 @@ Sk.parse = function parse(filename, input) {
 
     var endmarker_seen = false;
     var parser = makeParser(filename);
+    var totalLines = 0;
 
     /**
      * takes a string splits it on '\n' and returns a function that returns
@@ -315,6 +316,7 @@ Sk.parse = function parse(filename, input) {
         let lines = input.split("\n");
         Sk.parse.linecache[filename] = lines.slice();
         lines = lines.reverse();
+        totalLines = lines.length;
 
         return function () {
             if (lines.length === 0) {
@@ -364,7 +366,7 @@ Sk.parse = function parse(filename, input) {
     }, filename);
 
     if (!endmarker_seen) {
-        throw new Sk.builtin.SyntaxError("incomplete input", this.filename);
+        throw new Sk.builtin.SyntaxError("incomplete input", this.filename, "", [0, 0, totalLines]);
     }
 
     /**

@@ -244,7 +244,7 @@ Sk.builtin.SyntaxError = function (...args) {
     this.lineno = arguments.length >= 3 ? Sk.ffi.remapToPy(arguments[2]) : Sk.builtin.none.none$;
     this.offset = arguments.length >= 4 ? Sk.ffi.remapToPy(arguments[3]) : Sk.builtin.none.none$;
     try {
-        this.text = Sk.parse.linecache[arguments[1]][arguments[2]-1];
+        this.text = Sk.parse.linecache[arguments[1]][arguments[2]-1] || "";
     } catch (e) {
         this.text = "";
     }

@@ -24,6 +24,7 @@ var $builtinmodule = function (name) {
             self.currentLine = 0;
             self.pos$ = 0;
             Sk.abstr.sattr(self, new Sk.builtin.str("text"), Sk.ffi.remapToPy(self.data$), true);
+            return Sk.builtin.none.none$;
         });
 
 

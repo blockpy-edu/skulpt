@@ -409,11 +409,12 @@ Sk.builtin.chr = function chr(x) {
     }
     x = Sk.builtin.asnum$(x);
 
-    if (x < 0 || x > 255) {
-        throw new Sk.builtin.ValueError("chr() arg not in range(256)");
+    // Should be sys.maxunicode
+    if (x < 0) {
+        throw new Sk.builtin.ValueError("chr() arg not in range(0x110000)");
     }
 
-    return new Sk.builtin.str(String.fromCharCode(x));
+    return new Sk.builtin.str(String.fromCodePoint(x));
 };
 
 Sk.builtin.unichr = function unichr(x) {
@@ -1102,8 +1103,44 @@ var extractDict = function (obj) {
     return ret;
 };
 
-Sk.builtin.exec = function execf(pythonCode, new_globals) {
+var mergeDict = function(obj1, obj2) {
+    var k, v, kAsJs, iter;
+    if (obj2 === undefined) {
+        return obj1;
+    }
+    for (iter = obj2.tp$iter(), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+        v = obj2.mp$subscript(k);
+        if (v === undefined) {
+            v = null;
+        }
+        kAsJs = Sk.ffi.remapToJs(k);
+        // todo; assert that this is a reasonble lhs?
+        obj1[Sk.fixReserved(kAsJs)] = v;
+    }
+    return obj1;
+}
+
+Sk.builtin.exec = function execf(pythonCode, new_globals, newLocals) {
     Sk.builtin.pyCheckArgs("exec", arguments, 1, 2);
+    /*
+    var filename = "<string>";
+    if (pythonCode instanceof Sk.builtin.code) {
+        filename = pythonCode.filename;
+        pythonCode = pythonCode.source;
+    } else {
+        pythonCode = Sk.ffi.remapToJs(pythonCode);
+    }
+    let code = Sk.compile(pythonCode, filename, "exec", true, true);
+    const tmp = Sk.globals;
+    globals = new_globals || tmp;
+    return Sk.misceval.chain(
+        code,
+        (co) => eval(co.code)(globals),
+        (new_locals) => {
+            Sk.globals = tmp;
+            return new_locals;
+        }
+    );*/
 
     var prom = new Promise(function (resolve, reject) {
         var backupRG = Sk.retainGlobals;
@@ -1128,6 +1165,9 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
         var backupGlobals = Sk.globals;
         //console.log(Sk.globals);
         Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
+        //console.log(Sk.globals, new_globals);
+        //mergeDict(Sk.globals, new_globals);
+
         var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
         var pyName = new Sk.builtin.str(name);
         var loadModule = function() {
@@ -1136,6 +1176,7 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
             var caughtError = null;
             const res = Sk.misceval.tryCatch(() => {
                 Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
+                //console.log(Sk.sysmodules.mp$subscript(pyName).$js);
             }, (e) => {
                 console.error("SYSTEMATIC ERROR", e);
                 caughtError = e;
@@ -1150,6 +1191,7 @@ Sk.builtin.exec = function execf(pythonCode, new_globals) {
                     if (new_globals_copy.hasOwnProperty(key)) {
                         var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
                         Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
+                        //Sk.builtin.dict.prototype.mp$ass_subscript.call(Sk.globals, pykey, Sk.globals[key]);
                     }
                 }
                 Sk.retainGlobals = backupRG;

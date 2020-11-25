@@ -628,13 +628,22 @@ Sk.exportSymbol("Sk.misceval.print_", Sk.misceval.print_);
  * Sk.misceval.loadname("foo", Sk.globals);
  */
 Sk.misceval.loadname = function (name, other) {
-    var bi;
+    var builtinModuleVersion, bi;
     var v = other[name];
     if (v !== undefined) {
         if (typeof v === "function" && v.sk$object === undefined) {
             return v();
         }
         return v;
+    }
+
+    // Check if we've overridden the builtin via the builtin's module
+    if (other["__builtins__"] !== undefined) {
+        builtinModuleVersion = other["__builtins__"].mp$lookup(new Sk.builtin.str(name));
+        //console.log("Overrode __builtins__", other, name, builtinModuleVersion);
+        if (builtinModuleVersion !== undefined) {
+            return builtinModuleVersion;
+        }
     }
 
     bi = Sk.builtins[name];
@@ -1331,6 +1340,6 @@ Sk.misceval.unpauseTimer = function () {
 Sk.exportSymbol("Sk.misceval.unpauseTimer", Sk.misceval.unpauseTimer);
 
 Sk.misceval.errorUL = function (mangled) {
-    return new Sk.builtin.UnboundLocalError("local variable \"" + mangled + "\" referenced before assignment");
+    throw new Sk.builtin.UnboundLocalError("local variable '" + mangled + "' referenced before assignment");
 };
 Sk.exportSymbol("Sk.misceval.errorUL", Sk.misceval.errorUL);

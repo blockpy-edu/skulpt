@@ -24,3 +24,4 @@ Pipfile
 package-lock.json
 *~
 /deleteme.txt
+/delete*.js
