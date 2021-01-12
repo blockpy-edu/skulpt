@@ -222,26 +222,33 @@ var $builtinmodule = function (name) {
         } else if (chart.type === "bar") {
             yAxisBuffer = 5 * Math.max(extents["yMin"].toLocaleString().length,
                 extents["yMax"].toLocaleString().length);
-            chart.xScale = d3.scale.ordinal()
-                .domain([extents["xMin"], extents["xMax"]])
-                .rangeBands([0, chart.width - yAxisBuffer]);
+            chart.xScale = d3.scale.linear()
+                .domain([extents["xMin"], 1+extents["xMax"]])
+                .range([0, chart.width - yAxisBuffer]);
+                //.rangeBands([0, chart.width - yAxisBuffer]);
+            var bins = plots[0]["bins"];
             chart.xAxis = d3.svg.axis()
                 .scale(chart.xScale)
-                .tickFormat(function (d) {
+                /*.tickFormat(function (d) {
                     return d.index;
-                })
+                })*/
                 .orient("bottom");
         }
         // Fix y-axis
-        if (chart.type !== "hist") {
-            chart.yScale = d3.scale.linear()
-                .domain([extents["yMin"], extents["yMax"]])
-                .range([chart.height, 0]);
-        } else {
+        if (chart.type === "hist") {
             chart.yScale = d3.scale.linear()
                 .domain([0, d3.max(histMapper, function (d) {
                     return d.y;
                 })])
+                .range([chart.height, 0]);
+        } else if (chart.type === "bar") {
+            chart.yScale = d3.scale.linear()
+                .domain([Math.min(0, extents["yMin"]),
+                    Math.max(0, extents["yMax"])])
+                .range([chart.height, 0]);
+        } else {
+            chart.yScale = d3.scale.linear()
+                .domain([extents["yMin"], extents["yMax"]])
                 .range([chart.height, 0]);
         }
         chart.yAxis = d3.svg.axis()
@@ -366,6 +373,25 @@ var $builtinmodule = function (name) {
                     .attr("height", function (d) {
                         return chart.height - chart.yScale(d.y);
                     });
+            } else if (plot["type"] === "bar") {
+                chart.canvas.selectAll(".bar")
+                    .data(plot["data"])
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .style("fill", plot["style"]["color"])
+                    .style("stroke", "black")
+                    .attr("x", function (d) {
+                        return chart.xScale(d.x);
+                    })
+                    .attr("width", function (d) {
+                        return chart.xScale(d.x+1) - chart.xScale(d.x);
+                    })
+                    .attr("y", function (d) {
+                        return chart.yScale(d.y);
+                    })
+                    .attr("height", function (d) {
+                        return chart.height - chart.yScale(d.y);
+                    });
             }
         }
 
@@ -451,7 +477,7 @@ var $builtinmodule = function (name) {
     };
     mod.clf = new Sk.builtin.func(clf_f);
 
-    UNSUPPORTED = ["semilogx", "semilogy", "specgram", "stackplot", "stem", "step", "streamplot", "tricontour", "tricontourf", "tripcolor", "triplot", "vlines", "xcorr", "barbs", "cla", "grid", "table", "text", "annotate", "ticklabel_format", "locator_params", "tick_params", "margins", "autoscale", "autumn", "cool", "copper", "flag", "gray", "hot", "hsv", "jet", "pink", "prism", "spring", "summer", "winter", "spectral", "hlines", "loglog", "magnitude_spectrum", "pcolor", "pcolormesh", "phase_spectrum", "pie", "plot_date", "psd", "quiver", "quiverkey", "findobj", "switch_backend", "isinteractive", "ioff", "ion", "pause", "rc", "rc_context", "rcdefaults", "gci", "sci", "xkcd", "figure", "gcf", "get_fignums", "get_figlabels", "get_current_fig_manager", "connect", "disconnect", "close", "savefig", "ginput", "waitforbuttonpress", "figtext", "suptitle", "figimage", "figlegend", "hold", "ishold", "over", "delaxes", "sca", "gca", "subplot", "subplots", "subplot2grid", "twinx", "twiny", "subplots_adjust", "subplot_tool", "tight_layout", "box", "xlim", "ylim", "xscale", "yscale", "xticks", "yticks", "minorticks_on", "minorticks_off", "rgrids", "thetagrids", "plotting", "get_plot_commands", "colors", "colormaps", "_setup_pyplot_info_docstrings", "colorbar", "clim", "set_cmap", "imread", "imsave", "matshow", "polar", "plotfile", "_autogen_docstring", "acorr", "arrow", "axhline", "axhspan", "axvline", "axvspan", "bar", "barh", "broken_barh", "boxplot", "cohere", "clabel", "contour", "contourf", "csd", "errorbar", "eventplot", "fill", "fill_between", "fill_betweenx", "hexbin", "hist2d", "axis"];
+    UNSUPPORTED = ["semilogx", "semilogy", "specgram", "stackplot", "stem", "step", "streamplot", "tricontour", "tricontourf", "tripcolor", "triplot", "vlines", "xcorr", "barbs", "cla", "grid", "table", "text", "annotate", "ticklabel_format", "locator_params", "tick_params", "margins", "autoscale", "autumn", "cool", "copper", "flag", "gray", "hot", "hsv", "jet", "pink", "prism", "spring", "summer", "winter", "spectral", "hlines", "loglog", "magnitude_spectrum", "pcolor", "pcolormesh", "phase_spectrum", "pie", "plot_date", "psd", "quiver", "quiverkey", "findobj", "switch_backend", "isinteractive", "ioff", "ion", "pause", "rc", "rc_context", "rcdefaults", "gci", "sci", "xkcd", "figure", "gcf", "get_fignums", "get_figlabels", "get_current_fig_manager", "connect", "disconnect", "close", "savefig", "ginput", "waitforbuttonpress", "figtext", "suptitle", "figimage", "figlegend", "hold", "ishold", "over", "delaxes", "sca", "gca", "subplot", "subplots", "subplot2grid", "twinx", "twiny", "subplots_adjust", "subplot_tool", "tight_layout", "box", "xlim", "ylim", "xscale", "yscale", "xticks", "yticks", "minorticks_on", "minorticks_off", "rgrids", "thetagrids", "plotting", "get_plot_commands", "colors", "colormaps", "_setup_pyplot_info_docstrings", "colorbar", "clim", "set_cmap", "imread", "imsave", "matshow", "polar", "plotfile", "_autogen_docstring", "acorr", "arrow", "axhline", "axhspan", "axvline", "axvspan",, "broken_barh", "boxplot", "cohere", "clabel", "contour", "contourf", "csd", "errorbar", "eventplot", "fill", "fill_between", "fill_betweenx", "hexbin", "hist2d", "axis"];
     for (var i = 0; i < UNSUPPORTED.length; i += 1) {
         mod[UNSUPPORTED[i]] = new Sk.builtin.func(function () {
             throw new Sk.builtin.NotImplementedError(UNSUPPORTED[i] + " is not yet implemented");
@@ -599,6 +625,67 @@ var $builtinmodule = function (name) {
     scatter_f.co_kwargs = true;
     mod.scatter = new Sk.builtin.func(scatter_f);
 
+    var bar_f = function (kwa) {
+        // Parse arguments
+        Sk.builtin.pyCheckArgs("bar", arguments, 1, Infinity, true, false);
+        args = Array.prototype.slice.call(arguments, 1);
+        kwargs = new Sk.builtins.dict(kwa); // is pretty useless for handling kwargs
+        kwargs = Sk.ffi.remapToJs(kwargs); // create a proper dict
+
+        // Keep a backup of the arguments for checker
+        mod.values.push(args);
+
+        // Parse different argument combinations
+        var xdata = null;
+        var ydata = null;
+        var stylestring = null;
+        if (args.length === 2) {
+            // xdata
+            xdata = Sk.ffi.remapToJs(args[0]);
+            ydata = Sk.ffi.remapToJs(args[1]);
+        } else if (args.length === 3) {
+            // xdata, style
+            xdata = Sk.ffi.remapToJs(args[0]);
+            ydata = Sk.ffi.remapToJs(args[1]);
+            stylestring = Sk.ffi.remapToJs(args[2]);
+        }
+
+        // Zip up the data
+        var actualData = d3.zip(xdata, ydata).map(function (e) {
+            return {"x": e[0], "y": e[1]};
+        });
+
+        // empty canvas from previous plots
+        createChart("bar");
+
+        // Parse formatting, also keep ColorCycler updated
+        var cycle = jsplotlib.rc["axes.color_cycle"];
+        var linestyle = " ", marker = "o",
+            color = cycle[colorCycle % cycle.length];
+        if (stylestring !== null) {
+            var ftm_tuple = jsplotlib._process_plot_format(stylestring);
+            linestyle = ftm_tuple.linestyle;
+            marker = jsplotlib.parse_marker(ftm_tuple.marker);
+            color = ftm_tuple.color;
+        } else {
+            colorCycle += 1;
+        }
+        // Save
+        plots.push({
+            "data": actualData,
+            "bins": xdata.length,
+            "type": "bar",
+            "style": {
+                "linestyle": linestyle,
+                "marker": marker,
+                "color": jsplotlib.color_to_hex(color)
+            }
+        });
+        updateMinMax("x", xdata);
+        updateMinMax("y", ydata);
+    };
+    bar_f.co_kwargs = true;
+    mod.bar = new Sk.builtin.func(bar_f);
 
     return mod;
 };

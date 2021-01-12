@@ -111,17 +111,17 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         col_offset = ast.col_offset;
         sourceLine = this.getSourceLine(lineno);
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
-        out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
-        // TODO: Make filename a module-global, and update it via that quickly.
-        // JSON.stringify(sourceLine)
-        let chompedLine = sourceLine;
-        if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
-        out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
         let isDocstring = !!(ast.constructor === Sk.astnodes.Expr &&
                              ast.value.constructor === Sk.astnodes.Str);
         // Do not trace the standard library
         if (shouldStep && (!this.filename ||
             !this.filename.startsWith("src/lib/"))) {
+            out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
+            // TODO: Make filename a module-global, and update it via that quickly.
+            // JSON.stringify(sourceLine)
+            let chompedLine = sourceLine;
+            if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
+            out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
             out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc,${lineno}, ${col_offset}, $fname, ${isDocstring});\n`);
         }
     }
@@ -234,12 +234,13 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
         output += "var $dateNow = Date.now();";
         //output += "console.log($dateNow, Sk.execStart, Sk.execPaused, Sk.execPausedAmount, $dateNow-Sk.execStart-Sk.execPausedAmount, Sk.execLimit, );";
         if (Sk.execLimit !== null) {
-            output += ("if (Sk.execLimit !== null && $dateNow - Sk.execStart - Sk.execPausedAmount > Sk.execLimit){" +
-                "throw new Sk.builtin.TimeoutError(Sk.timeoutMsg())}");
+            //output += ("if (Sk.execLimit !== null && $dateNow - Sk.execStart - Sk.execPausedAmount > Sk.execLimit){" +
+            //    "throw new Sk.builtin.TimeoutError(Sk.timeoutMsg())}");
+            output += "Sk.misceval.timeoutCheck($dateNow);";
         }
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "if ($dateNow - Sk.lastYield > Sk.yieldLimit) {";
-            output += "var $susp = $saveSuspension({data: {type: 'Sk.yield'}, resume: function() {}}, '" + this.filename + "',$currLineNo,$currColNo, $currSource);";
+            output += "var $susp = $saveSuspension($mys(), $fname,$currLineNo,$currColNo, $currSource);";
             output += "$susp.$blk = $blk;";
             output += "$susp.optional = true;";
             output += "return $susp;";
@@ -823,11 +824,12 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                     this._checkSuspension(e);
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.Load:
-                    out("$ret = ", val, ".tp$getattr(", mname, ", true);");
+                    /*out("$ret = ", val, ".tp$getattr(", mname, ", true);");
                     out("\nif ($ret === undefined) {");
                     out("\nconst error_name =", val, ".sk$type ? \"type object '\" +", val, ".prototype.tp$name + \"'\" : \"'\" + Sk.abstr.typeName(", val, ") + \"' object\";");
                     out("\nthrow new Sk.builtin.AttributeError(error_name + \" has no attribute '\" + ", mname, ".$jsstr() + \"'\");");
-                    out("\n};");
+                    out("\n};");*/
+                    out("$ret=Sk.misceval.loadattr(", val, ", ", mname, ");");
                     this._checkSuspension(e);
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.AugStore:
@@ -1104,19 +1106,21 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
         // Close out function
         ";");
 
-    output += "var $saveSuspension = function($child, $filename, $lineno, $colno, $source) {" +
-        "var susp = new Sk.misceval.Suspension(); susp.child=$child;" +
-        "susp.resume=function(){" + unit.scopename + ".$wakingSuspension=susp; return " + unit.scopename + "(" + (unit.ste.generator ? "$gen" : "") + "); };" +
-        "susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
-        "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;susp.source=$source;" +
-        "susp.optional=susp.child.optional;" +
-        (hasCell ? "susp.$cell=$cell;" : "");
-
     for (i = 0; i < localsToSave.length; i++) {
         t = localsToSave[i];
         localSaveCode.push("\"" + t + "\":" + t);
     }
-    output += "susp.$tmps={" + localSaveCode.join(",") + "};" +
+
+    output += "var $mys = function(){return {data: {type: 'Sk.yield'}, resume: function(){} } };";
+    output += "var $saveSuspension = function($child, $filename, $lineno, $colno, $source) {" +
+        //"var susp = new Sk.misceval.Suspension(); susp.child=$child;" +
+        "var susp = Sk.misceval.injectSusp($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$source,{" + localSaveCode.join(",") + "});"+
+        "susp.resume=function(){" + unit.scopename + ".$wakingSuspension=susp; return " + unit.scopename + "(" + (unit.ste.generator ? "$gen" : "") + "); };" +
+        /*"susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
+        "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;susp.source=$source;" +
+        "susp.optional=susp.child.optional;" +*/
+        (hasCell ? "susp.$cell=$cell;" : "") +
+        //"susp.$tmps={" + localSaveCode.join(",") + "};" +
         "return susp;" +
         "};";
 
@@ -1162,7 +1166,8 @@ Compiler.prototype.outputAllUnits = function () {
                         break;
                     }
                 } else {
-                    ret += "throw new Sk.builtin.SystemError('internal error: unterminated block');";
+                    // Shouldn't really be possible to hit this
+                    //ret += "throw new Sk.builtin.SystemError('internal error: unterminated block');";
                     break;
                 }
             }
@@ -1885,7 +1890,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
-        this.u.varDeclsCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
+        this.u.varDeclsCode += "Sk.misceval.resetYield();";
     }
 
     //
@@ -2253,7 +2258,7 @@ Compiler.prototype.cclass = function (s) {
         this.u.switchCode += "Sk.misceval.startTimer();";
     }
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
-        this.u.switchCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
+        this.u.switchCode += "Sk.misceval.resetYield();";
     }
 
     this.u.switchCode += "while(true){try{";
@@ -2646,10 +2651,11 @@ Compiler.prototype.exitScope = function () {
         mangled = prev.name["$r"]().v;
         mangled = mangled.substring(1, mangled.length - 1);
         // mangled = fixReserved(mangled);
-        out(prev.scopename, ".co_name=new Sk.builtins['str']('", mangled, "');");
+        let mname = this.makeConstant("new Sk.builtin.str('" + mangled + "')");
+        out(prev.scopename, ".co_name="+mname+";");
         if (this.stack.length && this.u.ste.blockType == "class") {
             const classname = this.u.name.v;
-            out(prev.scopename, ".co_qualname=new Sk.builtins['str']('" + classname + "." + mangled + "');");
+            out(prev.scopename, ".co_qualname=new Sk.builtins.str('" + classname + "." + mangled + "');");
         }
     }
     for (var constant in prev.consts) {
@@ -2703,21 +2709,21 @@ Compiler.prototype.cmod = function (mod) {
     this.u.varDeclsCode =
         "var $gbl = $forcegbl || {}, $blk=" + entryBlock +
         ",$exc=[],$loc=$gbl,$cell={},$err=undefined;" +
-        "$loc.__file__=new Sk.builtins.str('" + this.filename +
-        "');var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
+        "$loc.__file__=new Sk.builtins.str($fname);" +
+        "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
 
     if (Sk.yieldLimit !== null && this.u.canSuspend) {
-        this.u.varDeclsCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
+        this.u.varDeclsCode += "Sk.misceval.resetYield();";
     }
 
     this.u.varDeclsCode += "if (" + modf + ".$wakingSuspension!==undefined) { $wakeFromSuspension(); }" +
         "if (Sk.retainGlobals) {" +
         //"    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; }" +
-        "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; $loc.__file__=new Sk.builtins.str('" + this.filename + "');}" +
+        "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; $loc.__file__=new Sk.builtins.str($fname);}" +
         "    else { Sk.globals = $gbl; }" +
         "} else { Sk.globals = $gbl; }";
 

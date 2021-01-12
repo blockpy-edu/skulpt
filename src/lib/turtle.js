@@ -635,6 +635,7 @@ var $builtinmodule = function (name) {
                 return [this.$xcor(), this.$ycor()];
             };
             proto.$position.returnType = function (value) {
+                // TODO: Should actually be a custom Vec2D
                 return new Sk.builtin.tuple([
                     Sk.builtin.float_(value[0]),
                     Sk.builtin.float_(value[1])

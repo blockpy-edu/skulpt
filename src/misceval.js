@@ -1328,6 +1328,13 @@ Sk.misceval.startTimer = function () {
 };
 Sk.exportSymbol("Sk.misceval.startTimer", Sk.misceval.startTimer);
 
+Sk.misceval.resetYield = function() {
+    if (typeof Sk.lastYield === "undefined") {
+        Sk.lastYield = Date.now();
+    }
+};
+Sk.exportSymbol("Sk.misceval.resetYield", Sk.misceval.resetYield);
+
 Sk.misceval.pauseTimer = function () {
     Sk.execPaused = Date.now();
 };
@@ -1339,7 +1346,57 @@ Sk.misceval.unpauseTimer = function () {
 };
 Sk.exportSymbol("Sk.misceval.unpauseTimer", Sk.misceval.unpauseTimer);
 
+Sk.misceval.timeoutCheck = function(d) {
+    if (Sk.execLimit !== null && d - Sk.execStart - Sk.execPausedAmount > Sk.execLimit) {
+        let shouldContinue = null;
+        if (Sk.timeoutHandler) {
+            Sk.misceval.pauseTimer();
+            shouldContinue = Sk.timeoutHandler(d - Sk.execStart - Sk.execPausedAmount, Sk.execLimit);
+            Sk.misceval.unpauseTimer();
+        }
+        if (!shouldContinue) {
+            throw new Sk.builtin.TimeoutError(Sk.timeoutMsg());
+        }
+    }
+};
+Sk.exportSymbol("Sk.misceval.timeoutCheck", Sk.misceval.timeoutCheck);
+
+Sk.misceval.injectSusp = function($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$source,$tmps) {
+    var susp = new Sk.misceval.Suspension();
+    susp.child=$child;
+    susp.data=susp.child.data;
+    susp.$blk=$blk;
+    susp.$loc=$loc;
+    susp.$gbl=$gbl;
+    susp.$exc=$exc;
+    susp.$err=$err;
+    susp.$postfinally=$postfinally;
+    susp.$filename=$filename;
+    susp.$lineno=$lineno;
+    susp.$colno=$colno;
+    susp.source=$source;
+    susp.optional=susp.child.optional;
+    susp.$tmps=$tmps;
+    return susp;
+};
+Sk.exportSymbol("Sk.misceval.injectSusp", Sk.misceval.injectSusp);
+
 Sk.misceval.errorUL = function (mangled) {
     throw new Sk.builtin.UnboundLocalError("local variable '" + mangled + "' referenced before assignment");
 };
 Sk.exportSymbol("Sk.misceval.errorUL", Sk.misceval.errorUL);
+
+Sk.misceval.loadattr = function(val, mname) {
+    $ret = val.tp$getattr(mname, true);
+    if ($ret === undefined) {
+        const error_name = val.sk$type ? "type object '"+val.prototype.tp$name+"\'" : "'"+ Sk.abstr.typeName(val) +"' object";
+        throw new Sk.builtin.AttributeError(error_name+" has no attribute '"+mname.$jsstr()+"'");
+    }
+    return $ret;
+/*out("$ret = ", val, ".tp$getattr(", mname, ", true);");
+                    out("\nif ($ret === undefined) {");
+                    out("\nconst error_name =", val, ".sk$type ? \"type object '\" +", val, ".prototype.tp$name + \"'\" : \"'\" + Sk.abstr.typeName(", val, ") + \"' object\";");
+                    out("\nthrow new Sk.builtin.AttributeError(error_name + \" has no attribute '\" + ", mname, ".$jsstr() + \"'\");");
+                    out("\n};");*/
+};
+Sk.exportSymbol("Sk.misceval.loadattr", Sk.misceval.loadattr);
