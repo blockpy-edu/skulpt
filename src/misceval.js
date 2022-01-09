@@ -638,9 +638,11 @@ Sk.misceval.loadname = function (name, other) {
     }
 
     // Check if we've overridden the builtin via the builtin's module
+    //console.log("MISCEVAL", other, other["__builtins__"], name);
+    //console.log(Object.keys(other));
+    //console.log("CONSIDERING LOADING", name, Object.keys(other), Object.keys(Sk.globals), Sk.globals === other);
     if (other["__builtins__"] !== undefined) {
         builtinModuleVersion = other["__builtins__"].mp$lookup(new Sk.builtin.str(name));
-        //console.log("Overrode __builtins__", other, name, builtinModuleVersion);
         if (builtinModuleVersion !== undefined) {
             return builtinModuleVersion;
         }

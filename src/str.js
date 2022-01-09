@@ -375,11 +375,15 @@ Sk.builtin.str.methods.split = function (self, sep, maxsplit) {
 Sk.builtin.str.methods.rsplit = function (self, sep, maxsplit) {
     var allSplit = genericsSplit(self, sep, undefined);
     if (maxsplit !== undefined) {
+        // TODO: Replace with better skulpt implementation
         if (!Sk.builtin.checkInt(maxsplit)) {
             throw new Sk.builtin.TypeError("an integer is required");
         }
-        // TODO
-        return allSplit;
+        const splitEnds = allSplit.v.slice(allSplit.v.length-maxsplit.v);
+        const pieces = allSplit.v.slice(0, allSplit.v.length-maxsplit.v).map(s => s.v).join(sep.v);
+        const unsplitEnd = new Sk.builtin.str(pieces);
+        splitEnds.unshift(unsplitEnd);
+        return new Sk.builtin.list(splitEnds);
     } else {
         return allSplit;
     }
@@ -1699,6 +1703,7 @@ var reservedWords_ = {
     watch: true,
     length: true,
     name: true,
+    Date: true
 };
 
 function fixReserved(name) {

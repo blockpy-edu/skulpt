@@ -37,6 +37,7 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
                 }
             }
         },
+        tp$setattr: Sk.generic.setAttr,
         $r: function () {
             let get = (s) => {
                 let v = this.tp$getattr(new Sk.builtin.str(s));

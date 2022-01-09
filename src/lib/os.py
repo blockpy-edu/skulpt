@@ -4,4 +4,6 @@ import posixpath as path
 
 sys.modules['os.path'] = path
 
+environ = {}
+
 # raise NotImplementedError("os is not yet implemented in Skulpt")

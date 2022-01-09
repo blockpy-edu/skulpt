@@ -23,6 +23,7 @@ Sk.builtin.str.$doc = new Sk.builtin.str("__doc__");
 Sk.builtin.str.$enter = new Sk.builtin.str("__enter__");
 Sk.builtin.str.$eq = new Sk.builtin.str("__eq__");
 Sk.builtin.str.$exit = new Sk.builtin.str("__exit__");
+Sk.builtin.str.$import = new Sk.builtin.str("__import__");
 Sk.builtin.str.$index = new Sk.builtin.str("__index__");
 Sk.builtin.str.$init = new Sk.builtin.str("__init__");
 Sk.builtin.str.$int_ = new Sk.builtin.str("__int__");

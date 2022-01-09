@@ -26,6 +26,7 @@ Sk.builtin.BaseException = Sk.abstr.buildNativeClass("BaseException", {
         this.traceback = [];
         // TODO: Hack, this exception isn't guaranteed to be thrown!
         this.err = Sk.err;
+        this.feedback = Sk.builtin.none.none$;
         this.__cause__ = Sk.builtin.none.none$;
         this.__context__ = Sk.builtin.none.none$;
         this.__suppress_context__ = Sk.builtin.none.none$;
@@ -85,6 +86,10 @@ Sk.builtin.BaseException = Sk.abstr.buildNativeClass("BaseException", {
         __cause__: {
             $get: function () { return this.__cause__; },
             $set: function(v) { this.__cause__ = v; }
+        },
+        feedback: {
+            $get: function () { return this.feedback; },
+            $set: function(v) { this.feedback = v; }
         },
         __context__: {
             $get: function () { return this.__context__; },

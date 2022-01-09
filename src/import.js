@@ -330,7 +330,8 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
                 module["$d"]["__path__"] = new Sk.builtin.tuple([new Sk.builtin.str(co.packagePath)]);
             }
 
-            return modscope(module["$d"]);
+            let r = modscope(module["$d"]);
+            return r;
 
         }, function (modlocs) {
             var i;
@@ -451,9 +452,18 @@ Sk.importBuiltinWithBody = function (name, dumpJS, body, canSuspend) {
     return Sk.importModuleInternal_(name, dumpJS, "__builtin__." + name, body, undefined, false, canSuspend);
 };
 
-Sk.builtin.__import__ = function (name, globals, locals, fromlist, level) {
+Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyword=false) {
     //print("Importing: ", JSON.stringify(name), JSON.stringify(fromlist), level);
     //if (name == "") { debugger; }
+
+    // TODO: Need to check if there is a builtins with the name __import__
+    if (askeyword && Sk.globals["__builtins__"] !== undefined) {
+        builtinModuleVersion = Sk.globals["__builtins__"].mp$lookup(Sk.builtin.str.$import);
+        //console.log("Overrode __builtins__", name, builtinModuleVersion);
+        if (builtinModuleVersion !== undefined) {
+            return Sk.misceval.callsimOrSuspend(builtinModuleVersion, new Sk.builtin.str(name), globals, locals, Sk.ffi.remapToPy(fromlist), Sk.ffi.remapToPy(level));
+        }
+    }
 
     // Save the Sk.globals variable importModuleInternal_ may replace it when it compiles
     // a Python language module.

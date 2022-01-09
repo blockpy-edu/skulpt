@@ -95,5 +95,10 @@ var $builtinmodule = function (name) {
         }
     });
 
+    sys.exit = new Sk.builtin.func(function() {
+        // TODO: Figure out a real way to exit?
+        return Sk.builtin.none.none$;
+    });
+
     return sys;
 };

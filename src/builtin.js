@@ -397,7 +397,8 @@ Sk.builtin.fabs = function fabs(x) {
 Sk.builtin.ord = function ord(x) {
     if (!Sk.builtin.checkString(x)) {
         throw new Sk.builtin.TypeError("ord() expected a string of length 1, but " + Sk.abstr.typeName(x) + " found");
-    } else if (x.v.length !== 1) {
+    // Unicode aware string length
+    } else if ([...x.v].length !== 1) {
         throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
     }
     return new Sk.builtin.int_(x.v.charCodeAt(0));
@@ -1171,11 +1172,18 @@ Sk.builtin.exec = function execf(pythonCode, new_globals, newLocals) {
         var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
         var pyName = new Sk.builtin.str(name);
         var loadModule = function() {
-            var sysModules = Sk.sysmodules.mp$subscript(Sk.builtin.str.$sys);
+            /*var sysModules = Sk.getSysModulesPolitely();
+            if (sysModules.quick$lookup(pyName)) {
+                console.log("OH HEY WAIT WHY ARE YOU HERE:", name);
+                sysModules.del$item(pyName);
+            }*/
             var modname = name;
             var caughtError = null;
             const res = Sk.misceval.tryCatch(() => {
-                Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
+                let r = Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
+                while (r instanceof Sk.misceval.Suspension) {
+                    r = r.resume();
+                }
                 //console.log(Sk.sysmodules.mp$subscript(pyName).$js);
             }, (e) => {
                 console.error("SYSTEMATIC ERROR", e);
@@ -1198,7 +1206,7 @@ Sk.builtin.exec = function execf(pythonCode, new_globals, newLocals) {
                 if (caughtError !== null) {
                     throw caughtError;
                 }
-                resolve();
+                resolve(Sk.builtin.none.none$);
             });
         };
         if (!Sk.sysmodules.sq$contains(Sk.builtin.str.$sys)) {

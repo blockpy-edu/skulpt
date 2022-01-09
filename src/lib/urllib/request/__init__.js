@@ -4,6 +4,16 @@ var $builtinmodule = function (name) {
 
     //~ Classes .................................................................
 
+    var requestClass = function($gbl, $loc) {
+        $loc.__init__ = new Sk.builtin.func(function (self, path) {
+            self.path = path;
+            return Sk.builtin.none.none$;
+        });
+    };
+
+    request.Request =
+        Sk.misceval.buildClass(request, requestClass, "Request", []);
+
     // Response class
     //
     // Response objects are returned by the request, get, post, etc.
@@ -23,6 +33,15 @@ var $builtinmodule = function (name) {
             }
             self.currentLine = 0;
             self.pos$ = 0;
+            return Sk.builtin.none.none$;
+        });
+
+        $loc.__exit__ = new Sk.builtin.func(function (self, exc_type, exc_value, exc_traceback) {
+            return Sk.builtin.none.none$;
+        });
+
+        $loc.__enter__ = new Sk.builtin.func(function (self) {
+            return self;
         });
 
 
@@ -106,6 +125,10 @@ var $builtinmodule = function (name) {
      * constructs a Response.
      */
     request.urlopen = new Sk.builtin.func(function (url, data, timeout) {
+        try {
+            url = url.path;
+        } catch (error) {}
+
         var prom = new Promise(function (resolve, reject) {
             var xmlhttp = new XMLHttpRequest();
 

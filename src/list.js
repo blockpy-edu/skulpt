@@ -169,7 +169,8 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
         },
         nb$inplace_add: function (other) {
             other = Sk.misceval.arrayFromIterable(other);
-            this.v.push(...other);
+            //this.v.push(...other);
+            this.v = this.v.concat(other);
             return this;
         },
         nb$inplace_multiply: function (n) {
