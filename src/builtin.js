@@ -401,7 +401,7 @@ Sk.builtin.ord = function ord(x) {
     } else if ([...x.v].length !== 1) {
         throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
     }
-    return new Sk.builtin.int_(x.v.charCodeAt(0));
+    return new Sk.builtin.int_(x.v.codePointAt(0));
 };
 
 Sk.builtin.chr = function chr(x) {
