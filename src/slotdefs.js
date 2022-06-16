@@ -98,6 +98,13 @@ function wrapperRichCompare(self, args, kwargs) {
     return new Sk.builtin.bool(res);
 }
 
+function wrapperCallBack(wrapper, callback) {
+    return function (self,args, kwargs) {
+        const res = wrapper.call(this, self, args, kwargs);
+        return callback(res);
+    };
+}
+
 /**
  * @description
  * Slot functions are wrappers around an Sk.builtin.func
@@ -113,7 +120,8 @@ function wrapperRichCompare(self, args, kwargs) {
  */
 function slotFuncNoArgs(dunderFunc) {
     return function () {
-        return Sk.misceval.callsimArray(dunderFunc, [this]);
+        const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) : dunderFunc;
+        return Sk.misceval.callsimArray(func, []);
     };
 }
 
@@ -127,7 +135,8 @@ function slotFuncNoArgs(dunderFunc) {
 function slotFuncNoArgsWithCheck(dunderName, checkFunc, checkMsg, f) {
     return function (dunderFunc) {
         return function () {
-            let res = Sk.misceval.callsimArray(dunderFunc, [this]);
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) : dunderFunc;
+            let res = Sk.misceval.callsimArray(func, []);
             if (!checkFunc(res)) {
                 throw new Sk.builtin.TypeError(dunderName + " should return " + checkMsg + " (returned " + Sk.abstr.typeName(res) + ")");
             }
@@ -142,26 +151,37 @@ function slotFuncNoArgsWithCheck(dunderName, checkFunc, checkMsg, f) {
 
 function slotFuncOneArg(dunderFunc) {
     return function (value) {
-        return Sk.misceval.callsimArray(dunderFunc, [this, value]);
+        const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) : dunderFunc;
+        return Sk.misceval.callsimArray(func, [value]);
     };
 }
 
 function slotFuncGetAttribute(pyName, canSuspend) {
-    const func = Sk.abstr.lookupSpecial(this, Sk.builtin.str.$getattribute);
-    let res;
-    if (func instanceof Sk.builtin.wrapper_descriptor) {
-        return func.d$wrapped.call(this, pyName, canSuspend);
-    } else if (canSuspend) {
-        res = Sk.misceval.callsimOrSuspendArray(func, [this, pyName]);
-    } else {
-        res = Sk.misceval.callsimArray(func, [this, pyName]);
+    let getattributeFn = this.ob$type.$typeLookup(Sk.builtin.str.$getattribute);
+    if (getattributeFn instanceof Sk.builtin.wrapper_descriptor) {
+        // we're assuming here that internal tp$getattr won't raise an exception
+        return getattributeFn.d$wrapped.call(this, pyName, canSuspend);
     }
-    return res;
+    if (getattributeFn.tp$descr_get) {
+        getattributeFn = getattributeFn.tp$descr_get(this);
+    }
+    const ret = Sk.misceval.tryCatch(
+        () => Sk.misceval.callsimOrSuspendArray(getattributeFn, [pyName]),
+        (e) => {
+            if (e instanceof Sk.builtin.AttributeError) {
+                return undefined;
+    } else {
+                throw e;
+    }
+        }
+    );
+    return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
 }
 
 function slotFuncFastCall(dunderFunc) {
     return function (args, kwargs) {
-        return Sk.misceval.callsimOrSuspendArray(dunderFunc, [this, ...args], kwargs);
+        const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) : dunderFunc;
+        return Sk.misceval.callsimOrSuspendArray(func, args, kwargs);
     };
 }
 
@@ -181,19 +201,24 @@ function slotFuncSetDelete(set_name, del_name, error_msg) {
             } else {
                 dunderName = set_name;
             }
-            const func = Sk.abstr.lookupSpecial(this, new Sk.builtin.str(dunderName));
+            // do a type lookup and a wrapped function directly
+            let func = this.ob$type.$typeLookup(new Sk.builtin.str(dunderName));
             if (func instanceof Sk.builtin.wrapper_descriptor) {
                 return func.d$wrapped.call(this, pyObject, value);
             }
-            const call_version = canSuspend ? Sk.misceval.callsimOrSuspendArray : Sk.misceval.callsimArray;
+            if (func.tp$descr_get) {
+                func = func.tp$descr_get(this);
+            }
+            
             if (func !== undefined) {
-                res = value === undefined ? call_version(func, [this, pyObject]) : call_version(func, [this, pyObject, value]);
+                const args = value === undefined ? [pyObject] : [pyObject, value];
+                res = Sk.misceval.callsimOrSuspendArray(func, args);
             } else if (error_msg) {
                 throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this) + "' object " + error_msg);
             } else {
                 throw new Sk.builtin.AttributeError(dunderName);
             }
-            return res;
+            return canSuspend ? res : Sk.misceval.retryOptionalSuspensionOrThrow(res);
         };
     };
 }
@@ -244,13 +269,13 @@ Sk.slots.__init__ = {
     $slot_name: "tp$init",
     $slot_func: function (dunderFunc) {
         return function tp$init(args, kwargs) {
-            let ret = Sk.misceval.callsimOrSuspendArray(dunderFunc, [this, ...args], kwargs);
-            return Sk.misceval.chain(ret, function (r) {
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) : dunderFunc;
+            let ret = Sk.misceval.callsimOrSuspendArray(func, args, kwargs);
+            return Sk.misceval.chain(ret, (r) => {
                 if (!Sk.builtin.checkNone(r) && r !== undefined) {
                     throw new Sk.builtin.TypeError("__init__() should return None, not " + Sk.abstr.typeName(r));
-                } else {
-                    return r;
                 }
+                return;
             });
         };
     },
@@ -282,7 +307,11 @@ slots.__new__ = {
     $slot_name: "tp$new",
     $slot_func: function (dunderFunc) {
         const tp$new = function (args, kwargs) {
-            return Sk.misceval.callsimOrSuspendArray(dunderFunc, [this.constructor, ...args], kwargs);
+            let func = dunderFunc;
+            if (dunderFunc.tp$descr_get) {
+                func = dunderFunc.tp$descr_get(null, this.constructor);
+            } // weird behaviour ignore staticmethods bascically
+            return Sk.misceval.callsimOrSuspendArray(func, [this.constructor, ...args], kwargs);
         };
         tp$new.sk$static_new = false; // this is a flag used in the __new__ algorithm
         return tp$new;
@@ -306,7 +335,16 @@ slots.__call__ = {
     $name: "__call__",
     $slot_name: "tp$call",
     $slot_func: slotFuncFastCall,
-    $wrapper: wrapperFastCall,
+    $wrapper: function __call__(self, args, kwargs) {
+        // function fast call objects override the prototype.tp$call
+        // so use self.tp$call instead of this.call(self)
+        const res = self.tp$call(args, kwargs);
+        if (res === undefined) {
+            return Sk.builtin.none.none$;
+        }
+        return res;
+    }
+    ,
     $textsig: "($self, /, *args, **kwargs)",
     $flags: {FastCall: true},
     $doc: "Call self as a function.",
@@ -346,6 +384,7 @@ slots.__str__ = {
     $doc: "Return str(self).",
 };
 
+var hash_slot = slotFuncNoArgsWithCheck("__hash__", Sk.builtin.checkInt, "int", (res) => typeof res.v === "number" ? res.v : res.tp$hash());
 /**
  * @memberof Sk.slots
  * @method tp$hash
@@ -358,8 +397,13 @@ slots.__str__ = {
 slots.__hash__ = {
     $name: "__hash__",
     $slot_name: "tp$hash",
-    $slot_func: slotFuncNoArgsWithCheck("__hash__", Sk.builtin.checkInt, "int"),
-    $wrapper: wrapperCallNoArgs,
+    $slot_func: function (dunder_func) {
+        if (dunder_func === Sk.builtin.none.none$) {
+            return Sk.builtin.none.none$;
+        }
+        return hash_slot(dunder_func);
+    },
+    $wrapper: wrapperCallBack(wrapperCallNoArgs, (res) => new Sk.builtin.int_(res)),
     $textsig: "($self, /)",
     $flags: {NoArgs: true},
     $doc: "Return hash(self).",
@@ -385,39 +429,20 @@ slots.__getattribute__ = {
     $slot_name: "tp$getattr",
     $slot_func: function (dunderFunc) {
         return function tp$getattr(pyName, canSuspend) {
-            const getattrFn = Sk.abstr.lookupSpecial(this, Sk.builtin.str.$getattr);
+            let getattrFn = this.ob$type.$typeLookup(Sk.builtin.str.$getattr);
             if (getattrFn === undefined) {
-                // we don't support dynamically created __getattr__ but hey...
-                this.constructor.prototype.tp$getattr = slotFuncGetAttribute;
                 return slotFuncGetAttribute.call(this, pyName, canSuspend);
             }
-            const getattributeFn = Sk.abstr.lookupSpecial(this, Sk.builtin.str.$getattribute);
-            const self = this;
-
-            let r = Sk.misceval.chain(
-                Sk.misceval.tryCatch(
-                    () => {
-                        if (getattributeFn instanceof Sk.builtin.wrapper_descriptor) {
-                            return getattributeFn.d$wrapped.call(self, pyName, canSuspend);
-                        } else {
-                            return Sk.misceval.callsimOrSuspendArray(getattributeFn, [self, pyName]);
-                        }
-                    },
-                    function (e) {
-                        if (e instanceof Sk.builtin.AttributeError) {
-                            return undefined;
-                        } else {
-                            throw e;
-                        }
-                    }
-                ),
-                (val) =>
+            const ret = Sk.misceval.chain(slotFuncGetAttribute.call(this, pyName, canSuspend), (val) =>
                     Sk.misceval.tryCatch(
                         () => {
                             if (val !== undefined) {
                                 return val;
                             }
-                            return Sk.misceval.callsimOrSuspendArray(getattrFn, [self, pyName]);
+                        if (getattrFn.tp$descr_get) {
+                            getattrFn = getattrFn.tp$descr_get(this);
+                        }
+                        return Sk.misceval.callsimOrSuspendArray(getattrFn, [pyName]);
                         },
                         function (e) {
                             if (e instanceof Sk.builtin.AttributeError) {
@@ -428,7 +453,7 @@ slots.__getattribute__ = {
                         }
                     )
             );
-            return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
+            return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
     },
     $wrapper: function (self, args, kwargs) {
@@ -458,6 +483,20 @@ slots.__getattr__ = {
     $flags: {OneArg: true},
     $doc: "Return getattr(self, name).",
 };
+
+
+/* Helper to check for object.__setattr__ or __delattr__ applied to a type.
+   This is called the Carlo Verre hack after its discoverer. */
+function hackcheck(obj, func) {
+    let type = obj.ob$type;
+    while (type && type.sk$klass !== undefined) {
+        type = type.prototype.tp$base;
+    }
+    if (type && type.prototype.tp$setattr !== func) {
+        throw new Sk.builtin.TypeError("can't apply this " + func.$name + " to " + Sk.abstr.typeName(obj) + " object");
+    }
+}
+
 /**
  * @suppress {checkTypes}
  * @memberof Sk.slots
@@ -474,7 +513,13 @@ slots.__setattr__ = {
     $slot_name: "tp$setattr",
     $slot_func: slotFuncSetDelete("__setattr__", "__delattr__"),
     // not need for an error message setattr is always defined on object
-    $wrapper: wrapperSet,
+    $wrapper: function(self, args, kwargs) {
+        Sk.abstr.checkNoKwargs(this.$name, kwargs);
+        Sk.abstr.checkArgsLen(this.$name, args, 2, 2);
+        hackcheck(self, this);
+        this.call(self, args[0], args[1]);
+        return Sk.builtin.none.none$; 
+    },
     $textsig: "($self, name, value, /)",
     $flags: {MinArgs: 2, MaxArgs: 2},
     $doc: "Implement setattr(self, name, value).",
@@ -484,7 +529,12 @@ slots.__delattr__ = {
     $name: "__delattr__",
     $slot_name: "tp$setattr",
     $slot_func: slots.__setattr__.$slot_func,
-    $wrapper: wrapperCallOneArg,
+    $wrapper: function(self, args, kwargs) {
+        Sk.abstr.checkOneArg(this.$name, args, kwargs);
+        hackcheck(self, this);
+        this.call(self, args[0]);
+        return Sk.builtin.none.none$;
+    },
     $textsig: "($self, name, /)",
     $flags: {OneArg: true},
     $doc: "Implement delattr(self, name).",
@@ -504,14 +554,15 @@ slots.__get__ = {
     $slot_name: "tp$descr_get",
     $slot_func: function (dunderFunc) {
         return function tp$descr_get(obj, obtype, canSuspend) {
-            const call_version = canSuspend ? Sk.misceval.callsimOrSuspendArray : Sk.misceval.callsimArray;
             if (obj === null) {
                 obj = Sk.builtin.none.none$;
             }
             if (obtype == null) {
                 obtype = Sk.builtin.none.none$;
             }
-            return call_version(dunderFunc, [this, obj, obtype]);
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
+            const ret = Sk.misceval.callsimOrSuspendArray(func, [obj, obtype]);
+            return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
     },
     $wrapper: function (self, args, kwargs) {
@@ -685,7 +736,7 @@ slots.__delete__ = {
  * @implements __iter__
  * @suppress {checkTypes}
  * @returns {pyObject} must have a valid `tp$iternext` slot
- * See {@link Sk.abstr.buildIteratorClass} and {@link Sk.generic.iterator}
+ * See {@link Sk.abstr.buildIteratorClass} and {@link Sk.misceval.iterator}
  */
 slots.__iter__ = {
     $name: "__iter__",
@@ -710,28 +761,19 @@ slots.__next__ = {
     $slot_name: "tp$iternext",
     $slot_func: function (dunderFunc) {
         return function tp$iternext(canSuspend) {
-            const self = this;
-            if (canSuspend) {
-                return Sk.misceval.tryCatch(
-                    () => Sk.misceval.callsimOrSuspendArray(dunderFunc, [self]),
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
+            const ret = Sk.misceval.tryCatch(
+                () => Sk.misceval.callsimOrSuspendArray(func, []),
                     (e) => {
                         if (e instanceof Sk.builtin.StopIteration) {
+                        this.gi$ret = e.$value;
                             return undefined;
                         } else {
                             throw e;
                         }
                     }
                 );
-            }
-            try {
-                return Sk.misceval.callsimArray(dunderFunc, [this]);
-            } catch (e) {
-                if (e instanceof Sk.builtin.StopIteration) {
-                    return undefined;
-                } else {
-                    throw e;
-                }
-            }
+            return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
     },
     /**
@@ -743,7 +785,9 @@ slots.__next__ = {
     $wrapper: function (self, args, kwargs) {
         // this = the wrapped function
         Sk.abstr.checkNoArgs(this.$name, args, kwargs);
-        return Sk.misceval.chain(this.call(self, true), (res) => {
+        // the first tp$iternext is sometimes different from the prototype.tp$iternext
+        // so instead of this.call(self) use self.tp$iternext
+        return Sk.misceval.chain(self.tp$iternext(true), (res) => {
             if (res === undefined) {
                 throw new Sk.builtin.StopIteration();
             }
@@ -805,21 +849,19 @@ slots.__len__ = {
     $slot_func: function (dunderFunc) {
         return function sq$length(canSuspend) {
             let res;
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
             if (canSuspend) {
-                res = Sk.misceval.callsimOrSuspendArray(dunderFunc, [this]);
+                res = Sk.misceval.callsimOrSuspendArray(func, []);
                 return Sk.misceval.chain(res, (r) => {
-                    return Sk.misceval.asIndexOrThrow(r, "'" + Sk.abstr.typeName(r) + "' object cannot be interpreted as an integer");
+                    return Sk.misceval.asIndexOrThrow(r);
                 });
             } else {
-                res = Sk.misceval.callsimArray(dunderFunc, [this]);
-                return Sk.misceval.asIndexOrThrow(res, "'" + Sk.abstr.typeName(res) + "' object cannot be interpreted as an integer");
+                res = Sk.misceval.callsimArray(func, []);
+                return Sk.misceval.asIndexOrThrow(res);
             }
         };
     },
-    $wrapper: function __len__(self, args, kwargs) {
-        Sk.abstr.checkNoArgs("__len__", args, kwargs);
-        return new Sk.builtin.int_(self.sq$length(true));
-    },
+    $wrapper: wrapperCallBack(wrapperCallNoArgs, (res) => new Sk.builtin.int_(res)),
     $flags: {NoArgs: true},
     $textsig: "($self, /)",
     $doc: "Return len(self).",
@@ -841,7 +883,8 @@ slots.__contains__ = {
     $slot_name: "sq$contains",
     $slot_func: function (dunderFunc) {
         return function sq$contains(key, canSuspend) {
-            let res = Sk.misceval.callsimOrSuspendArray(dunderFunc, [this, key]);
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
+            let res = Sk.misceval.callsimOrSuspendArray(func, [key]);
             res = Sk.misceval.chain(res, (r) => Sk.misceval.isTrue(r));
             if (res.$isSuspension) {
                 return canSuspend ? res : Sk.misceval.retryOptionalSuspensionOrThrow(res);
@@ -849,10 +892,8 @@ slots.__contains__ = {
             return res;
         };
     },
-    $wrapper: function __contains__(self, args, kwargs) {
-        Sk.abstr.checkOneArg("__contains__", args, kwargs);
-        return new Sk.builtin.bool(this.call(self, args[0], true));
-    },
+    // todo - allow for suspensions - but no internal functions suspend here
+    $wrapper: wrapperCallBack(wrapperCallOneArg, (res) => new Sk.builtin.bool(res)),
     $textsig: "($self, key, /)",
     $flags: {OneArg: true},
     $doc: "Return key in self.",
@@ -873,8 +914,9 @@ slots.__getitem__ = {
     $slot_name: "mp$subscript",
     $slot_func: function (dunderFunc) {
         return function mp$subscript(key, canSuspend) {
-            const call_version = canSuspend ? Sk.misceval.callsimOrSuspendArray : Sk.misceval.callsimArray;
-            return call_version(dunderFunc, [this, key]);
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
+            const ret = Sk.misceval.callsimOrSuspendArray(func, [key]);
+            return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
     },
     $wrapper: wrapperCallOneArg,
@@ -928,7 +970,7 @@ slots.__delitem__ = {
  *
  * Examples:
  * - [nb$add]{@link Sk.slots.nb$add}
- * - [nb$int_]{@link Sk.slots.nb$int_}
+ * - [nb$int]{@link Sk.slots.nb$int}
  * - [nb$divide]{@link Sk.slots.nb$divide} - note we do not use `nb$true_divide`
  * - [nb$bool]{@link Sk.slots.nb$bool} - should return a js boolean
  *
@@ -1213,7 +1255,7 @@ slots.__bool__ = {
     $name: "__bool__",
     $slot_name: "nb$bool",
     $slot_func: slotFuncNoArgsWithCheck("__bool__", Sk.builtin.checkBool, "bool", (res) => res.v !== 0),
-    $wrapper: wrapperCallNoArgs,
+    $wrapper: wrapperCallBack(wrapperCallNoArgs, (res) => new Sk.builtin.bool(res)),
     $textsig: "($self, /)",
     $flags: {NoArgs: true},
     $doc: "self != 0",
@@ -1460,13 +1502,13 @@ slots.__ior__ = {
 };
 /**
  * @memberof Sk.slots
- * @method nb$int_
+ * @method nb$int
  * @implements __int__
  * @suppress {checkTypes}
  */
 slots.__int__ = {
     $name: "__int__",
-    $slot_name: "nb$int_",
+    $slot_name: "nb$int",
     $slot_func: slotFuncNoArgsWithCheck("__int__", Sk.builtin.checkInt, "int"),
     $wrapper: wrapperCallNoArgs,
     $textsig: "($self, /)",
@@ -1475,13 +1517,13 @@ slots.__int__ = {
 };
 /**
  * @memberof Sk.slots
- * @method nb$float_
+ * @method nb$float
  * @implements __float__
  * @suppress {checkTypes}
  */
 slots.__float__ = {
     $name: "__float__",
-    $slot_name: "nb$float_",
+    $slot_name: "nb$float",
     $slot_func: slotFuncNoArgsWithCheck("__float__", Sk.builtin.checkFloat, "float"),
     $wrapper: wrapperCallNoArgs,
     $textsig: "($self, /)",
@@ -1587,8 +1629,8 @@ slots.__itruediv__ = {
 slots.__index__ = {
     $name: "__index__",
     $slot_name: "nb$index",
-    $slot_func: slotFuncNoArgsWithCheck("__index__", Sk.builtin.checkInt, "int"),
-    $wrapper: wrapperCallNoArgs,
+    $slot_func: slotFuncNoArgsWithCheck("__index__", Sk.builtin.checkInt, "int", (res) => res.v),
+    $wrapper: wrapperCallBack(wrapperCallNoArgs, (res) => new Sk.builtin.int_(res)),
     $textsig: "($self, /)",
     $flags: {NoArgs: true},
     $doc: "Return self converted to an integer, if self is suitable for use as an index into a list.",
@@ -1604,10 +1646,11 @@ slots.__pow__ = {
     $slot_name: "nb$power",
     $slot_func: function (dunderFunc) {
         return function (value, mod) {
+            const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
             if (mod == undefined) {
-                return Sk.misceval.callsimArray(dunderFunc, [this, value]);
+                return Sk.misceval.callsimArray(func, [value]);
             } else {
-                return Sk.misceval.callsimArray(dunderFunc, [this, value, mod]);
+                return Sk.misceval.callsimArray(func, [value, mod]);
             }
         };
     },
@@ -1695,7 +1738,7 @@ slots.__imatmul__ = {
 // py2 ONLY slots
 slots.__long__ = {
     $name: "__long__",
-    $slot_name: "nb$lng",
+    $slot_name: "nb$long",
     $slot_func: slotFuncNoArgsWithCheck("__long__", Sk.builtin.checkInt, "int"),
     $wrapper: wrapperCallNoArgs,
     $textsig: "($self, /)",
@@ -1717,7 +1760,7 @@ var py2$slots = {
         $name: "__nonzero__",
         $slot_name: "nb$bool",
         $slot_func: slotFuncNoArgsWithCheck("__nonzero__", Sk.builtin.checkInt, "int", (res) => res.v !== 0),
-        $wrapper: wrapperCallNoArgs,
+        $wrapper: wrapperCallBack(wrapperCallNoArgs, (res) => new Sk.builtin.bool(res)),
         $textsig: "($self, /)",
         $flags: {NoArgs: true},
         $doc: "x.__nonzero__() <==> x != 0",
@@ -1757,7 +1800,7 @@ var py2$slots = {
  * See the source code for a full list of slots split into apprpriate categories
  */
 Sk.subSlots = {
-    main_slots: {
+    main_slots: Object.entries({
         // nb we handle tp$new differently
         // tp_slots
         tp$init: "__init__",
@@ -1785,15 +1828,15 @@ Sk.subSlots = {
         // iter
         tp$iter: "__iter__",
         tp$iternext: "__next__",
-    },
+    }),
 
-    number_slots: {
+    number_slots: Object.entries({
         nb$abs: "__abs__",
         nb$negative: "__neg__",
         nb$positive: "__pos__",
-        nb$int_: "__int__",
-        nb$lng: "__long__",
-        nb$float_: "__float__",
+        nb$int: "__int__",
+        nb$long: "__long__",
+        nb$float: "__float__",
         nb$add: "__add__",
         nb$reflected_add: "__radd__",
         nb$inplace_add: "__iadd__",
@@ -1841,9 +1884,9 @@ Sk.subSlots = {
         nb$matrix_multiply: "__matmul__",
         nb$reflected_matrix_multiply: "__rmatmul__",
         nb$inplace_matrix_multiply: "__imatmul__",
-    },
+    }),
 
-    sequence_and_mapping_slots: {
+    sequence_and_mapping_slots: Object.entries({
         // sequence and mapping slots
         sq$length: "__len__",
         sq$contains: "__contains__",
@@ -1854,7 +1897,7 @@ Sk.subSlots = {
         nb$reflected_multiply: "__rmul__",
         nb$inplace_add: "__iadd__",
         nb$inplace_multiply: "__imul__",
-    },
+    }),
 };
 
 Sk.reflectedNumberSlots = {
@@ -1950,6 +1993,8 @@ Sk.sequenceAndMappingSlots = {
     sq$concat: ["nb$add"],
     sq$repeat: ["nb$multiply", "nb$reflected_multiply"],
     mp$length: ["sq$length"],
+    sq$inplace_repeat: ["nb$inplace_multiply"],
+    sq$inplace_concat: ["nb$inplace_add"],
 };
 
 /**
@@ -1962,7 +2007,7 @@ Sk.sequenceAndMappingSlots = {
  *
  * Note: __add__, __mul__, and __rmul__ can be used for either numeric or
  * sequence types. Here, they default to the numeric versions (i.e. nb$add,
- * nb$multiply, and nb$reflected_multiply). This works because Sk.abstr.binary_op_
+ * nb$multiply, and nb$reflected_multiply). This works because Sk.abstr.numberBinOp
  * checks for the numeric shortcuts and not the sequence shortcuts when computing
  * a binary operation.
  *
@@ -1985,6 +2030,8 @@ Sk.dunderToSkulpt = {
     __new__: "tp$new",
     __hash__: "tp$hash",
     __call__: "tp$call",
+    __iter__: "tp$iter",
+    __next__: "tp$iternext",
 
     __eq__: "ob$eq",
     __ne__: "ob$ne",
@@ -1996,8 +2043,8 @@ Sk.dunderToSkulpt = {
     __abs__: "nb$abs",
     __neg__: "nb$negative",
     __pos__: "nb$positive",
-    __int__: "nb$int_",
-    __float__: "nb$float_",
+    __int__: "nb$int",
+    __float__: "nb$float",
 
     __add__: "nb$add",
     __radd__: "nb$reflected_add",
@@ -2026,7 +2073,7 @@ Sk.dunderToSkulpt = {
 
     __bool__: "nb$bool",
     // py2 only
-    __long__: "nb$lng",
+    __long__: "nb$long",
 
     __lshift__: "nb$lshift",
     __rlshift__: "nb$reflected_lshift",
@@ -2073,34 +2120,13 @@ Sk.setupDunderMethods = function (py3) {
         // assume python3 switch version if we have to
         return;
     }
-    const classes_with_next = [
-        Sk.builtin.list_iter_,
-        Sk.builtin.set_iter_,
-        Sk.builtin.str_iter_,
-        Sk.builtin.tuple_iter_,
-        Sk.builtin.generator,
-        Sk.builtin.enumerate,
-        Sk.builtin.filter_,
-        Sk.builtin.zip_,
-        Sk.builtin.reversed,
-        Sk.builtin.map_,
-        Sk.builtin.seq_iter_,
-        Sk.builtin.callable_iter_,
-        Sk.builtin.reverselist_iter_,
-        Sk.builtin.dict_iter_,
-        Sk.builtin.dict_itemiter_,
-        Sk.builtin.dict_valueiter_,
-        Sk.builtin.dict_reverse_iter_,
-        Sk.builtin.dict_reverse_itemiter_,
-        Sk.builtin.dict_reverse_valueiter_,
-        Sk.builtin.range_iter_,
-        Sk.builtin.revereserange_iter_,
-        Sk.generic.iterator,
-    ];
+    const classes_with_next = Sk.abstr.built$iterators;
     const classes_with_bool = [Sk.builtin.int_, Sk.builtin.lng, Sk.builtin.float_, Sk.builtin.complex];
     const classes_with_divide = classes_with_bool;
     const number_slots = Sk.subSlots.number_slots;
     const main_slots = Sk.subSlots.main_slots;
+    const indexofnext = main_slots.findIndex((x) => x[0] === "tp$iternext");
+    const indexofbool = number_slots.findIndex((x) => x[0] === "nb$bool");
     const dunderToSkulpt = Sk.dunderToSkulpt;
 
     function switch_version(classes_with, old_meth, new_meth) {
@@ -2115,7 +2141,6 @@ Sk.setupDunderMethods = function (py3) {
     }
 
     if (py3) {
-        Sk.builtin.str.$next = new Sk.builtin.str("__next__");
         dunderToSkulpt.__bool__ = "nb$bool";
         dunderToSkulpt.__next__ = "tp$iternext";
 
@@ -2137,8 +2162,8 @@ Sk.setupDunderMethods = function (py3) {
             delete cls_proto.__rdiv__;
         }
 
-        main_slots.tp$iternext = "__next__";
-        number_slots.nb$bool = "__bool__";
+        main_slots[indexofnext][1] = "__next__";
+        number_slots[indexofbool][1] = "__bool__";
         switch_version(classes_with_next, "next", "__next__");
         switch_version(classes_with_bool, "__bool__", "__nonzero__");
     } else {
@@ -2148,7 +2173,6 @@ Sk.setupDunderMethods = function (py3) {
             };
             py3$slots = slots.py3$slots;
         }
-        Sk.builtin.str.$next = new Sk.builtin.str("next");
         dunderToSkulpt.next = "tp$iternext";
         dunderToSkulpt.__nonzero__ = "nb$bool";
         dunderToSkulpt.__div__ = "nb$divide";
@@ -2164,8 +2188,8 @@ Sk.setupDunderMethods = function (py3) {
             delete slots[slot_name];
         }
 
-        main_slots.tp$iternext = "next";
-        number_slots.nb$bool = "__nonzero__";
+        main_slots[indexofnext][1] = "next";
+        number_slots[indexofbool][1] = "__nonzero__";
         switch_version(classes_with_next, "__next__", "next");
         switch_version(classes_with_bool, "__nonzero__", "__bool__");
 

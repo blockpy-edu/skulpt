@@ -24,7 +24,7 @@ Sk.builtins = {
     "hasattr": null,
     "id": null,
 
-    "reduce": new Sk.builtin.func(Sk.builtin.reduce),
+    //"reduce": new Sk.builtin.func(Sk.builtin.reduce),
     "sorted": null,
     "any": null,
     "all": null,
@@ -46,9 +46,13 @@ Sk.builtins = {
     "ImportError": Sk.builtin.ImportError,
     "IndentationError": Sk.builtin.IndentationError,
     "IndexError": Sk.builtin.IndexError,
+    "LookupError"        : Sk.builtin.LookupError,
     "KeyError": Sk.builtin.KeyError,
     "TypeError": Sk.builtin.TypeError,
+    "UnicodeDecodeError" : Sk.builtin.UnicodeDecodeError,
+    "UnicodeEncodeError" : Sk.builtin.UnicodeEncodeError,
     "NameError": Sk.builtin.NameError,
+    "UnboundLocalError"  : Sk.builtin.UnboundLocalError,
     "OSError": Sk.builtin.OSError,
     "TimeoutError": Sk.builtin.TimeoutError,
     "IOError": Sk.builtin.IOError,
@@ -58,8 +62,11 @@ Sk.builtins = {
     "OperationError": Sk.builtin.OperationError,
     "NegativePowerError": Sk.builtin.NegativePowerError,
     "RuntimeError": Sk.builtin.RuntimeError,
+	"RecursionError": Sk.builtin.RecursionError,
     "StopIteration": Sk.builtin.StopIteration,
     "SyntaxError": Sk.builtin.SyntaxError,
+    "SystemError"        : Sk.builtin.SystemError,
+    "KeyboardInterrupt"  : Sk.builtin.KeyboardInterrupt,
     "EOFError": Sk.builtin.EOFError,
     "MemoryError": Sk.builtin.MemoryError,
     "ReferenceError": Sk.builtin.ReferenceError,
@@ -114,7 +121,7 @@ Sk.builtins = {
     // "pow"       : Sk.builtin.pow,
     "reload": Sk.builtin.reload,
     "super_$rw$": Sk.builtin.super_,
-    "unichr": Sk.builtin.unichr,
+    "unichr"    : new Sk.builtin.func(Sk.builtin.unichr),
     "vars": Sk.builtin.vars,
     "apply_$rw$": Sk.builtin.apply_,
     "buffer": Sk.builtin.buffer,
@@ -125,9 +132,16 @@ Sk.builtins = {
     "property": Sk.builtin.property,
     "classmethod": Sk.builtin.classmethod,
     "staticmethod": Sk.builtin.staticmethod,
+
+    "Ellipsis": Sk.builtin.Ellipsis
 };
 
-Sk.builtins.$method_defs = {
+const pyNone = Sk.builtin.none.none$;
+const emptyTuple = new Sk.builtin.tuple();
+const pyZero = new Sk.builtin.int_(0);
+
+
+Sk.abstr.setUpModuleMethods("builtins", Sk.builtins, {
     // __build_class__: {
     //     $meth: Sk.builtin.__build_class__,
     //     $flags: {},
@@ -136,11 +150,25 @@ Sk.builtins.$method_defs = {
     // },
 
     __import__: {
-        $meth: Sk.builtin.__import__,
-        $flags: {NamedArgs: ["name", "globals", "locals", "fromlist", "level"]},
+        $meth(name, globals, _locals, formlist, level) {
+            if (!Sk.builtin.checkString(name)) {
+                throw new Sk.builtin.TypeError("__import__() argument 1 must be str, not " + name.tp$name);
+            } else if (name === Sk.builtin.str.$empty && level.v === 0) {
+                throw new Sk.builtin.ValueError("Empty module name");
+            }
+            // check globals - locals is just ignored __import__
+            globals = globLocToJs(globals, "globals") || {};
+            formlist = Sk.ffi.remapToJs(formlist);
+            level = Sk.ffi.remapToJs(level);
+
+            return Sk.builtin.__import__(name, globals, undefined, formlist, level);
+        },
+        $flags: {
+            NamedArgs: ["name", "globals", "locals", "fromlist", "level"],
+            Defaults: [pyNone, pyNone, emptyTuple, pyZero],
+        },
         $textsig: null,
-        $doc:
-            "__import__(name, globals=None, locals=None, fromlist=(), level=0) -> module\n\nImport a module. Because this function is meant for use by the Python\ninterpreter and not for general use, it is better to use\nimportlib.import_module() to programmatically import a module.\n\nThe globals argument is only used to determine the context;\nthey are not modified.  The locals argument is unused.  The fromlist\nshould be a list of names to emulate ``from name import ...'', or an\nempty list to emulate ``import name''.\nWhen importing a module from a package, note that __import__('A.B', ...)\nreturns package A when fromlist is empty, but its submodule B when\nfromlist is not empty.  The level argument is used to determine whether to\nperform absolute or relative imports: 0 is absolute, while a positive number\nis the number of parent directories to search relative to the current module.",
+        $doc: "__import__(name, globals=None, locals=None, fromlist=(), level=0) -> module\n\nImport a module. Because this function is meant for use by the Python\ninterpreter and not for general use, it is better to use\nimportlib.import_module() to programmatically import a module.\n\nThe globals argument is only used to determine the context;\nthey are not modified.  The locals argument is unused.  The fromlist\nshould be a list of names to emulate ``from name import ...'', or an\nempty list to emulate ``import name''.\nWhen importing a module from a package, note that __import__('A.B', ...)\nreturns package A when fromlist is empty, but its submodule B when\nfromlist is not empty.  The level argument is used to determine whether to\nperform absolute or relative imports: 0 is absolute, while a positive number\nis the number of parent directories to search relative to the current module.",
     },
 
     abs: {
@@ -164,12 +192,12 @@ Sk.builtins.$method_defs = {
         $doc: "Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",
     },
 
-    // ascii: {
-    //     $meth: Sk.builtin.ascii,
-    //     $flags: {OneArg: true},
-    //     $textsig: "($module, obj, /)",
-    //     $doc: "Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2."
-    // },
+    ascii: {
+        $meth: Sk.builtin.ascii,
+        $flags: {OneArg: true},
+        $textsig: "($module, obj, /)",
+        $doc: "Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2."
+    },
 
     bin: {
         $meth: Sk.builtin.bin,
@@ -202,7 +230,7 @@ Sk.builtins.$method_defs = {
 
     compile: {
         $meth: Sk.builtin.compile,
-        $flags: {},
+        $flags: {MinArgs: 3, MaxArgs:6},
         $textsig: "($module, /, source, filename, mode, flags=0,\n        dont_inherit=False, optimize=-1)",
         $doc: "Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified."
     },
@@ -231,7 +259,17 @@ Sk.builtins.$method_defs = {
 
     eval_$rw$: {
         $name: "eval",
-        $meth: Sk.builtin.eval_,
+        $meth: function (source, globals, locals) {
+            // check globals
+            const tmp_globals = globLocToJs(globals, "globals");
+            // check locals
+            const tmp_locals = globLocToJs(locals, "locals");
+            return Sk.misceval.chain(Sk.builtin.eval(source, tmp_globals, tmp_locals), (res) => {
+                reassignGlobLoc(globals, tmp_globals);
+                reassignGlobLoc(locals, tmp_locals);
+                return res;
+            });
+        },
         $flags: {MinArgs: 1, MaxArgs: 3},
         $textsig: "($module, source, globals=None, locals=None, /)",
         $doc:
@@ -239,10 +277,21 @@ Sk.builtins.$method_defs = {
     },
 
     exec: {
-        $meth: Sk.builtin.exec,
-        $flags: {MinArgs:2, MaxArgs: 3},
+        $meth: function (source, globals, locals) {
+            // check globals
+            const tmp_globals = globLocToJs(globals, "globals");
+            // check locals
+            const tmp_locals = globLocToJs(locals, "locals");
+            return Sk.misceval.chain(Sk.builtin.exec(source, tmp_globals, tmp_locals), (new_locals) => {
+                reassignGlobLoc(globals, tmp_globals);
+                reassignGlobLoc(locals, tmp_locals);
+                return Sk.builtin.none.none$;
+            });
+        },
+        $flags: {MinArgs:1, MaxArgs: 3},
         $textsig: "($module, source, globals=None, locals=None, /)",
-        $doc: "Execute the given source in the context of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it."
+        $doc:
+            "Execute the given source in the context of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",
     },
 
     format: {
@@ -469,13 +518,38 @@ Sk.builtins.$method_defs = {
         $textsig: null,
         $doc: "vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",
     },
-};
+});
 
-for (let def_name in Sk.builtins.$method_defs) {
-    const method_def = Sk.builtins.$method_defs[def_name];
-    method_def.$name = def_name;
-    Sk.builtins[def_name] = new Sk.builtin.sk_method(method_def, undefined, "builtins");
+// function used for exec and eval
+function globLocToJs(glob_loc, name) {
+    let tmp = undefined;
+    if (glob_loc === undefined || Sk.builtin.checkNone(glob_loc)) {
+        glob_loc = undefined;
+    } else if (!(glob_loc instanceof Sk.builtin.dict)) {
+        throw new Sk.builtin.TypeError(name + " must be a dict or None, not " + Sk.abstr.typeName(glob_loc));
+    } else {
+        tmp = {};
+        // we only support dicts here since actually we need to convert this to a hashmap for skulpts version of
+        // compiled code. Any old mapping won't do, it must be iterable!
+        glob_loc.$items().forEach(([key, val]) => {
+            if (Sk.builtin.checkString(key)) {
+                tmp[key.$mangled] = val;
+            }
+        });
+    }
+    return tmp;
 }
+
+function reassignGlobLoc(dict, obj) {
+    if (dict === undefined || Sk.builtin.checkNone(dict)) {
+        return;
+    }
+    for (let key in obj) {
+        // this isn't technically correct - if they use delete in the exec this breaks
+        dict.mp$ass_subscript(new Sk.builtin.str(Sk.unfixReserved(key)), obj[key]);
+}
+}
+
 
 Sk.setupObjects = function (py3) {
     if (py3) {
@@ -483,15 +557,32 @@ Sk.setupObjects = function (py3) {
         Sk.builtins["map"] = Sk.builtin.map_;
         Sk.builtins["zip"] = Sk.builtin.zip_;
         Sk.builtins["range"] = Sk.builtin.range_;
+        delete Sk.builtins["reduce"];
         delete Sk.builtins["xrange"];
         delete Sk.builtins["StandardError"];
         delete Sk.builtins["unicode"];
+        delete Sk.builtins["basestring"];
         delete Sk.builtins["long_$rw$"];
         Sk.builtin.int_.prototype.$r = function () {
             return new Sk.builtin.str(this.v.toString());
         };
         delete Sk.builtin.int_.prototype.tp$str;
         delete Sk.builtin.bool.prototype.tp$str;
+        delete Sk.builtins["raw_input"];
+        delete Sk.builtins["unichr"];
+        delete Sk.builtin.str.prototype.decode;
+        Sk.builtins["bytes"] = Sk.builtin.bytes;
+        Sk.builtins["ascii"] = new Sk.builtin.sk_method(
+            {
+                $meth: Sk.builtin.ascii,
+                $flags: { OneArg: true },
+                $textsig: "($module, obj, /)",
+                $doc:
+                    "Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",
+            },
+            null,
+            "builtins"
+        );
     } else {
         Sk.builtins["range"] = new Sk.builtin.sk_method(
             {
@@ -508,7 +599,16 @@ Sk.setupObjects = function (py3) {
                 $name: "xrange",
                 $flags: {MinArgs: 1, MaxArgs: 3},
             },
-            undefined,
+            null,
+            "builtins"
+        );
+        Sk.builtins["reduce"] = new Sk.builtin.sk_method(
+            {
+                $meth: Sk.builtin.reduce,
+                $name: "reduce",
+                $flags: { MinArgs: 2, MaxArgs: 3 },
+            },
+            null,
             "builtins"
         );
         Sk.builtins["filter"] = new Sk.builtin.func(Sk.builtin.filter);
@@ -517,6 +617,7 @@ Sk.setupObjects = function (py3) {
 
         Sk.builtins["StandardError"] = Sk.builtin.Exception;
         Sk.builtins["unicode"] = Sk.builtin.str;
+        Sk.builtins["basestring"] = Sk.builtin.str;
         Sk.builtins["long_$rw$"] = Sk.builtin.lng;
         Sk.builtin.int_.prototype.$r = function () {
             const v = this.v;
@@ -532,6 +633,11 @@ Sk.setupObjects = function (py3) {
         Sk.builtin.bool.prototype.tp$str = function () {
             return this.$r();
         };
+        Sk.builtins["raw_input"] = new Sk.builtin.func(Sk.builtin.raw_input);
+        Sk.builtins["unichr"] = new Sk.builtin.func(Sk.builtin.unichr);
+        Sk.builtin.str.prototype.decode = Sk.builtin.str.$py2decode;
+        delete Sk.builtins["bytes"];
+        delete Sk.builtins["ascii"];
     }
 };
 

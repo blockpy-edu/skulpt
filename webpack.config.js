@@ -44,7 +44,15 @@ module.exports = (env, argv) => {
                     jscomp_off: ['fileoverviewTags', 'deprecated', 'uselessCode', 'suspiciousCode', 'checkTypes',],
                     languageOut: (env && env.languageOut) ? env.languageOut : 'ECMASCRIPT_2015',
                     externs: 'support/externs/sk.js',
+                    rewritePolyfills: true,
+                    // compiler flags here
+                    //
+                    // for debugging help, try these:
+                    //
                     // warningLevel: "QUIET",
+                    // formatting: 'PRETTY_PRINT',
+                    // debug: true,
+                    // renaming: false
                 })
             ]
         };

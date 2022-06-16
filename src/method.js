@@ -10,23 +10,29 @@ Sk.builtin.method = Sk.abstr.buildNativeClass("method", {
         Sk.asserts.assert(this instanceof Sk.builtin.method, "bad call to method constructor, use 'new'");
         this.im_func = func;
         this.im_self = self;
+        this.im_call = func.tp$call;
     },
     slots: {
-        $r: function () {
+        $r() {
             const def_name = "?";
-            const func = this.im_func;
-            const self = this.im_self;
-            return new Sk.builtin.str("<bound method " + (func.$qualname || def_name) + " of " + Sk.misceval.objectRepr(self) + ">");
+            let name = this.im_func.tp$getattr(Sk.builtin.str.$qualname) || this.im_func.tp$getattr(Sk.builtin.str.$name);
+            name = (name && name.v) || def_name;
+            return new Sk.builtin.str("<bound method " + name + " of " + Sk.misceval.objectRepr(this.im_self) + ">");
         },
-        tp$hash: function () {
-            const selfhash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_self));
-            const funchash = Sk.builtin.asnum$(Sk.builtin.hash(this.im_func));
-            return new Sk.builtin.int_(selfhash + funchash);
+        tp$hash() {
+            const selfhash = Sk.abstr.objectHash(this.im_self);
+            const funchash = Sk.abstr.objectHash(this.im_func);
+            return selfhash + funchash;
         },
-        tp$call: function (args, kwargs) {
-            return this.im_func.tp$call([this.im_self, ...args], kwargs);
+        tp$call(args, kwargs) {
+            var im_call = this.im_call;
+            if (im_call === undefined) {
+                throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(this.im_func) + "' object is not callable");
+            }
+            args = [this.im_self, ...args];
+            return im_call.call(this.im_func, args, kwargs);
         },
-        tp$new: function (args, kwargs) {
+        tp$new(args, kwargs) {
             Sk.abstr.checkNoKwargs("method", kwargs);
             Sk.abstr.checkArgsLen("method", args, 2, 2);
             const func = args[0];
@@ -39,7 +45,7 @@ Sk.builtin.method = Sk.abstr.buildNativeClass("method", {
             }
             return new Sk.builtin.method(func, self);
         },
-        tp$richcompare: function (other, op) {
+        tp$richcompare(other, op) {
             if ((op != "Eq" && op != "NotEq") || !(other instanceof Sk.builtin.method)) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
             }
@@ -55,38 +61,33 @@ Sk.builtin.method = Sk.abstr.buildNativeClass("method", {
                 return !eq;
             }
         },
-        tp$descr_get: function (obj, obtype) {
+        tp$descr_get(obj, obtype) {
             return this;
         },
-        tp$getattr: function (pyName, canSuspend) {
-            const descr = Sk.abstr.lookupSpecial(this, pyName); // true means we should mangle this pyName
+        tp$getattr(pyName, canSuspend) {
+            const descr = Sk.abstr.lookupSpecial(this, pyName);
             if (descr !== undefined) {
-                const f = descr.tp$descr_get;
-                if (f !== undefined) {
-                    return f.call(descr, this, this.ob$type);
-                } else {
                     return descr;
                 }
-            }
             return this.im_func.tp$getattr(pyName, canSuspend);
         },
     },
     getsets: {
         __func__: {
-            $get: function () {
+            $get() {
                 return this.im_func;
             },
         },
         __self__: {
-            $get: function () {
+            $get() {
                 return this.im_self;
             },
         },
         __doc__: {
-            $get: function () {
+            $get() {
                 return this.im_func.tp$getattr(Sk.builtin.str.$doc);
             },
         },
     },
-    flags: {sk$suitable_as_base_class: false},
+    flags: { sk$unacceptableBase: true },
 });

@@ -7,21 +7,27 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
     constructor: function tuple(L) {
         if (L === undefined) {
             L = [];
+        } else if (!Array.isArray(L)) {
+            L = Sk.misceval.arrayFromIterable(L); 
+            // internal calls to constructor can't suspend - avoid using this
         }
-        Sk.asserts.assert(Array.isArray(L) && this instanceof Sk.builtin.tuple, "bad call to tuple, use 'new' with an Array");
+        Sk.asserts.assert(this instanceof Sk.builtin.tuple, "bad call to tuple, use 'new' with an Array of python objects");
         this.v = L;
+        this.in$repr = false;
     },
     slots: /**@lends {Sk.builtin.tuple.prototype}*/{
         tp$getattr: Sk.generic.getAttr,
         tp$as_sequence_or_mapping: true,
         tp$doc:
             "Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",
-        $r: function () {
-            const bits = [];
-            for (let i = 0; i < this.v.length; ++i) {
-                bits[i] = Sk.misceval.objectRepr(this.v[i]);
+        $r() {
+            if (this.in$repr) {
+                return new Sk.builtin.str("(...)");
             }
-            let ret = bits.join(", ");
+            this.in$repr = true;
+            let ret = this.v.map((x) => Sk.misceval.objectRepr(x));
+            this.in$repr = false;
+            ret = ret.join(", ");
             if (this.v.length === 1) {
                 ret += ",";
             }
@@ -32,7 +38,7 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
          * @param {Array=} kwargs 
          * @ignore
          */
-        tp$new: function (args, kwargs) {
+        tp$new(args, kwargs) {
             // this = Sk.builtin.prototype or a prototype that inherits from Sk.builtin.tuple.prototype
             if (this !== Sk.builtin.tuple.prototype) {
                 return this.$subtype_new(args, kwargs);
@@ -43,23 +49,21 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             if (arg === undefined) {
                 return new Sk.builtin.tuple([]);
             }
-            if (arg.ob$type === Sk.builtin.tuple) {
+            if (arg.constructor === Sk.builtin.tuple) {
                 return arg;
             }
-            // make tuples suspendible
-            let L = Sk.misceval.arrayFromIterable(arg, true);
-            return Sk.misceval.chain(L, (l) => new Sk.builtin.tuple(l));
+            return Sk.misceval.chain(Sk.misceval.arrayFromIterable(arg, true), (L) => new Sk.builtin.tuple(L));
         },
-        tp$hash: function () {
+        tp$hash() {
             // the numbers and order are taken from Cpython
             let y,
                 x = 0x345678,
                 mult = 1000003;
             const len = this.v.length;
             for (let i = 0; i < len; ++i) {
-                y = Sk.builtin.hash(this.v[i]).v;
+                y = Sk.abstr.objectHash(this.v[i]);
                 if (y === -1) {
-                    return new Sk.builtin.int_(-1);
+                    return -1;
                 }
                 x = (x ^ y) * mult;
                 mult += 82520 + len + len;
@@ -68,21 +72,17 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             if (x === -1) {
                 x = -2;
             }
-            return new Sk.builtin.int_(x | 0);
+            return x | 0;
         },
-        tp$iter: function () {
-            return new Sk.builtin.tuple_iter_(this);
+        tp$richcompare: Sk.generic.seqCompare,
+        tp$iter() {
+            return new tuple_iter_(this);
         },
 
         // sequence and mapping slots
-        mp$subscript: function (index) {
-            let i;
+        mp$subscript(index) {
             if (Sk.misceval.isIndex(index)) {
-                i = Sk.misceval.asIndex(index);
-                if (typeof i !== "number") {
-                    throw new Sk.builtin.IndexError("cannot fit '" + Sk.abstr.typeName(index) + "' into an index-sized integer");
-                }
-                if (i !== undefined) {
+                let i = Sk.misceval.asIndexSized(index);
                     if (i < 0) {
                         i = this.v.length + i;
                     }
@@ -90,128 +90,61 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
                         throw new Sk.builtin.IndexError("tuple index out of range");
                     }
                     return this.v[i];
-                }
             } else if (index instanceof Sk.builtin.slice) {
                 const ret = [];
-                const lst = this.v;
-                index.sssiter$(lst.length, (i) => {
-                    ret.push(lst[i]);
+                index.sssiter$(this.v.length, (i) => {
+                    ret.push(this.v[i]);
                 });
                 return new Sk.builtin.tuple(ret);
             }
-
-            throw new Sk.builtin.TypeError("tuple indices must be integers, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError("tuple indices must be integers or slices, not " + Sk.abstr.typeName(index));
         },
-        sq$length: function () {
+        sq$length() {
             return this.v.length;
         },
-        sq$repeat: function (n) {
-            n = Sk.misceval.asIndex(n);
-            if (typeof n !== "number") {
-                throw new Sk.builtin.OverflowError("cannot fit '" + Sk.abstr.typeName(n) + "' into an index-sized integer");
+        sq$repeat(n) {
+            n = Sk.misceval.asIndexSized(n, Sk.builtin.OverflowError);
+            if (n === 1 && this.constructor === Sk.builtin.tuple) {
+                return this;
             }
             const ret = [];
-            for (let i = 0; i < n; ++i) {
-                for (let j = 0; j < this.v.length; ++j) {
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < this.v.length; j++) {
                     ret.push(this.v[j]);
                 }
             }
             return new Sk.builtin.tuple(ret);
         },
-        sq$concat: function (other) {
-            if (other.ob$type != Sk.builtin.tuple) {
+        sq$concat(other) {
+            if (!(other instanceof Sk.builtin.tuple)) {
                 throw new Sk.builtin.TypeError("can only concatenate tuple (not '" + Sk.abstr.typeName(other) + "') to tuple");
             }
             return new Sk.builtin.tuple(this.v.concat(other.v));
         },
-        sq$contains: function (ob) {
+        sq$contains(ob) {
             for (let it = this.tp$iter(), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
-                if (Sk.misceval.richCompareBool(i, ob, "Eq")) {
+                if (i === ob || Sk.misceval.richCompareBool(i, ob, "Eq")) {
                     return true;
                 }
             }
             return false;
         },
-
-        // richcompare
-        tp$richcompare: function (w, op) {
-            // w not a tuple
-            if (!(w instanceof Sk.builtin.tuple)) {
-                // shortcuts for eq/not
-                if (op === "Eq") {
-                    return false;
-                }
-                if (op === "NotEq") {
-                    return true;
-                }
-
-                if (Sk.__future__.python3) {
-                    return Sk.builtin.NotImplemented.NotImplemented$;
-                }
-                // todo; other types should have an arbitrary order
-                return false;
-            }
-
-            w = w.v;
-            const v = this.v;
-            const vl = v.length;
-            const wl = w.length;
-            let i, k;
-            for (i = 0; i < vl && i < wl; ++i) {
-                k = Sk.misceval.richCompareBool(v[i], w[i], "Eq");
-                if (!k) {
-                    break;
-                }
-            }
-
-            if (i >= vl || i >= wl) {
-                // no more items to compare, compare sizes
-                switch (op) {
-                    case "Lt":
-                        return vl < wl;
-                    case "LtE":
-                        return vl <= wl;
-                    case "Eq":
-                        return vl === wl;
-                    case "NotEq":
-                        return vl !== wl;
-                    case "Gt":
-                        return vl > wl;
-                    case "GtE":
-                        return vl >= wl;
-                    default:
-                        Sk.asserts.fail();
-                }
-            }
-
-            // we have an item that's different
-            // shortcuts for eq/not
-            if (op === "Eq") {
-                return false;
-            }
-            if (op === "NotEq") {
-                return true;
-            }
-
-            // or, compare the differing element using the proper operator
-            return Sk.misceval.richCompareBool(v[i], w[i], op);
-        },
     },
     proto: /**@lends {Sk.builtin.tuple.prototype}*/{
-        $subtype_new: function (args, kwargs) {
+        $subtype_new(args, kwargs) {
             const instance = new this.constructor();
             // pass the args but ignore the kwargs for subtyping - these might be handled by the subtypes init method
             const tuple = Sk.builtin.tuple.prototype.tp$new(args);
             instance.v = tuple.v;
             return instance;
         },
-        sk$asarray: function () {
+        sk$asarray() {
             return this.v.slice(0);
         },
     },
     methods: /**@lends {Sk.builtin.tuple.prototype}*/{
         __getnewargs__: {
-            $meth: function () {
+            $meth() {
                 return new Sk.builtin.tuple(this.v.slice(0));
             },
             $flags: {NoArgs: true},
@@ -219,12 +152,15 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             $doc: null,
         },
         index: /**@lends {Sk.builtin.type.prototype}*/{
-            $meth: function (item, start, stop) {
-                // TODO: currently doesn't support start and stop
-                const len = this.v.length;
+            $meth(item, start, end) {
+                if ((start !== undefined && !Sk.misceval.isIndex(start)) || (end !== undefined && !Sk.misceval.isIndex(end))) {
+                    // unusually can't have None here so check this first...
+                    throw new Sk.builtin.TypeError("slice indices must be integers or have an __index__ method");
+                }
+                ({ start, end } = Sk.builtin.slice.startEnd$wrt(this, start, end));
                 const obj = this.v;
-                for (let i = 0; i < len; ++i) {
-                    if (Sk.misceval.richCompareBool(obj[i], item, "Eq")) {
+                for (let i = start; i < end; i++) {
+                    if (obj[i] === item || Sk.misceval.richCompareBool(obj[i], item, "Eq")) {
                         return new Sk.builtin.int_(i);
                     }
                 }
@@ -235,12 +171,12 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             $doc: "Return first index of value.\n\nRaises ValueError if the value is not present.",
         },
         count: {
-            $meth: function (item) {
+            $meth(item) {
                 const len = this.v.length;
                 const obj = this.v;
                 let count = 0;
                 for (let i = 0; i < len; ++i) {
-                    if (Sk.misceval.richCompareBool(obj[i], item, "Eq")) {
+                    if (obj[i] === item || Sk.misceval.richCompareBool(obj[i], item, "Eq")) {
                         count += 1;
                     }
                 }
@@ -251,6 +187,25 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             $doc: "Return number of occurrences of value.",
         },
     },
+    classmethods: Sk.generic.classGetItem,
 });
 
 Sk.exportSymbol("Sk.builtin.tuple", Sk.builtin.tuple);
+
+/**
+ * @constructor
+ * @extends {Sk.builtin.object}
+ * @param {Sk.builtin.tuple} tuple
+ * @private
+ */
+var tuple_iter_ = Sk.abstr.buildIteratorClass("tuple_iterator", {
+    constructor: function tuple_iter_(tuple) {
+        this.$index = 0;
+        this.$seq = tuple.sk$asarray();
+    },
+    iternext: Sk.generic.iterNextWithArray,
+    methods: {
+        __length_hint__: Sk.generic.iterLengthHintWithArrayMethodDef,
+    },
+    flags: { sk$unacceptableBase: true },
+});

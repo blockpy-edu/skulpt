@@ -189,10 +189,14 @@ Sk.importModuleInternal_ = function (name, dumpJS, modname, suppliedPyBody, rela
 
         // if leaf is already in sys.modules, early out
         try {
-            prev = sysmodules.mp$subscript(new Sk.builtin.str(modname));
+            prev = sysmodules.quick$lookup(new Sk.builtin.str(modname));
+            //prev = sysmodules.mp$subscript(new Sk.builtin.str(modname));
             // if we're a dotted module, return the top level, otherwise ourselves
-            return topLevelModuleToReturn || prev;
+            if (prev !== undefined) {
+                return topLevelModuleToReturn || prev;
+            }
         } catch (x) {
+            console.error("WAIT", x);
             // not in sys.modules, continue
         }
 
@@ -402,6 +406,7 @@ Sk.importMain = function (name, dumpJS, canSuspend) {
     // Added to reset imports
     Sk.sysmodules = new Sk.builtin.dict([]);
     Sk.realsyspath = undefined;
+    Sk.execStack = [];
 
     Sk.resetCompiler();
 
@@ -432,6 +437,7 @@ Sk.importMainWithBody = function (name, dumpJS, body, canSuspend, sysmodules) {
     Sk.realsyspath = undefined;
     Sk.execPausedAmount = 0;
     Sk.execPaused = 0;
+    Sk.execStack = [];
 
     Sk.resetCompiler();
 
@@ -459,8 +465,12 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyw
     // TODO: Need to check if there is a builtins with the name __import__
     if (askeyword && Sk.globals["__builtins__"] !== undefined) {
         builtinModuleVersion = Sk.globals["__builtins__"].mp$lookup(Sk.builtin.str.$import);
-        //console.log("Overrode __builtins__", name, builtinModuleVersion);
         if (builtinModuleVersion !== undefined) {
+            if (globals && !Sk.builtin.checkNone(globals) && !(globals instanceof Sk.builtin.dict)) {
+                globals = new Sk.builtin.dict(Object.entries(globals).flatMap(
+                    ([key, value]) => [Sk.ffi.remapToPy(key), value]
+                ));
+            }
             return Sk.misceval.callsimOrSuspend(builtinModuleVersion, new Sk.builtin.str(name), globals, locals, Sk.ffi.remapToPy(fromlist), Sk.ffi.remapToPy(level));
         }
     }
@@ -548,7 +558,7 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyw
             // if they are not present on the module itself
             var i;
             var fromName;
-            var leafModule;
+            var leafModule, rootModule;
             var importChain;
 
             let sysmodules = Sk.getSysModulesPolitely();
@@ -557,6 +567,7 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyw
                 new Sk.builtin.str((relativeToPackageName || "") +
                     ((relativeToPackageName && name) ? "." : "") +
                     name));
+            rootModule = sysmodules.mp$subscript(new Sk.builtin.str(firstDottedName));
 
             for (i = 0; i < fromlist.length; i++) {
                 fromName = fromlist[i];
@@ -574,6 +585,8 @@ Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyw
                 // if there's a fromlist we want to return the leaf module
                 // (ret), not the toplevel namespace
                 Sk.asserts.assert(leafModule);
+                //console.log("LEAF MODULE:", leafModule, sysmodules, relativeToPackageName, name, firstDottedName, rootModule, fromlist);
+                //return leafModule;
                 return leafModule;
             });
         }

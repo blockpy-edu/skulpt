@@ -29,6 +29,10 @@ var $builtinmodule = function (name) {
             Sk.abstr.sattr(self, parametersStr, parameters, true);
             return Sk.builtin.none.none$;
         });
+        /*$loc.replace = new Sk.builtin.func(function (self, parameters, return_annotation) {
+            // TODO: Copy the parameters properly, also allow keyword args!
+            return Sk.misceval.callsim(mod.Signature, parameters);
+        });*/
     };
     mod.Signature = Sk.misceval.buildClass(mod, Signature, "Signature", []);
 

@@ -3,10 +3,22 @@
  * Sk.builtin.super_
  */
 Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
-    constructor: function super_() {
+    constructor: function super_(a_type, other_self) {
         // internally we never use this method
-        // use Sk.misceval.callsimArray(Sk.builtin.super_, [a_type, obj]);
         Sk.asserts.assert(this instanceof Sk.builtin.super_, "bad call to super, use 'new'");
+        // internal calls can use this method but it 
+        this.type = a_type;
+        this.obj = other_self;
+        if (a_type !== undefined) {
+            if (!Sk.builtin.checkClass(a_type)) {
+                throw new Sk.builtin.TypeError("must be type, not " + Sk.abstr.typeName(a_type));
+            }
+        }
+        if (this.obj !== undefined) {
+            this.obj_type = this.$supercheck(a_type, this.obj);
+        } else {
+            this.obj_type = null;
+        }
     },
     slots: {
         tp$doc:
@@ -16,7 +28,7 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
             "Typical use to call a cooperative superclass method:\n" +
             "class C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",
         tp$new: Sk.generic.new,
-        tp$init: function (args, kwargs) {
+        tp$init(args, kwargs) {
             Sk.abstr.checkNoKwargs("super", kwargs);
             Sk.abstr.checkArgsLen("super", args, 1, 2);
             const a_type = args[0];
@@ -29,16 +41,15 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
             if (this.obj != null) {
                 this.obj_type = this.$supercheck(a_type, this.obj);
             }
-
             return Sk.builtin.none.none$;
         },
-        $r: function () {
+        $r() {
             if (this.obj) {
                 return new Sk.builtin.str("<super: <class '" + this.type.prototype.tp$name + "'>, <" + Sk.abstr.typeName(this.obj) + " object>>");
             }
             return new Sk.builtin.str("<super: <class '" + this.type.prototype.tp$name + "'>, NULL>");
         },
-        tp$getattr: function (pyName, canSuspend) {
+        tp$getattr(pyName, canSuspend) {
             let starttype = this.obj_type;
             if (starttype == null) {
                 return Sk.generic.getAttr.call(this, pyName, canSuspend);
@@ -61,7 +72,7 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
             if (i >= n) {
                 return Sk.generic.getAttr.call(this, pyName, canSuspend);
             }
-            const jsName = pyName.$jsstr();
+            const jsName = pyName.$mangled;
 
             let tmp, res;
             while (i < n) {
@@ -82,7 +93,7 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
                 i++;
             }
         },
-        tp$descr_get: function (obj, obtype) {
+        tp$descr_get(obj, obtype) {
             if (obj === null || this.obj != null) {
                 return this;
             }
@@ -103,26 +114,26 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
     },
     getsets: {
         __thisclass__: {
-            $get: function () {
+            $get() {
                 return this.type;
             },
             $doc: "the class invoking super()",
         },
         __self__: {
-            $get: function () {
+            $get() {
                 return this.obj || Sk.builtin.none.none$;
             },
             $doc: "the instance invoking super(); may be None",
         },
         __self_class__: {
-            $get: function () {
+            $get() {
                 return this.obj_type || Sk.builtin.none.none$;
             },
             $doc: "the type of the instance invoking super(); may be None",
         },
     },
     proto: {
-        $supercheck: function (type, obj) {
+        $supercheck(type, obj) {
             /* Check that a super() call makes sense.  Return a type object.
 
             obj can be a class, or an instance of one:
@@ -142,7 +153,12 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
                 return obj.ob$type;
             } else {
                 /* Try the slow way */
-                /* Cpython has a slow way buy i'm not sure we need it */
+                const class_attr = obj.tp$getattr(Sk.builtin.str.$class);
+                if (class_attr !== undefined && class_attr !== obj.ob$type && Sk.builtin.checkClass(class_attr)) {
+                    if (class_attr.$isSubType(type)) {
+                        return class_attr;
+                    }
+                }
             }
             throw new Sk.builtin.TypeError("super(type, obj): obj must be an instance or subtype of type");
         },

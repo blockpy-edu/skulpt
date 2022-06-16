@@ -1,5 +1,5 @@
 var $builtinmodule = function (name) {
-    var mod = {};
+    var mod = {__name__: new Sk.builtin.str("re")};
 
     var validGroups, convert, getFlags, _split, _findall, matchobj, _search, _match, regexobj;
 
@@ -268,7 +268,7 @@ var $builtinmodule = function (name) {
             throw new Sk.builtin.TypeError("flags must be a number");
         }
         res = "/" + pattern.v.replace(/\//g, "\\/") + "/";
-        lst = mod._findre(res, string);
+        const lst = mod._findre(res, string);
         if (lst.v.length < 1) {
             return Sk.builtin.none.none$;
         }
@@ -296,9 +296,9 @@ var $builtinmodule = function (name) {
         if (!Sk.builtin.checkNumber(flags)) {
             throw new Sk.builtin.TypeError("flags must be a number");
         }
-        pat = Sk.ffi.remapToJs(pattern);
+        const pat = Sk.ffi.remapToJs(pattern);
         res = "/^" + pat.replace(/\//g, "\\/") + "/";
-        lst = mod._findre(res, string);
+        const lst = mod._findre(res, string);
         if (Sk.ffi.remapToJs(lst).length < 1) {
             return Sk.builtin.none.none$;
         }
@@ -325,7 +325,7 @@ var $builtinmodule = function (name) {
         });
 
         _repr = new Sk.builtin.func(function (self) {
-            var ret = "re.compile('" + Sk.ffi.remapToPy(self.re) + "')";
+            var ret = "re.compile('" + Sk.ffi.remapToJs(self.re) + "')";
             return Sk.ffi.remapToPy(ret.substring(0, 212));
         });
 
@@ -344,7 +344,7 @@ var $builtinmodule = function (name) {
             if (start == "^") {
                 start = str.indexOf("\n") + 1;
             }
-            if (end == Sk.builtin.none.none$ || end === null) {
+            if (end === null) {
                 end = str.length;
             }
             return Sk.ffi.remapToPy(str.substring(start, end));
@@ -429,8 +429,7 @@ var $builtinmodule = function (name) {
     });
 
     // No need to purge since we don't cache
-    mod.purge = new Sk.builtin.func(function () {
-    });
+    mod.purge = new Sk.builtin.func(function () {});
 
     return mod;
 };

@@ -32,6 +32,8 @@ if (program.args[0] == "py2") {
     process.exit(1);
 }
 
+const gbl = {__file__: new Sk.builtin.str("<repl>"), __name__: new Sk.builtin.str("__main__")};
+
 Sk.configure({
         output: (args) => { process.stdout.write(args); },
         read: (fname) => { return fs.readFileSync(fname, "utf8"); },
@@ -60,10 +62,10 @@ var //finds lines starting with "print"
 
 if (Sk.__future__.python3) {
     console.log("Python 3.7(ish) (skulpt, " + new Date() + ")");
-    printevaluationresult = "if not evaluationresult == None: print(repr(evaluationresult))"
+    printevaluationresult = "if not evaluationresult == None: print(repr(evaluationresult))";
 } else {
     console.log("Python 2.7(ish) (skulpt, " + new Date() + ")");
-    printevaluationresult = "if not evaluationresult == None: print repr(evaluationresult)"
+    printevaluationresult = "if not evaluationresult == None: print repr(evaluationresult)";
 }
 console.log("[node: " + process.version + "] on a system");
 console.log('Don\'t type "help", "copyright", "credits" or "license" unless you\'ve assigned something to them');
@@ -126,7 +128,7 @@ while (true) {
         if (!lines || /^\s*$/.test(lines)) {
             continue;
         } else {
-            Sk.importMainWithBody("repl", false, lines.join("\n"));
+            Sk.misceval.retryOptionalSuspensionOrThrow(Sk.builtin.exec(lines.join("\n"), gbl), "repl does not support suspensions");
         }
     } catch (err) {
         if (err instanceof Sk.builtin.SystemExit) {

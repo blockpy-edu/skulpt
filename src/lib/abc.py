@@ -1,1 +1,3 @@
-raise NotImplementedError("abc is not yet implemented in Skulpt")
+# TODO: Implement this!
+def update_abstractmethods(cls):
+    return cls

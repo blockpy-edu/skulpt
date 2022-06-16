@@ -133,7 +133,7 @@ Sk.configure = function (options) {
     Sk.inputfunTakesPrompt = options["inputfunTakesPrompt"] || false;
     Sk.asserts.assert(typeof Sk.inputfunTakesPrompt === "boolean");
 
-    Sk.retainGlobals = options["retainglobals"] || false;
+    Sk.retainGlobals = options["retainglobals"] || options["retainGlobals"] || false;
     Sk.asserts.assert(typeof Sk.retainGlobals === "boolean");
 
     Sk.debugging = options["debugging"] || false;
@@ -149,16 +149,16 @@ Sk.configure = function (options) {
     if (Sk.signals === true) {
         Sk.signals = {
             listeners: [],
-            addEventListener: function (handler) {
+            addEventListener(handler) {
                 Sk.signals.listeners.push(handler);
             },
-            removeEventListener: function (handler) {
+            removeEventListener(handler) {
                 var index = Sk.signals.listeners.indexOf(handler);
                 if (index >= 0) {
                     Sk.signals.listeners.splice(index, 1); // Remove items
                 }
             },
-            signal: function (signal, data) {
+            signal(signal, data) {
                 for (var i = 0; i < Sk.signals.listeners.length; i++) {
                     Sk.signals.listeners[i].call(null, signal, data);
                 }
@@ -211,6 +211,8 @@ Sk.configure = function (options) {
 
     Sk.switch_version(Sk.__future__.python3);
 
+    Sk.builtin.str.$next = Sk.__future__.python3 ? new Sk.builtin.str("__next__") : new Sk.builtin.str("next");
+
     Sk.setupOperators(Sk.__future__.python3);
     Sk.setupDunderMethods(Sk.__future__.python3);
 
@@ -259,6 +261,11 @@ Sk.execLimit = Number.POSITIVE_INFINITY;
  *  Soft execution timeout, returns a Suspension. Set to null to disable
  */
 Sk.yieldLimit = Number.POSITIVE_INFINITY;
+
+/*
+ * Keep track of stack somehow?
+ */
+Sk.execStack = [];
 
 /*
  * Replacable output redirection (called from print, etc).

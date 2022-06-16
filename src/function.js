@@ -34,7 +34,7 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
 
         this.$name = (code.co_name && code.co_name.v) || code.name || "<native JS>";
         this.$d = Sk.builtin.dict ? new Sk.builtin.dict() : undefined;
-        this.$doc = code.$doc;
+        this.$doc = code.co_docstring || Sk.builtin.none.none$;
         this.$module = (Sk.globals && Sk.globals["__name__"]) || Sk.builtin.none.none$;
         this.$qualname = (code.co_qualname && code.co_qualname.v) || this.$name;
 
@@ -45,25 +45,28 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             }
         }
         this.func_closure = closure;
+        this.func_annotations = null;
         this.$memoiseFlags();
-        this.memoised = code.co_fastcall || undefined;
+        this.memoised = code.co_fastcall || null;
         if (code.co_fastcall) {
-            this.tp$call = code;
+            this.tp$call = code.bind(this);
+        } else {
+            this.tp$call = Sk.builtin.func.prototype.tp$call.bind(this); // keep func the same shape
         }
 
     },
     slots: {
         tp$getattr: Sk.generic.getAttr,
-        tp$descr_get: function (obj, objtype) {
+        tp$descr_get(obj, objtype) {
             if (obj === null) {
                 return this;
             }
             return new Sk.builtin.method(this, obj);
         },
-        $r: function () {
+        $r() {
             return new Sk.builtin.str("<function " + this.$qualname + ">");
         },
-        tp$call: function (posargs, kw) {
+        tp$call(posargs, kw) {
             // Property reads from func_code are slooow, but
             // the existing external API allows setup first, so as a
             // hack we delay this initialisation.
@@ -97,10 +100,10 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
     },
     getsets: {
         __name__: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.str(this.$name);
             },
-            $set: function (value) {
+            $set(value) {
                 if (!Sk.builtin.checkString(value)) {
                     throw new Sk.builtin.TypeError("__name__ must be set to a string object");
                 }
@@ -108,10 +111,10 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             },
         },
         __qualname__: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.str(this.$qualname);
             },
-            $set: function (value) {
+            $set(value) {
                 if (!Sk.builtin.checkString(value)) {
                     throw new Sk.builtin.TypeError("__qualname__ must be set to a string object");
                 }
@@ -119,19 +122,52 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             },
         },
         __dict__: Sk.generic.getSetDict,
+        __annotations__: {
+            $get() {
+                if (this.func_annotations === null) {
+                    this.func_annotations = new Sk.builtin.dict([]);
+                } else if (Array.isArray(this.func_annotations)) {
+                    this.func_annotations = Sk.abstr.keywordArrayToPyDict(this.func_annotations);
+                }
+                return this.func_annotations;
+            },
+            $set(v) {
+                if (v === undefined || Sk.builtin.checkNone(v)) {
+                    this.func_annotations = new Sk.builtin.dict([]);
+                } else if (v instanceof Sk.builtin.dict) {
+                    this.func_annotations = v;
+                } else {
+                    throw new Sk.builtin.TypeError("__annotations__ must be set to a dict object");
+                }
+            }
+        },
         __defaults__: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.tuple(this.$defaults);
             }, // technically this is a writable property but we'll leave it as read-only for now
         },
         __doc__: {
-            $get: function () {
-                return new Sk.builtin.str(this.$doc);
+            $get() {
+                return this.$doc;
+            },
+            $set(v) {
+                // The value the user is setting __doc__ to can be any Python
+                // object.  If we receive 'undefined' then the user is deleting
+                // __doc__, which is allowed and results in __doc__ being None.
+                this.$doc = v || Sk.builtin.none.none$;
             },
         },
+        __module__: {
+            $get() {
+                return this.$module;
+        },
+            $set(v) {
+                this.$module = v || Sk.builtin.none.none$;
+            }
+        }
     },
     proto: {
-        $memoiseFlags: function () {
+        $memoiseFlags() {
             this.co_varnames = this.func_code.co_varnames;
             this.co_argcount = this.func_code.co_argcount;
             if (this.co_argcount === undefined && this.co_varnames) {
@@ -143,12 +179,13 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             this.$defaults = this.func_code.$defaults || [];
             this.$kwdefs = this.func_code.$kwdefs || [];
         },
+        $resolveArgs,
 
     }
 });
 
 
-Sk.builtin.func.prototype.$resolveArgs = function (posargs, kw) {
+function $resolveArgs(posargs, kw) {
     // The rest of this function is a logical Javascript port of
     // _PyEval_EvalCodeWithName, and follows its logic,
     // plus fast-paths imported from _PyFunction_FastCall* as marked
@@ -241,7 +278,14 @@ Sk.builtin.func.prototype.$resolveArgs = function (posargs, kw) {
             }
         }
         if (missing.length != 0 && (this.co_argcount || this.co_varnames)) {
-            throw new Sk.builtin.TypeError(this.$name + "() missing " + missing.length + " required argument" + (missing.length == 1 ? "" : "s") + (missingUnnamed ? "" : (": " + missing.join(", "))));
+            throw new Sk.builtin.TypeError(
+                this.$name +
+                    "() missing " +
+                    missing.length +
+                    " required argument" +
+                    (missing.length == 1 ? "" : "s") +
+                    (missingUnnamed ? "" : ": " + missing.map((x) => "'" + x + "'").join(", "))
+            );
         }
         for (; i < co_argcount; i++) {
             if (args[i] === undefined) {

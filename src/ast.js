@@ -159,6 +159,10 @@ function setContext(c, e, ctx, n) {
             }
             e.ctx = ctx;
             break;
+        case Sk.astnodes.Starred:
+            e.ctx = ctx;
+            setContext(c, e.value, ctx, n);
+            break;
         case Sk.astnodes.Subscript:
             e.ctx = ctx;
             break;
@@ -2213,76 +2217,96 @@ function astForIfexpr(c, n) {
  * s is a python-style string literal, including quote characters and u/r/b
  * prefixes. Returns [decoded string object, is-an-fstring]
  */
-function parsestr(c, s) {
-    var encodeUtf8 = function (s) {
-        return unescape(encodeURIComponent(s));
-    };
-    var decodeUtf8 = function (s) {
-        return decodeURIComponent(escape(s));
-    };
+function parsestr (c, n, s) {
+    var quote = s.charAt(0);
+    var rawmode = false;
+    var unicode = false;
+    var fmode = false;
+    var bytesmode = false;
+
     var decodeEscape = function (s, quote) {
         var d3;
         var d2;
         var d1;
         var d0;
-        var c;
+        var ch;
         var i;
         var len = s.length;
         var ret = "";
         for (i = 0; i < len; ++i) {
-            c = s.charAt(i);
-            if (c === "\\") {
+            ch = s.charAt(i);
+            if (ch === "\\") {
                 ++i;
-                c = s.charAt(i);
-                if (c === "n") {
+                ch = s.charAt(i);
+                if (ch === "n") {
                     ret += "\n";
-                } else if (c === "\\") {
-                    ret += "\\";
-                } else if (c === "t") {
-                    ret += "\t";
-                } else if (c === "r") {
-                    ret += "\r";
-                } else if (c === "b") {
-                    ret += "\b";
-                } else if (c === "f") {
-                    ret += "\f";
-                } else if (c === "v") {
-                    ret += "\v";
-                } else if (c === "0") {
-                    ret += "\0";
-                } else if (c === "\"") {
-                    ret += "\"";
-                } else if (c === "'") {
-                    ret += "'";
-                } else if (c === "\n") /* escaped newline, join lines */ {
-                } else if (c === "x") {
-                    d0 = s.charAt(++i);
-                    d1 = s.charAt(++i);
-                    ret += encodeUtf8(String.fromCharCode(parseInt(d0 + d1, 16)));
-                } else if (c === "u" || c === "U") {
-                    d0 = s.charAt(++i);
-                    d1 = s.charAt(++i);
-                    d2 = s.charAt(++i);
-                    d3 = s.charAt(++i);
-                    ret += encodeUtf8(String.fromCharCode(parseInt(d0 + d1, 16), parseInt(d2 + d3, 16)));
-                } else {
-                    // Leave it alone
-                    ret += "\\" + c;
-                    // Sk.asserts.fail("unhandled escape: '" + c.charCodeAt(0) + "'");
                 }
+                else if (ch === "\\") {
+                    ret += "\\";
+                }
+                else if (ch === "t") {
+                    ret += "\t";
+                }
+                else if (ch === "r") {
+                    ret += "\r";
+                }
+                else if (ch === "b") {
+                    ret += "\b";
+                }
+                else if (ch === "f") {
+                    ret += "\f";
+                }
+                else if (ch === "v") {
+                    ret += "\v";
+                }
+                else if (ch === "0") {
+                    ret += "\0";
+                }
+                else if (ch === '"') {
+                    ret += '"';
+                }
+                else if (ch === '\'') {
+                    ret += '\'';
+                }
+                else if (ch === "\n") /* escaped newline, join lines */ {
+                }
+                else if (ch === "x") {
+                    if (i+2 >= len) {
+                        ast_error(c, n, "Truncated \\xNN escape");
+                    }
+                    ret += String.fromCharCode(parseInt(s.substr(i+1,2), 16));
+                    i += 2;
+                }
+                else if (!bytesmode && ch === "u") {
+                    if (i+4 >= len) {
+                        ast_error(c, n, "Truncated \\uXXXX escape");
+                    }
+                    ret += String.fromCharCode(parseInt(s.substr(i+1, 4), 16))
+                    i += 4;
+                }
+                else if (!bytesmode && ch === "U") {
+                    if (i+8 >= len) {
+                        ast_error(c, n, "Truncated \\UXXXXXXXX escape");
+                    }
+                    ret += String.fromCodePoint(parseInt(s.substr(i+1, 8), 16))
+                    i += 8;
+                }
+                else {
+                    // Leave it alone
+                    ret += "\\" + ch;
+                    // Sk.asserts.fail("unhandled escape: '" + ch.charCodeAt(0) + "'");
+                }
+                }
+            else if (bytesmode && ch.charCodeAt(0) > 0x7f) {
+                ast_error(c, n, "bytes can only contain ASCII literal characters");
             } else {
-                ret += c;
+                ret += ch;
             }
         }
-        return decodeUtf8(ret);
+        return ret;
     };
 
-    //print("parsestr", s);
-
-    var quote = s.charAt(0);
-    var rawmode = false;
-    var unicode = false;
-    var fmode = false;
+    //console.log("parsestr", s);
 
     // treats every sequence as unicodes even if they are not treated with uU prefix
     // kinda hacking though working for most purposes
@@ -2297,9 +2321,11 @@ function parsestr(c, s) {
             unicode = true;
         } else if (quote === "r" || quote === "R") {
             rawmode = true;
-        } else if (quote === "b" || quote === "B") {
-            Sk.asserts.assert(!"todo; haven't done b'' strings yet");
-        } else if (quote === "f" || quote === "F") {
+        }
+        else if (quote === "b" || quote === "B") {
+            bytesmode = true;
+        }
+        else if (quote === "f" || quote === "F") {
             fmode = true;
         } else {
             break;
@@ -2310,9 +2336,6 @@ function parsestr(c, s) {
 
     Sk.asserts.assert(quote === "'" || quote === "\"" && s.charAt(s.length - 1) === quote);
     s = s.substr(1, s.length - 2);
-    if (unicode) {
-        s = encodeUtf8(s);
-    }
 
     if (s.length >= 4 && s.charAt(0) === quote && s.charAt(1) === quote) {
         Sk.asserts.assert(s.charAt(s.length - 1) === quote && s.charAt(s.length - 2) === quote);
@@ -2320,9 +2343,16 @@ function parsestr(c, s) {
     }
 
     if (rawmode || s.indexOf("\\") === -1) {
-        return [strobj(decodeUtf8(s)), fmode];
+        if (bytesmode) {
+            for (let i=0; i<s.length; i++) {
+                if (s.charCodeAt(i) > 0x7f) {
+                    ast_error(c, n, "bytes can only contain ASCII literal characters");
+                }
+            }
     }
-    return [strobj(decodeEscape(s, quote)), fmode];
+        return [strobj(s), fmode, bytesmode];
+    }
+    return [strobj(decodeEscape(s, quote)), fmode, bytesmode];
 }
 
 function fstring_compile_expr(str, expr_start, expr_end, c, n) {
@@ -2529,7 +2559,7 @@ function fstring_parse(str, start, end, raw, recurse_lvl, c, n) {
             // We need to error out on any lone }s, and
             // replace doubles with singles.
             if (/(^|[^}])}(}})*($|[^}])/.test(literal)) {
-                throw new SyntaxError("f-string: single '}' is not allowed", c.c_filename, LINENO(n), n.col_offset);
+                throw new Sk.builtin.SyntaxError("f-string: single '}' is not allowed", c.c_filename, LINENO(n), n.col_offset);
             }
             literal = literal.replace(/}}/g, "}");
         }
@@ -2577,17 +2607,22 @@ function fstring_parse(str, start, end, raw, recurse_lvl, c, n) {
 function parsestrplus(c, n) {
     let strs = [];
     let lastStrNode;
+    let bytesmode;
 
     for (let i = 0; i < NCH(n); ++i) {
         let chstr = CHILD(n, i).value;
-        let str, fmode;
-        try {
-            let r = parsestr(c, chstr);
-            str = r[0];
-            fmode = r[1];
-        } catch (x) {
-            throw new Sk.builtin.SyntaxError("invalid string (possibly contains a unicode character)", c.c_filename, CHILD(n, i).lineno);
+        let r = parsestr(c, CHILD(n,i), chstr);
+        let str = r[0];
+        let fmode = r[1];
+        let this_bytesmode = r[2];
+
+
+        /* Check that we're not mixing bytes with unicode. */
+        if (i != 0 && bytesmode !== this_bytesmode) {
+            ast_error(c, n, "cannot mix bytes and nonbytes literals");
         }
+        bytesmode = this_bytesmode;
+
         if (fmode) {
             if (!Sk.__future__.python3) {
                 throw new Sk.builtin.SyntaxError("invalid string (f-strings are not supported in Python 2)", c.c_filename, CHILD(n, i).lineno);
@@ -2600,7 +2635,8 @@ function parsestrplus(c, n) {
             if (lastStrNode) {
                 lastStrNode.s = lastStrNode.s.sq$concat(str);
             } else {
-                lastStrNode = new Sk.astnodes.Str(str, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
+                let type = bytesmode ? Sk.astnodes.Bytes : Sk.astnodes.Str;
+                lastStrNode = new type(str, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset)
                 strs.push(lastStrNode);
             }
         }
@@ -2613,78 +2649,44 @@ function parsestrplus(c, n) {
     }
 }
 
+const FLOAT_RE = new RegExp(Sk._tokenize.Floatnumber);
+const underscore = /_/g;
+
 function parsenumber(c, s, lineno) {
-    var neg;
-    var val;
-    var tmp;
-    var end = s.charAt(s.length - 1);
+    s = s.replace(underscore, ""); // we already know that we have a valid underscore number from the tokenizer
 
-    // call internal complex type constructor for complex strings
+    const end = s[s.length - 1];
+    // we know it's just a single floating point imaginary complex number
     if (end === "j" || end === "J") {
-        return Sk.builtin.complex.complex_subtype_from_string(s);
+        return new Sk.builtin.complex(0, parseFloat(s.slice(0, -1)));
     }
 
-    // Handle longs
+    // use the tokenizer float test
+    if (FLOAT_RE.test(s)) {
+        return new Sk.builtin.float_(parseFloat(s));
+    }
+
+    const start = s[0];
+    // python 2 compatiblity
+    if (start === "0" && s !== "0" && s.charCodeAt(1) < 65 /** i.e. the second char is a digit and not a base */) {
+        s = "0o" + s.substring(1); // silent octal
+    }
+    // python2 makes no guarantee about the size of a long
+    // so only make the int literal a long if it has an L suffix
+    let isInt = true;
     if (end === "l" || end === "L") {
-        return Sk.longFromStr(s.substr(0, s.length - 1), 0);
+        s = s.slice(0, -1);
+        isInt = false;
     }
 
-    // todo; we don't currently distinguish between int and float so
-    // str is wrong for these.
-    if (s.indexOf(".") !== -1) {
-        return new Sk.builtin.float_(parseFloat(s));
+    // we know it's a valid octal, hex, binary or decimal so let Number do its thing
+    const val = Number(s); // we can rely on this since we know s is positive and is already a valid int literal
+    if (val > Number.MAX_SAFE_INTEGER) {
+        return isInt ? new Sk.builtin.int_(JSBI.BigInt(s)) : new Sk.builtin.lng(JSBI.BigInt(s));
+    }
+    return isInt ? new Sk.builtin.int_(val) : new Sk.builtin.lng(val);
     }
 
-    // Handle integers of various bases
-    tmp = s;
-    neg = false;
-    if (s.charAt(0) === "-") {
-        tmp = s.substr(1);
-        neg = true;
-    }
-
-    if (tmp.charAt(0) === "0" && (tmp.charAt(1) === "x" || tmp.charAt(1) === "X")) {
-        // Hex
-        tmp = tmp.substring(2);
-        val = parseInt(tmp, 16);
-    } else if ((s.indexOf("e") !== -1) || (s.indexOf("E") !== -1)) {
-        // Float with exponent (needed to make sure e/E wasn't hex first)
-        return new Sk.builtin.float_(parseFloat(s));
-    } else if (tmp.charAt(0) === "0" && (tmp.charAt(1) === "b" || tmp.charAt(1) === "B")) {
-        // Binary
-        tmp = tmp.substring(2);
-        val = parseInt(tmp, 2);
-    } else if (tmp.charAt(0) === "0") {
-        if (tmp === "0") {
-            // Zero
-            val = 0;
-        } else {
-            // Octal
-            tmp = tmp.substring(1);
-            if ((tmp.charAt(0) === "o") || (tmp.charAt(0) === "O")) {
-                tmp = tmp.substring(1);
-            }
-            val = parseInt(tmp, 8);
-        }
-    } else {
-        // Decimal
-        val = parseInt(tmp, 10);
-    }
-
-    // Convert to long
-    if (val > Number.MAX_SAFE_INTEGER &&
-        Math.floor(val) === val &&
-        (s.indexOf("e") === -1 && s.indexOf("E") === -1)) {
-        return Sk.longFromStr(s, 0);
-    }
-
-    // Small enough, return parsed number
-    if (neg) {
-        return new Sk.builtin.int_(-val);
-    } else {
-        return new Sk.builtin.int_(val);
-    }
-}
 
 function astForSlice(c, n) {
     var n2;
@@ -2856,7 +2858,7 @@ function ast_for_atom(c, n) {
             }
         }
         default:
-            Sk.assert.fail("unhandled atom " + TYPE(ch));
+            Sk.asserts.fail("unhandled atom " + TYPE(ch));
             return null;
     }
 }
@@ -2874,110 +2876,6 @@ function ast_for_setdisplay(c, n) {
     }
 
     return new Sk.astnodes.Set(elts, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
-}
-
-
-function astForAtom(c, n) {
-    /* atom: '(' [yield_expr|testlist_comp] ')' | '[' [testlist_comp] ']'
-       | '{' [dictmaker|testlist_comp] '}' | NAME | NUMBER | STRING+
-       | '...' | 'None' | 'True' | 'False'
-    */
-    var i;
-    var values;
-    var keys;
-    var size;
-    var ch = CHILD(n, 0);
-    var elts;
-    switch (ch.type) {
-        case TOK.T_NAME:
-            var s = ch.value;
-            // All names start in Load context, but may be changed later
-            if (s.length >= 4 && s.length <= 5) {
-                if (s === "None") {
-                    return new Sk.astnodes.NameConstant(Sk.builtin.none.none$, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset /* c.c_arena*/);
-                }
-
-                if (s === "True") {
-                    return new Sk.astnodes.NameConstant(Sk.builtin.bool.true$, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset /* c.c_arena*/);
-                }
-
-                if (s === "False") {
-                    return new Sk.astnodes.NameConstant(Sk.builtin.bool.false$, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset /* c.c_arena*/);
-                }
-
-            }
-            var name = new_identifier(s, c);
-
-            /* All names start in Load context, but may later be changed. */
-            return new Sk.astnodes.Name(name, Sk.astnodes.Load, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-        case TOK.T_STRING:
-            return new Sk.astnodes.Str(parsestrplus(c, n), n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-        case TOK.T_NUMBER:
-            return new Sk.astnodes.Num(parsenumber(c, ch.value, n.lineno), n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-        case TOK.T_LPAR: // various uses for parens
-            ch = CHILD(n, 1);
-            if (ch.type === TOK.T_RPAR) {
-                return new Sk.astnodes.Tuple([], Sk.astnodes.Load, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            }
-            if (ch.type === SYM.yield_expr) {
-                return ast_for_expr(c, ch);
-            }
-            //            if (NCH(ch) > 1 && CHILD(ch, 1).type === SYM.comp_for) {
-            //                return astForComprehension(c, ch);
-            //            }
-            return ast_for_testlistComp(c, ch);
-        case TOK.T_LSQB: // list or listcomp
-            ch = CHILD(n, 1);
-            if (ch.type === TOK.T_RSQB) {
-                return new Sk.astnodes.List([], Sk.astnodes.Load, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            }
-            REQ(ch, SYM.listmaker);
-            if (NCH(ch) === 1 || CHILD(ch, 1).type === TOK.T_COMMA) {
-                return new Sk.astnodes.List(seq_for_testlist(c, ch), Sk.astnodes.Load, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            }
-            return ast_for_listcomp(c, ch);
-
-        case TOK.T_LBRACE:
-            /* dictorsetmaker:
-             *     (test ':' test (comp_for : (',' test ':' test)* [','])) |
-             *     (test (comp_for | (',' test)* [',']))
-             */
-            keys = [];
-            values = [];
-            ch = CHILD(n, 1);
-            if (n.type === TOK.T_RBRACE) {
-                //it's an empty dict
-                return new Sk.astnodes.Dict([], null, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            } else if (NCH(ch) === 1 || (NCH(ch) !== 0 && CHILD(ch, 1).type === TOK.T_COMMA)) {
-                //it's a simple set
-                elts = [];
-                size = Math.floor((NCH(ch) + 1) / 2);
-                for (i = 0; i < NCH(ch); i += 2) {
-                    var expression = ast_for_expr(c, CHILD(ch, i));
-                    elts[i / 2] = expression;
-                }
-                return new Sk.astnodes.Set(elts, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            } else if (NCH(ch) !== 0 && CHILD(ch, 1).type == SYM.comp_for) {
-                //it's a set comprehension
-                return ast_for_setcomp(c, ch);
-            } else if (NCH(ch) > 3 && CHILD(ch, 3).type === SYM.comp_for) {
-                //it's a dict compr. I think.
-                return ast_for_dictcomp(c, ch);
-            } else {
-                size = Math.floor((NCH(ch) + 1) / 4); // + 1 for no trailing comma case
-                for (i = 0; i < NCH(ch); i += 4) {
-                    keys[i / 4] = ast_for_expr(c, CHILD(ch, i));
-                    values[i / 4] = ast_for_expr(c, CHILD(ch, i + 2));
-                }
-                return new Sk.astnodes.Dict(keys, values, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-            }
-        case TOK.T_BACKQUOTE:
-            //throw new Sk.builtin.SyntaxError("backquote not supported, use repr()", c.c_filename, n.lineno);
-            return new Sk.astnodes.Repr(ast_for_testlist(c, CHILD(n, 1)), n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
-        default:
-            Sk.asserts.fail("unhandled atom", ch.type);
-
-    }
 }
 
 function astForAtomExpr(c, n) {
@@ -3303,7 +3201,7 @@ Sk.astFromParse = function (n, filename, c_flags) {
         case SYM.file_input:
             for (i = 0; i < NCH(n) - 1; ++i) {
                 ch = CHILD(n, i);
-                if (n.type === TOK.T_NEWLINE) {
+                if (ch.type === TOK.T_NEWLINE) {
                     continue;
                 }
                 REQ(ch, SYM.stmt);

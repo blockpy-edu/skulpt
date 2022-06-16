@@ -122,7 +122,7 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
             let chompedLine = sourceLine;
             if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
             out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
-            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$loc,${lineno}, ${col_offset}, $fname, ${isDocstring});\n`);
+            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring});\n`);
         }
     }
 };
@@ -340,23 +340,41 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
     Sk.asserts.assert(tuporlist === "tuple" || tuporlist === "list" || tuporlist === "set");
 
     let hasStars = false;
-    for (let elt of e.elts) {
-        if (elt.constructor === Sk.astnodes.Starred) {
+    let starIdx;
+    for (i = 0; i < e.elts.length; i++) {
+        if (e.elts[i].constructor === Sk.astnodes.Starred) {
             hasStars = true;
+            starIdx = i;
             break;
         }
     }
 
     if (e.ctx === Sk.astnodes.Store) {
         if (hasStars) {
-            // TODO support this in Python 3 mode
-            throw new Sk.builtin.SyntaxError("Tuple unpacking with stars is not supported");
+            if (!Sk.__future__.python3) {
+                throw new Sk.builtin.SyntaxError("assignment unpacking with stars is not supported in Python 2", this.filename, e.lineno);
+            }
+            for (i = starIdx + 1; i < e.elts.length; i++) {
+                if (e.elts[i].constructor === Sk.astnodes.Starred) {
+                    throw new Sk.builtin.SyntaxError("multiple starred expressions in assignment", this.filename, e.lineno);
+                }
         }
-        items = this._gr("items", "Sk.abstr.sequenceUnpack(" + data + "," + e.elts.length + ")");
+        }
+        const breakIdx = hasStars ? starIdx : e.elts.length;
+        const numvals = hasStars ? e.elts.length - 1 : breakIdx;
+        out("$ret = Sk.abstr.sequenceUnpack(" + data + "," + breakIdx + "," + numvals + ", " + hasStars + ");");
+        this._checkSuspension();
+        items = this._gr("items", "$ret");
+        
         for (i = 0; i < e.elts.length; ++i) {
+            if (i === starIdx) {
+                this.vexpr(e.elts[i].value, items + "[" + i + "]");
+            } else {
             this.vexpr(e.elts[i], items + "[" + i + "]");
         }
-    } else if (e.ctx === Sk.astnodes.Load || tuporlist === "set") { //because set's can't be assigned to.
+        }
+    } else if (e.ctx === Sk.astnodes.Load || tuporlist === "set") {
+        //because set's can't be assigned to.
 
         if (hasStars) {
             if (!Sk.__future__.python3) {
@@ -398,20 +416,64 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
     }
 };
 
-Compiler.prototype.cdict = function (e) {
-    var v;
-    var i;
-    var items;
-    items = [];
-    if (e.keys !== null) {
-        Sk.asserts.assert(e.values.length === e.keys.length);
-        for (i = 0; i < e.values.length; ++i) {
-            v = this.vexpr(e.values[i]); // "backwards" to match order in cpy
+Compiler.prototype.csubdict = function(e, begin, end) {
+    const items = [];
+    for (let i = begin; i < end; i++) {
             items.push(this.vexpr(e.keys[i]));
-            items.push(v);
-        }
+        items.push(this.vexpr(e.values[i])); 
     }
     return this._gr("loaddict", "new Sk.builtins['dict']([", items, "])");
+}
+
+Compiler.prototype.cdict = function (e) {
+    let have_dict = 0;
+    let is_unpacking = false;
+    const n = e.values ? e.values.length : 0;
+    let elements = 0;
+    let main_dict;
+    let sub_dict;
+
+    for (let i = 0; i<n; i++) {
+        is_unpacking = e.keys[i] === null;
+        if (is_unpacking) {
+            if (elements) {
+                sub_dict = this.csubdict(e, i-elements, i);
+                if (have_dict) {
+                    out(main_dict, ".dict$merge(", sub_dict, ");");
+                    // update the current dict (this won't suspend)
+                } else {
+                    main_dict = sub_dict;
+                    have_dict = 1;
+                }
+                elements = 0;
+            }
+            if (have_dict === 0) {
+                main_dict = this._gr("loaddict", "new Sk.builtins.dict([])");
+                have_dict = 1;
+            }
+            sub_dict = this.vexpr(e.values[i]);
+            out("$ret = ", main_dict, ".dict$merge(", sub_dict, ");");
+            this._checkSuspension(e);
+            // could suspend
+        } else {
+            elements ++;
+        }
+    }
+    if (elements) {
+        sub_dict = this.csubdict(e, n-elements, n)
+        if (have_dict) {
+            out(main_dict, ".dict$merge(", sub_dict, ");");
+            // update the current dict (this won't suspend)
+        } else {
+            main_dict = sub_dict;
+            have_dict = 1;
+        }
+    }
+    if (have_dict === 0) {
+        // add op buildmap
+        main_dict = this._gr("loaddict", "new Sk.builtins.dict([])");
+    }
+    return main_dict;
 };
 
 Compiler.prototype.clistcomp = function (e) {
@@ -495,7 +557,7 @@ Compiler.prototype.cyield = function (e) {
     if (this.u.ste.blockType !== Sk.SYMTAB_CONSTS.FunctionBlock) {
         throw new Sk.builtin.SyntaxError("'yield' outside function", this.filename, e.lineno);
     }
-    var val = "null",
+    var val = "Sk.builtin.none.none$",
         nextBlock;
     if (e.value) {
         val = this.vexpr(e.value);
@@ -504,7 +566,7 @@ Compiler.prototype.cyield = function (e) {
     // return a pair: resume target block and yielded value
     out("return [/*resume*/", nextBlock, ",/*ret*/", val, "];");
     this.setBlock(nextBlock);
-    return "$gen.gi$sentvalue"; // will either be null if none sent, or the value from gen.send(value)
+    return "$gen.gi$sentvalue"; // will either be none if none sent, or the value from gen.send(value)
 };
 
 Compiler.prototype.cyieldfrom = function (e) {
@@ -574,9 +636,9 @@ Compiler.prototype.ccompare = function (e) {
 
     for (i = 0; i < n; ++i) {
         rhs = this.vexpr(e.comparators[i]);
-        out("$ret = Sk.builtin.bool(Sk.misceval.richCompareBool(", cur, ",", rhs, ",'", e.ops[i].prototype._astname, "', true));");
+        out("$ret = Sk.misceval.richCompareBool(", cur, ",", rhs, ",'", e.ops[i].prototype._astname, "', true);");
         this._checkSuspension(e);
-        out(fres, "=$ret;");
+        out(fres, "=Sk.builtin.bool($ret);");
         this._jumpfalse("$ret", done);
         cur = rhs;
     }
@@ -602,7 +664,7 @@ Compiler.prototype.ccall = function (e) {
         kwarray = [];
         for (let kw of e.keywords) {
             if (hasStars && !Sk.__future__.python3) {
-                throw new SyntaxError("Advanced unpacking of function arguments is not supported in Python 2");
+                throw new Sk.builtin.SyntaxError("Advanced unpacking of function arguments is not supported in Python 2");
             }
             if (kw.arg) {
                 kwarray.push("'" + kw.arg.v + "'");
@@ -628,7 +690,8 @@ Compiler.prototype.ccall = function (e) {
         // note that it's part of the js API spec: https://developer.mozilla.org/en/docs/Web/API/Window/self
         // so we should probably add self to the mangling
         // TODO: feel free to ignore the above
-        out("if (typeof self === \"undefined\" || self.toString().indexOf(\"Window\") > 0) { throw new Sk.builtin.RuntimeError(\"super(): no arguments\") };");
+        //out("if (typeof self === \"undefined\" || self.toString().indexOf(\"Window\") > 0) { throw new Sk.builtin.RuntimeError(\"super(): no arguments\") };");
+        out("if (typeof self === \"undefined\" || self===window) { throw new Sk.builtin.RuntimeError(\"super(): no arguments\") };");
         positionalArgs = "[__class__,self]";
     }
     out("$ret = (", func, ".tp$call)?", func, ".tp$call(", positionalArgs, ",", keywordArgs, ") : Sk.misceval.applyOrSuspend(", func, ",undefined,undefined,", keywordArgs, ",", positionalArgs, ");");
@@ -769,9 +832,8 @@ Compiler.prototype.cformattedvalue = function (e) {
             value = this._gr("value", "new Sk.builtin.str(", value, ")");
             break;
         case "a":
-        // TODO when repr() becomes more unicode-aware,
-        // we'll want to handle repr() and ascii() differently.
-        // For now, they're the same
+            value = this._gr("value", "Sk.builtin.ascii(",value,")");
+            break;
         case "r":
             value = this._gr("value", "Sk.builtin.repr(", value, ")");
             break;
@@ -780,6 +842,26 @@ Compiler.prototype.cformattedvalue = function (e) {
     return this._gr("formatted", "Sk.abstr.objectFormat(" + value + "," + formatSpec + ")");
 };
 
+function getJsLiteralForString(s) {
+    let r = "\"";
+    for (let i = 0; i < s.length; i++) {
+        let c = s.charCodeAt(i);
+        // Escape quotes, anything before space, and anything non-ASCII
+        if (c == 0x0a) {
+            r += "\\n";
+        } else if (c == 92) {
+            r += "\\\\";
+        } else if (c == 34 || c < 32 || c >= 0x7f && c < 0x100) {
+            r += "\\x" + ("0" + c.toString(16)).substr(-2);
+        } else if (c >= 0x100) {
+            r += "\\u" + ("000" + c.toString(16)).substr(-4);
+        } else {
+            r += s.charAt(i);
+        }
+    }
+    r += "\"";
+    return r;
+}
 
 /**
  *
@@ -857,8 +939,18 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                 return this.makeConstant("new Sk.builtin.complex(" + real_val + ", " + imag_val + ")");
             }
             Sk.asserts.fail("unhandled Num type");
+        case Sk.astnodes.Bytes:
+            if (Sk.__future__.python3) {
+                const source = [];
+                const str = e.s.$jsstr();
+                for (let i = 0; i < str.length; i++) {
+                    source.push(str.charCodeAt(i));
+                }
+                return this.makeConstant("new Sk.builtin.bytes([", source.join(", "), "])");
+            }
+            // else fall through and make a string instead
         case Sk.astnodes.Str:
-            return this.makeConstant("new Sk.builtin.str(", e.s["$r"]().v, ")");
+            return this.makeConstant("new Sk.builtin.str(", getJsLiteralForString(e.s.$jsstr()), ")");
         case Sk.astnodes.Attribute:
             if (e.ctx !== Sk.astnodes.AugLoad && e.ctx !== Sk.astnodes.AugStore) {
                 val = this.vexpr(e.value);
@@ -870,20 +962,17 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
             switch (e.ctx) {
                 case Sk.astnodes.AugLoad:
                     out("$ret = ", augvar, ".tp$getattr(", mname, ", true);");
-                    out("\nif ($ret === undefined) {");
-                    out("\nconst error_name =", augvar, ".sk$type ? \"type object '\" +", augvar, ".prototype.tp$name + \"'\" : \"'\" + Sk.abstr.typeName(", augvar, ") + \"' object\";");
-                    out("\nthrow new Sk.builtin.AttributeError(error_name + \" has no attribute '\" + ", mname, ".$jsstr() + \"'\");");
-                    out("\n};");
                     this._checkSuspension(e);
+                    out("\nif ($ret === undefined) {");
+                    out("\nthrow new Sk.builtin.AttributeError(", augvar, ".sk$attrError() + \" has no attribute '\" + ", mname,".$jsstr() + \"'\");");
+                    out("\n};");
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.Load:
-                    /*out("$ret = ", val, ".tp$getattr(", mname, ", true);");
-                    out("\nif ($ret === undefined) {");
-                    out("\nconst error_name =", val, ".sk$type ? \"type object '\" +", val, ".prototype.tp$name + \"'\" : \"'\" + Sk.abstr.typeName(", val, ") + \"' object\";");
-                    out("\nthrow new Sk.builtin.AttributeError(error_name + \" has no attribute '\" + ", mname, ".$jsstr() + \"'\");");
-                    out("\n};");*/
-                    out("$ret=Sk.misceval.loadattr(", val, ", ", mname, ");");
+                    out("$ret = ", val, ".tp$getattr(", mname, ", true);");
                     this._checkSuspension(e);
+                    out("\nif ($ret === undefined) {");
+                    out("\nthrow new Sk.builtin.AttributeError(", val, ".sk$attrError() + \" has no attribute '\" + ", mname,".$jsstr() + \"'\");");
+                    out("\n};");
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.AugStore:
                     // To be more correct, we shouldn't sattr() again if the in-place update worked.
@@ -900,7 +989,8 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                     this._checkSuspension(e);
                     break;
                 case Sk.astnodes.Del:
-                    Sk.asserts.fail("todo Del;");
+                    out("$ret = ", val, ".tp$setattr(", mname, ", undefined, true);");
+                    this._checkSuspension(e);
                     break;
                 case Sk.astnodes.Param:
                 default:
@@ -958,11 +1048,20 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
         case Sk.astnodes.Set:
             return this.ctuplelistorset(e, data, "set");
         case Sk.astnodes.Starred:
-            break;
+            switch (e.ctx) {
+                case Sk.astnodes.Store:
+                    /* In all legitimate cases, the Starred node was already replaced
+                     * by compiler_list/compiler_tuple. XXX: is that okay? */
+                    throw new Sk.builtin.SyntaxError("starred assignment target must be in a list or tuple", this.filename, e.lineno);
+                default:
+                    throw new Sk.builtin.SyntaxError("can't use starred expression here", this.filename, e.lineno);
+            }
         case Sk.astnodes.JoinedStr:
             return this.cjoinedstr(e);
         case Sk.astnodes.FormattedValue:
             return this.cformattedvalue(e);
+        case Sk.astnodes.Ellipsis:
+            return this.makeConstant("Sk.builtin.Ellipsis");
         default:
             Sk.asserts.fail("unhandled case " + e.constructor.name + " vexpr");
     }
@@ -987,6 +1086,28 @@ Compiler.prototype.vseqexpr = function (exprs, data) {
     }
     return ret;
 };
+
+
+Compiler.prototype.cannassign = function (s) {
+    const target = s.target;
+    let val = s.value;
+    // perform the actual assignment first
+    if (val) {
+        val = this.vexpr(s.value);
+        this.vexpr(target, val);
+    }
+    switch (target.constructor) {
+        case Sk.astnodes.Name:
+            if (s.simple && (this.u.ste.blockType === Sk.SYMTAB_CONSTS.ClassBlock || this.u.ste.blockType == Sk.SYMTAB_CONSTS.ModuleBlock)) {
+                this.u.hasAnnotations = true;
+                const val = this.vexpr(s.annotation);
+                let mangled = mangleName(this.u.private_, target.id).v;
+                const key = this.makeConstant("new Sk.builtin.str('" + mangled + "')");
+                this.chandlesubscr(Sk.astnodes.Store, "$loc.__annotations__", key, val);
+            }
+    }
+};
+
 
 Compiler.prototype.caugassign = function (s) {
     var to;
@@ -1100,7 +1221,7 @@ Compiler.prototype.endExcept = function () {
     out("$exc.pop();");
 };
 
-Compiler.prototype.outputLocals = function (unit) {
+Compiler.prototype.getLocals = function (unit) {
     var name;
     var output;
     var i;
@@ -1118,11 +1239,16 @@ Compiler.prototype.outputLocals = function (unit) {
             have[name] = true;
         }
     }
-    if (output.length > 0) {
-        return "var " + output.join(",") + "; /* locals */";
+    return output;
+};
+
+Compiler.prototype.outputLocals = function (unit, localNames) {
+    const varnames = localNames.join(",");
+    if (localNames.length > 0) {
+        return "var " + varnames + "; /* locals */";
     }
     return "";
-};
+}
 
 Compiler.prototype.outputSuspensionHelpers = function (unit) {
     var i, t;
@@ -1139,6 +1265,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
         }
     }
     localsToSave = localsToSaveWithoutDuplicates;
+
 
     var hasCell = unit.ste.blockType === Sk.SYMTAB_CONSTS.FunctionBlock && unit.ste.childHasFree;
     var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "");
@@ -1181,6 +1308,10 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     return output;
 };
 
+Compiler.prototype.getLocalGetter = function(unit, localNames) {
+    return `var $getLocals=()=>({$cell,${localNames.join(",")}});`;
+};
+
 Compiler.prototype.outputAllUnits = function () {
     var i;
     var blocks;
@@ -1192,10 +1323,12 @@ Compiler.prototype.outputAllUnits = function () {
     for (j = 0; j < this.allUnits.length; ++j) {
         unit = this.allUnits[j];
         ret += unit.prefixCode;
-        ret += this.outputLocals(unit);
+        var localNames = this.getLocals(unit);
+        ret += this.outputLocals(unit, localNames);
         if (unit.doesSuspend) {
             ret += this.outputSuspensionHelpers(unit);
         }
+        ret += this.getLocalGetter(unit, localNames);
         ret += unit.varDeclsCode;
         ret += unit.switchCode;
         blocks = unit.blocks;
@@ -1405,7 +1538,7 @@ Compiler.prototype.craise = function (s) {
         // for the Python version you're using.
 
         var instantiatedException = this.newBlock("exception now instantiated");
-        var isClass = this._gr("isclass", exc + " instanceof Sk.builtin.type || " + exc + ".prototype instanceof Sk.builtin.BaseException");
+        var isClass = this._gr("isclass", exc + ".prototype instanceof Sk.builtin.BaseException");
         this._jumpfalse(isClass, instantiatedException);
         //this._jumpfalse(instantiatedException, isClass);
 
@@ -1428,10 +1561,11 @@ Compiler.prototype.craise = function (s) {
 
         // TODO TODO TODO set cause appropriately
         // (and perhaps traceback for py2 if we care before it gets fully deprecated)
-
-        out("throw ", exc, ";");
+        //out("Sk.execStack.pop();");
+        out("if (", exc, " instanceof Sk.builtin.BaseException) {throw ",exc,";} else {throw new Sk.builtin.TypeError('exceptions must derive from BaseException');};");
     } else {
         // re-raise
+        //out("Sk.execStack.pop();");
         out("throw $err;");
     }
 };
@@ -1600,13 +1734,13 @@ Compiler.prototype.cwith = function (s, itemIdx) {
     mgr = this._gr("mgr", this.vexpr(s.items[itemIdx].context_expr));
 
     // exit = mgr.__exit__
-    out("$ret = Sk.abstr.gattr(", mgr, ",Sk.builtin.str.$exit, true);");
+    out("$ret = Sk.abstr.lookupSpecial(",mgr,",Sk.builtin.str.$exit);");
     this._checkSuspension(s);
     exit = this._gr("exit", "$ret");
     this.u.tempsToSave.push(exit);
 
     // value = mgr.__enter__()
-    out("$ret = Sk.abstr.gattr(", mgr, ",Sk.builtin.str.$enter, true);");
+    out("$ret = Sk.abstr.lookupSpecial(",mgr,",Sk.builtin.str.$enter);");
     this._checkSuspension(s);
     out("$ret = Sk.misceval.callsimOrSuspendArray($ret);");
     this._checkSuspension(s);
@@ -1830,6 +1964,9 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     if (args && args.defaults) {
         defaults = this.vseqexpr(args.defaults);
     }
+
+    const func_annotations = this.cannotations(args, n.returns);
+
     if (args && args.kw_defaults) {
         kw_defaults = args.kw_defaults.map(e => e ? this.vexpr(e) : "undefined");
     }
@@ -1876,10 +2013,10 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
             funcArgs.push("$kwa");
             this.u.tempsToSave.push("$kwa");
         }
-        for (i = 0; args && i < args.args.length; i++) {
+        for (i = 0; args && i < args.args.length; ++i) {
             funcArgs.push(this.nameop(args.args[i].arg, Sk.astnodes.Param));
         }
-        for (i = 0; args && args.kwonlyargs && i < args.kwonlyargs.length; i++) {
+        for (i = 0; args && args.kwonlyargs && i < args.kwonlyargs.length; ++i) {
             funcArgs.push(this.nameop(args.kwonlyargs[i].arg, Sk.astnodes.Param));
         }
         if (vararg) {
@@ -1953,7 +2090,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     // If there is a suspension, resume from it. Otherwise, initialise
     // parameters appropriately.
     //
-    this.u.varDeclsCode += "if (" + scopename + ".$wakingSuspension!==undefined) { $wakeFromSuspension(); } else {";
+    this.u.varDeclsCode += "var $waking=false; if ("+scopename+".$wakingSuspension!==undefined) { $wakeFromSuspension(); $waking=true; } else {";
 
     if (fastCall) {
         // Resolve our arguments from $posargs+$kwargs.
@@ -2033,6 +2170,9 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     if (Sk.__future__.python3 && class_for_super) {
         this.u.varDeclsCode += "let __class__=$gbl." + class_for_super.v + ";";
     }
+    
+    // Begin stack entry
+    //this.u.prefixCode += `Sk.execStack.push(["${coname.v}", {${this.u.localnames.join(",")}}]);`;
 
     // finally, set up the block switch that the jump code expects
     //
@@ -2108,6 +2248,13 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     }
 
     //
+    // Skulpt doesn't have "co_consts", so record the docstring (or
+    // None) in the "co_docstring" property of the code object, ready
+    // for use by the Sk.builtin.func constructor.
+    //
+    out(scopename, ".co_docstring=", this.cDocstringOfCode(n), ";");
+
+    //
     // attach flags
     //
     if (kwarg) {
@@ -2156,19 +2303,112 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
                             "\",arguments.length,0,0);return new Sk.builtins['generator'](", scopename, ",$gbl,[]", frees, ");}))");
         }
     } else {
-        var res;
+        let funcobj;
         if (decos.length > 0) {
             out("$ret = new Sk.builtins['function'](", scopename, ",$gbl", frees, ");");
-            for (let decorator of decos) {
+            for (let decorator of decos.reverse()) {
                 out("$ret = Sk.misceval.callsimOrSuspendArray(", decorator, ",[$ret]);");
                 this._checkSuspension();
             }
-            return this._gr("funcobj", "$ret");
+            funcobj = this._gr("funcobj", "$ret");
+        } else {
+            funcobj = this._gr("funcobj", "new Sk.builtins['function'](", scopename, ",$gbl", frees, ")");
+        }
+        if (func_annotations) {
+            out(funcobj, ".func_annotations=", func_annotations, ";");
         }
 
-        return this._gr("funcobj", "new Sk.builtins['function'](", scopename, ",$gbl", frees, ")");
+        return funcobj;
     }
 };
+
+
+Compiler.prototype.cargannotation = function (id, annotation, ann_dict) {
+    if (annotation) {
+        const mangled = mangleName(this.u.private_, id).v;
+        // var scope = this.u.ste.getScope(mangled);
+        ann_dict.push(`'${mangled}'`);
+        ann_dict.push(this.vexpr(annotation));
+    }
+};
+
+Compiler.prototype.cargannotations = function (args, ann_dict) {
+    if (!args) {
+        return;
+    }
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        this.cargannotation(arg.arg, arg.annotation, ann_dict);
+    }
+};
+
+const return_str = new Sk.builtin.str("return");
+
+Compiler.prototype.cannotations = function (args, returns) {
+    const ann_dict = [];
+    if (args) {
+        this.cargannotations(args.posonlyargs, ann_dict);
+        this.cargannotations(args.args, ann_dict);
+        if (args.vararg && args.vararg.annotation) {
+            this.cargannotation(args.vararg.arg, args.vararg.annotation, ann_dict);
+        }
+        this.cargannotations(args.kwonlyargs, ann_dict);
+        if (args.kwarg && args.kwarg.annotation) {
+            this.cargannotation(args.kwarg.arg, args.kwarg.annotation, ann_dict);
+        }
+    }
+    if (returns) {
+        this.cargannotation(return_str, returns, ann_dict);
+    }
+    if (ann_dict.length === 0) {
+        return;
+    }
+    // return as kw dict like list.
+    // This will get turned into a dict when requested in python code
+    // see func.js;
+    return "[" + ann_dict.join(",") + "]";
+};
+
+/** JavaScript for the docstring of the given body, or null if the
+ * body has no docstring.
+ */
+Compiler.prototype.maybeCDocstringOfBody = function(body) {
+    if (body.length === 0)  // Don't think this can happen?
+        return null;
+
+    const stmt_0 = body[0];
+    if (stmt_0.constructor !== Sk.astnodes.Expr)
+        return null;
+
+    const expr = stmt_0.value;
+    if (expr.constructor !== Sk.astnodes.Str)
+        return null;
+
+    return this.vexpr(expr);
+};
+
+/** JavaScript for the docstring of the given node.  Only called from
+ * buildcodeobj(), and expects a FunctionDef, Lambda, or GeneratorExp
+ * node.  We give a "None" docstring to a GeneratorExp node, although
+ * it is not carried over to the final generator; this is harmless.
+ */
+Compiler.prototype.cDocstringOfCode = function(node) {
+    switch (node.constructor) {
+    case Sk.astnodes.AsyncFunctionDef:  // For when it's supported
+    case Sk.astnodes.FunctionDef:
+        return (
+            this.maybeCDocstringOfBody(node.body)
+            || "Sk.builtin.none.none$"
+        );
+
+    case Sk.astnodes.Lambda:
+    case Sk.astnodes.GeneratorExp:
+        return "Sk.builtin.none.none$";
+
+    default:
+        Sk.asserts.fail(`unexpected node kind ${node.constructor.name}`);
+    }
+}
 
 Compiler.prototype.cfunction = function (s, class_for_super) {
     var funcorgen;
@@ -2311,7 +2551,7 @@ Compiler.prototype.cclass = function (s) {
     scopename = this.enterScope(s.name, s, s.lineno, s.name.v);
     entryBlock = this.newBlock("class entry");
 
-    this.u.prefixCode = "var " + scopename + "=(function $" + s.name.v + "$class_outer($globals,$locals,$cell){var $gbl=$globals,$loc=$locals;$free=$globals;";
+    this.u.prefixCode = "var " + scopename + "=(function $" + s.name.v + "$class_outer($globals,$locals,$cell){var $gbl=$globals,$loc=$locals,$free=$globals;";
     this.u.switchCode += "(function $" + s.name.v + "$_closure($cell){";
     this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
@@ -2433,6 +2673,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             if (this.filename && !this.filename.startsWith("src/lib/")) {
                 out("Sk.beforeReturn && Sk.beforeReturn("+val+");");
             }
+            //out("Sk.execStack.pop();");
             if (this.u.finallyBlocks.length == 0) {
                 out("return ", val, ";");
             } else {
@@ -2451,12 +2692,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             }
             break;
         case Sk.astnodes.AnnAssign:
-            if (s.value !== null) {
-                val = this.vexpr(s.value);
-                this.vexpr(s.target, val);
-            }
-            this.vexpr(s.annotation);
-            break;
+            return this.cannassign(s);
         case Sk.astnodes.AugAssign:
             return this.caugassign(s);
         case Sk.astnodes.Print:
@@ -2735,9 +2971,24 @@ Compiler.prototype.exitScope = function () {
  * @param {Sk.builtin.str=} class_for_super
  */
 Compiler.prototype.cbody = function (stmts, class_for_super) {
-    var i;
-    for (i = 0; i < stmts.length; ++i) {
+    var i = 0;
+
+    // If we have a docstring, then assign it to __doc__, and skip over
+    // the expression when properly compiling the rest of the body.  This
+    // happens for class and module bodies.
+    //
+    const maybeDocstring = this.maybeCDocstringOfBody(stmts);
+    if (maybeDocstring !== null) {
+        out("$loc.__doc__ = ", maybeDocstring, ";");
+        i = 1;
+    }
+
+    for (; i < stmts.length; ++i) {
         this.vstmt(stmts[i], class_for_super);
+    }
+    /* Every annotated class and module should have __annotations__. */
+    if (this.u.hasAnnotations) {
+        this.u.varDeclsCode += "$loc.__annotations__ || ($loc.__annotations__ = new Sk.builtin.dict());";
     }
 };
 
@@ -2770,10 +3021,10 @@ Compiler.prototype.cmod = function (mod) {
     var modf = this.enterScope(new Sk.builtin.str("<module>"), mod, 0, this.canSuspend, this.filename);
 
     var entryBlock = this.newBlock("module entry");
-    this.u.prefixCode = "var " + modf + "=(function($forcegbl){";
+    this.u.prefixCode = "var " + modf + "=(function($forcegbl, $forceloc){";
     this.u.varDeclsCode =
         "var $gbl = $forcegbl || {}, $blk=" + entryBlock +
-        ",$exc=[],$loc=$gbl,$cell={},$err=undefined;" +
+        ",$exc=[],$loc=$forceloc || $gbl,$cell={},$err=undefined;" +
         "$loc.__file__=new Sk.builtins.str($fname);" +
         "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
 
@@ -2785,7 +3036,7 @@ Compiler.prototype.cmod = function (mod) {
         this.u.varDeclsCode += "Sk.misceval.resetYield();";
     }
 
-    this.u.varDeclsCode += "if (" + modf + ".$wakingSuspension!==undefined) { $wakeFromSuspension(); }" +
+    this.u.varDeclsCode += "var $waking=false; if (" + modf + ".$wakingSuspension!==undefined) { $wakeFromSuspension(); $waking=true; }" +
         "if (Sk.retainGlobals) {" +
         //"    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; }" +
         "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; $loc.__file__=new Sk.builtins.str($fname);}" +
@@ -2888,7 +3139,8 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
         "\nreturn " + funcname + ";}();");
     return {
         funcname: "$compiledmod",
-        code: ret
+        code    : ret,
+        filename: filename,
     };
 };
 

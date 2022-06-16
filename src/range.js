@@ -1,5 +1,3 @@
-const JSBI = require("jsbi");
-
 /**
  * @constructor
  * @param {number} start
@@ -19,34 +17,34 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
         tp$as_sequence_or_mapping: true,
         tp$doc:
             "range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",
-        tp$new: function (args, kwargs) {
+        tp$new(args, kwargs) {
             Sk.abstr.checkNoKwargs("range", kwargs);
             Sk.abstr.checkArgsLen("range", args, 1, 3);
             return rangeFromPy(args[0], args[1], args[2]);
         },
-        $r: function () {
-            let name = "range(" + this.start + ", " + this.stop;
+        $r() {
+            let repr = "range(" + this.start + ", " + this.stop;
             if (this.step != 1) {
-                name += ", " + this.step;
+                repr += ", " + this.step;
             }
-            name += ")";
-            return new Sk.builtin.str(name);
+            repr += ")";
+            return new Sk.builtin.str(repr);
         },
-        tp$richcompare: function (w, op) {
+        tp$richcompare(w, op) {
             if ((op !== "Eq" && op !== "NotEq") || w.ob$type !== Sk.builtin.range_) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
             }
             w = new Sk.builtin.list(w.v);
             return new Sk.builtin.list(this.v).tp$richcompare(w, op);
         },
-        tp$iter: function () {
-            return new Sk.builtin.range_iter_(this);
+        tp$iter() {
+            return new range_iter_(this);
         },
-        nb$bool: function () {
+        nb$bool() {
             return this.v.length !== 0;
         },
         // sequence and mapping slots
-        sq$contains: function (item) {
+        sq$contains(item) {
             const lst = this.v;
             for (let i = 0; i < lst.length; i++) {
                 if (Sk.misceval.richCompareBool(item, lst[i], "Eq")) {
@@ -55,12 +53,12 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
             }
             return false;
         },
-        sq$length: function () {
+        sq$length() {
             return this.v.length;
         },
-        mp$subscript: function (index) {
+        mp$subscript(index) {
             if (Sk.misceval.isIndex(index)) {
-                let i = Sk.misceval.asIndex(index);
+                let i = Sk.misceval.asIndexSized(index);
                 if (i < 0) {
                     i = this.v.length + i;
                 }
@@ -74,14 +72,13 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
                 index.sssiter$(lst.length, (i) => {
                     ret.push(lst[i]);
                 });
-                const sss = index.$slice_indices();
-                const start = Sk.misceval.asIndex(lst[sss[0]]) || this.start;
-                const stop = Sk.misceval.asIndex(lst[sss[1]]) || this.stop;
-                let step;
+                let { start, stop, step } = index.slice$indices(lst.length);
+                start = Sk.misceval.asIndex(lst[start]) || this.start;
+                stop = Sk.misceval.asIndex(lst[stop]) || this.stop;
                 if (typeof this.step === "number") {
-                    step = sss[2] * this.step;
+                    step = step * this.step;
                 } else {
-                    step = JSBI.multiply(this.step, JSBI.BigInt(sss[2]));
+                    step = JSBI.multiply(this.step, JSBI.BigInt(step));
                 }
                 return new Sk.builtin.range_(start, stop, step, ret);
             }
@@ -90,25 +87,25 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
     },
     getsets: {
         start: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.int_(this.start);
             },
         },
         step: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.int_(this.step);
             },
         },
         stop: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.int_(this.stop);
             },
         },
     },
     methods: {
         __reversed__: {
-            $meth: function () {
-                return new Sk.builtin.revereserange_iter_(this);
+            $meth() {
+                return new reverserange_iter_(this);
             },
             $flags: {NoArgs: true},
             $textsig: null,
@@ -120,11 +117,10 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
         //     $textsig: null,
         //     $doc: "" },
         count: {
-            $meth: function (item) {
-                const lst = this.v;
+            $meth(item) {
                 let count = 0;
-                for (let i = 0; i < lst.length; i++) {
-                    if (Sk.misceval.richCompareBool(item, lst[i], "Eq")) {
+                for (let i = 0; i < this.v.length; i++) {
+                    if (Sk.misceval.richCompareBool(item, this.v[i], "Eq")) {
                         count++;
                     }
                 }
@@ -135,10 +131,9 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
             $doc: "rangeobject.count(value) -> integer -- return number of occurrences of value",
         },
         index: {
-            $meth: function (item) {
-                const lst = this.v;
-                for (let i = 0; i < lst.length; i++) {
-                    if (Sk.misceval.richCompareBool(item, lst[i], "Eq")) {
+            $meth(item) {
+                for (let i = 0; i < this.v.length; i++) {
+                    if (Sk.misceval.richCompareBool(item, this.v[i], "Eq")) {
                         return new Sk.builtin.int_(i);
                     }
                 }
@@ -150,12 +145,12 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
         },
     },
     proto: {
-        sk$asarray: function () {
+        sk$asarray() {
             return this.v.slice(0);
         },
     },
     flags: {
-        sk$acceptable_as_base_class: false,
+        sk$unacceptableBase: true,
     },
 });
 
@@ -189,7 +184,7 @@ function rangeFromPy(start, stop, step) {
         start = i = JSBI.BigInt(start);
         step = JSBI.BigInt(step);
         stop = JSBI.BigInt(stop);
-        if (!step.sign) {
+        if (JSBI.greaterThan(step, JSBI.__ZERO)) {
             while (JSBI.lessThan(i, stop)) {
                 ret.push(new Sk.builtin.int_(convertIfSafe(i)));
                 i = JSBI.add(i, step);
@@ -207,12 +202,12 @@ function rangeFromPy(start, stop, step) {
     return new Sk.builtin.range_(start, stop, step, ret);
 }
 
-Sk.builtin.range_iter_ = Sk.abstr.buildIteratorClass("range_iterator", {
+var range_iter_ = Sk.abstr.buildIteratorClass("range_iterator", {
     constructor: function range_iter_(range_obj) {
         this.$index = 0;
         this.$seq = range_obj.v;
     },
-    iternext: function () {
+    iternext() {
         return this.$seq[this.$index++];
         // we could check that the index is not outside of range
         // but it will still return undefined so no need?
@@ -220,30 +215,25 @@ Sk.builtin.range_iter_ = Sk.abstr.buildIteratorClass("range_iterator", {
     methods: {
         __length_hint__: Sk.generic.iterLengthHintWithArrayMethodDef,
     },
-    flags: {sk$acceptable_as_base_class: false},
+    flags: { sk$unacceptableBase: true },
 });
 
-Sk.builtin.revereserange_iter_ = Sk.abstr.buildIteratorClass("range_reverseiterator", {
+var reverserange_iter_ = Sk.abstr.buildIteratorClass("range_reverseiterator", {
     constructor: function range_iter(range_obj) {
         this.$seq = range_obj.v;
         this.$index = this.$seq.length - 1;
     },
-    iternext: function () {
-        if (this.$index < 0) {
-            return undefined;
-        }
+    iternext() {
         return this.$seq[this.$index--];
     },
     methods: {
-        __length_hint__: Sk.generic.iterReverseLengthHintMethodDef
+        __length_hint__: Sk.generic.iterReverseLengthHintMethodDef,
     },
-    flags: {sk$acceptable_as_base_class: false},
+    flags: { sk$unacceptableBase: true },
 });
 
-const MaxSafeBig = JSBI.BigInt(Number.MAX_SAFE_INTEGER);
-const MaxSafeBigNeg = JSBI.BigInt(-Number.MAX_SAFE_INTEGER);
 function convertIfSafe(v) {
-    if (JSBI.lessThan(v, MaxSafeBig) && JSBI.greaterThan(v, MaxSafeBigNeg)) {
+    if (JSBI.lessThan(v, JSBI.__MAX_SAFE) && JSBI.greaterThan(v, JSBI.__MIN_SAFE)) {
         return JSBI.toNumber(v);
     }
     return v;

@@ -7,7 +7,6 @@
  * work, etc.
  */
 
-const JSBI = require("jsbi");
 
 Sk.builtin.asnum$ = function (a) {
     if (a === undefined) {
@@ -164,9 +163,9 @@ Sk.builtin.round = function round(number, ndigits) {
     if (special !== undefined) {
         // method on builtin, provide this arg
         if (ndigits !== undefined) {
-            return Sk.misceval.callsimArray(special, [number, ndigits]);
+            return Sk.misceval.callsimArray(special, [ndigits]);
         } else {
-            return Sk.misceval.callsimArray(special, [number]);
+            return Sk.misceval.callsimArray(special, []);
         }
     } else {
         throw new Sk.builtin.TypeError("a float is required");
@@ -178,8 +177,7 @@ Sk.builtin.len = function len(item) {
     let res;
     if (item.sq$length) {
         res = item.sq$length(true);
-    }
-    if (res === undefined) {
+    } else {
         throw new Sk.builtin.TypeError("object of type '" + Sk.abstr.typeName(item) + "' has no len()");
     }
     return Sk.misceval.chain(res, (r) => {
@@ -193,9 +191,7 @@ Sk.builtin.min = function min(args, kwargs) {
     if (!nargs) {
         throw new Sk.builtin.TypeError("min expected 1 argument, got 0");
     }
-    const default_key = Sk.abstr.copyKeywordsToNamedArgs("min", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
-    const $default = default_key[0];
-    const key = default_key[1];
+    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs("min", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
 
     // if args is not a single iterable then default should not be included as a kwarg
     if (nargs > 1 && $default !== null) {
@@ -212,32 +208,44 @@ Sk.builtin.min = function min(args, kwargs) {
         throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(key) + "' object is not callable");
     }
 
-    let lowest = iter.tp$iternext();
-
-    if (lowest === undefined) {
-        if ($default === null) {
-            throw new Sk.builtin.ValueError("min() arg is an empty sequence");
-        } else {
-            return $default;
-        }
-    }
-    if (Sk.builtin.checkNone(key)) {
-        for (let i = iter.tp$iternext(); i !== undefined; i = iter.tp$iternext()) {
-            if (Sk.misceval.richCompareBool(i, lowest, "Lt")) {
-                lowest = i;
+    let lowest;
+    return Sk.misceval.chain(
+        iter.tp$iternext(true),
+        (i) => {
+            lowest = i;
+            if (lowest === undefined) {
+                return;
             }
-        }
-    } else {
-        let lowest_compare = Sk.misceval.callsimArray(key, [lowest]);
-        for (let i = iter.tp$iternext(); i !== undefined; i = iter.tp$iternext()) {
-            let i_compare = Sk.misceval.callsimArray(key, [i]);
-            if (Sk.misceval.richCompareBool(i_compare, lowest_compare, "Lt")) {
-                lowest = i;
-                lowest_compare = i_compare;
+            if (Sk.builtin.checkNone(key)) {
+                return Sk.misceval.iterFor(iter, (i) => {
+                    if (Sk.misceval.richCompareBool(i, lowest, "Lt")) {
+                        lowest = i;
+                    }
+                });
+            } else {
+                return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [lowest]), (lowest_compare) =>
+                    Sk.misceval.iterFor(iter, (i) =>
+                        Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [i]), (i_compare) => {
+                            if (Sk.misceval.richCompareBool(i_compare, lowest_compare, "Lt")) {
+                                lowest = i;
+                                lowest_compare = i_compare;
+                            }
+                        })
+                    )
+                );
             }
+        },
+        () => {
+            if (lowest === undefined) {
+                if ($default === null) {
+                    throw new Sk.builtin.ValueError("min() arg is an empty sequence");
+                } else {
+                    lowest = $default;
+                }
+            }
+            return lowest;
         }
-    }
-    return lowest;
+    );
 };
 
 Sk.builtin.max = function max(args, kwargs) {
@@ -247,9 +255,7 @@ Sk.builtin.max = function max(args, kwargs) {
     if (!nargs) {
         throw new Sk.builtin.TypeError("max expected 1 argument, got 0");
     }
-    const default_key = Sk.abstr.copyKeywordsToNamedArgs("min", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
-    const $default = default_key[0];
-    const key = default_key[1];
+    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs("max", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
 
     // if args is not a single iterable then default should not be included as a kwarg
     if (nargs > 1 && $default !== null) {
@@ -265,82 +271,138 @@ Sk.builtin.max = function max(args, kwargs) {
     if (!Sk.builtin.checkNone(key) && !Sk.builtin.checkCallable(key)) {
         throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(key) + "' object is not callable");
     }
-
-    let highest = iter.tp$iternext();
-
-    if (highest === undefined) {
-        if ($default === null) {
-            throw new Sk.builtin.ValueError("max() arg is an empty sequence");
-        } else {
-            return $default;
-        }
-    }
-    if (Sk.builtin.checkNone(key)) {
-        for (let i = iter.tp$iternext(); i !== undefined; i = iter.tp$iternext()) {
-            if (Sk.misceval.richCompareBool(i, highest, "Gt")) {
-                highest = i;
+    let highest;
+    return Sk.misceval.chain(
+        iter.tp$iternext(true),
+        (i) => {
+            highest = i;
+            if (highest === undefined) {
+                return;
             }
-        }
-    } else {
-        let highest_compare = Sk.misceval.callsimArray(key, [highest]);
-        for (let i = iter.tp$iternext(); i !== undefined; i = iter.tp$iternext()) {
-            let i_compare = Sk.misceval.callsimArray(key, [i]);
-            if (Sk.misceval.richCompareBool(i_compare, highest_compare, "Gt")) {
-                highest = i;
-                highest_compare = i_compare;
+            if (Sk.builtin.checkNone(key)) {
+                return Sk.misceval.iterFor(iter, (i) => {
+                    if (Sk.misceval.richCompareBool(i, highest, "Gt")) {
+                        highest = i;
+                    }
+                });
+            } else {
+                return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [highest]), (highest_compare) =>
+                    Sk.misceval.iterFor(iter, (i) =>
+                        Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [i]), (i_compare) => {
+                            if (Sk.misceval.richCompareBool(i_compare, highest_compare, "Gt")) {
+                                highest = i;
+                                highest_compare = i_compare;
+                            }
+                        })
+                    )
+                );
             }
+        },
+        () => {
+            if (highest === undefined) {
+                if ($default === null) {
+                    throw new Sk.builtin.ValueError("max() arg is an empty sequence");
+                } else {
+                    highest = $default;
+                }
+            }
+            return highest;
         }
-    }
-    return highest;
+    );
 };
 
+// incase someone calls these functions via Sk.misceval.call
+Sk.builtin.min.co_fastcall = Sk.builtin.max.co_fastcall = 1;
+
 Sk.builtin.any = function any(iter) {
-    const ret = Sk.misceval.iterFor(Sk.abstr.iter(iter), function (i) {
-        if (Sk.misceval.isTrue(i)) {
-            return new Sk.misceval.Break(true);
-        }
-    });
-    return ret === undefined ? Sk.builtin.bool.false$ : Sk.builtin.bool.true$;
+    return Sk.misceval.chain(
+        Sk.misceval.iterFor(Sk.abstr.iter(iter), function (i) {
+            if (Sk.misceval.isTrue(i)) {
+                return new Sk.misceval.Break(Sk.builtin.bool.true$);
+            }
+        }),
+        (brValue) => brValue || Sk.builtin.bool.false$
+    );
 };
 
 Sk.builtin.all = function all(iter) {
-    const ret = Sk.misceval.iterFor(Sk.abstr.iter(iter), function (i) {
-        if (!Sk.misceval.isTrue(i)) {
-            return new Sk.misceval.Break(false);
-        }
-    });
-    return ret === undefined ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
+    return Sk.misceval.chain(
+        Sk.misceval.iterFor(Sk.abstr.iter(iter), function (i) {
+            if (!Sk.misceval.isTrue(i)) {
+                return new Sk.misceval.Break(Sk.builtin.bool.false$);
+            }
+        }),
+        (brValue) => brValue || Sk.builtin.bool.true$
+    );
 };
 
 Sk.builtin.sum = function sum(iter, start) {
     var tot;
-    var has_float;
-    // this follows the order python checks errors
-    Sk.builtin.pyCheckType("iter", "iterable", Sk.builtin.checkIterable(iter));
-    if (Sk.builtin.checkString(start)) {
+    // follows the order of CPython checks
+    const it = Sk.abstr.iter(iter);
+    if (start === undefined) {
+        tot = new Sk.builtin.int_(0);
+    } else if (Sk.builtin.checkString(start)) {
         throw new Sk.builtin.TypeError("sum() can't sum strings [use ''.join(seq) instead]");
+    } else {
+        tot = start;
     }
-    tot = start;
-    Sk.misceval.iterFor(Sk.abstr.iter(iter), function (i) {
-        if (!has_float && i instanceof Sk.builtin.float_) {
-            has_float = true;
-            tot = new Sk.builtin.float_(Sk.builtin.asnum$(tot));
-        }
-        // else if (i instanceof Sk.builtin.lng) {
-        //     if (!has_float && !(tot instanceof Sk.builtin.lng)) {
-        //         tot = new Sk.builtin.lng(tot);
-        //     }
-        // }
-        if (tot.nb$add !== undefined) {
-            const itermed = tot.nb$add(i);
-            if (itermed !== undefined && !(itermed instanceof Sk.builtin.NotImplemented)) {
-                tot = itermed;
-                return;
+
+    function fastSumInt() {
+        return Sk.misceval.iterFor(it, (i) => {
+            if (i.constructor === Sk.builtin.int_) {
+                tot = tot.nb$add(i);
+            } else if (i.constructor === Sk.builtin.float_) {
+                tot = tot.nb$float().nb$add(i);
+                return new Sk.misceval.Break("float");
+            } else {
+                tot = Sk.abstr.numberBinOp(tot, i, "Add");
+                return new Sk.misceval.Break("slow");
             }
-        }
-        throw new Sk.builtin.TypeError("unsupported operand type(s) for +: '" + Sk.abstr.typeName(tot) + "' and '" + Sk.abstr.typeName(i) + "'");
-    });
-    return tot;
+        });
+    }
+
+    function fastSumFloat() {
+        return Sk.misceval.iterFor(it, (i) => {
+            if (i.constructor === Sk.builtin.float_ || i.constructor === Sk.builtin.int_) {
+                tot = tot.nb$add(i);
+            } else {
+                tot = Sk.abstr.numberBinOp(tot, i, "Add");
+                return new Sk.misceval.Break("slow");
+            }
+        });
+    }
+
+    function slowSum() {
+        return Sk.misceval.iterFor(it, (i) => {
+            tot = Sk.abstr.numberBinOp(tot, i, "Add");
+        });
+    }
+
+    let sumType;
+    if (start === undefined || start.constructor === Sk.builtin.int_) {
+        sumType = fastSumInt();
+    } else if (start.constructor === Sk.builtin.float_) {
+        sumType = "float";
+    } else {
+        sumType = "slow";
+    }
+
+    return Sk.misceval.chain(
+        sumType,
+        (sumType) => {
+            if (sumType === "float") {
+                return fastSumFloat();
+            }
+            return sumType;
+        },
+        (sumType) => {
+            if (sumType === "slow") {
+                return slowSum();
+            }
+        },
+        () => tot
+    );
 };
 
 Sk.builtin.zip = function zip() {
@@ -385,7 +447,7 @@ Sk.builtin.abs = function abs(x) {
     if (x.nb$abs) {
         return x.nb$abs();
     }
-    throw new TypeError("bad operand type for abs(): '" + Sk.abstr.typeName(x) + "'");
+    throw new Sk.builtin.TypeError("bad operand type for abs(): '" + Sk.abstr.typeName(x) + "'");
 };
 
 // fabs belongs in the math module but has been a Skulpt builtin since 41665a97d (2012).
@@ -395,13 +457,19 @@ Sk.builtin.fabs = function fabs(x) {
 };
 
 Sk.builtin.ord = function ord(x) {
-    if (!Sk.builtin.checkString(x)) {
-        throw new Sk.builtin.TypeError("ord() expected a string of length 1, but " + Sk.abstr.typeName(x) + " found");
-    // Unicode aware string length
-    } else if ([...x.v].length !== 1) {
-        throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
+    if (Sk.builtin.checkString(x)) {
+        if ([...x.v].length !== 1 && x.sq$length() !== 1) {
+            // ^^ avoid the astral check unless necessary ^^
+            throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
+        }
+        return new Sk.builtin.int_(x.v.codePointAt(0));
+    } else if (Sk.builtin.checkBytes(x)) {
+        if (x.sq$length() !== 1) {
+            throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
+        }
+        return new Sk.builtin.int_(x.v[0]);
     }
-    return new Sk.builtin.int_(x.v.codePointAt(0));
+    throw new Sk.builtin.TypeError("ord() expected a string of length 1, but " + Sk.abstr.typeName(x) + " found");
 };
 
 Sk.builtin.chr = function chr(x) {
@@ -409,16 +477,21 @@ Sk.builtin.chr = function chr(x) {
         throw new Sk.builtin.TypeError("an integer is required");
     }
     x = Sk.builtin.asnum$(x);
-
-    // Should be sys.maxunicode
-    if (x < 0) {
-        throw new Sk.builtin.ValueError("chr() arg not in range(0x110000)");
+    if (Sk.__future__.python3) {
+        if ((x < 0) || (x >= 0x110000)) {
+            throw new Sk.builtin.ValueError("chr() arg not in range(0x110000)");
+        }
+    } else {
+        if ((x < 0) || (x >= 256)) {
+            throw new Sk.builtin.ValueError("chr() arg not in range(256)");
+        }
     }
 
     return new Sk.builtin.str(String.fromCodePoint(x));
 };
 
 Sk.builtin.unichr = function unichr(x) {
+    Sk.builtin.pyCheckArgsLen("unichr", arguments.length, 1, 1);
     if (!Sk.builtin.checkInt(x)) {
         throw new Sk.builtin.TypeError("an integer is required");
     }
@@ -438,20 +511,22 @@ Sk.builtin.unichr = function unichr(x) {
  * This is a helper function and we already know that x is an int or has an nb$index slot
  */
 Sk.builtin.int2str_ = function helper_(x, radix, prefix) {
-    let v;
-    if (x.constructor === Sk.builtin.int_ || x instanceof Sk.builtin.int_) {
-        v = x.v; // we don't use asnum$ because it returns a str rather than a bigint. 
+    let v = x.nb$index();
+    let isNegative = false;
+    if (typeof v === "number") {
+        isNegative = v < 0;
+        v = isNegative ? -v : v;
     } else {
-        x = x.nb$index();
-        v = x.v;
+        isNegative = JSBI.lessThan(v, JSBI.__ZERO);
+        v = isNegative ? JSBI.unaryMinus(v) : v;
     }
     let str = v.toString(radix);
-    if (x.nb$isnegative()) {
-        str = "-" + prefix + str.slice(1);
+    if (isNegative) {
+        str = "-" + prefix + str;
     } else {
         str = prefix + str;
     }
-    if (radix !== 2 && !Sk.__future__.python3 && (x instanceof Sk.builtin.lng || v instanceof JSBI)) {
+    if (radix !== 2 && !Sk.__future__.python3 && (x instanceof Sk.builtin.lng || JSBI.__isBigInt(v))) {
         str += "L";
     }
     return new Sk.builtin.str(str);
@@ -486,8 +561,7 @@ Sk.builtin.bin = function bin(x) {
 Sk.builtin.dir = function dir(obj) {
     if (obj !== undefined) {
         const obj_dir_func = Sk.abstr.lookupSpecial(obj, Sk.builtin.str.$dir);
-        const dir = Sk.misceval.callsimArray(obj_dir_func, [obj]);
-        return Sk.builtin.sorted(dir);
+        return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(obj_dir_func, []), (dir) => Sk.builtin.sorted(dir));
         // now iter through the keys and check they are all stings
     }
     // then we want all the objects in the global scope
@@ -497,6 +571,53 @@ Sk.builtin.dir = function dir(obj) {
 
 Sk.builtin.repr = function repr(x) {
     return x.$r();
+};
+
+Sk.builtin.ascii = function ascii (x) {
+    return Sk.misceval.chain(x.$r(), (r) => {
+        let ret;
+        let i;
+        // Fast path
+        for (i=0; i < r.v.length; i++) {
+            if (r.v.charCodeAt(i) >= 0x7f) {
+                ret = r.v.substr(0, i);
+                break;
+            }
+        }
+        if (!ret) {
+            return r;
+        }
+        for (; i < r.v.length; i++) {
+            let c = r.v.charAt(i);
+            let cc = r.v.charCodeAt(i);
+
+            if (cc > 0x7f && cc <= 0xff) {
+                let ashex = cc.toString(16);
+                if (ashex.length < 2) {
+                    ashex = "0" + ashex;
+                }
+                ret += "\\x" + ashex;
+            } else if (cc > 0x7f && cc < 0xd800 || cc >= 0xe000) {
+                // BMP
+                ret += "\\u" + ("000"+cc.toString(16)).slice(-4);
+            } else if (cc >= 0xd800) {
+                // Surrogate pair stuff
+                let val = r.v.codePointAt(i);
+                i++;
+
+                val = val.toString(16);
+                let s = ("0000000"+val.toString(16));
+                if (val.length > 4) {
+                    ret += "\\U" + s.slice(-8);
+                } else {
+                    ret += "\\u" + s.slice(-4);
+                }
+            } else {
+                ret += c;
+            }
+        }
+        return new Sk.builtin.str(ret);
+    });
 };
 
 Sk.builtin.open = function open(filename, mode, bufsize) {
@@ -513,33 +634,30 @@ Sk.builtin.open = function open(filename, mode, bufsize) {
     return new Sk.builtin.file(filename, mode, bufsize);
 };
 
-const issubclass_multiple_inheritance = function (klass, base) {
-    const mro = klass.prototype.tp$mro;
-    for (let i = 0; i < mro.length; i++) {
-        if (base === mro[i]) {
-            return true;
-        }
-    }
-    return false;
-};
 
 Sk.builtin.isinstance = function isinstance(obj, type) {
     if (!Sk.builtin.checkClass(type) && !(type instanceof Sk.builtin.tuple)) {
         throw new Sk.builtin.TypeError("isinstance() arg 2 must be a class, type, or tuple of classes and types");
     }
 
-    // Normal case
+    // Fast path
+    const act_type = obj.ob$type;
+    if (act_type === type) {
+        return Sk.builtin.bool.true$;
+    }
     if (!(type instanceof Sk.builtin.tuple)) {
-        // Overridden __class__
-        var objType;
-        var __class__ = obj.tp$getattr(Sk.builtin.str.$class);
-        if (__class__ !== undefined) {
-            objType = __class__;
-        } else {
-            objType = obj.ob$type;
+        // attempt 1
+        if (act_type.$isSubType(type)) {
+            return Sk.builtin.bool.true$;
         }
-
-        return objType.$isSubType(type) ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
+        // fail so check if we have overriden __class__
+        const maybe_type = obj.tp$getattr(Sk.builtin.str.$class);
+        if (maybe_type == act_type) {
+            return Sk.builtin.bool.false$;
+        } else if (Sk.builtin.checkClass(maybe_type) && maybe_type.$isSubType(type)) {
+            return Sk.builtin.bool.true$;
+        }
+        return Sk.builtin.bool.false$;
     }
     // Handle tuple type argument
     for (let i = 0; i < type.v.length; ++i) {
@@ -550,39 +668,8 @@ Sk.builtin.isinstance = function isinstance(obj, type) {
     return Sk.builtin.bool.false$;
 };
 
-Sk.builtin.hash = function hash(value) {
-    var junk;
-
-    // Useless object to get compiler to allow check for __hash__ property
-    junk = {
-        __hash__: function () {
-            return 0;
-        },
-    };
-
-    if (value instanceof Object) {
-        if (Sk.builtin.checkNone(value.tp$hash)) {
-            // python sets the hash function to None , so we have to catch this case here
-            throw new Sk.builtin.TypeError("unhashable type: '" + Sk.abstr.typeName(value) + "'");
-        } else if (value.tp$hash !== undefined) {
-            if (value.$savedHash_) {
-                return value.$savedHash_;
-            }
-            value.$savedHash_ = value.tp$hash();
-            return value.$savedHash_;
-        } else {
-            if (value.__hash === undefined) {
-                Sk.builtin.hashCount += 1;
-                value.__hash = Sk.builtin.hashCount;
-            }
-            return new Sk.builtin.int_(value.__hash);
-        }
-    } else if (typeof value === "number" || value === null || value === true || value === false) {
-        throw new Sk.builtin.TypeError("unsupported Javascript type");
-    }
-
-    return new Sk.builtin.str(typeof value + " " + String(value));
-    // todo; throw properly for unhashable types
+Sk.builtin.hash = function hash(obj) {
+    return new Sk.builtin.int_(Sk.abstr.objectHash(obj));
 };
 
 Sk.builtin.getattr = function getattr(obj, pyName, default_) {
@@ -604,7 +691,7 @@ Sk.builtin.getattr = function getattr(obj, pyName, default_) {
             if (default_ !== undefined) {
                 return default_;
             }
-            throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(obj) + "' object has no attribute " + pyName.$jsstr());
+            throw new Sk.builtin.AttributeError(obj.sk$attrError() + " has no attribute " + Sk.misceval.objectRepr(pyName));
         }
         return r;
     });
@@ -615,10 +702,7 @@ Sk.builtin.setattr = function setattr(obj, pyName, value) {
     if (!Sk.builtin.checkString(pyName)) {
         throw new Sk.builtin.TypeError("attribute name must be string");
     }
-    const res = obj.tp$setattr(pyName, value, true);
-    return Sk.misceval.chain(res, () => {
-        return Sk.builtin.none.none$;
-    });
+    return Sk.misceval.chain(obj.tp$setattr(pyName, value, true), () => Sk.builtin.none.none$);
 };
 
 Sk.builtin.raw_input = function (prompt) {
@@ -661,8 +745,56 @@ Sk.builtin.jsmillis = function jsmillis() {
     return now.valueOf();
 };
 
-Sk.builtin.eval_ = function eval_() {
-    throw new Sk.builtin.NotImplementedError("eval is not yet implemented");
+const pyCode = Sk.abstr.buildNativeClass("code", {
+    constructor: function code(filename, compiled) {
+        this.compiled = compiled; // old "source"
+        this.code = compiled.code;
+        this.filename = filename;
+    },
+    slots: {
+        tp$new(args, kwargs) {
+            throw new Sk.builtin.NotImplementedError("cannot construct a code object in skulpt");
+        },
+        $r() {
+            return new Sk.builtin.str("<code object <module>, file " + this.filename + ">");
+        },
+    },
+});
+
+
+Sk.builtin.compile = function (source, filename, mode, flags, dont_inherit, optimize) {
+    Sk.builtin.pyCheckType("source", "str", Sk.builtin.checkString(source));
+    Sk.builtin.pyCheckType("filename", "str", Sk.builtin.checkString(filename));
+    Sk.builtin.pyCheckType("mode", "str", Sk.builtin.checkString(mode));
+    source = source.$jsstr();
+    filename = filename.$jsstr();
+    mode = mode.$jsstr();
+    return Sk.misceval.chain(Sk.compile(source, filename, mode, true, true), (co) => new pyCode(filename, co));
+};
+
+
+Sk.builtin.eval = function (source, globals, locals) {
+    if (Sk.builtin.checkString(source)) {
+        source = source.$jsstr();
+    } else if (Sk.builtin.checkBytes(source)) {
+        throw new Sk.builtin.NotImplementedError("bytes for eval is not yet implemented in skulpt");
+    }
+    if (typeof source === "string") {
+        source = source.trim();
+        const parse = Sk.parse("?", source);
+        const ast = Sk.astFromParse(parse.cst, "?", parse.flags);
+        if (ast.body.length > 1 || !(ast.body[0] instanceof Sk.astnodes.Expr)) {
+            throw new Sk.builtin.SyntaxError("invalid syntax");
+        }
+        source = "__final_res__ = " + source;
+    } else if (!(source instanceof pyCode)) {
+        throw new Sk.builtin.TypeError("eval() arg 1 must be a string, bytes or code object");
+    }
+    return Sk.misceval.chain(Sk.builtin.exec(source, globals, locals), (new_locals) => {
+        const res = new_locals.__final_res__ || Sk.builtin.none.none$;
+        delete new_locals.__final_res__;
+        return res;
+    });
 };
 
 Sk.builtin.map = function map(fun, seq) {
@@ -776,7 +908,7 @@ Sk.builtin.sorted = function sorted(iterable, cmp, key, reverse) {
     const lst = Sk.misceval.arrayFromIterable(iterable, true);
     return Sk.misceval.chain(lst, (L) => {
         L = new Sk.builtin.list(L);
-        L.$list_sort(cmp, key, reverse);
+        L.list$sort(cmp, key, reverse);
         return L;
     });
 };
@@ -853,71 +985,21 @@ Sk.builtin.hasattr = function hasattr(obj, pyName) {
     return Sk.misceval.chain(res, (val) => (val === undefined ? Sk.builtin.bool.false$ : Sk.builtin.bool.true$));
 };
 
-Sk.builtin.pow = function pow(a, b, c) {
-    var ret;
-    var res;
-    var right;
-    var left;
-    var c_num;
-    var b_num;
-    var a_num;
-
-    if (c instanceof Sk.builtin.none) {
-        c = undefined;
+Sk.builtin.pow = function pow(v, w, z) {
+    // skulpt does support ternary slots
+    if (z === undefined || Sk.builtin.checkNone(z)) {
+        return Sk.abstr.numberBinOp(v, w, "Pow");
     }
-
-    // add complex type hook here, builtin is messed up anyways
-    if (Sk.builtin.checkComplex(a)) {
-        return a.nb$power(b, c); // call complex pow function
-    }
-
-    a_num = Sk.builtin.asnum$(a);
-    b_num = Sk.builtin.asnum$(b);
-    c_num = Sk.builtin.asnum$(c);
-
-    if (!Sk.builtin.checkNumber(a) || !Sk.builtin.checkNumber(b)) {
-        if (c === undefined) {
-            throw new Sk.builtin.TypeError(
-                "unsupported operand type(s) for pow(): '" + Sk.abstr.typeName(a) + "' and '" + Sk.abstr.typeName(b) + "'"
-            );
+    // only support a third argument if they're all the integers.
+    if (!(Sk.builtin.checkInt(v) && Sk.builtin.checkInt(w) && Sk.builtin.checkInt(z))) {
+        if (Sk.builtin.checkFloat(v) || Sk.builtin.checkComplex(v)) {
+            return v.nb$power(w, z); // these slots for float and complex throw the correct errors
         }
         throw new Sk.builtin.TypeError(
-            "unsupported operand type(s) for pow(): '" + Sk.abstr.typeName(a) + "', '" + Sk.abstr.typeName(b) + "', '" + Sk.abstr.typeName(c) + "'"
+            "unsupported operand type(s) for ** or pow(): '" + Sk.abstr.typeName(v) + "', '" + Sk.abstr.typeName(w) + "', '" + Sk.abstr.typeName(z) + "'"
         );
     }
-    if (a_num < 0 && b instanceof Sk.builtin.float_) {
-        throw new Sk.builtin.ValueError("negative number cannot be raised to a fractional power");
-    }
-
-    if (c === undefined) {
-        if (a instanceof Sk.builtin.float_ || b instanceof Sk.builtin.float_ || b_num < 0) {
-            return new Sk.builtin.float_(Math.pow(a_num, b_num));
-        }
-        left = new Sk.builtin.int_(a_num);
-        right = new Sk.builtin.int_(b_num);
-        res = left.nb$power(right);
-        return res;
-    } else {
-        if (!Sk.builtin.checkInt(a) || !Sk.builtin.checkInt(b) || !Sk.builtin.checkInt(c)) {
-            throw new Sk.builtin.TypeError("pow() 3rd argument not allowed unless all arguments are integers");
-        }
-        if (b_num < 0) {
-            if (Sk.__future__.exceptions) {
-                throw new Sk.builtin.ValueError("pow() 2nd argument cannot be negative when 3rd argument specified");
-            } else {
-                throw new Sk.builtin.TypeError("pow() 2nd argument cannot be negative when 3rd argument specified");
-            }
-        }
-        if (c_num === 0) {
-            throw new Sk.builtin.ValueError("pow() 3rd argument cannot be 0");
-        }
-        if (a instanceof Sk.builtin.lng || b instanceof Sk.builtin.lng || c instanceof Sk.builtin.lng || Math.pow(a_num, b_num) === Infinity) {
-            return a.nb$power(b, c);
-        } else {
-            ret = new Sk.builtin.int_(Math.pow(a_num, b_num));
-            return ret.nb$remainder(c);
-        }
-    }
+    return v.nb$power(w, z);
 };
 
 Sk.builtin.quit = function quit(msg) {
@@ -942,14 +1024,15 @@ Sk.builtin.issubclass = function issubclass(c1, c2) {
             return Sk.builtin.bool.true$;
         }
     }
-    return Sk.misceval.bool.false$;
+    return Sk.builtin.bool.false$;
 };
 
 Sk.builtin.globals = function globals() {
-    var i;
+    var i, unmangled;
     var ret = new Sk.builtin.dict([]);
     for (i in Sk["globals"]) {
-        ret.mp$ass_subscript(new Sk.builtin.str(i), Sk["globals"][i]);
+        unmangled = Sk.unfixReserved(i);
+        ret.mp$ass_subscript(new Sk.builtin.str(unmangled), Sk["globals"][i]);
     }
 
     return ret;
@@ -965,73 +1048,18 @@ Sk.builtin.divmod = function divmod(a, b) {
  * built-in types: Format Specification Mini-Language.
  */
 Sk.builtin.format = function format(value, format_spec) {
-    if (format_spec === undefined) {
-        format_spec = Sk.builtin.str.$emptystr;
-    }
-
     return Sk.abstr.objectFormat(value, format_spec);
 };
 
-Sk.builtin.reversed = function reversed(seq) {
-    Sk.builtin.pyCheckArgsLen("reversed", arguments.length, 1, 1);
-
-    var special = Sk.abstr.lookupSpecial(seq, Sk.builtin.str.$reversed);
-    if (special != null) {
-        return Sk.misceval.callsimArray(special, [seq]);
-    } else {
-        if (!Sk.builtin.checkSequence(seq)) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(seq) + "' object is not a sequence");
-        }
-
-        /**
-         * Builds an iterator that outputs the items form last to first.
-         *
-         * @constructor
-         */
-        var reverseIter = function (obj) {
-            this.idx = obj.sq$length() - 1;
-            this.myobj = obj;
-            this.ob$type = Sk.builtin.type.makeTypeObj("reversed", function _reversed() {
-            });
-            this.getitem = Sk.abstr.lookupSpecial(obj, Sk.builtin.str.$getitem);
-            this["$r"] = function () {
-                return new Sk.builtin.str("<reversed>");
-            },
-            this.tp$iter = function () {
-                return this;
-            },
-            this.tp$iternext = function () {
-                var ret;
-
-                if (this.idx < 0) {
-                    return undefined;
-                }
-
-                try {
-                    ret = Sk.misceval.callsimArray(this.getitem, [this.myobj, Sk.ffi.remapToPy(this.idx)]);
-                } catch (e) {
-                    if (e instanceof Sk.builtin.IndexError) {
-                        return undefined;
-                    } else {
-                        throw e;
-                    }
-                }
-                this.idx--;
-                return ret;
-            };
-        };
-
-        return new reverseIter(seq);
-    }
-};
-
+const idMap = new Map();
+let _id = 0;
 Sk.builtin.id = function (obj) {
-    if (obj.__id === undefined) {
-        Sk.builtin.idCount += 1;
-        obj.__id = Sk.builtin.idCount;
+    const id = idMap.get(obj);
+    if (id !== undefined) {
+        return new Sk.builtin.int_(id);
     }
-
-    return new Sk.builtin.int_(obj.__id);
+    idMap.set(obj, _id);
+    return new Sk.builtin.int_(_id++);
 };
 
 Sk.builtin.bytearray = function bytearray() {
@@ -1053,36 +1081,6 @@ Sk.builtin.delattr = function delattr(obj, attr) {
 
 Sk.builtin.execfile = function execfile() {
     throw new Sk.builtin.NotImplementedError("execfile is not yet implemented");
-};
-
-/**
- * Okay, I'll be honest, this is 100% not a real code object. It just holds the source
- * code and filename. I'm relying on the `exec` call to actually compile it. IT'S ALL
- * A BIG LIE. I'm sorry. -acbart
- * @param filename
- * @param source
- * @returns {Sk.builtin|*}
- */
-Sk.builtin.code = function (filename, source) {
-    if (!(this instanceof Sk.builtin.code)) {
-        return new Sk.builtin.code(filename, source);
-    }
-    this.filename = filename;
-    this.source = source;
-    this.__class__ = Sk.builtin.code;
-    return this;
-};
-Sk.abstr.setUpInheritance("code", Sk.builtin.code, Sk.builtin.object);
-Sk.builtin.code.prototype["$r"] = function () {
-    return new Sk.builtin.str("<code object, file \"" + this.filename + "\">");
-};
-Sk.exportSymbol("Sk.builtin.code", Sk.builtin.code);
-
-Sk.builtin.compile = function (source, filename, mode, flags, dont_inherit, optimize) {
-    Sk.builtin.pyCheckArgsLen("compile", arguments.length, 3, 6);
-    source = Sk.ffi.remapToJs(source);
-    filename = Sk.ffi.remapToJs(filename);
-    return new Sk.builtin.code(filename, source);
 };
 
 
@@ -1119,109 +1117,101 @@ var mergeDict = function(obj1, obj2) {
         obj1[Sk.fixReserved(kAsJs)] = v;
     }
     return obj1;
-}
-
-Sk.builtin.exec = function execf(pythonCode, new_globals, newLocals) {
-    Sk.builtin.pyCheckArgs("exec", arguments, 1, 2);
-    /*
-    var filename = "<string>";
-    if (pythonCode instanceof Sk.builtin.code) {
-        filename = pythonCode.filename;
-        pythonCode = pythonCode.source;
-    } else {
-        pythonCode = Sk.ffi.remapToJs(pythonCode);
-    }
-    let code = Sk.compile(pythonCode, filename, "exec", true, true);
-    const tmp = Sk.globals;
-    globals = new_globals || tmp;
-    return Sk.misceval.chain(
-        code,
-        (co) => eval(co.code)(globals),
-        (new_locals) => {
-            Sk.globals = tmp;
-            return new_locals;
-        }
-    );*/
-
-    var prom = new Promise(function (resolve, reject) {
-        var backupRG = Sk.retainGlobals;
-        Sk.retainGlobals = true;
-        var filename = "<string>";
-        if (pythonCode instanceof Sk.builtin.code) {
-            filename = pythonCode.filename;
-            pythonCode = pythonCode.source;
-        } else {
-            pythonCode = Sk.ffi.remapToJs(pythonCode);
-        }
-        var new_globals_copy = extractDict(new_globals);
-        if (!new_globals_copy.__file__) {
-            new_globals_copy.__file__ = Sk.ffi.remapToPy(filename);
-        }
-        if (!new_globals_copy.__name__) {
-            new_globals_copy.__name__ = Sk.ffi.remapToPy(filename);
-        }
-        if (!new_globals_copy.__package__) {
-            new_globals_copy.__package__ = Sk.builtin.none.none$;
-        }
-        var backupGlobals = Sk.globals;
-        //console.log(Sk.globals);
-        Sk.globals = new_globals_copy; // Possibly copy over some "default" ones?
-        //console.log(Sk.globals, new_globals);
-        //mergeDict(Sk.globals, new_globals);
-
-        var name = filename.endsWith(".py") ? filename.slice(0, -3) : filename;
-        var pyName = new Sk.builtin.str(name);
-        var loadModule = function() {
-            /*var sysModules = Sk.getSysModulesPolitely();
-            if (sysModules.quick$lookup(pyName)) {
-                console.log("OH HEY WAIT WHY ARE YOU HERE:", name);
-                sysModules.del$item(pyName);
-            }*/
-            var modname = name;
-            var caughtError = null;
-            const res = Sk.misceval.tryCatch(() => {
-                let r = Sk.importModuleInternal_(name, false, modname, pythonCode, undefined, false, true);
-                while (r instanceof Sk.misceval.Suspension) {
-                    r = r.resume();
-                }
-                //console.log(Sk.sysmodules.mp$subscript(pyName).$js);
-            }, (e) => {
-                console.error("SYSTEMATIC ERROR", e);
-                caughtError = e;
-            });
-            Sk.misceval.chain(res, function() {
-                Sk.globals = backupGlobals;
-                // Only try to delete if we succeeded in creating it!
-                if (Sk.sysmodules.mp$lookup(pyName)) {
-                    Sk.sysmodules.del$item(pyName);
-                }
-                for (var key in new_globals_copy) {
-                    if (new_globals_copy.hasOwnProperty(key)) {
-                        var pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
-                        Sk.builtin.dict.prototype.mp$ass_subscript.call(new_globals, pykey, new_globals_copy[key]);
-                        //Sk.builtin.dict.prototype.mp$ass_subscript.call(Sk.globals, pykey, Sk.globals[key]);
-                    }
-                }
-                Sk.retainGlobals = backupRG;
-                if (caughtError !== null) {
-                    throw caughtError;
-                }
-                resolve(Sk.builtin.none.none$);
-            });
-        };
-        if (!Sk.sysmodules.sq$contains(Sk.builtin.str.$sys)) {
-            Sk.misceval.chain(Sk.importModule("sys", false, true),
-                              loadModule);
-        } else {
-            loadModule();
-        }
-    });
-
-    return Sk.misceval.promiseToSuspension(prom);
 };
 
-Sk.builtin.frozenset = function frozenset() {
-    throw new Sk.builtin.NotImplementedError("frozenset is not yet implemented");
+Sk.builtin.exec = function exec(code, globals, locals) {
+    Sk.builtin.pyCheckArgs("exec", arguments, 1, 3);
+
+    let filename = globals && globals.__file__;
+    if (filename !== undefined && Sk.builtin.checkString(filename)) {
+        filename = filename.toString();
+    } else if (code instanceof pyCode) {
+        filename = code.filename;
+    } else {
+        filename = "<string>";
+    }
+
+    if (Sk.builtin.checkString(code)) {
+        code = Sk.compile(code.$jsstr(), filename, "exec", true, true);
+    } else if (typeof code === "string") {
+        code = Sk.compile(code, filename, "exec", true, true);
+    } else if (!(code instanceof pyCode)) {
+        throw new Sk.builtin.TypeError("exec() arg 1 must be a string, bytes or code object");
+    }
+
+    Sk.asserts.assert(
+        globals === undefined || globals.constructor === Object,
+        "internal calls to exec should be called with a javascript object for globals"
+    );
+    Sk.asserts.assert(
+        locals === undefined || locals.constructor === Object,
+        "internal calls to exec should be called with a javascript object for locals"
+    );
+
+    let backupGlobals, backupRG, caughtError;
+    return Sk.misceval.chain(
+        code,
+        (co) => {
+            if (!Sk.sysmodules.sq$contains(Sk.builtin.str.$sys)) {
+                Sk.importModule("sys", false, true);
+            }
+            return co;
+        },
+        (co) => {
+            // Backup the "retainGlobals" flag
+            backupRG = Sk.retainGlobals;
+            // Make sure we remember the globals before we do anything
+            Sk.retainGlobals = true;
+            // Create a dictionary to hold the new temporary globals
+            //globalsCopy = extractDict(globals);
+            // Ensure certain defaults are available
+            if (!globals.__file__) {
+                globals.__file__ = Sk.ffi.remapToPy(filename);
+            }
+            if (!globals.__name__) {
+                globals.__name__ = Sk.ffi.remapToPy(filename);
+            }
+            if (!globals.__package__) {
+                globals.__package__ = Sk.builtin.none.none$;
+            }
+            // Swap the real globals for our freshly copied temporary globals
+            backupGlobals = Sk.globals;
+            Sk.globals = globals;
+            // Set up some error catching
+            caughtError = null;
+            // Guard against exceptions so we can recover gracefully
+            return Sk.misceval.tryCatch(() => {
+                let result = Sk.global["eval"](co.code)(globals, locals);
+                // Ensure it terminates
+                while (result instanceof Sk.misceval.Suspension) {
+                    result = result.resume();
+                }
+                return result;
+            }, (e) => {
+                console.error("exec error:", e, locals, globals);
+                caughtError = e;
+            });
+        },
+        (new_locals) => {
+            // Restore the Original globals
+            Sk.globals = backupGlobals;
+            // Copy over the temporary globals' data to the original globals we were given
+            /*for (let key in globalsCopy) {
+                if (globalsCopy.hasOwnProperty(key)) {
+                    const pykey = Sk.ffi.remapToPy(Sk.unfixReserved(key));
+                    Sk.builtin.dict.prototype.mp$ass_subscript.call(globals, pykey, globals[key]);
+                }
+            }*/
+            // And restore the retainGlobals flag
+            Sk.retainGlobals = backupRG;
+            // Throw any errors at this point in time
+            if (caughtError !== null) {
+                throw caughtError;
+            }
+            // Return new_locals internally for eval
+            return new_locals;
+        }
+    );
 };
 
 Sk.builtin.help = function help() {
@@ -1244,25 +1234,45 @@ Sk.builtin.memoryview = function memoryview() {
 };
 
 Sk.builtin.next_ = function next_(iter, default_) {
-    var nxt;
     if (!iter.tp$iternext) {
         throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(iter) + "' object is not an iterator");
     }
-    nxt = iter.tp$iternext();
-    if (nxt === undefined) {
-        if (default_) {
-            return default_;
+    return Sk.misceval.chain(iter.tp$iternext(true), (nxt) => {
+        if (nxt === undefined) {
+            if (default_) {
+                return default_;
+            }
+            const v = iter.gi$ret;
+            // gi$ret is the original value that was thrown by the StopIteration
+            // (or returned by a generator)
+            // We've now lost the original StopIteration
+            // We make the assumption that it was probably called like
+            // raise StopIteration # or  StopIteration()
+            // rather than
+            // raise StopIteration(None)
+            if (v !== undefined && v !== Sk.builtin.none.none$) {
+                throw new Sk.builtin.StopIteration(v);
+            } else {
+                throw new Sk.builtin.StopIteration();
+            }
         }
-        throw new Sk.builtin.StopIteration();
-    }
-    return nxt;
+        return nxt;
+    });
 };
 
 Sk.builtin.reload = function reload() {
     throw new Sk.builtin.NotImplementedError("reload is not yet implemented");
 };
-Sk.builtin.vars = function vars() {
-    throw new Sk.builtin.NotImplementedError("vars is not yet implemented");
+Sk.builtin.vars = function vars(obj) {
+    if (arguments.length === 1) {
+        if (obj.$d) {
+            return obj.$d;
+        } else {
+            throw new Sk.builtin.TypeError("vars() argument must have __dict__ attribute");
+        }
+    } else {
+        throw new Sk.builtin.NotImplementedError("vars() is not yet implemented");
+    }
 };
 
 Sk.builtin.apply_ = function apply_() {

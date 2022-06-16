@@ -74,6 +74,7 @@
     "node": ">=10.4"
   },
   "dependencies": {
+    "fastestsmallesttextencoderdecoder": "^1.0.22",
     "jsbi": "^3.1.3"
   }
 }

@@ -32,7 +32,8 @@ Sk.generic.getAttr = function __getattribute__(pyName, canSuspend) {
     // look in the type for a descriptor
     if (descr !== undefined) {
         f = descr.tp$descr_get;
-        if (f && Sk.builtin.checkDataDescr(descr)) {
+        if (f !== undefined && descr.tp$descr_set !== undefined) {
+            // then we're a data descriptor
             return f.call(descr, this, type, canSuspend);
         }
     }
@@ -45,10 +46,10 @@ Sk.generic.getAttr = function __getattribute__(pyName, canSuspend) {
             return res;
         }
     }
-    if (f) {
+    if (f !== undefined) {
         return f.call(descr, this, type, canSuspend);
     }
-    if (descr != null) {
+    if (descr !== undefined) {
         return descr;
     }
     return;
@@ -107,7 +108,7 @@ Sk.generic.setAttr = function __setattr__(pyName, value, canSuspend) {
             }
         }
     }
-    throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(this) + "' object has no attribute '" + pyName.$jsstr() + "'");
+    throw new Sk.builtin.AttributeError(this.sk$attrError() + " has no attribute '" + pyName.$jsstr() + "'");
 };
 Sk.exportSymbol("Sk.generic.setAttr", Sk.generic.setAttr);
 
@@ -127,7 +128,7 @@ Sk.exportSymbol("Sk.generic.setAttr", Sk.generic.setAttr);
 Sk.generic.new = function (builtin) {
     const genericNew = function __new__(args, kwargs) {
         // this = prototype of an sk$type object.
-        if (this === builtin.prototype) {
+        if (this.constructor === builtin) {
             return new this.constructor();
         } else {
             const instance = new this.constructor();
@@ -152,7 +153,7 @@ Sk.generic.new = function (builtin) {
  *
  */
 Sk.generic.newMethodDef = {
-    $meth: function (args, kwargs) {
+    $meth(args, kwargs) {
         // this = a type object
         let this_name, subs_name;
         const native_type_proto = this.prototype;
@@ -177,12 +178,10 @@ Sk.generic.newMethodDef = {
         /* from CPython: Check that the use doesn't do something silly and unsafe like
        object.__new__(dict).  To do this, we check that the
        most derived base that's not a heap type is this type. */
-        let static_proto = subtype.prototype;
-        let is_static_new = static_proto.hasOwnProperty("tp$new") ? static_proto.tp$new.sk$static_new : false;
-        while (!is_static_new) {
-            static_proto = static_proto.tp$base.prototype;
-            is_static_new = static_proto.hasOwnProperty("tp$new") ? static_proto.tp$new.sk$static_new : false;
-        }
+
+        /**@todo is  prototypical inheritance fine here - i think it is because of the best base algorithm*/
+        const static_proto = subtype.prototype.sk$staticNew.prototype;
+
         if (static_proto.tp$new !== native_type_proto.tp$new) {
             this_name = native_type_proto.tp$name;
             subs_name = subtype.prototype.tp$name;
@@ -217,11 +216,11 @@ Sk.generic.selfIter = function __iter__() {
  * typically used by mutable iterators like dict_iter_ and set_iter_
  */
 Sk.generic.iterNextWithArrayCheckSize = function __next__() {
-    if (this.$index >= this.$seq.length) {
-        return undefined;
-    } else if (this.$seq.length !== this.$orig.get$size()) {
+    if (this.$seq.length !== this.$orig.get$size()) {
         const error_name = this.tp$name.split("_")[0];
         throw new Sk.builtin.RuntimeError(error_name + " changed size during iteration");
+    } else if (this.$index >= this.$seq.length) {
+        return undefined;
     }
     return this.$seq[this.$index++];
 };
@@ -233,10 +232,11 @@ Sk.generic.iterNextWithArrayCheckSize = function __next__() {
  * the $seq of the iterator must be an array
  */
 Sk.generic.iterNextWithArray = function __next__() {
-    if (this.$index >= this.$seq.length) {
-        return undefined;
+    const next = this.$seq[this.$index++];
+    if (next === undefined) {
+        this.tp$iternext = () => undefined; // consumed iterator
     }
-    return this.$seq[this.$index++];
+    return next;
 };
 
 /**
@@ -271,15 +271,86 @@ Sk.generic.iterReverseLengthHintMethodDef = {
  * typical implementation of `__dict__` for type objects that support it
  */
 Sk.generic.getSetDict = {
-    $get: function () {
+    $get() {
         return this.$d;
     },
-    $set: function (value) {
-        if (!(value instanceof Sk.builtin.dict)) {
+    $set(value) {
+        if (value === undefined) {
+            throw new Sk.builtin.TypeError("cannot delete __dict__");
+        } else if (value instanceof Sk.builtin.dict) {
+            this.$d = value;
+        } else {
             throw new Sk.builtin.TypeError("__dict__ must be set to a dictionary, not a '" + Sk.abstr.typeName(value) + "'");
         }
-        this.$d = value;
     },
     $doc: "dictionary for instance variables (if defined)",
     $name: "__dict__",
+};
+
+/**
+ * Logic used by seq and tuple to do rich comparisons
+ */
+Sk.generic.seqCompare = function (other, op) {
+    if (this === other && Sk.misceval.opAllowsEquality(op)) {
+        return true;
+    }
+    // w not a tuple
+    if (!(other instanceof this.sk$builtinBase)) {
+        return Sk.builtin.NotImplemented.NotImplemented$;
+    }
+    const v = this.v;
+    const w = other.v;
+    let i;
+    if (v.length !== w.length && (op === "Eq" || op === "NotEq")) {
+        /* Shortcut: if the lengths differ, the tuples differ */
+        return op === "Eq" ? false : true;
+    }
+    for (i = 0; i < v.length && i < w.length; ++i) {
+        if (!(v[i] === w[i] || Sk.misceval.richCompareBool(v[i], w[i], "Eq"))) {
+            break;
+        }
+    }
+    const vl = v.length; // it's possible for list lengths to have changed during iteration!
+    const wl = w.length;
+    if (i >= vl || i >= wl) {
+        // no more items to compare, compare sizes
+        switch (op) {
+            case "Lt":
+                return vl < wl;
+            case "LtE":
+                return vl <= wl;
+            case "Eq":
+                return vl === wl;
+            case "NotEq":
+                return vl !== wl;
+            case "Gt":
+                return vl > wl;
+            case "GtE":
+                return vl >= wl;
+            default:
+                Sk.asserts.fail();
+        }
+    }
+
+    // we have an item that's different
+    // shortcuts for eq/not
+    if (op === "Eq") {
+        return false;
+    }
+    if (op === "NotEq") {
+        return true;
+    }
+
+    // or, compare the differing element using the proper operator
+    return Sk.misceval.richCompareBool(v[i], w[i], op);
+};
+
+
+Sk.generic.classGetItem = {
+    __class_getitem__: {
+        $meth(args) {
+            return new Sk.builtin.GenericAlias(this, args);
+        },
+        $flags: { OneArg: true },
+    },
 };

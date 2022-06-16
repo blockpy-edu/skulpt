@@ -1,87 +1,49 @@
-/*
-	Implementation of the Python3 print version. Due to Python2 grammar we have
-	to mimic the named keywords after *args as kwargs. Though this does not change
-	anything for the internal implementation
-
-*/
 Sk.builtin.print = function print(args, kwargs) {
-    const kwarg_vals = Sk.abstr.copyKeywordsToNamedArgs("print", ["sep", "end", "file"], [], kwargs, [
-        Sk.builtin.none.none$,
-        Sk.builtin.none.none$,
-        Sk.builtin.none.none$,
-    ]);
-
-    // defaults, null for None
-    var kw_list = {
-        sep: " ",
-        end: "\n",
-        file: null,
-    };
-
-    var remap_val;
-    var is_none;
+    /** @todo flush is allowed but has no effect */
+    let [sep, end, file] = Sk.abstr.copyKeywordsToNamedArgs("print", ["sep", "end", "file", "flush"], [], kwargs);
 
     // check for sep; string or None
-    remap_val = kwarg_vals[0];
-    if (remap_val !== undefined) {
-        is_none = Sk.builtin.checkNone(remap_val);
-        if (is_none || Sk.builtin.checkString(remap_val)) {
-            kw_list["sep"] = is_none ? kw_list["sep"] : Sk.ffi.remapToJs(remap_val); // only reassign for string
+    if (sep === undefined || Sk.builtin.checkNone(sep)) {
+        sep = " ";
+    } else if (Sk.builtin.checkString(sep)) {
+        sep = sep.$jsstr();
         } else {
-            throw new Sk.builtin.TypeError("sep must be None or a string, not " + Sk.abstr.typeName(remap_val));
-        }
+        throw new Sk.builtin.TypeError("sep must be None or a string, not " + Sk.abstr.typeName(sep));
     }
 
     // check for end; string or None
-    remap_val = kwarg_vals[1];
-    if (remap_val !== undefined) {
-        is_none = Sk.builtin.checkNone(remap_val);
-        if (is_none || Sk.builtin.checkString(remap_val)) {
-            kw_list["end"] = is_none ? kw_list["end"] : Sk.ffi.remapToJs(remap_val); // only reassign for string
+    if (end === undefined || Sk.builtin.checkNone(end)) {
+        end = "\n";
+    } else if (Sk.builtin.checkString(end)) {
+        end = end.$jsstr();
         } else {
-            throw new Sk.builtin.TypeError("end must be None or a string, not " + Sk.abstr.typeName(remap_val));
-        }
+        throw new Sk.builtin.TypeError("end must be None or a string, not " + Sk.abstr.typeName(end));
     }
 
-    // check for file
-    // allow None, though just keep null or check if value has attribute write
-    remap_val = kwarg_vals[2];
-    if (remap_val !== undefined) {
-        is_none = Sk.builtin.checkNone(remap_val);
-        if (is_none || remap_val.tp$getattr("write") !== undefined) {
-            kw_list["file"] = is_none ? kw_list["file"] : remap_val;
-        } else {
-            throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(remap_val) + "' object has no attribute 'write'");
+    // check for file and get the file_write function if it exists
+    let file_write;
+    if (file !== undefined && !Sk.builtin.checkNone(file)) {
+        file_write = Sk.abstr.lookupSpecial(file, Sk.builtin.str.$write);
+        if (file_write === undefined) {
+            throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(file) + "' object has no attribute 'write'");
         }
     }
 
     // loop through outputs and create output string
-    var s = "";
-    var i;
-    for (i = 0; i < args.length; i++) {
-        s += new Sk.builtin.str(args[i]).v; // get str repr
-        s += kw_list.sep;
-    }
+    const output = new Sk.builtin.str(args.map((x) => new Sk.builtin.str(x).toString()).join(sep) + end);
 
-    if (args.length > 0 && kw_list.sep.length > 0) {
-        s = s.substring(0, s.length - kw_list.sep.length);
-    }
-
-    s += kw_list.end;
-
-    if (kw_list.file !== null) {
+    if (file_write !== undefined) {
         // currently not tested, though it seems that we need to see how we should access the write function in a correct manner
-        Sk.misceval.callsimArray(kw_list.file.write, [kw_list.file, new Sk.builtin.str(s)]); // callsim to write function
+        Sk.misceval.callsimArray(file_write, [output]);
     } else {
-        if (Sk.globals.sys !== undefined) {
-            const sys = Sk.globals.sys;
-            return Sk.misceval.callsimOrSuspendArray(sys.$d.stdout.write, [sys["$d"]["stdout"], new Sk.builtin.str(s)]);
-        }
-        return Sk.misceval.chain(Sk.importModule("sys", false, true), function (sys) {
-            return Sk.misceval.callsimOrSuspendArray(sys["$d"]["stdout"]["write"], [sys["$d"]["stdout"], new Sk.builtin.str(s)]);
+        return Sk.misceval.chain(Sk.importModule("sys", false, true), (sys) => {
+            file_write = Sk.abstr.lookupSpecial(sys.$d.stdout, Sk.builtin.str.$write);
+            return file_write && Sk.misceval.callsimOrSuspendArray(file_write, [output]);
         });
     }
-    // ToDo:
-    // cpython print function may receive another flush kwarg that flushes the output stream immediately
+    
     return Sk.builtin.none.none$;
 };
+
+// add this flag so that if Sk.misceval.call(Sk.builtin.print) is used then it knows how to deal with args
+Sk.builtin.print.co_fastcall = 1;

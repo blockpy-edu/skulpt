@@ -36,9 +36,10 @@ Sk.builtin.sk_method = Sk.abstr.buildNativeClass("builtin_function_or_method", {
         // here we set this.$meth binding it's call signature to self
         this.$meth = method_def.$meth.bind(self);
         this.$doc = method_def.$doc;
-        this.$self = self;
-        this.$module = module ? new Sk.builtin.str(module) : Sk.builtin.none.none$;
+        this.$self = self || null;
+        this.$module = module ? new Sk.builtin.str(module) : null;
         this.$name = method_def.$name || method_def.$meth.name || "<native JS>";
+        this.m$def = method_def;
 
         // useful to set the $textsig to determine the correct flags
         this.$textsig = method_def.$textsig;
@@ -65,73 +66,92 @@ Sk.builtin.sk_method = Sk.abstr.buildNativeClass("builtin_function_or_method", {
         }
     },
     proto: {
-        $fastCallNoKwargs: function (args, kwargs) {
+        $fastCallNoKwargs(args, kwargs) {
             Sk.abstr.checkNoKwargs(this.$name, kwargs);
             return this.$meth(args);
         },
-        $callNoArgs: function (args, kwargs) {
+        $callNoArgs(args, kwargs) {
             Sk.abstr.checkNoArgs(this.$name, args, kwargs);
             return this.$meth();
         },
-        $callOneArg: function (args, kwargs) {
+        $callOneArg(args, kwargs) {
             Sk.abstr.checkOneArg(this.$name, args, kwargs);
             return this.$meth(args[0]);
         },
-        $callNamedArgs: function (args, kwargs) {
+        $callNamedArgs(args, kwargs) {
             args = Sk.abstr.copyKeywordsToNamedArgs(this.$name, this.$flags.NamedArgs, args, kwargs, this.$flags.Defaults);
             return this.$meth(...args);
         },
-        $callMinArgs: function (args, kwargs) {
+        $callMinArgs(args, kwargs) {
             Sk.abstr.checkNoKwargs(this.$name, kwargs);
             Sk.abstr.checkArgsLen(this.$name, args, this.$flags.MinArgs, this.$flags.MaxArgs);
             return this.$meth(...args);
         },
-        $defaultCallMethod: function (args, kwargs) {
+        $defaultCallMethod(args, kwargs) {
             // default implementation for all currently created functions that have yet to be be converted
             // and don't utilise flagged calls
-            if (this.$self !== undefined) {
+            if (this.$self !== null) {
                 return Sk.builtin.func.prototype.tp$call.call(this, [this.$self, ...args], kwargs);
             }
             return Sk.builtin.func.prototype.tp$call.call(this, args, kwargs);
         },
-        $memoiseFlags: Sk.builtin.func.prototype.$memoiseFlags,
-        $resolveArgs: Sk.builtin.func.prototype.$resolveArgs,
+        $memoiseFlags() {
+            return Sk.builtin.func.prototype.$memoiseFlags.call(this);
     },
-    flags: {sk$acceptable_as_base_class: false},
+        $resolveArgs() {
+            return Sk.builtin.func.prototype.$resolveArgs.call(this);
+        },
+    },
+    flags: { sk$unacceptableBase: true },
     slots: {
         tp$getattr: Sk.generic.getAttr,
-        $r: function () {
-            if (this.$self === undefined) {
+        $r() {
+            if (this.$self === null) {
                 return new Sk.builtin.str("<built-in function " + this.$name + ">");
             }
             return new Sk.builtin.str("<built-in method " + this.$name + " of " + Sk.abstr.typeName(this.$self) + " object>");
         },
-        tp$call: function (args, kwargs) {
+        tp$call(args, kwargs) {
             return this.tp$call(args, kwargs);
+        },
+        tp$richcompare(other, op) {
+            if ((op !== "Eq" && op !== "NotEq") || !(other instanceof Sk.builtin.sk_method)) {
+                return Sk.builtin.NotImplemented.NotImplemented$;
+            }
+            let eq = this.$self === other.$self && this.m$def.$meth === other.m$def.$meth;
+            return op === "Eq" ? eq : !eq;
         },
     },
     getsets: {
         __module__: {
-            $get: function () {
-                return this.$module;
+            $get() {
+                return this.$module || Sk.builtin.none.none$;
             },
-            $set: function (value) {
+            $set(value) {
+                value = value || Sk.builtin.none.none$;
                 this.$module = value;
             },
         },
         __doc__: {
-            $get: function () {
+            $get() {
                 return this.$doc ? new Sk.builtin.str(this.$doc) : Sk.builtin.none.none$;
             },
         },
         __name__: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.str(this.$name);
             },
         },
         __text_signature__: {
-            $get: function () {
+            $get() {
                 return new Sk.builtin.str(this.$textsig);
+            },
+        },
+        __self__: {
+            $get() {
+                // self might be a module object - which means it was created inside a module before the module existed
+                // so look the name up in sysmodules
+                return this.$self || Sk.sysModules.mp$lookup(this.$module) || Sk.builtin.none.none$;
             },
         },
     },

@@ -4,14 +4,7 @@ const minify = require("babel-minify");
 const beautify = require("js-beautify");
 
 
-const reqskulpt = require("../run/require-skulpt").requireSkulpt;
-var skulpt = reqskulpt();
-if (skulpt === null) {
-    process.exit(1);
-}
-Sk.configure({__future__: Sk.python3});
-
-var ALLOW_LIST = ["src/lib/posixpath.py", "src/lib/traceback.py", "src/lib/io.py", "cisc108/", "unittest/"];
+var ALLOW_LIST = ["src/lib/posixpath.py", "src/lib/dataclasses.py", "src/lib/traceback.py", "src/lib/io.py", "cisc108/", "unittest/"];
 function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);
@@ -19,13 +12,22 @@ function endsWithAny(string, suffixes) {
 }
 function inAllowList(filename, extension) {
     return ALLOW_LIST.some(function (entry) {
-        if (entry.endsWith('/')) {
-            return filename.startsWith('src/lib/'+entry);
+        if (entry.endsWith("/")) {
+            return filename.startsWith("src/lib/"+entry);
         } else {
             return filename.endsWith(entry);
         }
     });
 }
+
+
+const reqskulpt = require("../run/require-skulpt").requireSkulpt;
+var skulpt = reqskulpt();
+if (skulpt !== null) {
+    Sk.configure({__future__: Sk.python3});
+    //process.exit(1);
+}
+
 
 /**
  * If this optional file exists in the top level directory, it will be

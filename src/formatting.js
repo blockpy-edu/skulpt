@@ -2,7 +2,7 @@
 // for numbers and strings
 // https://docs.python.org/3.7/library/string.html#formatspec
 
-const FORMAT_SPEC_REGEX = /^(?:(.)?([<\>\=\^]))?([\+\-\s])?(#)?(0)?(\d+)?(,)?(?:\.(\d+))?([bcdeEfFgGnosxX%])?$/;
+const FORMAT_SPEC_REGEX = /^(?:(.)?([<\>\=\^]))?([\+\-\s])?(#)?(0)?(\d+)?(,|_)?(?:\.(\d+))?([bcdeEfFgGnosxX%])?$/;
 const FMT = {
     FILL_CHAR: 1,
     FILL_ALIGN: 2,
@@ -28,7 +28,7 @@ let handleWidth = function (m, r, prefix, isNumber) {
         let nFill = fieldWidth - (r.length + (prefix ? prefix.length : 0));
 
         if (nFill <= 0) {
-            return r;
+            return prefix + r;
         }
 
         let fill = fillChar.repeat(nFill);
@@ -57,6 +57,9 @@ let signForNeg = function (m, neg) {
         (m[FMT.SIGN] === " ") ? " " : "";
 };
 
+const thousandSep = /\B(?=(\d{3})+(?!\d))/g;
+const otherBaseSep = /\B(?=([A-Za-z0-9]{4})+(?![A-Za-z0-9]))/g;
+
 let handleInteger = function (m, n, base) {
     // TODO: Do we need to tolerate float inputs for integer conversions?
     // Python doesn't, but I'm guessing this is something to do with JS's
@@ -82,15 +85,20 @@ let handleInteger = function (m, n, base) {
         }
     }
 
-    if (m[FMT.CONVERSION_TYPE] === "X") {
-        r = r.toUpperCase();
+    const conversionType = m[FMT.CONVERSION_TYPE];
+    if (conversionType === "X") {
+        r = r.toUpperCase(); // floats convert nan to NAN
     }
 
     if (m[FMT.CONVERSION_TYPE] === "n") {
         r = (+r).toLocaleString();
     } else if (m[FMT.COMMA]) {
-        var parts = r.toString().split(".");
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        const parts = r.split(".");
+        const sep = m[FMT.COMMA];
+        if (sep === "," && base !== 10) {
+            throw new Sk.builtin.ValueError(`Cannot specify ',' with '${conversionType}'`);
+        }
+        parts[0] = parts[0].replace(base === 10 ? thousandSep : otherBaseSep , sep);
         r = parts.join(".");
     }
 
@@ -189,6 +197,9 @@ let formatNumber = function (num, formatSpec, isFractional) {
                     result += ".0";
                 }
             }
+            if (conversionType.toLowerCase()==="e") {
+                result = result.replace(/^([-+]?[0-9]*\.?[0-9]+[eE][-+]?)([0-9])?$/, "$10$2");
+            }
             if (m[FMT.COMMA]) {
                 var parts = result.toString().split(".");
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -237,9 +248,7 @@ Sk.formatting.mkNumber__format__ = (isFractional) => function (format_spec) {
     return new Sk.builtin.str(formatNumber(this, format_spec.$jsstr(), isFractional));
 };
 
-let formatString = function (self, format_spec) {
-    Sk.builtin.pyCheckArgsLen("__format__", arguments.length, 2, 2);
-
+function formatString(format_spec) {
     if (!Sk.builtin.checkString(format_spec)) {
         throw new Sk.builtin.TypeError("format() argument 2 must be str, not " + Sk.abstr.typeName(format_spec));
     }
@@ -261,7 +270,7 @@ let formatString = function (self, format_spec) {
         throw new Sk.builtin.ValueError("Cannot specify ',' with 's'");
     }
 
-    let value = self.v;
+    let value = this.v;
 
     if (m[FMT.PRECISION]) {
         value = value.substring(0, m[FMT.PRECISION]);
@@ -271,26 +280,11 @@ let formatString = function (self, format_spec) {
 };
 
 // str.format() implementation
-var format = function (kwa) {
+function format(args, kwargs) {
     // following PEP 3101
-
-    var a, args, key, kwargs;
-    var ret;
-    var regex;
-    var index;
-    var replFunc;
-    var arg_dict = {};
-
-    Sk.builtin.pyCheckArgsLen("format", arguments.length, 0, Infinity, true, true);
-
-    args = new Sk.builtins["tuple"](Array.prototype.slice.call(arguments, 1)); /*vararg*/
-    kwargs = new Sk.builtins["dict"](kwa);
-
-    if (arguments[1] === undefined) {
-        return args.v;
-    }
-    index = 0;
-    regex = /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!([rs]))?(?:\:([^}]*))?}/g;
+    kwargs = kwargs || [];
+    const arg_dict = {};
+    const regex = /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!([rs]))?(?:\:([^}]*))?}/g;
     // ex: {o.name!r:*^+#030,.9b}
     // Field 1, Field_name, o.name
     // Field 2, arg_name, o
@@ -304,23 +298,15 @@ var format = function (kwa) {
     // retrive field value
     // hand off format spec
     // return resulting spec to function
-
-    if (kwargs.size !== 0) {
-        let iter, k, v;
-        for (iter = kwargs.tp$iter(), k = iter.tp$iternext();
-            k !== undefined;
-            k = iter.tp$iternext()) {
-            v = kwargs.mp$lookup(k);
-            arg_dict[k.v] = v;
+    for (let i = 0; i < kwargs.length; i += 2) {
+        arg_dict[kwargs[i]] = kwargs[i + 1];
         }
-    }
-    for (var i in args.v) {
-        if (i !== "0") {
-            arg_dict[i - 1] = args.v[i];
-        }
+    for (let i in args) {
+        arg_dict[i] = args[i];
     }
 
-    replFunc = function (substring, field_name, arg_name, attr_name, attribute_name, element_index, conversion, format_spec, offset, str_whole) {
+    let index = 0;
+    function replFunc (substring, field_name, arg_name, attr_name, attribute_name, element_index, conversion, format_spec, offset, str_whole) {
         let value;
 
         if (element_index !== undefined && element_index !== "") {
@@ -334,15 +320,18 @@ var format = function (kwa) {
             }
             index++;
         } else if (attribute_name !== undefined && attribute_name !== "") {
-            value = Sk.abstr.gattr(arg_dict[arg_name || (index++)], new Sk.builtin.str(attribute_name));
+            value = Sk.abstr.gattr(arg_dict[arg_name || index++], new Sk.builtin.str(attribute_name));
         } else if (arg_name !== undefined && arg_name !== "") {
             value = arg_dict[arg_name];
         } else if (field_name === undefined || field_name === "") {
             value = arg_dict[index];
             index++;
-        } else if (field_name instanceof Sk.builtin.int_ ||
+        } else if (
+            field_name instanceof Sk.builtin.int_ ||
             field_name instanceof Sk.builtin.float_ ||
-            field_name instanceof Sk.builtin.lng || /^\d+$/.test(field_name)) {
+            field_name instanceof Sk.builtin.lng ||
+            /^\d+$/.test(field_name)
+        ) {
             value = arg_dict[field_name];
             index++;
         }
@@ -359,10 +348,9 @@ var format = function (kwa) {
         return Sk.abstr.objectFormat(value, new Sk.builtin.str(format_spec)).$jsstr();
     };
 
-    ret = args.v[0].v.replace(regex, replFunc);
+    const ret = this.v.replace(regex, replFunc);
     return new Sk.builtin.str(ret);
 };
 
-format["co_kwargs"] = true;
-Sk.builtin.str.prototype["format"] = new Sk.builtin.func(format);
-Sk.builtin.str.prototype["__format__"] = new Sk.builtin.func(formatString);
+Sk.formatting.format = format;
+Sk.formatting.formatString = formatString;

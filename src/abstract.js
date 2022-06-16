@@ -7,7 +7,7 @@
 Sk.abstr = {};
 
 /**@typedef {Sk.builtin.object}*/var pyObject;
-/** @typedef {Sk.builtin.type|Function}*/var typeObject;
+/** @typedef {Sk.builtin.type|FunctionConstructor}*/var typeObject;
 
 
 /**
@@ -23,28 +23,58 @@ Sk.abstr = {};
  */
 Sk.abstr.typeName = function (obj) {
     if (obj != null && obj.tp$name !== undefined) {
-        return obj.tp$name;
+        let name = obj.ht$name;
+        if (name !== undefined) {
+            return name.toString();
+        }
+        name = obj.tp$name;
+        if (name.includes(".")) {
+            name = name.slice(name.lastIndexOf(".") + 1);
+        }
+        return name;
     } else {
+        Sk.asserts.fail(obj + " passed to typeName");
         return "<invalid type>";
     }
 };
 
-Sk.abstr.binop_type_error = function (v, w, name) {
-    const vtypename = Sk.abstr.typeName(v);
-    const wtypename = Sk.abstr.typeName(w);
-
-    throw new Sk.builtin.TypeError("unsupported operand type(s) for " + name + ": '" + vtypename + "' and '" + wtypename + "'");
+const binop_name_to_symbol = {
+    Add: "+",
+    Sub: "-",
+    Mult: "*",
+    MatMult: "@",
+    Div: "/",
+    FloorDiv: "//",
+    Mod: "%",
+    DivMod: "divmod()",
+    Pow: "** or pow()",
+    LShift: "<<",
+    RShift: ">>",
+    BitAnd: "&",
+    BitXor: "^",
+    BitOr: "|",
 };
 
-Sk.abstr.unop_type_error = function (v, name) {
-    var vtypename = Sk.abstr.typeName(v),
-        uop = {
-            UAdd: "+",
-            USub: "-",
-            Invert: "~",
-        }[name];
+function binop_type_error(v, w, name) {
+    const vtypename = Sk.abstr.typeName(v);
+    const wtypename = Sk.abstr.typeName(w);
+    throw new Sk.builtin.TypeError("unsupported operand type(s) for " + binop_name_to_symbol[name] + ": '" + vtypename + "' and '" + wtypename + "'");
+};
 
-    throw new Sk.builtin.TypeError("bad operand type for unary " + uop + ": '" + vtypename + "'");
+function biniop_type_error(v, w, name) {
+    const vtypename = Sk.abstr.typeName(v);
+    const wtypename = Sk.abstr.typeName(w);
+    throw new Sk.builtin.TypeError("unsupported operand type(s) for " + binop_name_to_symbol[name] + "=: '" + vtypename + "' and '" + wtypename + "'");
+};
+
+const uop_name_to_symbol = {
+    UAdd: "+",
+    USub: "-",
+    Invert: "~",
+};
+function unop_type_error(v, name) {
+    var vtypename = Sk.abstr.typeName(v);
+    throw new Sk.builtin.TypeError("bad operand type for unary " + uop_name_to_symbol[name] + ": '" + vtypename + "'");
 };
 
 /**
@@ -57,7 +87,7 @@ Sk.abstr.unop_type_error = function (v, name) {
  *
  * @private
  */
-Sk.abstr.boNameToSlotFuncLhs_ = function (obj, name) {
+function boNameToSlotFuncLhs_(obj, name) {
     switch (name) {
         case "Add":
             return obj.nb$add;
@@ -92,7 +122,7 @@ Sk.abstr.boNameToSlotFuncLhs_ = function (obj, name) {
     }
 };
 
-Sk.abstr.boNameToSlotFuncRhs_ = function (obj, name) {
+function boNameToSlotFuncRhs_(obj, name) {
     switch (name) {
         case "Add":
             return obj.nb$reflected_add;
@@ -127,7 +157,7 @@ Sk.abstr.boNameToSlotFuncRhs_ = function (obj, name) {
     }
 };
 
-Sk.abstr.iboNameToSlotFunc_ = function (obj, name) {
+function iboNameToSlotFunc_(obj, name) {
     switch (name) {
         case "Add":
             return obj.nb$inplace_add;
@@ -160,7 +190,7 @@ Sk.abstr.iboNameToSlotFunc_ = function (obj, name) {
     }
 };
 
-Sk.abstr.uoNameToSlotFunc_ = function (obj, name) {
+function uoNameToSlotFunc_(obj, name) {
     switch (name) {
         case "USub":
             return obj.nb$negative;
@@ -171,13 +201,13 @@ Sk.abstr.uoNameToSlotFunc_ = function (obj, name) {
     }
 };
 
-Sk.abstr.binary_op_ = function (v, w, opname) {
+function binary_op_(v, w, opname) {
     // All Python inheritance is now enforced with Javascript inheritance
     // (see Sk.abstr.setUpInheritance). This checks if w's type is a strict
     // subclass of v's type
     const w_type = w.constructor;
     const v_type = v.constructor;
-    const w_is_subclass = w_type !== v_type && w_type.sk$basetype === undefined && w instanceof v_type;
+    const w_is_subclass = w_type !== v_type && w_type.sk$baseClass === undefined && w instanceof v_type;
 
     // From the Python 2.7 docs:
     //
@@ -190,9 +220,13 @@ Sk.abstr.binary_op_ = function (v, w, opname) {
 
     let wop;
     let ret;
+    let tried_reflected = false;
     if (w_is_subclass) {
-        wop = Sk.abstr.boNameToSlotFuncRhs_(w, opname);
-        if (wop !== undefined) {
+        wop = boNameToSlotFuncRhs_(w, opname);
+        if (wop === undefined) {
+            tried_reflected = true;
+        } else if (wop !== boNameToSlotFuncRhs_(v, opname)) {
+            tried_reflected = true;
             ret = wop.call(w, v);
             if (ret !== Sk.builtin.NotImplemented.NotImplemented$) {
                 return ret;
@@ -200,16 +234,16 @@ Sk.abstr.binary_op_ = function (v, w, opname) {
         }
     }
 
-    const vop = Sk.abstr.boNameToSlotFuncLhs_(v, opname);
+    const vop = boNameToSlotFuncLhs_(v, opname);
     if (vop !== undefined) {
         ret = vop.call(v, w);
         if (ret !== Sk.builtin.NotImplemented.NotImplemented$) {
             return ret;
         }
     }
-    // Don't retry RHS if failed above
-    if (!w_is_subclass) {
-        wop = Sk.abstr.boNameToSlotFuncRhs_(w, opname);
+    // try the RHS if we haven't tried it yet and we're not the same type see test_magicmethods.py
+    if (!tried_reflected && w_type !== v_type) {
+        wop || (wop = boNameToSlotFuncRhs_(w, opname));
         if (wop !== undefined) {
             ret = wop.call(w, v);
             if (ret !== Sk.builtin.NotImplemented.NotImplemented$) {
@@ -217,11 +251,11 @@ Sk.abstr.binary_op_ = function (v, w, opname) {
             }
         }
     }
-    Sk.abstr.binop_type_error(v, w, opname);
+
 };
 
-Sk.abstr.binary_iop_ = function (v, w, opname) {
-    const vop = Sk.abstr.iboNameToSlotFunc_(v, opname);
+function binary_iop_(v, w, opname) {
+    const vop = iboNameToSlotFunc_(v, opname);
     if (vop !== undefined) {
         const ret = vop.call(v, w);
         if (ret !== Sk.builtin.NotImplemented.NotImplemented$) {
@@ -229,15 +263,14 @@ Sk.abstr.binary_iop_ = function (v, w, opname) {
         }
     }
     // If there wasn't an in-place operation, fall back to the binop
-    return Sk.abstr.binary_op_(v, w, opname);
+    return binary_op_(v, w, opname);
 };
 
-Sk.abstr.unary_op_ = function (v, opname) {
-    const vop = Sk.abstr.uoNameToSlotFunc_(v, opname);
+function unary_op_(v, opname) {
+    const vop = uoNameToSlotFunc_(v, opname);
     if (vop !== undefined) {
         return vop.call(v);
     }
-    Sk.abstr.unop_type_error(v, opname);
 };
 
 /**
@@ -251,7 +284,7 @@ Sk.abstr.unary_op_ = function (v, opname) {
  * @throws {Sk.builtin.TypeError}
  */
 Sk.abstr.numberBinOp = function (v, w, op) {
-    return Sk.abstr.binary_op_(v, w, op);
+    return binary_op_(v, w, op) || binop_type_error(v, w, op);
 };
 Sk.exportSymbol("Sk.abstr.numberBinOp", Sk.abstr.numberBinOp);
 
@@ -266,7 +299,7 @@ Sk.exportSymbol("Sk.abstr.numberBinOp", Sk.abstr.numberBinOp);
  * @throws {Sk.builtin.TypeError}
  */
 Sk.abstr.numberInplaceBinOp = function (v, w, op) {
-    return Sk.abstr.binary_iop_(v, w, op);
+    return binary_iop_(v, w, op) || biniop_type_error(v, w, op);
 };
 Sk.exportSymbol("Sk.abstr.numberInplaceBinOp", Sk.abstr.numberInplaceBinOp);
 
@@ -283,7 +316,7 @@ Sk.abstr.numberUnaryOp = function (v, op) {
     if (op === "Not") {
         return Sk.misceval.isTrue(v) ? Sk.builtin.bool.false$ : Sk.builtin.bool.true$;
     }
-    return Sk.abstr.unary_op_(v, op);
+    return unary_op_(v, op) || unop_type_error(v, op);
 };
 Sk.exportSymbol("Sk.abstr.numberUnaryOp", Sk.abstr.numberUnaryOp);
 
@@ -311,7 +344,7 @@ Sk.abstr.sequenceContains = function (seq, ob, canSuspend) {
     const r = Sk.misceval.iterFor(
         Sk.abstr.iter(seq),
         function (i) {
-            if (Sk.misceval.richCompareBool(i, ob, "Eq")) {
+            if (i === ob || Sk.misceval.richCompareBool(i, ob, "Eq")) {
                 return new Sk.misceval.Break(true);
             } else {
                 return false;
@@ -322,11 +355,34 @@ Sk.abstr.sequenceContains = function (seq, ob, canSuspend) {
     return canSuspend ? r : Sk.misceval.retryOptionalSuspensionOrThrow(r);
 };
 
-Sk.abstr.sequenceConcat = function (seq1, seq2) {
-    if (seq1.sq$concat) {
-        return seq1.sq$concat(seq2);
+Sk.abstr.sequenceConcat = function (s, o) {
+    if (s.sq$concat) {
+        return s.sq$concat(o);
     }
-    throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(seq1) + "' object can't be concatenated");
+    // user defined classes don't have a sq$concat only nb$add
+    if (Sk.builtin.checkSequence(s) && Sk.builtin.checkSequence(o)) {
+        const res = binary_op_(s, o, "Add");
+        if (res !== undefined) {
+            return res;
+        }
+    }
+    throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(s) + "' object can't be concatenated");
+};
+
+Sk.abstr.sequenceInPlaceConcat = function (s, o) {
+    if (s.sq$inplace_concat) {
+        return s.sq$inplace_concat(o);
+    } else if (s.sq$concat) {
+        return s.sq$concat(o);
+    }
+    // user defined classes don't have a sq$concat only nb$add
+    if (Sk.builtin.checkSequence(s) && Sk.builtin.checkSequence(o)) {
+        const res = binary_iop_(s, o, "Add");
+        if (res !== undefined) {
+            return res;
+        }
+    }
+    throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(s) + "' object can't be concatenated");
 };
 
 /**
@@ -378,8 +434,8 @@ Sk.abstr.sequenceSetItem = function (seq, i, x, canSuspend) {
     return Sk.abstr.objectSetItem(seq, i, x, canSuspend);
 };
 
-Sk.abstr.sequenceDelItem = function (seq, i) {
-    return Sk.abstr.objectDelItem(seq, i);
+Sk.abstr.sequenceDelItem = function (seq, i, canSuspend) {
+    return Sk.abstr.objectDelItem(seq, i, canSuspend);
 };
 
 Sk.abstr.sequenceGetSlice = function (seq, i1, i2) {
@@ -394,23 +450,75 @@ Sk.abstr.sequenceSetSlice = function (seq, i1, i2, x) {
     return Sk.abstr.objectSetItem(seq, new Sk.builtin.slice(i1, i2));
 };
 
-// seq - Python object to unpack
-// n   - JavaScript number of items to unpack
-Sk.abstr.sequenceUnpack = function (seq, n) {
-    const res = [];
+/**
+ * 
+ * @param {*} seq the iterable to unpack
+ * @param {*} breakIdx either the starred index or the number of elements to unpack if no star
+ * @param {*} numvals the total number of un-starred indices
+ * @param {*} hasStar is there a starred index
+ * 
+ * this function is used in compile code to unpack a sequence to an assignment statement
+ * e.g.
+ * a, b, c = 1, 2, 3 # seq is the tuple 1,2,3
+ * // Sk.abstr.sequenceUncpack(seq, 3, 3, false)
+ * // return [int_(1), int_(2), int_(3)]
+ * 
+ * 
+ * a, *b, c = 1,2,3,4 
+ * // Sk.abstr.sequenceUncpack(seq, 1, 2, true)
+ * // return [int_(1), list(int_(2), int_(3)), int_(4)]
+ * 
+ */
+Sk.abstr.sequenceUnpack = function (seq, breakIdx, numvals, hasStar) {
+    if (!Sk.builtin.checkIterable(seq)) {
+        throw new Sk.builtin.TypeError("cannot unpack non-iterable " + Sk.abstr.typeName(seq) + " object");
+    }
     const it = Sk.abstr.iter(seq);
-    let i;
-    for (i = it.tp$iternext(); i !== undefined && res.length < n; i = it.tp$iternext()) {
-        res.push(i);
+    const res = [];
+    let i = 0;
+    let upToStar;
+    if (breakIdx > 0) {
+        // iterator up to but not including the breakIdx
+        upToStar = Sk.misceval.iterFor(it, (nxt) => {
+            res.push(nxt);
+            if (++i === breakIdx) {
+                return new Sk.misceval.Break();
+            }
+        });
     }
-    if (res.length < n) {
-        throw new Sk.builtin.ValueError("need more than " + res.length + " values to unpack");
-    }
-    if (i !== undefined) {
-        throw new Sk.builtin.ValueError("too many values to unpack");
-    }
-    // Return Javascript array of items
-    return res;
+
+    return Sk.misceval.chain(upToStar, () => {
+        if (res.length < breakIdx) {
+            throw new Sk.builtin.ValueError("not enough values to unpack (expected at least " + numvals + ", got " + res.length + ")");
+        }
+        if (!hasStar) {
+            // check we've consumed the iterator
+            return Sk.misceval.chain(it.tp$iternext(true), (nxt) => {
+                if (nxt !== undefined) {
+                    throw new Sk.builtin.ValueError("too many values to unpack (expected " + breakIdx + ")");
+                }
+                return res;
+            });
+        }
+        const starred = [];
+        return Sk.misceval.chain(
+            Sk.misceval.iterFor(it, (nxt) => {
+                starred.push(nxt);
+            }),
+            () => {
+                const starred_end = starred.length + breakIdx - numvals;
+                if (starred_end < 0) {
+                    throw new Sk.builtin.ValueError(
+                        "not enough values to unpack (expected at least " + numvals + ", got " + (numvals + starred_end) + ")"
+                    );
+                }
+                res.push(new Sk.builtin.list(starred.slice(0, starred_end)));
+                res.push(...starred.slice(starred_end));
+                // Return Javascript array of items
+                return res;
+            }
+        );
+    });
 };
 
 // Unpack mapping into a JS array of alternating keys/values, possibly suspending
@@ -420,26 +528,52 @@ Sk.abstr.sequenceUnpack = function (seq, n) {
 // at some point, but in the meantime we have this function to
 // unpack keyword dictionaries into our special format
 Sk.abstr.mappingUnpackIntoKeywordArray = function (jsArray, pyMapping, pyCodeObject) {
-    return Sk.misceval.chain(
-        pyMapping.tp$getattr(new Sk.builtin.str("items")),
-        function (itemfn) {
-            if (!itemfn) {
-                throw new Sk.builtin.TypeError("Object is not a mapping");
+    if (pyMapping instanceof Sk.builtin.dict) {
+        pyMapping.$items().forEach(([key, val]) => {
+            if (!Sk.builtin.checkString(key)) {
+                throw new Sk.builtin.TypeError((pyCodeObject.$qualname ? pyCodeObject.$qualname + "() " : "") + "keywords must be strings");
             }
-            return Sk.misceval.callsimOrSuspend(itemfn);
-        },
-        function (items) {
-            return Sk.misceval.iterFor(Sk.abstr.iter(items), function (item) {
-                if (!item || !item.v) {
-                    throw new Sk.builtin.TypeError("Object is not a mapping; items() does not return tuples");
-                }
-                if (!(item.v[0].ob$type === Sk.builtin.str)) {
-                    throw new Sk.builtin.TypeError((pyCodeObject.tp$name ? pyCodeObject.tp$name + ":" : "") + "keywords must be strings");
-                }
-                jsArray.push(item.v[0].v, item.v[1]);
+            jsArray.push(key.v);
+            jsArray.push(val);
+        });
+        return;
+    }
+
+    const keyf = Sk.abstr.lookupSpecial(pyMapping, Sk.builtin.str.$keys);
+    if (keyf === undefined) {
+        throw new Sk.builtin.TypeError("Object is not a mapping");
+    }
+    return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(keyf), (keys) =>
+        Sk.misceval.iterFor(Sk.abstr.iter(keys), (key) => {
+            if (!Sk.builtin.checkString(key)) {
+                throw new Sk.builtin.TypeError((pyCodeObject.$qualname ? pyCodeObject.$qualname + "() " : "") + "keywords must be strings");
+            }
+            return Sk.misceval.chain(pyMapping.mp$subscript(key, true), (val) => {
+                jsArray.push(key.v);
+                jsArray.push(val);
             });
-        }
+        })
     );
+};
+
+Sk.abstr.keywordArrayFromPyDict = function (dict) {
+    const kwarray = [];
+    dict.$items().forEach(([key, val]) => {
+        if (!Sk.builtin.checkString(key)) {
+            throw new Sk.builtin.TypeError("keywords must be strings");
+        }
+        kwarray.push(key.toString());
+        kwarray.push(val);
+    });
+    return kwarray;
+};
+
+Sk.abstr.keywordArrayToPyDict = function (kwarray) {
+    const dict = new Sk.builtin.dict();
+    for (let i = 0; i < kwarray.length; i += 2) {
+        dict.mp$ass_subscript(new Sk.builtin.str(kwarray[i]), kwarray[i + 1]);
+    }
+    return dict;
 };
 
 /**
@@ -473,14 +607,16 @@ Sk.abstr.copyKeywordsToNamedArgs = function (func_name, varnames, args, kwargs, 
         throw new Sk.builtin.TypeError(func_name + "() expected at most " + varnames.length + " arguments (" + nargs + " given)");
     }
     if (!kwargs.length && defaults === undefined) {
+        // no defaults supplied
         return args;
     } else if (nargs === varnames.length && !kwargs.length) {
+        // position only arguments match
         return args;
-    } else if (nargs === 0 && varnames.length === (defaults ? defaults.length : defaults)) {
-        // a fast case
+    } else if (nargs === 0 && varnames.length === (defaults && defaults.length)) {
+        // a fast case - no args so just return the defaults
         return defaults;
     }
-    args = args.slice(0); //[...args]; // make a shallow copy of args
+    args = args.slice(0); // make a copy of args
 
     for (let i = 0; i < kwargs.length; i += 2) {
         const name = kwargs[i]; // JS string
@@ -590,12 +726,35 @@ Sk.abstr.checkArgsLen = function (func_name, args, minargs, maxargs) {
 Sk.exportSymbol("Sk.abstr.checkArgsLen", Sk.abstr.checkArgsLen);
 
 Sk.abstr.objectFormat = function (obj, format_spec) {
+    if (format_spec === undefined) {
+        format_spec = Sk.builtin.str.$emptystr;
+    } else if (!Sk.builtin.checkString(format_spec)) {
+        throw new Sk.builtin.TypeError("Format specifier must be a string, not " + Sk.abstr.typeName(format_spec));
+    }
     const meth = Sk.abstr.lookupSpecial(obj, Sk.builtin.str.$format); // inherited from object so guaranteed to exist
-    const result = Sk.misceval.callsimArray(meth, [obj, format_spec]);
+    const result = Sk.misceval.callsimArray(meth, [format_spec]);
     if (!Sk.builtin.checkString(result)) {
         throw new Sk.builtin.TypeError("__format__ must return a str, not " + Sk.abstr.typeName(result));
     }
     return result;
+};
+
+/**
+ * 
+ * @param {pyObject} obj 
+ * 
+ * @returns {Number} the hash value a number less than Number.MAX_SAFE_INTEGER 
+ * @throws {Sk.buitin.TypeError} if the object is unhashable
+ */
+Sk.abstr.objectHash = function (obj) {
+    const hash_func = obj.tp$hash;
+    if (hash_func !== undefined) {
+        if (Sk.builtin.checkNone(hash_func)) {
+            throw new Sk.builtin.TypeError("unhashable type: '" + Sk.abstr.typeName(obj) + "'");
+        }
+        return obj.tp$hash();
+    }
+    throw new Sk.builtin.TypeError("unsupported Javascript type");
 };
 
 Sk.abstr.objectAdd = function (a, b) {
@@ -622,9 +781,9 @@ Sk.abstr.objectPositive = function (obj) {
     throw new Sk.builtin.TypeError("bad operand type for unary +: '" + Sk.abstr.typeName(obj) + "'");
 };
 
-Sk.abstr.objectDelItem = function (o, key) {
+Sk.abstr.objectDelItem = function (o, key, canSuspend) {
     if (o.mp$ass_subscript) {
-        return o.mp$ass_subscript(key);
+        return o.mp$ass_subscript(key, undefined, canSuspend);
     }
     throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(o) + "' object does not support item deletion");
 };
@@ -639,13 +798,15 @@ Sk.exportSymbol("Sk.abstr.objectDelItem", Sk.abstr.objectDelItem);
 Sk.abstr.objectGetItem = function (o, key, canSuspend) {
     if (o.mp$subscript) {
         return o.mp$subscript(key, canSuspend);
-    } else if (Sk.builtin.checkClass(o)) {
+    }
+    if (Sk.builtin.checkClass(o)) {
         if (o === Sk.builtin.type) {
-            return o;
+            return new Sk.builtin.GenericAlias(o, key);
         }
-        let f = Sk.abstr.lookupSpecial(o, Sk.builtin.str.$class_getitem);
-        if (f) {
-            return Sk.misceval.callsimOrSuspendArray(f, [o, key]);
+        const meth = Sk.abstr.typeLookup(o, Sk.builtin.str.$class_getitem);
+        if (meth !== undefined) {
+            const res = Sk.misceval.callsimOrSuspendArray(meth, [key]);
+            return canSuspend ? res : Sk.misceval.retryOptionalSuspensionOrThrow(res);
         }
     }
     throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(o) + "' does not support indexing");
@@ -677,13 +838,11 @@ Sk.abstr.gattr = function (obj, pyName, canSuspend) {
     // let the getattr and setattr's deal with reserved words - we don't want to pass a mangled pyName to tp$getattr!!
     const ret = obj.tp$getattr(pyName, canSuspend);
     if (ret === undefined) {
-        const error_name = obj.sk$type ? "type object '" + obj.prototype.tp$name + "'" : "'" + Sk.abstr.typeName(obj) + "' object";
-        throw new Sk.builtin.AttributeError(error_name + " has no attribute '" + pyName.$jsstr() + "'");
+        throw new Sk.builtin.AttributeError(obj.sk$attrError() + " has no attribute '" + pyName.$jsstr() + "'");
     } else if (ret.$isSuspension) {
         return Sk.misceval.chain(ret, function (r) {
             if (r === undefined) {
-                const error_name = obj.sk$type ? "type object '" + obj.prototype.tp$name + "'" : "'" + Sk.abstr.typeName + "' object";
-                throw new Sk.builtin.AttributeError(error_name + " has no attribute '" + pyName.$jsstr() + "'");
+                throw new Sk.builtin.AttributeError(obj.sk$attrError() + " has no attribute '" + pyName.$jsstr() + "'");
             }
             return r;
         });
@@ -749,9 +908,29 @@ Sk.exportSymbol("Sk.abstr.iter", Sk.abstr.iter);
  * @param {Sk.builtin.str} pyName
  */
 Sk.abstr.lookupSpecial = function (obj, pyName) {
-    return obj.ob$type.$typeLookup(pyName);
+    var obtype = obj.ob$type;
+    if (obtype === undefined) {
+        Sk.asserts.fail("javascript object sent to lookupSpecial");
+        return;
+    }
+    var func = obtype.$typeLookup(pyName);
+    if (func === undefined) {
+        return;
+    } else if (func.tp$descr_get !== undefined) {
+        func = func.tp$descr_get(obj, obtype);
+    }
+    return func;
 };
 Sk.exportSymbol("Sk.abstr.lookupSpecial", Sk.abstr.lookupSpecial);
+
+
+Sk.abstr.typeLookup = function (type_obj, pyName) {
+    const res = type_obj.$typeLookup(pyName);
+    if (res !== undefined && res.tp$descr_get) {
+        return res.tp$descr_get(null, type_obj);
+    }
+    return res;
+};
 
 /**
  * Mark a class as unhashable and prevent its `__hash__` function from being called.
@@ -785,28 +964,25 @@ Sk.abstr.markUnhashable = function (thisClass) {
  * builtins should inherit from Sk.builtin.object.
  *
  * @param {string} childName The Python name of the child (subclass).
- * @param {!typeObject} child     The subclass.
- * @param {typeObject=} [parent=Sk.builtin.object]    The base of child.
- * @param {typeObject=} [metaclass=Sk.builtin.type]
+ * @param {FunctionConstructor} child     The subclass.
+ * @param {FunctionConstructor=} [parent=Sk.builtin.object]    The base of child.
+ * @param {FunctionConstructor=} [metaclass=Sk.builtin.type]
  * 
- * @returns {!typeObject}
+ * @returns {FunctionConstructor}
  * 
  */
 Sk.abstr.setUpInheritance = function (childName, child, parent, metaclass) {
     metaclass = metaclass || Sk.builtin.type;
-    parent = parent || Sk.builtin.object;
+    parent = parent === undefined ? Sk.builtin.object : parent;
+    const parentproto = parent !== null ? parent.prototype : null;
     Object.setPrototypeOf(child, metaclass.prototype);
-
-
-    child.prototype = Object.create(parent.prototype);
+    Object.setPrototypeOf(child.prototype, parentproto);
     Object.defineProperties(child.prototype, {
-        constructor: {value: child, writable: true},
+        sk$object: { value: child, writable: true },
         ob$type: {value: child, writable: true},
         tp$name: {value: childName, writable: true},
         tp$base: {value: parent, writable: true},
     });
-    
-    return child;
 };
 
 
@@ -814,244 +990,259 @@ Sk.abstr.setUpInheritance = function (childName, child, parent, metaclass) {
  * This function is called in {@link Sk.doOneTimeInitialization}
  * and {@link Sk.abstr.buildNativeClass}
  *
- * @param  {!typeObject} child
+ * @param  {FunctionConstructor} child
  *
  */
 Sk.abstr.setUpBuiltinMro = function (child) {
-    let parent = child.prototype.tp$base || undefined;
-    const bases = parent === undefined ? [] : [parent];
-    if (parent === Sk.builtin.object || parent === undefined) {
-        child.sk$basetype = true;
+    let base = child.prototype.tp$base;
+    const bases = base === null ? [] : [base];
+    if (base === Sk.builtin.object || base === null) {
+        Object.defineProperty(child, "sk$baseClass", { value: true, writable: true });
+        Object.defineProperty(child.prototype, "sk$builtinBase", { value: child, writable: true });
     }
+    // assume solid base - this can be overridden later in flags
+    Object.defineProperty(child, "sk$solidBase", { value: true, writable: true });
     const mro = [child];
-    for (let base = parent; base !== undefined; base = base.prototype.tp$base) {
-        if (!base.sk$abstract) {
-            mro.push(base);
-        }
+    while (base !== null) {
+        mro.push(base);
+        base = base.prototype.tp$base;
     }
+    
     // internally we keep the mro and bases as array objects
     // the wrapper descripor returns the tuple of the array
     Object.defineProperties(child.prototype, {
         sk$prototypical: {value: true, writable: true},
-        tp$mro: {value: mro, writable: true},
         tp$bases: {value: bases, writable: true},
+        tp$mro: { value: mro, writable: true },
+    });
+    Object.defineProperty(child, "$typeLookup", {
+        value: function (pyName) {
+            var jsName = pyName.$mangled;
+            return this.prototype[jsName];
+        },
+        writable: true,
     });
 };
 /**
- * 
- * @param {!typeObject} klass 
+ * @param {FunctionConstructor} klass 
  * @param {Object=} getsets 
  */
 Sk.abstr.setUpGetSets = function (klass, getsets) {
-    getsets = getsets || klass.prototype.tp$getsets || {};
-    for (let getset_name in getsets) {
-        const gsd = getsets[getset_name];
-        gsd.$name = getset_name;
-        klass.prototype[getset_name] = new Sk.builtin.getset_descriptor(klass, gsd);
+    if (Sk.builtin.getset_descriptor === undefined) {
+        return;
     }
-    // we check this later in onetimeInitialization
-    // it also means that you can create more getsets and then allocate them later
-    Object.defineProperty(klass.prototype, "tp$getsets", {
-        value: null,
-        writable: true,
-        enumerable: false,
+    const klass_proto = klass.prototype;
+    getsets = getsets || klass_proto.tp$getsets || {};
+    Object.entries(getsets).forEach(([getset_name, getset_def]) => {
+        getset_def.$name = getset_name;
+        klass_proto[getset_name] = new Sk.builtin.getset_descriptor(klass, getset_def);
     });
+    Object.defineProperty(klass_proto, "tp$getsets", { value: null, writable: true });
 };
 
 /**
  * 
- * @param {typeObject} klass 
+ * @param {FunctionConstructor} klass 
  * @param {Object=} methods 
  */
 Sk.abstr.setUpMethods = function (klass, methods) {
-    methods = methods || klass.prototype.tp$methods || {};
-    for (let method_name in methods) {
-        const method_def = methods[method_name];
-        method_def.$name = method_name;
-        klass.prototype[method_name] = new Sk.builtin.method_descriptor(klass, method_def);
+    if (Sk.builtin.method_descriptor === undefined) {
+        return;
     }
-    Object.defineProperty(klass.prototype, "tp$methods", {
-        value: null,
-        writable: true,
-        enumerable: false,
+    const klass_proto = klass.prototype;
+    methods = methods || klass_proto.tp$methods || {};
+    Object.entries(methods).forEach(([method_name, method_def]) => {
+        method_def.$name = method_name;
+        klass_proto[method_name] = new Sk.builtin.method_descriptor(klass, method_def);
     });
+    Object.defineProperty(klass_proto, "tp$methods", { value: null, writable: true });
 };
 
 /**
  * 
- * @param {typeObject} klass 
+ * @param {FunctionConstructor} klass 
  * @param {Object=} methods 
  */
 Sk.abstr.setUpClassMethods = function (klass, methods) {
-    methods = methods || {};
-    for (let method_name in methods) {
-        const method_def = methods[method_name];
-        method_def.$name = method_name;
-        klass.prototype[method_name] = new Sk.builtin.classmethod_descriptor(klass, method_def);
+    if (Sk.builtin.classmethod_descriptor === undefined) {
+        return;
     }
+    const klass_proto = klass.prototype;
+    methods = methods || klass_proto.tp$classmethods || {};
+    Object.entries(methods).forEach(([method_name, method_def]) => {
+        method_def.$name = method_name;
+        klass_proto[method_name] = new Sk.builtin.classmethod_descriptor(klass, method_def);
+    });
+    Object.defineProperty(klass_proto, "tp$classmethods", { value: null, writable: true });
 };
+
+const op2shortcut = Object.entries({
+    Eq: "ob$eq",
+    NotEq: "ob$ne",
+    Gt: "ob$gt",
+    GtE: "ob$ge",
+    Lt: "ob$lt",
+    LtE: "ob$le",
+});
+
+function _set_up_richcompare_wrappers(slots) {
+    op2shortcut.forEach(([op, shortcut]) => {
+        slots[shortcut] = function (other) {
+            return this.tp$richcompare(other, op);
+        };
+    });
+}
+
+function _set_up_reflected_number_slots(slots) {
+    // do the reflected slots
+    const reflected_slots = Sk.reflectedNumberSlots;
+    Object.keys(reflected_slots).forEach((slot_name) => {
+        if (slots[slot_name] !== undefined) {
+            const reflected_slot_def = reflected_slots[slot_name];
+            const reflect_name = reflected_slot_def.reflected;
+            const reflected_slot = slots[reflect_name];
+            if (reflected_slot !== undefined) {
+                // the reflected slot was already defined so don't recreate it
+                if (reflected_slot === null) {
+                    delete slots[reflect_name]; // e.g. Counter doesn't want reflected slots
+                }
+            } else {
+                // either the reflected slot is a function or it's undefined
+                // if it's undefined then the reflected slot is the same as non reflected slot - like nb$add
+                slots[reflect_name] = reflected_slot_def.slot || slots[slot_name];
+            }
+        }
+    });
+}
+
+function _set_up_sequence_to_number_slots(slots) {
+    const sequenceToNumber = Sk.sequenceAndMappingSlots;
+    Object.keys(sequenceToNumber).forEach((slot_name) => {
+        if (slots[slot_name] !== undefined) {
+            const equiv_slots = sequenceToNumber[slot_name];
+            equiv_slots.forEach((equv_slot_name) => {
+                slots[equv_slot_name] = slots[slot_name];
+            });
+        }
+    });
+}
 
 /**
  * 
- * @param {typeObject} klass
+ * @param {FunctionConstructor} klass
  * @param {Object=} slots 
  */
 Sk.abstr.setUpSlots = function (klass, slots) {
-    const proto = klass.prototype;
-    const op2shortcut = {
-        Eq: "ob$eq",
-        NotEq: "ob$ne",
-        Gt: "ob$gt",
-        GtE: "ob$ge",
-        Lt: "ob$lt",
-        LtE: "ob$le",
-    };
-    if (slots === undefined) {
-        // make a shallow copy so that we don't accidently consider parent slots
-        // maybe better to use .hasOwnProperty but this allows for more code reuse
-        slots = {...klass.prototype};
+    if (Sk.builtin.wrapper_descriptor === undefined) {
+        return;
     }
+    const proto = klass.prototype;
+    slots = slots || proto.tp$slots || {};
 
+    // set up the raw slots on the proto
+
+    // start with tp$new - we couldn't call genericnew before the klass was defined so call it now
     if (slots.tp$new === Sk.generic.new) {
         slots.tp$new = Sk.generic.new(klass);
     }
 
-    for (let slot_name in slots) {
-        Object.defineProperty(proto, slot_name, {
-            value: slots[slot_name],
-            writable: true,
-            enumerable: false,
-        });
+    // wrap ob$eq slots into tp$richcompare
+    if (slots.tp$richcompare) {
+        // Either a klass defines a tp$richcompare slot or ob$eq slots
+        // if tp$richcompare is defined then create all the ob$eq slots
+        _set_up_richcompare_wrappers(slots);
     }
 
-    // set up richcompare skulpt slots
-    if (slots.tp$richcompare !== undefined) {
-        for (let op in op2shortcut) {
-            const shortcut = op2shortcut[op];
-            slots[shortcut] =
-                slots[shortcut] ||
-                function (other) {
-                    return this.tp$richcompare(other, op);
-                };
-            Object.defineProperty(proto, shortcut, {
-                value: slots[shortcut],
-                writable: true,
-                enumerable: false,
+    // setup some reflected slots
+    if (slots.tp$as_number) {
+        _set_up_reflected_number_slots(slots);
+    }
+
+    // turn sequence slots into number slots
+    if (slots.tp$as_sequence_or_mapping) {
+        _set_up_sequence_to_number_slots(slots);
+    }
+
+    // make all slots non-enumerable - makes the dir implementation easier
+    Object.entries(slots).forEach(([slot_name, value]) => {
+        Object.defineProperty(proto, slot_name, {
+            value: value,
+            writable: true,
+        });
+    });
+
+    if (slots.tp$new) {
+        proto.__new__ = new Sk.builtin.sk_method(Sk.generic.newMethodDef, klass);
+        // this property is used in the implementation of calling __new__
+        Object.defineProperty(proto, "sk$staticNew", {value: klass, writable: true});
+    }
+
+    function wrap_func(dunder_name, wrapped_func) {
+        const slot_def = Sk.slots[dunder_name];
+        // we do this here because in the generic.wrapperCall methods the wrapped_func
+        // the wrapped func should have a $name property and a $flags property (for minArgs)
+        proto[dunder_name] = new Sk.builtin.wrapper_descriptor(klass, slot_def, wrapped_func);
+    }
+
+    function set_up_slot(dunder_name, wrapped_func) {
+        // some slots get multpile dunders
+        if (typeof dunder_name === "string") {
+            wrap_func(dunder_name, wrapped_func);
+        } else {
+            dunder_name.forEach((related_dunder_name) => {
+                wrap_func(related_dunder_name, wrapped_func);
             });
         }
     }
 
-    if (slots.tp$new !== undefined) {
-        proto.__new__ = new Sk.builtin.sk_method(Sk.generic.newMethodDef, klass);
-        proto.tp$new.sk$static_new = true; // a flag for the slot
-    }
-
-    function wrap_func(klass, dunder_name, wrapped_func) {
-        const slot_def = Sk.slots[dunder_name];
-        // we do this here because in the generic.wrapperCall methods the wrapped_func
-        // the wrapped func should have a $name property and a $flags property (for minArgs)
-        klass.prototype[dunder_name] = new Sk.builtin.wrapper_descriptor(klass, slot_def, wrapped_func);
-    }
-    function set_up_slot(slot_name, slots, klass, slot_mapping) {
-        const wrapped_func = slots[slot_name];
-        // some slots get multpile dunders
-        const dunder_name = slot_mapping[slot_name];
-        if (typeof dunder_name === "string") {
-            wrap_func(klass, dunder_name, wrapped_func);
-        } else {
-            for (let i = 0; i < dunder_name.length; i++) {
-                wrap_func(klass, dunder_name[i], wrapped_func);
-            }
-        }
-    }
-
     // main slots
-    const main_slots = Sk.subSlots.main_slots;
-    for (let slot_name in main_slots) {
-        if (slots[slot_name] !== undefined) {
-            set_up_slot(slot_name, slots, klass, main_slots);
+    Sk.subSlots.main_slots.forEach(([slot_name, dunder_name]) => {
+        const wrapped_func = slots[slot_name];
+        if (wrapped_func !== undefined) {
+            set_up_slot(dunder_name, wrapped_func);
         }
-    }
+    });
 
     // __hash__
     const hash = slots.tp$hash;
-    if (hash == Sk.builtin.none.none$) {
-        klass.prototype.__hash__ = hash;
-    } else if (hash !== undefined) {
-        wrap_func(klass, "__hash__", hash);
+    if (hash !== undefined) {   
+        if (typeof hash === "function") {
+            wrap_func("__hash__", hash);
+        } else if (hash === Sk.builtin.none.none$) {
+            proto.__hash__ = hash;
+        } else {
+            Sk.asserts.fail("invalid tp$hash");
+        }
     }
 
-    // as_number_slots
-    const number_slots = Sk.subSlots.number_slots;
-    const reflected_slots = Sk.reflectedNumberSlots;
-    if (slots.tp$as_number !== undefined) {
-        for (let slot_name in reflected_slots) {
-            if (slots[slot_name] !== undefined) {
-                const reflect_name = reflected_slots[slot_name].reflected;
-                if (slots[reflect_name] !== undefined) {
-                    continue;
-                }
-                const slot = reflected_slots[slot_name].slot;
-                if (slot == null) {
-                    // then the reflected slot is the same as non reflected slot - like nb$add
-                    (slots[reflect_name] = slots[slot_name]),
-                    Object.defineProperty(proto, reflect_name, {
-                        value: slots[slot_name],
-                        writable: true,
-                        enumerable: false,
-                    });
-                } else {
-                    (slots[reflect_name] = slot),
-                    Object.defineProperty(proto, reflect_name, {
-                        value: slot,
-                        writable: true,
-                        enumerable: false,
-                    });
-                }
+    // number_slots
+    if (slots.tp$as_number) {
+        Sk.subSlots.number_slots.forEach(([slot_name, dunder_name]) => {
+            const wrapped_func = slots[slot_name];
+            if (wrapped_func !== undefined) {
+                set_up_slot(dunder_name, wrapped_func);
             }
-        }
-        for (let slot_name in number_slots) {
-            if (slots[slot_name] !== undefined) {
-                set_up_slot(slot_name, slots, klass, number_slots);
-            }
-        }
+        });
     }
 
     // as_sequence_or_mapping slots
-    const sequence_and_mapping_slots = Sk.subSlots.sequence_and_mapping_slots;
-    if (slots.tp$as_sequence_or_mapping !== undefined) {
-        for (let slot_name in Sk.sequenceAndMappingSlots) {
-            if (slots[slot_name] !== undefined) {
-                const equiv_slots = Sk.sequenceAndMappingSlots[slot_name];
-                for (let i = 0; i < equiv_slots.length; i++) {
-                    const equiv_slot = equiv_slots[i];
-                    slots[equiv_slot] = slots[slot_name];
-                    Object.defineProperty(proto, equiv_slot, {
-                        value: slots[slot_name],
-                        writable: true,
-                        enumerable: false,
-                    });
-                }
+    if (slots.tp$as_sequence_or_mapping) {
+        Sk.subSlots.sequence_and_mapping_slots.forEach(([slot_name, dunder_name]) => {
+            const wrapped_func = slots[slot_name];
+            if (wrapped_func !== undefined) {
+                set_up_slot(dunder_name, wrapped_func);
             }
-        }
-        for (let slot_name in sequence_and_mapping_slots) {
-            if (slots[slot_name] !== undefined) {
-                set_up_slot(slot_name, slots, klass, sequence_and_mapping_slots);
-            }
-        }
+        });
     }
-    // a flag to check during doOneTimeInitialization
-    Object.defineProperty(proto, "sk$slots", {
-        value: null,
-        writeable: true,
-    });
+
+    Object.defineProperty(proto, "tp$slots", { value: null, writable: true });
 };
 
 /**
  * @function
  * @param {string} typename
  * @param {Object} options An object literal that provides the functionality of the typobject
- *
+ * @returns {FunctionConstructor}
  *
  * @description
  * this can be called to create a native typeobj
@@ -1065,73 +1256,66 @@ Sk.abstr.setUpSlots = function (klass, slots) {
  * - getsets: getset objects `{$get: Function, $set: Function, $doc: string}`,
  * - classmethods: classmethod objects `{$meth: Function, $flags: callmethod, $doc: string, $textsic: string|null}`,
  *
- * - flags: Object allocated directly onto class like `klass.sk$acceptable_as_base_class`
+ * - flags: Object allocated directly onto class like `klass.sk$unacceptableBase`
  * - proto: Object allocated onto the prototype useful for private methods
  * ```
  * See most builtin type objects for examples
  *
- *
  */
 Sk.abstr.buildNativeClass = function (typename, options) {
-    
     options = options || {};
-    /**@type {typeObject} */
-    let typeobject;
-    if (!options.hasOwnProperty("constructor")) {
-        typeobject = function klass() {
-            this.$d = new Sk.builtin.dict();
-        };
-    } else {
-        typeobject = options.constructor || new Function;
-    }
-    let mod;
-    if (typename.includes(".")) {
-        // you should define the module like "collections.defaultdict" for static classes
-        const mod_typename = typename.split(".");
-        typename = mod_typename.pop();
-        mod = mod_typename.join(".");
-    }
-    const meta = options.meta || undefined;
+    Sk.asserts.assert(options.hasOwnProperty("constructor"), "A constructor is required to build a native class");
 
-    Sk.abstr.setUpInheritance(typename, typeobject, options.base, meta);
+    /**@type {FunctionConstructor} */
+    let typeobject = options.constructor;
 
-    // would need to change this for multiple inheritance.
+    // set the prototypical chains for inheritance
+    Sk.abstr.setUpInheritance(typename, typeobject, options.base, options.meta);
+
+    // Native classes can only be single inheritance objects
     Sk.abstr.setUpBuiltinMro(typeobject);
 
-    if (options.slots !== undefined) {
-        // only setUpSlotWrappers if slots defined;
-        Sk.abstr.setUpSlots(typeobject, /**@lends {typeobject.prototype} */ options.slots);
-    }
-
-    Sk.abstr.setUpMethods(typeobject, options.methods || {});
-    Sk.abstr.setUpGetSets(typeobject, options.getsets || {});
-    Sk.abstr.setUpClassMethods(typeobject, options.classmethods || {});
-
-    if (mod !== undefined) {
-        typeobject.prototype.__module__ = new Sk.builtin.str(mod);
-    }
     const type_proto = typeobject.prototype;
+
+    Object.defineProperties(type_proto, {
+        // memoise these and make them null later
+        tp$slots: {value: options.slots, writable: true},
+        tp$getsets: {value: options.getsets, writable: true},
+        tp$methods: {value: options.methods, writable: true},
+        tp$classmethods: {value: options.classmethods, writable: true},
+    });
+
+    Sk.abstr.setUpSlots(typeobject, /**@lends {typeobject.prototype} */ options.slots || {});
+    Sk.abstr.setUpMethods(typeobject, options.methods);
+    Sk.abstr.setUpGetSets(typeobject, options.getsets);
+    Sk.abstr.setUpClassMethods(typeobject, options.classmethods);
+
+
     const proto = options.proto || {};
-    for (let p in proto) {
+    Object.entries(proto).forEach(([p, val]) => {
         Object.defineProperty(type_proto, p, {
-            value: proto[p],
+            value: val,
             writable: true,
-            enumerable: false,
+            enumerable: !(p.includes("$") || (p in Object.prototype)), 
+            // only make these private in these cases otherwise they're public methods
         });
-    }
+    });
+
     const flags = options.flags || {};
-    for (let f in flags) {
-        typeobject[f] = flags[f];
-    }
+    Object.entries(flags).forEach(([flag, val]) => {
+        Object.defineProperty(typeobject, flag, {
+            value: val,
+            writable: true,
+        }); 
+    });
 
     // str might not have been created yet
-
-    if (Sk.builtin.str !== undefined && typeobject.prototype.hasOwnProperty("tp$doc") && !typeobject.prototype.hasOwnProperty("__doc__")) {
-        const docstr = typeobject.prototype.tp$doc || null;
+    if (Sk.builtin.str !== undefined && type_proto.hasOwnProperty("tp$doc") && !type_proto.hasOwnProperty("__doc__")) {
+        const docstr = type_proto.tp$doc || null;
         if (typeof docstr === "string") {
-            typeobject.prototype.__doc__ = new Sk.builtin.str(docstr);
+            type_proto.__doc__ = new Sk.builtin.str(docstr);
         } else {
-            typeobject.prototype.__doc__ = Sk.builtin.none.none$;
+            type_proto.__doc__ = Sk.builtin.none.none$;
         }
     }
     return typeobject;
@@ -1141,8 +1325,7 @@ Sk.abstr.buildNativeClass = function (typename, options) {
  * @function
  *
  * @param {string} typename e.g. "itertools.chain"
- * @param {Object
- * } iterator minimum options `{constructor: function, iternext: function}`
+ * @param {Object} iterator minimum options `{constructor: function, iternext: function}`
  *
  * @description
  * effectively a wrapper for easily defining an iterator
@@ -1156,7 +1339,7 @@ Sk.abstr.buildNativeClass = function (typename, options) {
  *
  * the main benefit of this helper function is to reduce some repetitive code for defining an iterator class
  *
- * If you want a generic iterator see {@link Sk.generic.iterator}
+ * If you want a generic iterator see {@link Sk.miscival.iterator}
  *
  *
  * @example
@@ -1172,7 +1355,7 @@ Sk.abstr.buildNativeClass = function (typename, options) {
         return this.$seq[this.$index++];
     }
 });
- *
+ * @returns {FunctionConstructor}
  *
  */
 
@@ -1182,15 +1365,18 @@ Sk.abstr.buildIteratorClass = function (typename, iterator) {
     iterator.slots.tp$iter = Sk.generic.selfIter;
     iterator.slots.tp$iternext = iterator.slots.tp$iternext || iterator.iternext;
     iterator.slots.tp$getattr = iterator.slots.tp$getattr || Sk.generic.getAttr;
-    return Sk.abstr.buildNativeClass(typename, iterator);
+    let ret = Sk.abstr.buildNativeClass(typename, iterator);
+    Sk.abstr.built$iterators.push(ret);
+    return ret;
 };
 
-Sk.abstr.setUpModuleMethods = function (module_name, method_defs, module) {
-    for (let method_name in method_defs) {
-        const method_def = method_defs[method_name];
-        method_def.$name = method_def.$name || method_name;
-        module[method_name] = new Sk.builtin.sk_method(method_def, undefined, module_name);
-    }
+Sk.abstr.built$iterators = [];
+
+Sk.abstr.setUpModuleMethods = function (module_name, module, method_defs) {
+    Object.entries(method_defs).forEach(([method_name, method_def]) => {
+        method_def.$name = method_def.$name || method_name; // operator e.g. some methods share method_defs
+        module[method_name] = new Sk.builtin.sk_method(method_def, null, module_name);
+    });
 };
 
 /**
