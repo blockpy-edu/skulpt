@@ -107,6 +107,7 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
     var lineno;
     var sourceLine;
     if (this.source) {
+        const astName = ast._astname;
         lineno = ast.lineno;
         col_offset = ast.col_offset;
         sourceLine = this.getSourceLine(lineno);
@@ -122,7 +123,7 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
             let chompedLine = sourceLine;
             if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
             out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
-            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring});\n`);
+            out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring}, '${astName}');\n`);
         }
     }
 };
@@ -1232,6 +1233,7 @@ Compiler.prototype.getLocals = function (unit) {
     }
     //unit.localnames.sort();
     output = [];
+    //console.log(unit.localnames, unit.argnames);
     for (i = 0; i < unit.localnames.length; ++i) {
         name = unit.localnames[i];
         if (have[name] === undefined) {
@@ -1328,7 +1330,7 @@ Compiler.prototype.outputAllUnits = function () {
         if (unit.doesSuspend) {
             ret += this.outputSuspensionHelpers(unit);
         }
-        ret += this.getLocalGetter(unit, localNames);
+        ret += this.getLocalGetter(unit, unit.localnames);
         ret += unit.varDeclsCode;
         ret += unit.switchCode;
         blocks = unit.blocks;

@@ -39,7 +39,8 @@ Sk.builtin.file = function (name, mode, buffering) {
             this.lineList = this.lineList.slice(0, -1);
         }
 
-        for (i in this.lineList) {
+        //for (i in this.lineList) {
+        for (let i=0; i < this.lineList.length-1; i+= 1) {
             this.lineList[i] = this.lineList[i] + "\n";
         }
         this.currentLine = 0;
@@ -71,7 +72,8 @@ Sk.builtin.file.prototype["$r"] = function () {
 
 Sk.builtin.file.prototype.tp$iter = function () {
     var allLines = this.lineList;
-    var currentLine = this.currentLine;
+    var that = this;
+    //var currentLine = this.currentLine;
 
     var ret =
         {
@@ -79,13 +81,13 @@ Sk.builtin.file.prototype.tp$iter = function () {
                 return ret;
             },
             $obj: this,
-            $index: currentLine,
+            $index: this.currentLine,
             $lines: allLines,
             tp$iternext: function () {
-                if (ret.$index >= ret.$lines.length) {
+                if (that.currentLine >= ret.$lines.length) {
                     return undefined;
                 }
-                return new Sk.builtin.str(ret.$lines[ret.$index++]);
+                return new Sk.builtin.str(ret.$lines[that.currentLine++]);
             }
         };
     return ret;

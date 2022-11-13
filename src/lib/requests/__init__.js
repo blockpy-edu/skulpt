@@ -113,7 +113,7 @@ var $builtinmodule = function (name) {
      * object; it just makes the request through jQuery.ajax and then
      * constructs a Response.
      */
-    request.get = new Sk.builtin.func(function (url, data, timeout) {
+    const get_f = function (url, data, timeout) {
         if (Sk.requestsGet) {
             return Sk.misceval.callsim(request.Response, Sk.requestsGet(Sk.ffi.remapToJs(url), data, timeout));
         }
@@ -172,8 +172,12 @@ var $builtinmodule = function (name) {
         };
 
         return susp;
-    });
+    };
+    get_f.co_kwargs = true;
+    request.get = new Sk.builtin.func(get_f);
 
+    // Lazy solution for now!
+    request.post = request.get;
 
     return request;
 };

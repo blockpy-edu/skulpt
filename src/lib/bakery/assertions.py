@@ -262,7 +262,7 @@ def _is_equal(x, y, precision, exact_strings, *args):
     elif isinstance(x, dict) and isinstance(y, dict):
         primary_keys = set(x.keys())
         if not _are_sets_equal(primary_keys, set(y.keys()),
-                               precision, exact_strings):
+                               precision, True):
             return False
         for key in primary_keys:
             if not _is_equal(x[key], y[key], precision, exact_strings):

@@ -22,6 +22,7 @@ __all__ = ['dataclass',
 
            # Helper functions.
            'fields',
+           '_FIELDS',
            'asdict',
            'astuple',
            'make_dataclass',

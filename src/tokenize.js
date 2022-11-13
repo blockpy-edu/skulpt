@@ -3,7 +3,7 @@ import Unicode from "../support/polyfills/Unicode";
 var tokens = Sk.token.tokens;
 
 const TokenError = Sk.builtin.SyntaxError;
-const IndentationError = Sk.builtin.SyntaxError;
+const IndentationError = Sk.builtin.IndentationError;
 
 /**
  *

@@ -64,7 +64,7 @@ class StringIO:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """A file object is its own iterator, for example iter(f) returns f
         (unless f is closed). When a file is used as an iterator, typically
         in a for loop (for example, for line in f: print line), the next()
