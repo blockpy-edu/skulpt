@@ -1676,6 +1676,9 @@ function $builtinmodule() {
                         kws,
                         [null, null, int0, int0, int0, int0, pyNone, int0]
                     );
+                    if (tzinfo == null) {
+                        tzinfo = pyNone;
+                    }
                     let asBytes;
                     if (
                         year instanceof pyBytes &&

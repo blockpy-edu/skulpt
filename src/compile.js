@@ -1744,7 +1744,7 @@ Compiler.prototype.cwith = function (s, itemIdx) {
     // value = mgr.__enter__()
     out("$ret = Sk.abstr.lookupSpecial(",mgr,",Sk.builtin.str.$enter);");
     this._checkSuspension(s);
-    out("$ret = Sk.misceval.callsimOrSuspendArray($ret);");
+    out("$ret = $ret != null && Sk.misceval.callsimOrSuspendArray($ret);");
     this._checkSuspension(s);
     value = this._gr("value", "$ret");
 
@@ -1776,7 +1776,7 @@ Compiler.prototype.cwith = function (s, itemIdx) {
 
     //   if not exit(*sys.exc_info()):
     //     raise
-    out("$ret = Sk.misceval.applyOrSuspend(", exit, ",undefined,Sk.builtin.getExcInfo($err),undefined,[]);");
+    out("$ret = ", exit, "!=null && Sk.misceval.applyOrSuspend(", exit, ",undefined,Sk.builtin.getExcInfo($err),undefined,[]);");
     this._checkSuspension(s);
     this._jumptrue("$ret", carryOn);
     out("throw $err;");
@@ -1787,7 +1787,7 @@ Compiler.prototype.cwith = function (s, itemIdx) {
     this.popFinallyBlock();
 
     //   exit(None, None, None)
-    out("$ret = Sk.misceval.callsimOrSuspendArray(", exit, ",[Sk.builtin.none.none$,Sk.builtin.none.none$,Sk.builtin.none.none$]);");
+    out("$ret = ", exit, "!=null && Sk.misceval.callsimOrSuspendArray(", exit, ",[Sk.builtin.none.none$,Sk.builtin.none.none$,Sk.builtin.none.none$]);");
     this._checkSuspension(s);
     // Ignore $ret.
 

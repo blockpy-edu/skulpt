@@ -77,6 +77,9 @@ class StringIO:
             raise StopIteration
         return r
 
+    def __enter__(self):
+        return self
+
     def close(self):
         """Free the memory buffer.
         """

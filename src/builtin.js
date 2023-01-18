@@ -624,6 +624,9 @@ Sk.builtin.open = function open(filename, mode, bufsize) {
     if (mode === undefined) {
         mode = new Sk.builtin.str("r");
     }
+    if (bufsize === undefined) {
+        bufsize = -1;
+    }
 
     if (/\+/.test(mode.v)) {
         throw "todo; haven't implemented read/write mode";
