@@ -12,8 +12,8 @@ var $builtinmodule = function (name) {
     sys.copyright = new Sk.builtin["str"]("Copyright 2009-2010 Scott Graham.\nAll Rights Reserved.\n");
 
     if (Sk.__future__.python3) {
-        sys.version = "3.7(ish) [Skulpt]";
-        sys.version_info = new Sk.builtin.tuple([new Sk.builtin.int_(3), new Sk.builtin.int_(7)]);
+        sys.version = "3.10(ish) [Skulpt]";
+        sys.version_info = new Sk.builtin.tuple([new Sk.builtin.int_(3), new Sk.builtin.int_(10)]);
     } else {
         sys.version = "2.7(ish) [Skulpt]";
         sys.version_info = new Sk.builtin.tuple([new Sk.builtin.int_(2), new Sk.builtin.int_(7)]);

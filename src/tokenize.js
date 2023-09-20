@@ -303,7 +303,7 @@ function _tokenize(readline, encoding, yield_, filename) {
         if (contstr) {                       // continued string
             if (!line) {
                 //throw new TokenError("EOF in multi-line string", strstart);
-                throw new TokenError("EOF in multi-line string", filename, spos[0], [spos, epos]);
+                throw new TokenError("EOF in multi-line string", filename, last_line, ...spos, ...epos);
             }
             endprog.lastIndex = 0;
             var endmatch = endprog.exec(line);
@@ -380,7 +380,7 @@ function _tokenize(readline, encoding, yield_, filename) {
         } else {                                  // continued statement
             if (!line) {
                 //throw new TokenError("EOF in multi-line statement", [lnum, 0]);
-                throw new TokenError("EOF in multi-line statement", filename, spos[0], [spos, epos]);
+                throw new TokenError("EOF in multi-line statement", filename, last_line, ...spos, ...epos);
             }
             continued = 0;
         }

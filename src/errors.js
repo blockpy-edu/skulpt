@@ -24,7 +24,8 @@ const BaseException = Sk.abstr.buildNativeClass("BaseException", {
         this.args = new Sk.builtin.tuple(arg ? [arg] : []);
         // if we have tb args then it's an internal call indicating the pre instantiated traceback
         // we should probably change this at some point because this only happens with SyntaxErrors
-        this.traceback = tb.length >= 2 ? [{ filename: tb[0] || "<unknown>", lineno: tb[1] }] : [];
+        this.traceback = tb.length >= 2 ? [{ filename: tb[0] || "<unknown>", text: tb[1], lineno: tb[2] }] : [];
+        this._full_traceback = tb;
         this.feedback = Sk.builtin.none.none$;
         this.__cause__ = Sk.builtin.none.none$;
         this.__context__ = Sk.builtin.none.none$;
@@ -284,6 +285,7 @@ const SyntaxError = complexExtends(
     "SyntaxError",
     "Invalid syntax.",
     function init(args, kws) {
+        // TODO: this doesn't actually get called any more??
         BaseExc_init.call(this, args, kws);
         if (args.length >= 1) {
             this.$msg = args[0];
@@ -292,11 +294,33 @@ const SyntaxError = complexExtends(
             const info = new Sk.builtin.tuple(args[1]).v;
             this.$filename = info[0];
             this.$lineno = info[1];
-            this.$offset = info[2];
+            //console.debug(this, info);
+            // if info[2] is an array, then we break it up
+            if (Array.isArray(info[2].v)) {
+                if (Array.isArray(info[2].v[0].v)) {
+                    // Nested array?
+                    this.$offset = info[2].v[0].v[1];
+                    this.$end_lineno = info[2].v[1].v[0];
+                    this.$end_offset = info[2].v[1].v[1];
+                } else {
+                    // Flat array
+                    this.$offset = info[2].v[1];
+                    this.$end_lineno = info[2].v[2];
+                    this.$end_offset = info[2].v[3];
+                }
+            } else {
+                this.$offset = info[2];
+                this.$end_lineno = info[1];
+                this.$end_offset = info[2];
+            }
+            /*this.$offset = info[2].v[0].v[1];
+            this.$end_lineno = info[2].v[1].v[0];
+            this.$end_offset = info[2].v[1].v[1];*/
             this.$text = info[3];
+            // TODO: acbart this just makes the traceback work for now, not actually getting the data yet
         }
     },
-    ["msg", "filename", "lineno", "offset", "text" /*"print_file_and_line"*/],
+    ["msg", "filename", "text", "lineno", "offset", "end_lineno", "end_offset" /*"print_file_and_line"*/],
     function str() {
         return BaseExc_str.call(this);
     }

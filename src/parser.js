@@ -154,15 +154,18 @@ Parser.prototype.addtoken = function (type, value, context) {
             //print("WAA");
             this.pop();
             if (this.stack.length === 0) {
-                throw new Sk.builtin.SyntaxError("too much input", this.filename, "", context);
+                throw new Sk.builtin.SyntaxError("too much input", this.filename, ...flatten_context(context));
             }
         } else {
             // no transition
-            errline = context[0][0];
-            throw new Sk.builtin.SyntaxError("bad input", this.filename, errline, context);
+            throw new Sk.builtin.SyntaxError("bad input", this.filename, ...flatten_context(context));
         }
     }
 };
+
+function flatten_context(context) {
+    return [context[2], context[0][0], context[0][1], context[1][0], context[1][1]];
+}
 
 // turn a token into a label
 Parser.prototype.classify = function (type, value, context) {
@@ -194,7 +197,7 @@ Parser.prototype.classify = function (type, value, context) {
             }
         }
 
-        throw new Sk.builtin.SyntaxError("bad token " + descr, this.filename, context[0][0], context);
+        throw new Sk.builtin.SyntaxError("bad token " + descr, this.filename, ...flatten_context(context));
     }
     return ilabel;
 };
@@ -366,7 +369,7 @@ Sk.parse = function parse(filename, input) {
     }, filename);
 
     if (!endmarker_seen) {
-        throw new Sk.builtin.SyntaxError("incomplete input", this.filename, "", [0, 0, totalLines]);
+        throw new Sk.builtin.SyntaxError("incomplete input", this.filename, "", 0, 0, totalLines, 0);
     }
 
     /**
