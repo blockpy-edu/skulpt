@@ -127,6 +127,9 @@ Sk.configure = function (options) {
     Sk.imageProxy = options["imageProxy"] || "http://localhost:8080/320x";
     Sk.asserts.assert(typeof Sk.imageProxy === "string" || typeof Sk.imageProxy === "function");
 
+    Sk.BottleSiteTarget = options["BottleSiteTarget"] || "#website";
+    Sk.asserts.assert(typeof Sk.BottleSiteTarget === "string" || typeof Sk.BottleSiteTarget === "function");
+
     Sk.inputfun = options["inputfun"] || Sk.inputfun;
     Sk.asserts.assert(typeof Sk.inputfun === "function");
 

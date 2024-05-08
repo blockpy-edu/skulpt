@@ -81,6 +81,10 @@ function CompilerUnit() {
     this.finallyBlocks = [];
 }
 
+function get_context(ctx) {
+    return [ctx.lineno, ctx.col_offset, ctx.end_lineno, ctx.end_col_offset ];
+}
+
 CompilerUnit.prototype.activateScope = function () {
     var self = this;
 
@@ -357,7 +361,7 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
             }
             for (i = starIdx + 1; i < e.elts.length; i++) {
                 if (e.elts[i].constructor === Sk.astnodes.Starred) {
-                    throw new Sk.builtin.SyntaxError("multiple starred expressions in assignment", this.filename, e.lineno);
+                    throw new Sk.builtin.SyntaxError("multiple starred expressions in assignment", this.filename, e.lineno, ...get_context(e));
                 }
         }
         }
@@ -556,7 +560,7 @@ Compiler.prototype.ccompgen = function (type, tmpname, generators, genIndex, val
 
 Compiler.prototype.cyield = function (e) {
     if (this.u.ste.blockType !== Sk.SYMTAB_CONSTS.FunctionBlock) {
-        throw new Sk.builtin.SyntaxError("'yield' outside function", this.filename, e.lineno);
+        throw new Sk.builtin.SyntaxError("'yield' outside function", this.filename, e.lineno, ...get_context(e));
     }
     var val = "Sk.builtin.none.none$",
         nextBlock;
@@ -572,7 +576,7 @@ Compiler.prototype.cyield = function (e) {
 
 Compiler.prototype.cyieldfrom = function (e) {
     if (this.u.ste.blockType !== Sk.SYMTAB_CONSTS.FunctionBlock) {
-        throw new Sk.builtin.SyntaxError("'yield' outside function", this.filename, e.lineno);
+        throw new Sk.builtin.SyntaxError("'yield' outside function", this.filename, e.lineno, ...get_context(e));
     }
     let iterable = this.vexpr(e.value);
     // get the iterator we are yielding from and store it
@@ -1028,7 +1032,7 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
             return this.nameop(e.id, e.ctx, data);
         case Sk.astnodes.NameConstant:
             if (e.ctx === Sk.astnodes.Store || e.ctx === Sk.astnodes.AugStore || e.ctx === Sk.astnodes.Del) {
-                throw new Sk.builtin.SyntaxError("can not assign to a constant name");
+                throw new Sk.builtin.SyntaxError("can not assign to a constant name", this.filename, e.lineno, ...get_context(e));
             }
 
             switch (e.value) {
@@ -1053,9 +1057,9 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                 case Sk.astnodes.Store:
                     /* In all legitimate cases, the Starred node was already replaced
                      * by compiler_list/compiler_tuple. XXX: is that okay? */
-                    throw new Sk.builtin.SyntaxError("starred assignment target must be in a list or tuple", this.filename, e.lineno);
+                    throw new Sk.builtin.SyntaxError("starred assignment target must be in a list or tuple", this.filename, e.lineno, ...get_context(e));
                 default:
-                    throw new Sk.builtin.SyntaxError("can't use starred expression here", this.filename, e.lineno);
+                    throw new Sk.builtin.SyntaxError("can't use starred expression here", this.filename, e.lineno, ...get_context(e));
             }
         case Sk.astnodes.JoinedStr:
             return this.cjoinedstr(e);
@@ -1666,7 +1670,7 @@ Compiler.prototype.ctry = function (s) {
         this.setBlock(handlers[i]);
         handler = s.handlers[i];
         if (!handler.type && i < n - 1) {
-            throw new Sk.builtin.SyntaxError("default 'except:' must be last", this.filename, handler.lineno);
+            throw new Sk.builtin.SyntaxError("default 'except:' must be last", this.filename, handler.lineno, ...get_context(handler));
         }
 
         if (handler.type) {
@@ -2003,11 +2007,11 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
         // TODO make generators deal with arguments properly
         if (kwarg) {
             throw new Sk.builtin.SyntaxError(coname.v + "(): keyword arguments in generators not supported",
-                                             this.filename, n.lineno);
+                                             this.filename, n.lineno, ...get_context(n));
         }
         if (vararg) {
             throw new Sk.builtin.SyntaxError(coname.v + "(): variable number of arguments in generators not supported",
-                                             this.filename, n.lineno);
+                                             this.filename, n.lineno, ...get_context(n));
         }
         funcArgs.push("$gen");
     } else {
@@ -2604,7 +2608,7 @@ Compiler.prototype.cclass = function (s) {
 Compiler.prototype.ccontinue = function (s) {
     var nextFinally = this.peekFinallyBlock(), gotoBlock;
     if (this.u.continueBlocks.length == 0) {
-        throw new Sk.builtin.SyntaxError("'continue' outside loop", this.filename, s.lineno);
+        throw new Sk.builtin.SyntaxError("'continue' outside loop", this.filename, s.lineno, ...get_context(s));
     }
     // todo; continue out of exception blocks
     gotoBlock = this.u.continueBlocks[this.u.continueBlocks.length - 1];
@@ -2620,7 +2624,7 @@ Compiler.prototype.cbreak = function (s) {
     var nextFinally = this.peekFinallyBlock(), gotoBlock;
 
     if (this.u.breakBlocks.length === 0) {
-        throw new Sk.builtin.SyntaxError("'break' outside loop", this.filename, s.lineno);
+        throw new Sk.builtin.SyntaxError("'break' outside loop", this.filename, s.lineno, ...get_context(s));
     }
     gotoBlock = this.u.breakBlocks[this.u.breakBlocks.length - 1];
     if (nextFinally && nextFinally.breakDepth == this.u.breakBlocks.length) {
@@ -2668,7 +2672,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             break;
         case Sk.astnodes.Return:
             if (this.u.ste.blockType !== Sk.SYMTAB_CONSTS.FunctionBlock) {
-                throw new Sk.builtin.SyntaxError("'return' outside function", this.filename, s.lineno);
+                throw new Sk.builtin.SyntaxError("'return' outside function", this.filename, s.lineno, ...get_context(s));
             }
             val = s.value ? this.vexpr(s.value) : "Sk.builtin.none.none$";
             // Track that we are about to call the function
@@ -2779,7 +2783,8 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
     var op;
     var mangled;
     if ((ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore || ctx === Sk.astnodes.Del) && name.v === "__debug__") {
-        throw new Sk.builtin.SyntaxError("can not assign to __debug__", this.filename, this.u.lineno);
+        // TODO: add in context
+        throw new Sk.builtin.SyntaxError("can not assign to __debug__", this.filename, this.u.lineno, ...get_context(this.u));
     }
     Sk.asserts.assert(name.v !== "None");
 

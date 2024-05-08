@@ -370,7 +370,7 @@ function _tokenize(readline, encoding, yield_, filename) {
                 if (!contains(indents, column)) {
                     throw new IndentationError(
                         "unindent does not match any outer indentation level",
-                        filename, spos[0], [spos, epos]); //["<tokenize>", lnum, pos, line]);
+                        filename, spos[0], ...spos, ...epos); //["<tokenize>", lnum, pos, line]);
                 }
 
                 indents = indents.slice(0, -1);

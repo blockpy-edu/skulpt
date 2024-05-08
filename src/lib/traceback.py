@@ -631,23 +631,32 @@ class TracebackException:
         The message indicating which exception occurred is always the last
         string in the output.
         """
+        result = []
         if chain:
             if self.__cause__ is not None:
                 # yield from self.__cause__.format(chain=chain)
                 for g in self.__cause__.format(chain=chain):
-                    yield g
-                yield _cause_message
+                    result.append(g)
+                    #yield g
+                result.append(_cause_message)
+                #yield _cause_message
             elif (self.__context__ is not None and
                   not self.__suppress_context__):
                 # yield from self.__context__.format(chain=chain)
                 for g in self.__cause__.format(chain=chain):
-                    yield g
-                yield _context_message
+                    result.append(g)
+                    #yield g
+                result.append(_context_message)
+                #yield _context_message
         if self.exc_traceback is not None:
-            yield 'Traceback (most recent call last):\n'
+            result.append('Traceback (most recent call last):\n')
+            #yield 'Traceback (most recent call last):\n'
         # yield from self.stack.format()
         for g in self.stack.format():
-            yield g
+            #yield g
+            result.append(g)
         # yield from self.format_exception_only()
         for g in self.format_exception_only():
-            yield g
+            #yield g
+            result.append(g)
+        return result

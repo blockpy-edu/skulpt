@@ -217,7 +217,7 @@ function $resolveArgs(posargs, kw) {
 
     let kwargs;
 
-    /* Create a NOT-a-dictionary for keyword parameters (**kwags) */
+    /* Create a NOT-a-dictionary for keyword parameters (**kwargs) */
     if (this.co_kwargs) {
         kwargs = [];
     }

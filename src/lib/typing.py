@@ -1,4 +1,5 @@
-
+class Any:
+    pass
 
 class Optional:
     def __class_getitem__(self, key):

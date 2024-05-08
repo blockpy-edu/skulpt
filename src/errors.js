@@ -518,10 +518,12 @@ Sk.builtin.traceback = function (trace) {
 
     this.trace = trace;
 
-    this.tb_lineno = new Sk.builtin.int_(trace.lineno);
+    const lineno = Array.isArray(trace.lineno) ? trace.lineno[2] : trace.lineno || -1;
+
+    this.tb_lineno = new Sk.builtin.int_(lineno);
     // TODO: Hack, you know this isn't right
     this.tb_frame = new Sk.builtin.frame(trace);
-    this.tb_source = new Sk.builtin.str(trace.source);
+    this.tb_source = new Sk.builtin.str(trace.source || "(Missing Source Code)");
 
     //tb_frame, tb_lasti, tb_lineno, tb_next
 
