@@ -314,13 +314,13 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
         ass$subscript(index, value) {
             if (Sk.misceval.isIndex(index)) {
                 this.ass$index(index, value);
-    } else if (index instanceof Sk.builtin.slice) {
+            } else if (index instanceof Sk.builtin.slice) {
                 const { start, stop, step } = index.slice$indices(this.v.length);
                 if (step === 1) {
                     this.ass$slice(start, stop, value);
-        } else {
+                } else {
                     this.ass$ext_slice(index, value);
-            }
+                }
             } else {
                 throw new Sk.builtin.TypeError("list indices must be integers or slices, not " + Sk.abstr.typeName(index));
             }
@@ -333,7 +333,7 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
         ass$slice(start, stop, iterable) {
             if (!Sk.builtin.checkIterable(iterable)) {
                 throw new Sk.builtin.TypeError("can only assign an iterable");
-        }
+            }
             const vals = Sk.misceval.arrayFromIterable(iterable);
             this.v.splice(start, stop - start, ...vals);
         },
@@ -344,14 +344,14 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
             });
             if (!Sk.builtin.checkIterable(iterable)) {
                 throw new Sk.builtin.TypeError("must assign iterable to extended slice");
-    }
+            }
             const vals = Sk.misceval.arrayFromIterable(iterable);
             if (indices.length !== vals.length) {
                 throw new Sk.builtin.ValueError("attempt to assign sequence of size " + vals.length + " to extended slice of size " + indices.length);
             }
             for (let i = 0; i < indices.length; i++) {
                 this.v.splice(indices[i], 1, vals[i]);
-        }
+            }
         },
         del$subscript(index) {
             if (Sk.misceval.isIndex(index)) {

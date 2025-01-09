@@ -106,7 +106,7 @@ Sk.builtins = {
     "iter": null,
 
     // Functions below are not implemented
-    // "bytearray" : Sk.builtin.bytearray,
+    "bytearray" : Sk.builtin.bytearray,
     // "callable"  : Sk.builtin.callable,
     // "delattr"   : Sk.builtin.delattr,
     // "eval_$rw$" : Sk.builtin.eval_,
@@ -432,12 +432,14 @@ Sk.abstr.setUpModuleMethods("builtins", Sk.builtins, {
         $meth: Sk.builtin.open,
         $flags: {
             MinArgs: 1,
-            MaxArgs: 3,
-            //NamedArgs: ["file, mode, buffering, encoding, errors, newline, closefd, opener"],
-            //Defaults: [new Sk.builtin.str("r"), new Sk.builtin.int_(-1), Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.bool.true$, Sk.builtin.none.none$]
+            MaxArgs: 8,
+            NamedArgs: ["file", "mode", "buffering", "encoding", "errors", "newline", "closefd", "opener"],
+            Defaults: [new Sk.builtin.str("r"), new Sk.builtin.int_(-1),
+                       pyNone, pyNone, pyNone,
+                       Sk.builtin.bool.true$, pyNone]
         },
-        $textsig: null,
-        // $textsig: "($module, /, file, mode='r', buffering=-1, encoding=None,\n     errors=None, newline=None, closefd=True, opener=None)",
+        // $textsig: null,
+        $textsig: "($module, /, file, mode='r', buffering=-1, encoding=None,\n     errors=None, newline=None, closefd=True, opener=None)",
         // this is the python 2 documentation since we don't support the py3 version
         $doc:
             "open(name[, mode[, buffering]]) -> file object\n\nOpen a file using the file() type, returns a file object.  This is the\npreferred way to open a file.  See file.__doc__ for further information.",
@@ -494,7 +496,7 @@ Sk.abstr.setUpModuleMethods("builtins", Sk.builtins, {
         $meth: Sk.builtin.sorted,
         $flags: {
             NamedArgs: [null, "cmp", "key", "reverse"],
-            Defaults: [Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.bool.false$],
+            Defaults: [pyNone, pyNone, Sk.builtin.bool.false$],
         }, // should be fast call leave for now
         $textsig: "($module, iterable, /, *, key=None, reverse=False)",
         $doc:

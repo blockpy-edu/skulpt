@@ -1,3 +1,44 @@
+
+<html>
+  <head>
+    <script src="../dist/skulpt.js" type="text/javascript"></script>
+    <script src="../dist/skulpt-stdlib.js" type="text/javascript"></script>
+      <!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>-->
+  </head>
+
+  <body>
+
+        <div>
+      <div id="website"
+          unused-style="border-style: solid; display: block; width: 80%; height: 600px; overflow: scroll; ">
+            Loading.
+        </div></div>
+
+      <script>
+          const target = "#website";
+      </script>
+
+    <script>
+        Sk.builtinFiles['files']["test.csv"] = 'name,age\nJohn,25\nJane,24\nJack,26\nJill,23\n"Hello world","33","Alpha strike",44\n';
+        Sk.builtinFiles['files']["test2.csv"] = 'name|age\nJohn|25\nJane|24\nJack|26\nJill|23\n"Hello world"|"33"|"Alpha strike"|44';
+
+	function builtinRead(x) {
+	    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+		    throw "File not found: '" + x + "'";
+	    return Sk.builtinFiles["files"][x];
+	}
+
+    Sk.configure({ read: builtinRead, __future__: Sk.python3,
+    output: function () {
+      console.log(">>>", ...arguments);
+    }});
+    Sk.inBrowser = false;
+
+    //Sk.builtinFiles.files["src/lib/gzip.js"] = ``;
+
+    Sk.builtinFiles.files["src/lib/csv.py"] = `
 QUOTE_MINIMAL = 0
 QUOTE_ALL = 1
 QUOTE_NONNUMERIC = 2
@@ -10,7 +51,7 @@ class CSVError(Exception):
 
 class Dialect:
     def __init__(self, delimiter=',', doublequote=True, escapechar=None,
-                 lineterminator='\r\n', quotechar='"', quoting=QUOTE_MINIMAL,
+                 lineterminator='\\r\\n', quotechar='"', quoting=QUOTE_MINIMAL,
                  skipinitialspace=False, strict=False):
         self.delimiter = delimiter
         self.doublequote = doublequote
@@ -25,7 +66,7 @@ class Reader:
     START_RECORD, START_FIELD, ESCAPED_CHAR, IN_FIELD, IN_QUOTED_FIELD, ESCAPE_IN_QUOTED_FIELD, QUOTE_IN_QUOTED_FIELD, EAT_CRNL, AFTER_ESCAPED_CRNL = [
         "START_RECORD", "START_FIELD", "ESCAPED_CHAR", "IN_FIELD", "IN_QUOTED_FIELD", "ESCAPE_IN_QUOTED_FIELD", "QUOTE_IN_QUOTED_FIELD", "EAT_CRNL", "AFTER_ESCAPED_CRNL"
     ]
-    EOL = '\n'
+    EOL = '\\n'
     NOT_SET = -1
 
     def __init__(self, iterable, dialect=None, **kwargs):
@@ -94,14 +135,14 @@ class Reader:
         if self.state == self.START_RECORD:
             if c == self.EOL:
                 return 0
-            elif c == '\n' or c == '\r':
+            elif c == '\\n' or c == '\\r':
                 self.state = self.EAT_CRNL
                 return 0
             self.state = self.START_FIELD
 
         if self.state == self.START_FIELD:
             self.unquoted_field = True
-            if c == '\n' or c == '\r' or c == self.EOL:
+            if c == '\\n' or c == '\\r' or c == self.EOL:
                 if self.parse_save_field() < 0:
                     return -1
                 self.state = self.START_RECORD if c == self.EOL else self.EAT_CRNL
@@ -121,13 +162,13 @@ class Reader:
                     return -1
                 self.state = self.IN_FIELD
         elif self.state == self.ESCAPED_CHAR:
-            if c == '\n' or c == '\r':
+            if c == '\\n' or c == '\\r':
                 if self.parse_add_char(c) < 0:
                     return -1
                 self.state = self.AFTER_ESCAPED_CRNL
             else:
                 if c == self.EOL:
-                    c = '\n'
+                    c = '\\n'
                 if self.parse_add_char(c) < 0:
                     return -1
                 self.state = self.IN_FIELD
@@ -136,7 +177,7 @@ class Reader:
                 return 0
             self.state = self.IN_FIELD
         elif self.state == self.IN_FIELD:
-            if c == '\n' or c == '\r' or c == self.EOL:
+            if c == '\\n' or c == '\\r' or c == self.EOL:
                 if self.parse_save_field() < 0:
                     return -1
                 self.state = self.START_RECORD if c == self.EOL else self.EAT_CRNL
@@ -164,7 +205,7 @@ class Reader:
                     return -1
         elif self.state == self.ESCAPE_IN_QUOTED_FIELD:
             if c == self.EOL:
-                c = '\n'
+                c = '\\n'
             if self.parse_add_char(c) < 0:
                 return -1
             self.state = self.IN_QUOTED_FIELD
@@ -177,7 +218,7 @@ class Reader:
                 if self.parse_save_field() < 0:
                     return -1
                 self.state = self.START_FIELD
-            elif c == '\n' or c == '\r' or c == self.EOL:
+            elif c == '\\n' or c == '\\r' or c == self.EOL:
                 if self.parse_save_field() < 0:
                     return -1
                 self.state = self.START_RECORD if c == self.EOL else self.EAT_CRNL
@@ -188,7 +229,7 @@ class Reader:
             else:
                 raise CSVError(f"'{self.dialect.delimiter}' expected after '{self.dialect.quotechar}'")
         elif self.state == self.EAT_CRNL:
-            if c == '\n' or c == '\r':
+            if c == '\\n' or c == '\\r':
                 pass
             elif c == self.EOL:
                 self.state = self.START_RECORD
@@ -219,7 +260,7 @@ class Writer:
         if self.dialect.quoting == QUOTE_ALL:
             return self.dialect.quotechar + field + self.dialect.quotechar
         if self.dialect.quoting == QUOTE_MINIMAL:
-            if self.dialect.delimiter in field or self.dialect.quotechar in field or '\n' in field or '\r' in field:
+            if self.dialect.delimiter in field or self.dialect.quotechar in field or '\\n' in field or '\\r' in field:
                 return self.dialect.quotechar + field + self.dialect.quotechar
         if self.dialect.quoting == QUOTE_NONNUMERIC:
             try:
@@ -269,7 +310,28 @@ writer = Writer
 
 if __name__ == "__main__":
     import io
-    csvfile = io.StringIO("1,2,3\n4,5,6\n")
+    csvfile = io.StringIO("1,2,3\\n4,5,6\\n")
     reader = Reader(csvfile)
     for row in reader:
         print("ROW", row)
+`;
+    try {
+      Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("main", false, `
+import csv
+with open('test.csv', newline='') as csvfile:
+    reader = csv.reader(csvfile)
+    for row in reader:
+        print(row)
+with open('test2.csv', newline='') as csvfile:
+    reader = csv.reader(csvfile, delimiter="|")
+    for row in reader:
+        print(row)
+`, true)).then(result => console.log(result.$d));
+    } catch (e) {
+      console.error(e);
+      console.error(e.args.v[0].v);
+    }
+
+    </script>
+  </body>
+</html>

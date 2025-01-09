@@ -444,11 +444,12 @@ Sk.builtin.ExternalError = Sk.abstr.buildNativeClass("ExternalError", {
 /**
  * @constructor
  */
-Sk.builtin.frame = function (trace) {
+Sk.builtin.frame = function (trace, index=0) {
     if (!(this instanceof Sk.builtin.frame)) {
         return new Sk.builtin.frame(trace);
     }
     this.trace = trace;
+    this.index = index;
     this.__class__ = Sk.builtin.frame;
     return this;
 };

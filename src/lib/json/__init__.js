@@ -1,3 +1,36 @@
+function BaseExc_new(args, kws) {
+    const instance = new this.constructor();
+    if (this.ht$type) {
+        BaseException.call(instance);
+    }
+    // called from python so do the args here
+    instance.args = new Sk.builtin.tuple(args.slice(0));
+    return instance;
+}
+
+function BaseExc_init(args, kws) {
+    Sk.abstr.checkNoKwargs(Sk.abstr.typeName(this), kws);
+    this.args = new Sk.builtin.tuple(args.slice(0));
+}
+
+function simpleExtends(base, name, doc) {
+    const tp$init = base.prototype.tp$init;
+    const slots = { tp$doc: doc, tp$init };
+    if (tp$init === BaseExc_init) {
+        slots.tp$new = BaseExc_new;
+    }
+    return Sk.abstr.buildNativeClass(name, {
+        base,
+        constructor: function pyExc(...args) {
+            base.apply(this, args);
+        },
+        slots,
+        flags: {
+            sk$solidBase: false,
+        },
+    });
+}
+
 var $builtinmodule = function (name) {
     "use strict";
     var mod = {};
@@ -68,7 +101,11 @@ var $builtinmodule = function (name) {
         }
 
         // may need to create a clone of this to have more control/options
-        str = JSON.stringify(jsobj, stringify_opts, kwargs.indent || 1);
+        try {
+            str = JSON.stringify(jsobj, stringify_opts, kwargs.indent || 1);
+        } catch (e) {
+            throw new JSONEncodeError(e.message);
+        }
 
         return new Sk.builtin.str(str);
     };
@@ -86,7 +123,11 @@ var $builtinmodule = function (name) {
 
         kwargs = Sk.ffi.remapToJs(kwargs);
         str = args[0].v;
-        obj = JSON.parse(str);
+        try {
+            obj = JSON.parse(str);
+        } catch (e) {
+            throw new JSONDecodeError(e.message);
+        }
 
         return Sk.ffi.remapToPy(obj);
     };
@@ -111,6 +152,9 @@ var $builtinmodule = function (name) {
 
     load_f.co_kwargs = true;
     mod.load = new Sk.builtin.func(load_f);
+
+    const JSONDecodeError = mod.JSONDecodeError = simpleExtends(Sk.builtin.ValueError, "JSONDecodeError", "Subclass of ValueError with the JSON decoder.");
+    const JSONEncodeError = mod.JSONEncodeError = simpleExtends(Sk.builtin.ValueError, "JSONEncodeError", "Subclass of ValueError with the JSON encoder.");
 
     return mod;
 };

@@ -136,6 +136,15 @@ function parse_mod(parse) {
     quote_plus_.$defaults = [emptyString, emptyString, pyNone, pyNone];
     parse.quote_plus = new Sk.builtin.func(quote_plus_);
 
+    var unquote_ = function(string, encoding, errors) {
+        Sk.builtin.pyCheckArgs("unquote", arguments, 1, 3, true, false);
+        let decoded = decodeURIComponent(string.v);
+        return new pyStr(decoded);
+    };
+    unquote_.co_varnames = ["string", "encoding", "errors"];
+    unquote_.$defaults = [emptyString, pyNone, pyNone];
+    parse.unquote = new Sk.builtin.func(unquote_);
+
     // urlencode, urlparse, parse_qs
     // TODO: geturl (and make sure _replace works)
     var parse_qs_ = function(qs, keep_blank_values, strict_parsing, encoding, errors, max_num_fields, separator) {

@@ -322,6 +322,11 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
                 const result = bankRound * multiplier;
                 return new Sk.builtin.int_(result);
         },
+        valueOf() {
+            return this.v;
+        },
+        // flag to determine inheritance of ints without instanceof
+        sk$int: true,
     },
 });
 
@@ -774,8 +779,10 @@ function getInt(x, base) {
         return new Sk.builtin.int_(Sk.str2number(x.v, base));
     } else if (base !== null) {
         throw new Sk.builtin.TypeError("int() can't convert non-string with explicit base");
-    } else if (x.nb$int) {
+    } else if (x.nb$int !== undefined) {
         return x.nb$int();
+    } else if (x.nb$index !== undefined) {
+        return new Sk.builtin.int_(x.nb$index());
     }
 
     if ((func = Sk.abstr.lookupSpecial(x, Sk.builtin.str.$trunc))) {

@@ -620,7 +620,7 @@ Sk.builtin.ascii = function ascii (x) {
     });
 };
 
-Sk.builtin.open = function open(filename, mode, bufsize) {
+Sk.builtin.open = function open(filename, mode, bufsize, encoding, errors, newline, closedf, opener) {
     if (mode === undefined) {
         mode = new Sk.builtin.str("r");
     }
@@ -634,7 +634,7 @@ Sk.builtin.open = function open(filename, mode, bufsize) {
         throw "todo; haven't implemented non-read opens";
     }
 
-    return new Sk.builtin.file(filename, mode, bufsize);
+    return new Sk.builtin.file(filename, mode, bufsize, encoding, errors, newline, closedf, opener);
 };
 
 
@@ -1122,6 +1122,26 @@ var mergeDict = function(obj1, obj2) {
     return obj1;
 };
 
+function tryCatchWithPromises(tryFn, catchFn) {
+    var r;
+
+    try {
+        r = tryFn();
+    } catch (e) {
+        return catchFn(e);
+    }
+
+    if (r instanceof Sk.misceval.Suspension) {
+        var susp = new Sk.misceval.Suspension(undefined, r);
+        susp.resume = function () {
+            return tryCatchWithPromises(r.resume, catchFn);
+        };
+        return susp;
+    } else {
+        return r;
+    }
+}
+
 Sk.builtin.exec = function exec(code, globals, locals) {
     Sk.builtin.pyCheckArgs("exec", arguments, 1, 3);
 
@@ -1182,11 +1202,18 @@ Sk.builtin.exec = function exec(code, globals, locals) {
             Sk.globals = globals;
             // Set up some error catching
             caughtError = null;
+
             // Guard against exceptions so we can recover gracefully
             return Sk.misceval.tryCatch(() => {
                 let result = Sk.global["eval"](co.code)(globals, locals);
                 // Ensure it terminates
+                // If the result has a promise, we need to execute that first
+                // Then attach the result/error to the suspension
+                // And then finally call resume on the suspension
                 while (result instanceof Sk.misceval.Suspension) {
+                    if (!result.optional) {
+                        return Sk.misceval.promiseToSuspension(Sk.misceval.asyncToPromise(() => result));
+                    }
                     result = result.resume();
                 }
                 return result;

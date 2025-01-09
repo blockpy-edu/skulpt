@@ -1,26 +1,48 @@
+class _IndexReturnsSelf:
+    def __class_getitem__(self, key):
+        return self
+
 class Any:
     pass
 
-class Optional:
-    def __class_getitem__(self, key):
-        return self
+class Optional(_IndexReturnsSelf):
+    pass
 
-class Union:
-    def __class_getitem__(self, key):
-        return self
+class Union(_IndexReturnsSelf):
+    pass
 
-class List:
-    def __class_getitem__(self, key):
-        return self
+class List(_IndexReturnsSelf):
+    pass
 
-class Dict:
-    def __class_getitem__(self, key):
-        return self
+class Dict(_IndexReturnsSelf):
+    pass
 
-class ClassVar:
-    def __class_getitem__(self, key):
-        return self
+class ClassVar(_IndexReturnsSelf):
+    pass
 
-class _GenericAlias:
-    def __class_getitem__(self, key):
-        return self
+class _GenericAlias(_IndexReturnsSelf):
+    pass
+
+class NoReturn:
+    pass
+
+class Never:
+    pass
+
+class LiteralString:
+    pass
+
+class Literal(_IndexReturnsSelf):
+    pass
+
+class TypeAlias:
+    pass
+
+class Callable(_IndexReturnsSelf):
+    pass
+
+class Tuple(_IndexReturnsSelf):
+    pass
+
+class List(_IndexReturnsSelf):
+    pass

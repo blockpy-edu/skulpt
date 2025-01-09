@@ -56,15 +56,12 @@ function $builtinmodule() {
 
     const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
 
-    var tagsToReplace = {
-        "%": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;"
-    };
-    var allTagsToReplace = {
-        ...tagsToReplace,
-        '"': "&quot;",
-        "'": "&#39;"
+    const escapeHtml = (unsafe, quote) => {
+        let newVersion = unsafe.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+        if (quote) {
+            newVersion = newVersion.replaceAll('"', "&quot;").replaceAll("'", "&#x27;");
+        }
+        return newVersion;
     };
     const escapeTextArea = document.createElement("textarea");
 
@@ -74,8 +71,9 @@ function $builtinmodule() {
         return toJs(s).replace(/[^<>]/g, function(tag) {
             return replacer[tag] || tag;
         });*/
-        escapeTextArea.textContent = toJs(s);
-        return new Sk.builtin.str(escapeTextArea.innerHTML);
+        /*escapeTextArea.textContent = toJs(s);
+        return new Sk.builtin.str(escapeTextArea.innerHTML);*/
+        return new Sk.builtin.str(escapeHtml(toJs(s), toJs(quote)));
     };
     escape.co_varnames = ["s", "quote"];
     escape.$defaults = [pyTrue];

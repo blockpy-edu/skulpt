@@ -1,7 +1,9 @@
-Sk.jsplotlib = Sk.jsplotlib || {};
+Sk.jsplotlib = Sk.jsplotlib || {
+    PICTURES: {}
+};
 
 // Skulpt translation
-let $builtinmodule = function (name) {
+var $builtinmodule = function (name) {
     let mod = {__name__: "matplotlib.pyplot"};
 
     const STRING_COLOR = new Sk.builtin.str("color");
@@ -448,12 +450,12 @@ let $builtinmodule = function (name) {
         }
     }
 
-    function attachCanvasToChart(chart, yAxisBuffer) {
-        let outputTarget = Sk.console.plot(chart);
-        chart.svg = d3.select(outputTarget.html[0]).append("div").append("svg");
+    function attachCanvasToChart(chart, yAxisBuffer, width, height, outputTarget) {
+        console.log("ATTACHING CANVAS", chart, yAxisBuffer, width, height, outputTarget);
+        chart.svg = d3.select(outputTarget).append("div").append("svg");
         chart.svg.attr("class", "chart");
-        chart.svg.attr("width", Sk.console.getWidth());
-        chart.svg.attr("height", Sk.console.getHeight());
+        chart.svg.attr("width", width);
+        chart.svg.attr("height", height);
         chart.svg.attr("chartCount", chart.idNumber);
 
         let translation = "translate(" + (chart.margin.left + yAxisBuffer) + "," + chart.margin.top + ")";
@@ -614,7 +616,7 @@ let $builtinmodule = function (name) {
         }
     }
 
-    function finalizeChart(chart) {
+    function finalizeChart(chart, saveFigureFn) {
         let doctype = "<?xml version=\"1.0\" standalone=\"no\"?>" + "<" + "!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
         let xml = new XMLSerializer().serializeToString(chart.svg.node());
         let blob = new Blob([doctype + xml], {type: "image/svg+xml"});
@@ -644,6 +646,11 @@ let $builtinmodule = function (name) {
             img.setAttribute("alt", "Generated plot titled: " + filename);
             anchor.setAttribute("href", canvasUrl);
             anchor.setAttribute("download", filename);
+
+
+            if (saveFigureFn !== undefined) {
+                saveFigureFn(canvas);
+            }
             // Snip off this chart, we can now start a new one.
         };
         img.onerror = function (e) {
@@ -655,7 +662,7 @@ let $builtinmodule = function (name) {
 
     const DEFAULT_MARKER_SIZE = 2;
 
-    let show_f = function () {
+    let show_f = function (outputTarget, saveFigureFn) {
         let chart = getChart();
 
         // Sanity checks
@@ -676,7 +683,13 @@ let $builtinmodule = function (name) {
         chart.mapX = d => chart.xScale(d.x);
         chart.mapY = d => chart.yScale(d.y);
         chart.mapLine = d3.line().x(chart.mapX).y(chart.mapY);
-        attachCanvasToChart(chart, yAxisBuffer);
+
+        if (outputTarget === undefined) {
+            outputTarget = Sk.console.plot(chart).html[0];
+        }
+        let width = Sk.console.getWidth();
+        let height = Sk.console.getHeight();
+        attachCanvasToChart(chart, yAxisBuffer, width, height, outputTarget);
 
         // Actually draw the chart objects
         for (let i = 0; i < chart.plots.length; i += 1) {
@@ -812,7 +825,7 @@ let $builtinmodule = function (name) {
         }
         ////////////////////////////////////////////////////////////////////
 
-        finalizeChart(chart);
+        finalizeChart(chart, saveFigureFn);
     };
     mod.show = new Sk.builtin.func(show_f);
 
@@ -880,6 +893,53 @@ let $builtinmodule = function (name) {
     };
     mod.clf = new Sk.builtin.func(clf_f);
 
+    // Create a unique identifier for the chart
+
+
+    const savefig_f = function (self, imageData, kwargs) {
+        console.log("SAVING FIG",self, imageData, kwargs);
+        if (imageData.tp$name === "BytesIO") {
+
+        }
+        const chart = getChart();
+        let chartIdNumber = chart.chartIdNumber;
+        const container = document.createElement("div");
+        show_f(container, function (canvas) {
+            if (imageData.tp$name === "BytesIO") {
+                const url = canvas.toDataURL("image/png");
+                const base64Data = url.replace(/^data:image\/png;base64,/, "");
+                const binaryData = atob(base64Data);
+                const uint8Array = new Uint8Array(binaryData.length);
+
+                for (let i = 0; i < binaryData.length; i++) {
+                    uint8Array[i] = binaryData.charCodeAt(i);
+                }
+                const bytes = new Sk.builtin.bytes(uint8Array);
+                Sk.misceval.callsimArray(imageData.write, [imageData, bytes]);
+                return Sk.builtin.none.none$;
+            }
+            Sk.jsplotlib.PICTURES[chartIdNumber] = canvas;
+            canvas.style.display = "block";
+        });
+        /*
+        There are so many better ways to do this, but I was so amused by this solution
+        that I've kept it in. Since we can't suspect in a string generation, and we need
+        more time to load the image, we just return an image for now, trigger an error,
+        and then fix it in the error handler. That error handler is delaying things
+        further by using setTimeout. It's a mess, but it works.
+         */
+        return new Sk.builtin.str(`
+            <img onerror='setTimeout(()=>{ this.replaceWith(Sk.jsplotlib.PICTURES[${chartIdNumber}]); delete Sk.jsplotlib.PICTURES[${chartIdNumber}];}, 1);' src='TRIGGER_AN_ERROR' />
+        `);
+    };
+    savefig_f.co_kwargs = true;
+    mod.savefig = new Sk.builtin.func(savefig_f);
+
+    const close_f = function () {
+        return Sk.builtin.none.none$;
+    };
+    mod.close = new Sk.builtin.func(close_f);
+
     const UNSUPPORTED = ["semilogx", "semilogy", "specgram", "stackplot", "stem", "step", "streamplot",
                          "tricontour", "tricontourf", "tripcolor", "triplot", "xcorr", "barbs",
                          "cla", "grid", "table", "text", "annotate", "ticklabel_format", "locator_params",
@@ -889,7 +949,7 @@ let $builtinmodule = function (name) {
                          "pie", "plot_date", "psd", "quiver", "quiverkey", "findobj", "switch_backend",
                          "isinteractive", "ioff", "ion", "pause", "rc", "rc_context", "rcdefaults",
                          "gci", "sci", "xkcd", "figure", "gcf", "get_fignums", "get_figlabels",
-                         "get_current_fig_manager", "connect", "disconnect", "close", "savefig",
+                         "get_current_fig_manager", "connect", "disconnect",
                          "ginput", "waitforbuttonpress", "figtext", "suptitle", "figimage", "figlegend",
                          "hold", "ishold", "over", "delaxes", "sca", "gca", "subplot", "subplots",
                          "subplot2grid", "twinx", "twiny", "subplots_adjust", "subplot_tool",

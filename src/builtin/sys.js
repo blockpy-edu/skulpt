@@ -133,6 +133,16 @@ var $builtinmodule = function (name) {
         }
     });
 
+    const _getframe = function (depth) {
+        if (depth === undefined) {
+            depth = 1;
+        } else {
+            depth = Sk.builtin.asnum$(depth);
+        }
+        return new Sk.builtin.frame({});
+    };
+    sys._getframe = new Sk.builtin.func(_getframe);
+
     sys.exit = new Sk.builtin.func(function() {
         // TODO: Figure out a real way to exit?
         return Sk.builtin.none.none$;

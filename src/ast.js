@@ -73,7 +73,7 @@ function STR(ch) {
 }
 
 function ast_error(c, n, msg) {
-    throw new Sk.builtin.SyntaxError(msg, c.c_filename, n.lineno);
+    throw new Sk.builtin.SyntaxError(msg, c.c_filename, ...get_context(n));
 }
 
 function strobj(s) {
@@ -130,11 +130,16 @@ function forbiddenCheck(c, n, x, lineno) {
         x = x.v;
     }
     if (x === "None") {
-        throw new Sk.builtin.SyntaxError("assignment to None", c.c_filename, lineno);
+        throw new Sk.builtin.SyntaxError("assignment to None", c.c_filename, ...get_context(n));
     }
     if (x === "True" || x === "False") {
-        throw new Sk.builtin.SyntaxError("assignment to True or False is forbidden", c.c_filename, lineno);
+        throw new Sk.builtin.SyntaxError("assignment to True or False is forbidden", c.c_filename, ...get_context(n));
     }
+}
+
+function get_context(n) {
+    // TODO: The first element should be the actual line of code!
+    return ["", n.lineno, n.col_offset || 0, n.end_lineno || n.lineno, n.end_col_offset || 0];
 }
 
 /**
@@ -172,7 +177,7 @@ function setContext(c, e, ctx, n) {
             break;
         case Sk.astnodes.Tuple:
             if (e.elts.length === 0) {
-                throw new Sk.builtin.SyntaxError("can't assign to ()", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("can't assign to ()", c.c_filename, ...get_context(n));
             }
             e.ctx = ctx;
             s = e.elts;
@@ -225,7 +230,7 @@ function setContext(c, e, ctx, n) {
             Sk.asserts.fail("unhandled expression in assignment");
     }
     if (exprName) {
-        throw new Sk.builtin.SyntaxError("can't " + (ctx === Sk.astnodes.Store ? "assign to" : "delete") + " " + exprName, c.c_filename, n.lineno);
+        throw new Sk.builtin.SyntaxError("can't " + (ctx === Sk.astnodes.Store ? "assign to" : "delete") + " " + exprName, c.c_filename, ...get_context(n));
     }
 
     if (s) {
@@ -263,7 +268,7 @@ Sk.exportSymbol("Sk.setupOperators", Sk.setupOperators);
 
 function getOperator(n) {
     if (operatorMap[n.type] === undefined) {
-        throw new Sk.builtin.SyntaxError("invalid syntax", n.type, n.lineno);
+        throw new Sk.builtin.SyntaxError("invalid syntax", n.type, ...get_context(n));
     }
     return operatorMap[n.type];
 }
@@ -446,7 +451,7 @@ function astForTryStmt(c, n) {
             nexcept--;
         }
     } else if (CHILD(n, nc - 3).type !== SYM.except_clause) {
-        throw new Sk.builtin.SyntaxError("malformed 'try' statement", c.c_filename, n.lineno);
+        throw new Sk.builtin.SyntaxError("malformed 'try' statement", c.c_filename, ...get_context(n));
     }
 
     if (nexcept > 0) {
@@ -751,7 +756,7 @@ function aliasForImportName(c, n) {
             case TOK.T_STAR:
                 return new Sk.astnodes.alias(strobj("*"), null);
             default:
-                throw new Sk.builtin.SyntaxError("unexpected import name", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("unexpected import name", c.c_filename, ...get_context(n));
         }
         break;
     }
@@ -823,11 +828,11 @@ function astForImportStmt(c, n) {
                 n = CHILD(n, idx);
                 nchildren = NCH(n);
                 if (nchildren % 2 === 0) {
-                    throw new Sk.builtin.SyntaxError("trailing comma not allowed without surrounding parentheses", c.c_filename, n.lineno);
+                    throw new Sk.builtin.SyntaxError("trailing comma not allowed without surrounding parentheses", c.c_filename, ...get_context(n));
                 }
                 break;
             default:
-                throw new Sk.builtin.SyntaxError("Unexpected node-type in from-import", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("Unexpected node-type in from-import", c.c_filename, ...get_context(n));
         }
         aliases = [];
         if (n.type === TOK.T_STAR) {
@@ -840,7 +845,7 @@ function astForImportStmt(c, n) {
         modname = mod ? mod.name.v : "";
         return new Sk.astnodes.ImportFrom(strobj(modname), aliases, ndots, lineno, col_offset, end_lineno, end_col_offset);
     }
-    throw new Sk.builtin.SyntaxError("unknown import statement", c.c_filename, n.lineno);
+    throw new Sk.builtin.SyntaxError("unknown import statement", c.c_filename, ...get_context(n));
 }
 
 function ast_for_testlistComp(c, n) {
@@ -1359,7 +1364,7 @@ function astForArguments(c, n) {
                     i += 2;
                     foundDefault = 1;
                 } else if (foundDefault) {
-                    throw new Sk.builtin.SyntaxError("non-default argument follows default argument", c.c_filename, n.lineno);
+                    throw new Sk.builtin.SyntaxError("non-default argument follows default argument", c.c_filename, ...get_context(n));
                 }
                 posargs[k++] = astForArg(c, ch);
                 i += 2; /* the name and the comma */
@@ -1367,7 +1372,7 @@ function astForArguments(c, n) {
             case TOK.T_STAR:
                 if (i + 1 >= NCH(n) ||
                     (i + 2 == NCH(n) && CHILD(n, i + 1).type == TOK.T_COMMA)) {
-                    throw new Sk.builtin.SyntaxError("named arguments must follow bare *", c.c_filename, n.lineno);
+                    throw new Sk.builtin.SyntaxError("named arguments must follow bare *", c.c_filename, ...get_context(n));
                 }
                 ch = CHILD(n, i + 1);  /* tfpdef or COMMA */
                 if (ch.type == TOK.T_COMMA) {
@@ -2114,11 +2119,11 @@ function ast_for_exprStmt(c, n) {
             case Sk.astnodes.Subscript:
                 break;
             case Sk.astnodes.GeneratorExp:
-                throw new Sk.builtin.SyntaxError("augmented assignment to generator expression not possible", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("augmented assignment to generator expression not possible", c.c_filename, ...get_context(n));
             case Sk.astnodes.Yield:
-                throw new Sk.builtin.SyntaxError("augmented assignment to yield expression not possible", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("augmented assignment to yield expression not possible", c.c_filename, ...get_context(n));
             default:
-                throw new Sk.builtin.SyntaxError("illegal expression for augmented assignment", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("illegal expression for augmented assignment", c.c_filename, ...get_context(n));
         }
 
         ch = CHILD(n, 2);
@@ -2131,7 +2136,7 @@ function ast_for_exprStmt(c, n) {
         return new Sk.astnodes.AugAssign(expr1, astForAugassign(c, CHILD(n, 1)), expr2, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
     } else if (CHILD(n, 1).type === SYM.annassign) {
         if (!Sk.__future__.python3) {
-            throw new Sk.builtin.SyntaxError("Annotated assignment is not supported in Python 2", c.c_filename, n.lineno);
+            throw new Sk.builtin.SyntaxError("Annotated assignment is not supported in Python 2", ...get_context(n));
         }
         // annotated assignment
         ch = CHILD(n, 0);
@@ -2160,11 +2165,11 @@ function ast_for_exprStmt(c, n) {
                 setContext(c, expr1, Sk.astnodes.Store, ch);
                 break;
             case Sk.astnodes.List:
-                throw new Sk.builtin.SyntaxError("only single target (not list) can be annotated", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("only single target (not list) can be annotated", c.c_filename, ...get_context(n));
             case Sk.astnodes.Tuple:
-                throw new Sk.builtin.SyntaxError("only single target (not tuple) can be annotated", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("only single target (not tuple) can be annotated", c.c_filename, ...get_context(n));
             default:
-                throw new Sk.builtin.SyntaxError("illegal target for annotation", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("illegal target for annotation", c.c_filename, ...get_context(n));
         }
 
         if (expr1.constructor != Sk.astnodes.Name) {
@@ -2187,7 +2192,7 @@ function ast_for_exprStmt(c, n) {
         for (i = 0; i < NCH(n) - 2; i += 2) {
             ch = CHILD(n, i);
             if (ch.type === SYM.yield_expr) {
-                throw new Sk.builtin.SyntaxError("assignment to yield expression not possible", c.c_filename, n.lineno);
+                throw new Sk.builtin.SyntaxError("assignment to yield expression not possible", c.c_filename, ...get_context(n));
             }
             e = ast_for_testlist(c, ch);
             setContext(c, e, Sk.astnodes.Store, CHILD(n, i));
@@ -2559,7 +2564,7 @@ function fstring_parse(str, start, end, raw, recurse_lvl, c, n) {
             // We need to error out on any lone }s, and
             // replace doubles with singles.
             if (/(^|[^}])}(}})*($|[^}])/.test(literal)) {
-                throw new Sk.builtin.SyntaxError("f-string: single '}' is not allowed", c.c_filename, LINENO(n), n.col_offset);
+                throw new Sk.builtin.SyntaxError("f-string: single '}' is not allowed", c.c_filename, ...get_context(n));
             }
             literal = literal.replace(/}}/g, "}");
         }
@@ -2625,7 +2630,7 @@ function parsestrplus(c, n) {
 
         if (fmode) {
             if (!Sk.__future__.python3) {
-                throw new Sk.builtin.SyntaxError("invalid string (f-strings are not supported in Python 2)", c.c_filename, CHILD(n, i).lineno);
+                throw new Sk.builtin.SyntaxError("invalid string (f-strings are not supported in Python 2)", c.c_filename,...get_context(CHILD(n, i)));
             }
             let jss = str.$jsstr();
             let [astnode, _] = fstring_parse(jss, 0, jss.length, false, 0, c, CHILD(n, i));

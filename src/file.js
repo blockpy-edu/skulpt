@@ -8,7 +8,7 @@ var STDERR_FILENO = 2;
  * @param {Sk.builtin.str} mode
  * @param {Object} buffering
  */
-Sk.builtin.file = function (name, mode, buffering) {
+Sk.builtin.file = function (name, mode, buffering, encoding, errors, newline, closefd, opener) {
     var i;
     var elem;
 
@@ -18,6 +18,16 @@ Sk.builtin.file = function (name, mode, buffering) {
 
     this.mode = mode;
     this.name = Sk.ffi.remapToJs(name);
+    this.buffering = Sk.ffi.remapToJs(buffering);
+    this.encoding = Sk.ffi.remapToJs(encoding);
+    this.errors = Sk.ffi.remapToJs(errors);
+    if (Sk.builtin.checkNone(newline)) {
+        this.newline = "\n";
+    } else {
+        this.newline = Sk.ffi.remapToJs(newline);
+    }
+    this.closefd = Sk.ffi.remapToJs(closefd);
+    this.opener = Sk.ffi.remapToJs(opener);
     this.closed = false;
 
     if (this.name === "/dev/stdout") {
@@ -31,18 +41,11 @@ Sk.builtin.file = function (name, mode, buffering) {
         if (Sk.inBrowser) {  // todo:  Maybe provide a replaceable function for non-import files
             this.fileno = 10;
             this.data$ = Sk.inBrowser(this.name);
-            this.lineList = this.data$.split("\n");
         } else {
             this.fileno = 11;
             this.data$ = Sk.read(name.v);
-            this.lineList = this.data$.split("\n");
-            this.lineList = this.lineList.slice(0, -1);
         }
-
-        //for (i in this.lineList) {
-        for (let i=0; i < this.lineList.length-1; i+= 1) {
-            this.lineList[i] = this.lineList[i] + "\n";
-        }
+        this.lineList = splitLines(this.data$, this.newline, Sk.inBrowser);
         this.currentLine = 0;
     }
     this.pos$ = 0;
@@ -56,6 +59,23 @@ Sk.builtin.file = function (name, mode, buffering) {
 
     return this;
 };
+
+function splitLines(text, newline, inBrowser) {
+    if (newline === "") {
+        newline = "\n";
+    }
+    let lineList = text.split(newline);
+    // TODO: Find the reason why we needed this. It was part of CSV?
+    if (inBrowser && lineList.length) {
+        if (lineList[lineList.length-1] === "") {
+            lineList = lineList.slice(0, -1);
+        }
+    }
+    for (let i=0; i < lineList.length-1; i+= 1) {
+        lineList[i] = lineList[i] + newline;
+    }
+    return lineList;
+}
 
 Sk.abstr.setUpInheritance("file", Sk.builtin.file, Sk.builtin.object);
 Sk.abstr.setUpBuiltinMro(Sk.builtin.file);
@@ -197,7 +217,7 @@ Sk.builtin.file.prototype["readline"] = new Sk.builtin.func(function readline(se
 
 Sk.builtin.file.prototype["readlines"] = new Sk.builtin.func(function readlines(self, sizehint) {
     if (self.fileno === 0) {
-        return new Sk.builtin.NotImplementedError("readlines ins't implemented because the web doesn't support Ctrl+D");
+        return new Sk.builtin.NotImplementedError("readlines isn't implemented because the web doesn't support Ctrl+D");
     }
 
     var i;
