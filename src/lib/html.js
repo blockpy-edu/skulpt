@@ -73,7 +73,8 @@ function $builtinmodule() {
         });*/
         /*escapeTextArea.textContent = toJs(s);
         return new Sk.builtin.str(escapeTextArea.innerHTML);*/
-        return new Sk.builtin.str(escapeHtml(toJs(s), toJs(quote)));
+        const newVersion = escapeHtml(toJs(s), toJs(quote));
+        return new Sk.builtin.str(newVersion);
     };
     escape.co_varnames = ["s", "quote"];
     escape.$defaults = [pyTrue];

@@ -92,6 +92,10 @@ from drafter import *
 from dataclasses import dataclass
 import io
 import base64
+import gzip
+
+print(gzip.decompress(gzip.compress(b"Hello, World!")).decode())
+print(base64.b64decode(base64.b64encode(b"Hello, World!").decode()))
 
 @dataclass
 class State:
@@ -104,6 +108,7 @@ def index(state: State) -> Page:
     gives them the choice whether or not they want to
     encode or decode.
     """
+    print("THIS WAS RUN")
     return Page(state, [
         "Hello!",
         "Would you like to encode or decode?",

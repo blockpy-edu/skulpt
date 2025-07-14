@@ -494,7 +494,7 @@ function astForDecorator(c, n) {
         return nameExpr;
     } else if (NCH(n) === 5) {// call with no args
         return new Sk.astnodes.Call(nameExpr, [], [],
-                                    n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
+            n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
     } else {
         return ast_for_call(c, CHILD(n, 3), nameExpr);
     }
@@ -924,9 +924,9 @@ function astForForStmt(c, n) {
     }
 
     return new Sk.astnodes.For(target,
-                               ast_for_testlist(c, CHILD(n, 3)),
-                               astForSuite(c, CHILD(n, 5)),
-                               seq, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
+        ast_for_testlist(c, CHILD(n, 3)),
+        astForSuite(c, CHILD(n, 5)),
+        seq, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
 }
 
 function ast_for_call(c, n, func, allowgen) {
@@ -982,11 +982,11 @@ function ast_for_call(c, n, func, allowgen) {
                 if (nkeywords) {
                     if (ndoublestars) {
                         ast_error(c, chch,
-                                  "positional argument follows " +
+                            "positional argument follows " +
                             "keyword argument unpacking");
                     } else {
                         ast_error(c, chch,
-                                  "positional argument follows " +
+                            "positional argument follows " +
                             "keyword argument");
                     }
                 }
@@ -1000,7 +1000,7 @@ function ast_for_call(c, n, func, allowgen) {
                 var starred;
                 if (ndoublestars) {
                     ast_error(c, chch,
-                              "iterable argument unpacking follows " +
+                        "iterable argument unpacking follows " +
                         "keyword argument unpacking");
                     return NULL;
                 }
@@ -1009,7 +1009,7 @@ function ast_for_call(c, n, func, allowgen) {
                     return NULL;
                 }
                 starred = new Sk.astnodes.Starred(e, Sk.astnodes.Load, LINENO(chch),
-                                                  chch.col_offset, chch.end_lineno, chch.end_col_offset);
+                    chch.col_offset, chch.end_lineno, chch.end_col_offset);
                 args[nargs++] = starred;
             } else if (TYPE(chch) == TOK.T_DOUBLESTAR) {
                 /* a keyword argument unpacking */
@@ -1047,11 +1047,11 @@ function ast_for_call(c, n, func, allowgen) {
                  */
                 if (e.constructor === Sk.astnodes.Lambda) {
                     ast_error(c, chch,
-                              "lambda cannot contain assignment");
+                        "lambda cannot contain assignment");
                     return NULL;
                 } else if (e.constructor !== Sk.astnodes.Name) {
                     ast_error(c, chch,
-                              "keyword can't be an expression");
+                        "keyword can't be an expression");
                     return NULL;
                 } else if (forbiddenCheck(c, e.id, ch, 1)) {
                     return NULL;
@@ -1061,7 +1061,7 @@ function ast_for_call(c, n, func, allowgen) {
                     tmp = keywords[k].arg;
                     if (tmp && tmp === key) {
                         ast_error(c, chch,
-                                  "keyword argument repeated");
+                            "keyword argument repeated");
                         return NULL;
                     }
                 }
@@ -1087,7 +1087,7 @@ function ast_for_trailer(c, n, left_expr) {
     if (TYPE(CHILD(n, 0)) == TOK.T_LPAR) {
         if (NCH(n) == 2) {
             return new Sk.astnodes.Call(left_expr, NULL, NULL, LINENO(n),
-                                        n.col_offset, n.end_lineno, n.end_col_offset);
+                n.col_offset, n.end_lineno, n.end_col_offset);
         } else {
             return ast_for_call(c, CHILD(n, 1), left_expr, true);
         }
@@ -1097,7 +1097,7 @@ function ast_for_trailer(c, n, left_expr) {
             return NULL;
         }
         return new Sk.astnodes.Attribute(left_expr, attr_id, Sk.astnodes.Load,
-                                         LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
+            LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
     } else {
         REQ(CHILD(n, 0), TOK.T_LSQB);
         REQ(CHILD(n, 2), TOK.T_RSQB);
@@ -1108,7 +1108,7 @@ function ast_for_trailer(c, n, left_expr) {
                 return NULL;
             }
             return new Sk.astnodes.Subscript(left_expr, slc, Sk.astnodes.Load,
-                                             LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
+                LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
         } else {
             /* The grammar is ambiguous here. The ambiguity is resolved
                by treating the sequence as a tuple literal if there are
@@ -1132,8 +1132,8 @@ function ast_for_trailer(c, n, left_expr) {
             }
             if (!simple) {
                 return new Sk.astnodes.Subscript(left_expr, new Sk.astnodes.ExtSlice(slices),
-                                                 Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                                 n.end_lineno, n.end_col_offset);
+                    Sk.astnodes.Load, LINENO(n), n.col_offset,
+                    n.end_lineno, n.end_col_offset);
             }
             /* extract Index values and put them in a Tuple */
             elts = [];
@@ -1146,7 +1146,7 @@ function ast_for_trailer(c, n, left_expr) {
             e = new Sk.astnodes.Tuple(elts, Sk.astnodes.Load, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
 
             return new Sk.astnodes.Subscript(left_expr, new Sk.astnodes.Index(e),
-                                             Sk.astnodes.Load, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
+                Sk.astnodes.Load, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
         }
     }
 }
@@ -1169,36 +1169,36 @@ function ast_for_flow_stmt(c, n) {
     switch (TYPE(ch)) {
         case SYM.break_stmt:
             return new Sk.astnodes.Break(LINENO(n), n.col_offset,
-                                         n.end_lineno, n.end_col_offset);
+                n.end_lineno, n.end_col_offset);
         case SYM.continue_stmt:
             return new Sk.astnodes.Continue(LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+                n.end_lineno, n.end_col_offset);
         case SYM.yield_stmt: { /* will reduce to yield_expr */
             var exp = ast_for_expr(c, CHILD(ch, 0));
             if (!exp) {
                 return null;
             }
             return new Sk.astnodes.Expr(exp, LINENO(n), n.col_offset,
-                                        n.end_lineno, n.end_col_offset);
+                n.end_lineno, n.end_col_offset);
         }
         case SYM.return_stmt:
             if (NCH(ch) == 1) {
                 return new Sk.astnodes.Return(null, LINENO(n), n.col_offset,
-                                              n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             } else {
                 var expression = ast_for_testlist(c, CHILD(ch, 1));
                 if (!expression) {
                     return null;
                 }
                 return new Sk.astnodes.Return(expression, LINENO(n), n.col_offset,
-                                              n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             }
         case SYM.raise_stmt:
             // This is tricky and Skulpt-specific, because we need to handle
             // both Python 3-style and Python 2-style 'raise' statements
             if (NCH(ch) == 1) {
                 return new Sk.astnodes.Raise(null, null, null, null, LINENO(n), n.col_offset,
-                                             n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             } else if (NCH(ch) >= 2) {
                 var cause = null;
                 var expression = ast_for_expr(c, CHILD(ch, 1));
@@ -1223,7 +1223,7 @@ function ast_for_flow_stmt(c, n) {
                     }
                 }
                 return new Sk.astnodes.Raise(expression, cause, inst, tback, LINENO(n), n.col_offset,
-                                             n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             }
         /* fall through */
         default:
@@ -1378,7 +1378,7 @@ function astForArguments(c, n) {
                 if (ch.type == TOK.T_COMMA) {
                     i += 2; /* now follows keyword only arguments */
                     i = handleKeywordonlyArgs(c, n, i,
-                                              kwonlyargs, kwdefaults);
+                        kwonlyargs, kwdefaults);
                 } else {
                     vararg = astForArg(c, ch);
 
@@ -1386,7 +1386,7 @@ function astForArguments(c, n) {
                     if (i < NCH(n) && (CHILD(n, i).type == SYM.tfpdef
                         || CHILD(n, i).type == SYM.vfpdef)) {
                         i = handleKeywordonlyArgs(c, n, i,
-                                                  kwonlyargs, kwdefaults);
+                            kwonlyargs, kwdefaults);
                     }
                 }
                 break;
@@ -1412,13 +1412,13 @@ function ast_for_async_funcdef(c, n, decorator_seq) {
     REQ(CHILD(n, 1), SYM.funcdef);
 
     return ast_for_funcdef_impl(c, n, decorator_seq,
-                                true /* is_async */);
+        true /* is_async */);
 }
 
 function ast_for_funcdef(c, n, decorator_seq) {
     /* funcdef: 'def' NAME parameters ['->' test] ':' suite */
     return ast_for_funcdef_impl(c, n, decorator_seq,
-                                false /* is_async */);
+        false /* is_async */);
 }
 
 function ast_for_funcdef_impl(c, n0, decorator_seq, is_async) {
@@ -1435,7 +1435,7 @@ function ast_for_funcdef_impl(c, n0, decorator_seq, is_async) {
 
     if (is_async && c.c_feature_version < 5) {
         ast_error(c, n,
-                  "Async functions are only supported in Python 3.5 and greater");
+            "Async functions are only supported in Python 3.5 and greater");
         return NULL;
     }
 
@@ -1490,10 +1490,10 @@ function ast_for_funcdef_impl(c, n0, decorator_seq, is_async) {
 
     if (is_async) {
         return new Sk.astnodes.AsyncFunctionDef(name, args, body, decorator_seq, returns, type_comment,
-                                                LINENO(n0), n0.col_offset, n0.end_lineno, n0.end_col_offset);
+            LINENO(n0), n0.col_offset, n0.end_lineno, n0.end_col_offset);
     } else {
         return new Sk.astnodes.FunctionDef(name, args, body, decorator_seq, returns, type_comment,
-                                           LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
+            LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
     }
 }
 
@@ -1522,7 +1522,7 @@ function astForClassdef(c, n, decoratorSeq) {
 
         return new Sk.astnodes.ClassDef(classname, [], [], s, decoratorSeq,
             /*TODO docstring*/null, LINENO(n), n.col_offset,
-                                        n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
     }
 
     if (TYPE(CHILD(n, 3)) === TOK.T_RPAR) { /* class NAME '(' ')' ':' suite */
@@ -1531,7 +1531,7 @@ function astForClassdef(c, n, decoratorSeq) {
         forbiddenCheck(c, CHILD(n, 3), classname, CHILD(n, 3).lineno);
         return new Sk.astnodes.ClassDef(classname, [], [], s, decoratorSeq,
             /*TODO docstring*/null, LINENO(n), n.col_offset,
-                                        n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
     }
 
     /* class NAME '(' arglist ')' ':' suite */
@@ -1541,7 +1541,7 @@ function astForClassdef(c, n, decoratorSeq) {
         var dummy;
         dummy_name = new_identifier(CHILD(n, 1));
         dummy = new Sk.astnodes.Name(dummy_name, Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                     n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
         call = ast_for_call(c, CHILD(n, 3), dummy, false);
     }
     s = astForSuite(c, CHILD(n, 6));
@@ -1549,8 +1549,8 @@ function astForClassdef(c, n, decoratorSeq) {
     forbiddenCheck(c, CHILD(n, 1), classname, CHILD(n, 1).lineno);
 
     return new Sk.astnodes.ClassDef(classname, call.args, call.keywords, s,
-                                    decoratorSeq, /*TODO docstring*/null, LINENO(n), n.col_offset,
-                                    n.end_lineno, n.end_col_offset);
+        decoratorSeq, /*TODO docstring*/null, LINENO(n), n.col_offset,
+        n.end_lineno, n.end_col_offset);
 }
 
 function astForLambdef(c, n) {
@@ -1813,8 +1813,8 @@ function ast_for_comprehension(c, n) {
             comp = new Sk.astnodes.comprehension(first, expression, null, is_async);
         } else {
             comp = new Sk.astnodes.comprehension(new Sk.astnodes.Tuple(t, Sk.astnodes.Store, first.lineno, first.col_offset,
-                                                                       for_ch.end_lineno, for_ch.end_col_offset),
-                                                 expression, null, is_async);
+                    for_ch.end_lineno, for_ch.end_col_offset),
+                expression, null, is_async);
         }
 
         if (NCH(n) == (5 + is_async)) {
@@ -1902,13 +1902,13 @@ function ast_for_itercomp(c, n, type) {
 
     if (type == COMP_GENEXP) {
         return new Sk.astnodes.GeneratorExp(elt, comps, LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
     } else if (type == COMP_LISTCOMP) {
         return new Sk.astnodes.ListComp(elt, comps, LINENO(n), n.col_offset,
-                                        n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
     } else if (type == COMP_SETCOMP) {
         return new Sk.astnodes.SetComp(elt, comps, LINENO(n), n.col_offset,
-                                       n.end_lineno, n.end_col_offset);
+            n.end_lineno, n.end_col_offset);
     } else {
         /* Should never happen */
         return null;
@@ -1975,7 +1975,7 @@ function ast_for_dictdisplay(c, n) {
     }
 
     return new Sk.astnodes.Dict(keys, values, LINENO(n), n.col_offset,
-                                n.end_lineno, n.end_col_offset);
+        n.end_lineno, n.end_col_offset);
 }
 
 function ast_for_gen_expr(c, n) {
@@ -2222,7 +2222,7 @@ function astForIfexpr(c, n) {
  * s is a python-style string literal, including quote characters and u/r/b
  * prefixes. Returns [decoded string object, is-an-fstring]
  */
-function parsestr (c, n, s) {
+function parsestr(c, n, s) {
     var quote = s.charAt(0);
     var rawmode = false;
     var unicode = false;
@@ -2245,64 +2245,49 @@ function parsestr (c, n, s) {
                 ch = s.charAt(i);
                 if (ch === "n") {
                     ret += "\n";
-                }
-                else if (ch === "\\") {
+                } else if (ch === "\\") {
                     ret += "\\";
-                }
-                else if (ch === "t") {
+                } else if (ch === "t") {
                     ret += "\t";
-                }
-                else if (ch === "r") {
+                } else if (ch === "r") {
                     ret += "\r";
-                }
-                else if (ch === "b") {
+                } else if (ch === "b") {
                     ret += "\b";
-                }
-                else if (ch === "f") {
+                } else if (ch === "f") {
                     ret += "\f";
-                }
-                else if (ch === "v") {
+                } else if (ch === "v") {
                     ret += "\v";
-                }
-                else if (ch === "0") {
+                } else if (ch === "0") {
                     ret += "\0";
-                }
-                else if (ch === '"') {
-                    ret += '"';
-                }
-                else if (ch === '\'') {
-                    ret += '\'';
-                }
-                else if (ch === "\n") /* escaped newline, join lines */ {
-                }
-                else if (ch === "x") {
-                    if (i+2 >= len) {
+                } else if (ch === "\"") {
+                    ret += "\"";
+                } else if (ch === "'") {
+                    ret += "'";
+                } else if (ch === "\n") /* escaped newline, join lines */ {
+                } else if (ch === "x") {
+                    if (i + 2 >= len) {
                         ast_error(c, n, "Truncated \\xNN escape");
                     }
-                    ret += String.fromCharCode(parseInt(s.substr(i+1,2), 16));
+                    ret += String.fromCharCode(parseInt(s.substr(i + 1, 2), 16));
                     i += 2;
-                }
-                else if (!bytesmode && ch === "u") {
-                    if (i+4 >= len) {
+                } else if (!bytesmode && ch === "u") {
+                    if (i + 4 >= len) {
                         ast_error(c, n, "Truncated \\uXXXX escape");
                     }
-                    ret += String.fromCharCode(parseInt(s.substr(i+1, 4), 16))
+                    ret += String.fromCharCode(parseInt(s.substr(i + 1, 4), 16));
                     i += 4;
-                }
-                else if (!bytesmode && ch === "U") {
-                    if (i+8 >= len) {
+                } else if (!bytesmode && ch === "U") {
+                    if (i + 8 >= len) {
                         ast_error(c, n, "Truncated \\UXXXXXXXX escape");
                     }
-                    ret += String.fromCodePoint(parseInt(s.substr(i+1, 8), 16))
+                    ret += String.fromCodePoint(parseInt(s.substr(i + 1, 8), 16));
                     i += 8;
-                }
-                else {
+                } else {
                     // Leave it alone
                     ret += "\\" + ch;
                     // Sk.asserts.fail("unhandled escape: '" + ch.charCodeAt(0) + "'");
                 }
-                }
-            else if (bytesmode && ch.charCodeAt(0) > 0x7f) {
+            } else if (bytesmode && ch.charCodeAt(0) > 0x7f) {
                 ast_error(c, n, "bytes can only contain ASCII literal characters");
             } else {
                 ret += ch;
@@ -2326,11 +2311,9 @@ function parsestr (c, n, s) {
             unicode = true;
         } else if (quote === "r" || quote === "R") {
             rawmode = true;
-        }
-        else if (quote === "b" || quote === "B") {
+        } else if (quote === "b" || quote === "B") {
             bytesmode = true;
-        }
-        else if (quote === "f" || quote === "F") {
+        } else if (quote === "f" || quote === "F") {
             fmode = true;
         } else {
             break;
@@ -2349,12 +2332,12 @@ function parsestr (c, n, s) {
 
     if (rawmode || s.indexOf("\\") === -1) {
         if (bytesmode) {
-            for (let i=0; i<s.length; i++) {
+            for (let i = 0; i < s.length; i++) {
                 if (s.charCodeAt(i) > 0x7f) {
                     ast_error(c, n, "bytes can only contain ASCII literal characters");
                 }
             }
-    }
+        }
         return [strobj(s), fmode, bytesmode];
     }
     return [strobj(decodeEscape(s, quote)), fmode, bytesmode];
@@ -2549,8 +2532,8 @@ function fstring_find_expr(str, start, end, raw, recurse_lvl, c, n) {
     /* And now create the FormattedValue node that represents this
        entire expression with the conversion and format spec. */
     let expr = new Sk.astnodes.FormattedValue(simple_expression, conversion,
-                                              format_spec, LINENO(n), n.col_offset,
-                                              n.end_lineno, n.end_col_offset);
+        format_spec, LINENO(n), n.col_offset,
+        n.end_lineno, n.end_col_offset);
 
     return [expr, i];
 }
@@ -2616,7 +2599,7 @@ function parsestrplus(c, n) {
 
     for (let i = 0; i < NCH(n); ++i) {
         let chstr = CHILD(n, i).value;
-        let r = parsestr(c, CHILD(n,i), chstr);
+        let r = parsestr(c, CHILD(n, i), chstr);
         let str = r[0];
         let fmode = r[1];
         let this_bytesmode = r[2];
@@ -2630,7 +2613,7 @@ function parsestrplus(c, n) {
 
         if (fmode) {
             if (!Sk.__future__.python3) {
-                throw new Sk.builtin.SyntaxError("invalid string (f-strings are not supported in Python 2)", c.c_filename,...get_context(CHILD(n, i)));
+                throw new Sk.builtin.SyntaxError("invalid string (f-strings are not supported in Python 2)", c.c_filename, ...get_context(CHILD(n, i)));
             }
             let jss = str.$jsstr();
             let [astnode, _] = fstring_parse(jss, 0, jss.length, false, 0, c, CHILD(n, i));
@@ -2641,7 +2624,7 @@ function parsestrplus(c, n) {
                 lastStrNode.s = lastStrNode.s.sq$concat(str);
             } else {
                 let type = bytesmode ? Sk.astnodes.Bytes : Sk.astnodes.Str;
-                lastStrNode = new type(str, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset)
+                lastStrNode = new type(str, LINENO(n), n.col_offset, n.end_lineno, n.end_col_offset);
                 strs.push(lastStrNode);
             }
         }
@@ -2690,7 +2673,7 @@ function parsenumber(c, s, lineno) {
         return isInt ? new Sk.builtin.int_(JSBI.BigInt(s)) : new Sk.builtin.lng(JSBI.BigInt(s));
     }
     return isInt ? new Sk.builtin.int_(val) : new Sk.builtin.lng(val);
-    }
+}
 
 
 function astForSlice(c, n) {
@@ -2774,7 +2757,7 @@ function ast_for_atom(c, n) {
             name = new_identifier(s, c);
             /* All names start in Load context, but may later be changed. */
             return new Sk.astnodes.Name(name, Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                        n.end_lineno, n.end_col_offset);
+                n.end_lineno, n.end_col_offset);
         }
         case TOK.T_STRING:
             return parsestrplus(c, n);
@@ -2782,13 +2765,13 @@ function ast_for_atom(c, n) {
             return new Sk.astnodes.Num(parsenumber(c, ch.value, n.lineno), n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
         case TOK.T_ELLIPSIS: /* Ellipsis */
             return new Sk.astnodes.Ellipsis(LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+                n.end_lineno, n.end_col_offset);
         case TOK.T_LPAR: /* some parenthesized expressions */
             ch = CHILD(n, 1);
 
             if (TYPE(ch) == TOK.T_RPAR) {
                 return new Sk.astnodes.Tuple([], Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                             n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             }
 
             if (TYPE(ch) == SYM.yield_expr) {
@@ -2810,7 +2793,7 @@ function ast_for_atom(c, n) {
 
             if (TYPE(ch) == TOK.T_RSQB) {
                 return new Sk.astnodes.List([], Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             }
 
             REQ(ch, SYM.testlist_comp);
@@ -2820,7 +2803,7 @@ function ast_for_atom(c, n) {
                     return null;
                 }
                 return new Sk.astnodes.List(elts, Sk.astnodes.Load, LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             } else {
                 return copy_location(ast_for_listcomp(c, ch), n);
             }
@@ -2834,7 +2817,7 @@ function ast_for_atom(c, n) {
             if (TYPE(ch) == TOK.T_RBRACE) {
                 /* It's an empty dict. */
                 return new Sk.astnodes.Dict(null, null, LINENO(n), n.col_offset,
-                                            n.end_lineno, n.end_col_offset);
+                    n.end_lineno, n.end_col_offset);
             } else {
                 var is_dict = (TYPE(CHILD(ch, 0)) == TOK.T_DOUBLESTAR);
                 if (NCH(ch) == 1 ||
@@ -2851,7 +2834,7 @@ function ast_for_atom(c, n) {
                     /* It's a dictionary comprehension. */
                     if (is_dict) {
                         ast_error(c, n,
-                                  "dict unpacking cannot be used in dict comprehension");
+                            "dict unpacking cannot be used in dict comprehension");
                         return null;
                     }
                     res = ast_for_dictcomp(c, ch);
@@ -3306,103 +3289,103 @@ Sk.astDump = function (node) {
 
 Sk.INHERITANCE_MAP = {
     "mod": [Sk.astnodes.Module,
-            Sk.astnodes.Interactive,
-            Sk.astnodes.Expression,
-            Sk.astnodes.Suite],
+        Sk.astnodes.Interactive,
+        Sk.astnodes.Expression,
+        Sk.astnodes.Suite],
     "stmt": [Sk.astnodes.FunctionDef,
-             Sk.astnodes.AsyncFunctionDef,
-             Sk.astnodes.ClassDef,
-             Sk.astnodes.Return,
-             Sk.astnodes.Delete,
-             Sk.astnodes.Assign,
-             Sk.astnodes.AugAssign,
-             Sk.astnodes.AnnAssign,
-             Sk.astnodes.For,
-             Sk.astnodes.AsyncFor,
-             Sk.astnodes.While,
-             Sk.astnodes.If,
-             Sk.astnodes.With,
-             Sk.astnodes.AsyncWith,
-             Sk.astnodes.Raise,
-             Sk.astnodes.Try,
-             Sk.astnodes.Assert,
-             Sk.astnodes.Import,
-             Sk.astnodes.ImportFrom,
-             Sk.astnodes.Global,
-             Sk.astnodes.Nonlocal,
-             Sk.astnodes.Expr,
-             Sk.astnodes.Pass,
-             Sk.astnodes.Break,
-             Sk.astnodes.Continue,
-             Sk.astnodes.Print,
-             Sk.astnodes.Debugger],
+        Sk.astnodes.AsyncFunctionDef,
+        Sk.astnodes.ClassDef,
+        Sk.astnodes.Return,
+        Sk.astnodes.Delete,
+        Sk.astnodes.Assign,
+        Sk.astnodes.AugAssign,
+        Sk.astnodes.AnnAssign,
+        Sk.astnodes.For,
+        Sk.astnodes.AsyncFor,
+        Sk.astnodes.While,
+        Sk.astnodes.If,
+        Sk.astnodes.With,
+        Sk.astnodes.AsyncWith,
+        Sk.astnodes.Raise,
+        Sk.astnodes.Try,
+        Sk.astnodes.Assert,
+        Sk.astnodes.Import,
+        Sk.astnodes.ImportFrom,
+        Sk.astnodes.Global,
+        Sk.astnodes.Nonlocal,
+        Sk.astnodes.Expr,
+        Sk.astnodes.Pass,
+        Sk.astnodes.Break,
+        Sk.astnodes.Continue,
+        Sk.astnodes.Print,
+        Sk.astnodes.Debugger],
     "expr": [Sk.astnodes.BoolOp,
-             Sk.astnodes.BinOp,
-             Sk.astnodes.UnaryOp,
-             Sk.astnodes.Lambda,
-             Sk.astnodes.IfExp,
-             Sk.astnodes.Dict,
-             Sk.astnodes.Set,
-             Sk.astnodes.ListComp,
-             Sk.astnodes.SetComp,
-             Sk.astnodes.DictComp,
-             Sk.astnodes.GeneratorExp,
-             Sk.astnodes.Await,
-             Sk.astnodes.Yield,
-             Sk.astnodes.YieldFrom,
-             Sk.astnodes.Compare,
-             Sk.astnodes.Call,
-             Sk.astnodes.Num,
-             Sk.astnodes.Str,
-             Sk.astnodes.FormattedValue,
-             Sk.astnodes.JoinedStr,
-             Sk.astnodes.Bytes,
-             Sk.astnodes.Ellipsis,
-             Sk.astnodes.NameConstant,
-             Sk.astnodes.Constant,
-             Sk.astnodes.Attribute,
-             Sk.astnodes.Subscript,
-             Sk.astnodes.Starred,
-             Sk.astnodes.Name,
-             Sk.astnodes.List,
-             Sk.astnodes.Tuple],
+        Sk.astnodes.BinOp,
+        Sk.astnodes.UnaryOp,
+        Sk.astnodes.Lambda,
+        Sk.astnodes.IfExp,
+        Sk.astnodes.Dict,
+        Sk.astnodes.Set,
+        Sk.astnodes.ListComp,
+        Sk.astnodes.SetComp,
+        Sk.astnodes.DictComp,
+        Sk.astnodes.GeneratorExp,
+        Sk.astnodes.Await,
+        Sk.astnodes.Yield,
+        Sk.astnodes.YieldFrom,
+        Sk.astnodes.Compare,
+        Sk.astnodes.Call,
+        Sk.astnodes.Num,
+        Sk.astnodes.Str,
+        Sk.astnodes.FormattedValue,
+        Sk.astnodes.JoinedStr,
+        Sk.astnodes.Bytes,
+        Sk.astnodes.Ellipsis,
+        Sk.astnodes.NameConstant,
+        Sk.astnodes.Constant,
+        Sk.astnodes.Attribute,
+        Sk.astnodes.Subscript,
+        Sk.astnodes.Starred,
+        Sk.astnodes.Name,
+        Sk.astnodes.List,
+        Sk.astnodes.Tuple],
     "expr_context": [Sk.astnodes.Load,
-                     Sk.astnodes.Store,
-                     Sk.astnodes.Del,
-                     Sk.astnodes.AugLoad,
-                     Sk.astnodes.AugStore,
-                     Sk.astnodes.Param],
+        Sk.astnodes.Store,
+        Sk.astnodes.Del,
+        Sk.astnodes.AugLoad,
+        Sk.astnodes.AugStore,
+        Sk.astnodes.Param],
     "slice": [Sk.astnodes.Slice,
-              Sk.astnodes.ExtSlice,
-              Sk.astnodes.Index],
+        Sk.astnodes.ExtSlice,
+        Sk.astnodes.Index],
     "boolop": [Sk.astnodes.And, Sk.astnodes.Or],
     "operator": [Sk.astnodes.Add,
-                 Sk.astnodes.Sub,
-                 Sk.astnodes.Mult,
-                 Sk.astnodes.MatMult,
-                 Sk.astnodes.Div,
-                 Sk.astnodes.Mod,
-                 Sk.astnodes.Pow,
-                 Sk.astnodes.LShift,
-                 Sk.astnodes.RShift,
-                 Sk.astnodes.BitOr,
-                 Sk.astnodes.BitXor,
-                 Sk.astnodes.BitAnd,
-                 Sk.astnodes.FloorDiv],
+        Sk.astnodes.Sub,
+        Sk.astnodes.Mult,
+        Sk.astnodes.MatMult,
+        Sk.astnodes.Div,
+        Sk.astnodes.Mod,
+        Sk.astnodes.Pow,
+        Sk.astnodes.LShift,
+        Sk.astnodes.RShift,
+        Sk.astnodes.BitOr,
+        Sk.astnodes.BitXor,
+        Sk.astnodes.BitAnd,
+        Sk.astnodes.FloorDiv],
     "unaryop": [Sk.astnodes.Invert,
-                Sk.astnodes.Not,
-                Sk.astnodes.UAdd,
-                Sk.astnodes.USub],
+        Sk.astnodes.Not,
+        Sk.astnodes.UAdd,
+        Sk.astnodes.USub],
     "cmpop": [Sk.astnodes.Eq,
-              Sk.astnodes.NotEq,
-              Sk.astnodes.Lt,
-              Sk.astnodes.LtE,
-              Sk.astnodes.Gt,
-              Sk.astnodes.GtE,
-              Sk.astnodes.Is,
-              Sk.astnodes.IsNot,
-              Sk.astnodes.In,
-              Sk.astnodes.NotIn],
+        Sk.astnodes.NotEq,
+        Sk.astnodes.Lt,
+        Sk.astnodes.LtE,
+        Sk.astnodes.Gt,
+        Sk.astnodes.GtE,
+        Sk.astnodes.Is,
+        Sk.astnodes.IsNot,
+        Sk.astnodes.In,
+        Sk.astnodes.NotIn],
     "comprehension": [],
     "excepthandler": [Sk.astnodes.ExceptHandler],
     "arguments_": [],

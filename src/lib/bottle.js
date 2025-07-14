@@ -105,7 +105,7 @@ function $builtinmodule() {
         }
         //console.log(bottleSiteTarget);
         objectSetAttr(self, rootStr, bottleSiteTarget);
-        objectGetAttr(self, rootStr).innerHTML += "Apples";
+        objectGetAttr(self, rootStr).innerHTML += "System failure during setup; reload, and if it persists than please contact Dr. Bart.";
 
         self.load_route.tp$call([self, defaultRouteStr, getStr, new pyDict([]), pyStr.$empty, pyStr.$empty]);
     };
@@ -170,6 +170,7 @@ function $builtinmodule() {
             const routeFunction = this.routes[method.v][pathName];
             // let page = Sk.misceval.callsimOrSuspendArray(routeFunction, []);
             let createPage = () => {
+                console.log("Creating page...");
                 let page = Sk.misceval.callsimOrSuspendArray(routeFunction, []);
                 while (page instanceof Sk.misceval.Suspension) {
                     if (!page.optional) {
