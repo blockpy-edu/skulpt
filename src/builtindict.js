@@ -62,7 +62,7 @@ Sk.builtins = {
     "OperationError": Sk.builtin.OperationError,
     "NegativePowerError": Sk.builtin.NegativePowerError,
     "RuntimeError": Sk.builtin.RuntimeError,
-	"RecursionError": Sk.builtin.RecursionError,
+    "RecursionError": Sk.builtin.RecursionError,
     "StopIteration": Sk.builtin.StopIteration,
     "SyntaxError": Sk.builtin.SyntaxError,
     "SystemError"        : Sk.builtin.SystemError,
@@ -549,7 +549,7 @@ function reassignGlobLoc(dict, obj) {
     for (let key in obj) {
         // this isn't technically correct - if they use delete in the exec this breaks
         dict.mp$ass_subscript(new Sk.builtin.str(Sk.unfixReserved(key)), obj[key]);
-}
+    }
 }
 
 
