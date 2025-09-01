@@ -1408,6 +1408,73 @@ Compiler.prototype.cif = function (s) {
 
 };
 
+Compiler.prototype.cmatch = function (s) {
+    var i, j;
+    var subject;
+    var case_body;
+    var end;
+    var next_case;
+    var pattern_value;
+    var pattern_test;
+    var wildcard_found = false;
+    
+    Sk.asserts.assert(s instanceof Sk.astnodes.Match);
+    
+    // Evaluate subject expression once and store result
+    subject = this.vexpr(s.subject);
+    
+    // Create end block for match statement
+    end = this.newBlock("end of match");
+    
+    // Process each case
+    for (i = 0; i < s.cases.length; i++) {
+        var match_case = s.cases[i];
+        
+        // Skip creating a new block for the last case
+        if (i < s.cases.length - 1) {
+            next_case = this.newBlock("next case");
+        } else {
+            next_case = end;
+        }
+        
+        // Handle wildcard pattern "_"
+        if (match_case.pattern instanceof Sk.astnodes.Name && 
+            match_case.pattern.id && match_case.pattern.id.v === "_") {
+            // Wildcard pattern - always matches, execute body
+            this.vseqstmt(match_case.body);
+            wildcard_found = true;
+            break;
+        } else {
+            // Evaluate pattern and compare with subject
+            pattern_value = this.vexpr(match_case.pattern);
+            
+            // Generate comparison: if subject == pattern
+            pattern_test = "Sk.misceval.richCompareBool(" + subject + "," + pattern_value + ",'Eq')";
+            
+            // If pattern doesn't match, jump to next case
+            this._jumpfalse(pattern_test, next_case);
+            
+            // Execute case body
+            this.vseqstmt(match_case.body);
+            this._jump(end);
+            
+            // Set up next case block
+            if (i < s.cases.length - 1) {
+                this.setBlock(next_case);
+            }
+        }
+    }
+    
+    // If no wildcard was found and we're not already at the end, 
+    // we need to handle the case where no pattern matched
+    if (!wildcard_found) {
+        this.setBlock(end);
+    } else {
+        this._jump(end);
+        this.setBlock(end);
+    }
+};
+
 Compiler.prototype.cwhile = function (s) {
     var body;
     var orelse;
@@ -2716,6 +2783,8 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             return this.ctry(s);
         case Sk.astnodes.With:
             return this.cwith(s, 0);
+        case Sk.astnodes.Match:
+            return this.cmatch(s);
         case Sk.astnodes.Assert:
             return this.cassert(s);
         case Sk.astnodes.Import:

@@ -666,6 +666,30 @@ function astForIfStmt(c, n) {
     Sk.asserts.fail("unexpected token in 'if' statement");
 }
 
+function astForMatchStmt(c, n) {
+    /* match_stmt: 'match' test ':' NEWLINE INDENT case_block+ DEDENT */
+    var i;
+    var cases = [];
+    var pattern, body;
+    REQ(n, SYM.match_stmt);
+    
+    // Extract subject expression (the value being matched)
+    var subject = ast_for_expr(c, CHILD(n, 1));
+    
+    // Parse case blocks - they start from child 5 (after 'match', test, ':', NEWLINE, INDENT)
+    for (i = 5; i < NCH(n) - 1; i++) { // -1 for DEDENT
+        var case_node = CHILD(n, i);
+        if (case_node.type === SYM.case_block) {
+            // case_block: 'case' test ':' suite
+            pattern = ast_for_expr(c, CHILD(case_node, 1));
+            body = astForSuite(c, CHILD(case_node, 3));
+            cases.push(new Sk.astnodes.match_case(pattern, body));
+        }
+    }
+    
+    return new Sk.astnodes.Match(subject, cases, n.lineno, n.col_offset, n.end_lineno, n.end_col_offset);
+}
+
 function ast_for_exprlist(c, n, context) {
     var e;
     var i;
@@ -3163,6 +3187,8 @@ function astForStmt(c, n) {
                 return astForTryStmt(c, ch);
             case SYM.with_stmt:
                 return ast_for_with_stmt(c, ch);
+            case SYM.match_stmt:
+                return astForMatchStmt(c, ch);
             case SYM.funcdef:
                 return ast_for_funcdef(c, ch, []);
             case SYM.classdef:
@@ -3306,6 +3332,7 @@ Sk.INHERITANCE_MAP = {
         Sk.astnodes.If,
         Sk.astnodes.With,
         Sk.astnodes.AsyncWith,
+        Sk.astnodes.Match,
         Sk.astnodes.Raise,
         Sk.astnodes.Try,
         Sk.astnodes.Assert,

@@ -659,6 +659,25 @@ Sk.astnodes.Continue = function Continue(/* {int} */ lineno, /* {int} */
 }
 
 /** @constructor */
+Sk.astnodes.Match = function Match(/* {expr_ty} */ subject, /* {asdl_seq *} */
+                                        cases, /* {int} */ lineno, /* {int} */
+                                        col_offset, /* {int} */ end_lineno, /*
+                                        {int} */ end_col_offset)
+{
+    Sk.asserts.assert(lineno !== null && lineno !== undefined);
+    Sk.asserts.assert(col_offset !== null && col_offset !== undefined);
+    Sk.asserts.assert(end_lineno !== null && end_lineno !== undefined);
+    Sk.asserts.assert(end_col_offset !== null && end_col_offset !== undefined);
+    this.subject = subject;
+    this.cases = cases;
+    this.lineno = lineno;
+    this.col_offset = col_offset;
+    this.end_lineno = end_lineno;
+    this.end_col_offset = end_col_offset;
+    return this;
+}
+
+/** @constructor */
 Sk.astnodes.Print = function Print(/* {expr_ty} */ dest, /* {asdl_seq *} */
                                         values, /* {int} */ nl, /* {int} */
                                         lineno, /* {int} */ col_offset, /*
@@ -1399,6 +1418,15 @@ Sk.astnodes.withitem = function withitem(/* {expr_ty} */ context_expr, /*
     return this;
 }
 
+/** @constructor */
+Sk.astnodes.match_case = function match_case(/* {expr_ty} */ pattern, /*
+                                                  {asdl_seq *} */ body)
+{
+    this.pattern = pattern;
+    this.body = body;
+    return this;
+}
+
 
 Sk.astnodes.Module.prototype._astname = "Module";
 Sk.astnodes.Module.prototype._fields = [
@@ -1555,6 +1583,11 @@ Sk.astnodes.Break.prototype._fields = [
 ];
 Sk.astnodes.Continue.prototype._astname = "Continue";
 Sk.astnodes.Continue.prototype._fields = [
+];
+Sk.astnodes.Match.prototype._astname = "Match";
+Sk.astnodes.Match.prototype._fields = [
+    "subject", function(n) { return n.subject; },
+    "cases", function(n) { return n.cases; }
 ];
 Sk.astnodes.Print.prototype._astname = "Print";
 Sk.astnodes.Print.prototype._fields = [
@@ -1836,6 +1869,11 @@ Sk.astnodes.withitem.prototype._astname = "withitem";
 Sk.astnodes.withitem.prototype._fields = [
     "context_expr", function(n) { return n.context_expr; },
     "optional_vars", function(n) { return n.optional_vars; }
+];
+Sk.astnodes.match_case.prototype._astname = "match_case";
+Sk.astnodes.match_case.prototype._fields = [
+    "pattern", function(n) { return n.pattern; },
+    "body", function(n) { return n.body; }
 ];
 
 Sk.exportSymbol("Sk.astnodes", Sk.astnodes);
