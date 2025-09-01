@@ -501,7 +501,7 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.frame.prototype["$r"] = function () {
     return new Sk.builtin.str("<frame object>");
@@ -563,7 +563,7 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.traceback.prototype["$r"] = function () {
     return new Sk.builtin.str("<traceback object>");
