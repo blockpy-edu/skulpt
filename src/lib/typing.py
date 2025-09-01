@@ -1,3 +1,8 @@
+TYPE_CHECKING = False
+
+class Self:
+    pass
+
 class _IndexReturnsSelf:
     def __class_getitem__(self, key):
         return self
@@ -45,4 +50,7 @@ class Tuple(_IndexReturnsSelf):
     pass
 
 class List(_IndexReturnsSelf):
+    pass
+
+class Iterator(_IndexReturnsSelf):
     pass
