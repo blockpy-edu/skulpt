@@ -444,12 +444,77 @@ Sk.builtin.ExternalError = Sk.abstr.buildNativeClass("ExternalError", {
 /**
  * @constructor
  */
+Sk.builtin.code = function (trace) {
+    if (!(this instanceof Sk.builtin.code)) {
+        return new Sk.builtin.code(trace);
+    }
+    
+    this.co_filename = trace.filename || "<unknown>";
+    this.co_name = trace.scope || "<unknown>";
+    this.co_firstlineno = trace.lineno || -1;
+    
+    this.__class__ = Sk.builtin.code;
+    return this;
+};
+
+Sk.abstr.setUpInheritance("code", Sk.builtin.code, Sk.builtin.object);
+
+Sk.builtin.code.prototype.tp$getattr = function (name) {
+    if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
+        var _name = name;
+
+        // get javascript string
+        if (Sk.builtin.checkString(name)) {
+            _name = Sk.ffi.remapToJs(name);
+        }
+
+        switch (_name) {
+            case "co_filename":
+                return Sk.ffi.remapToPy(this.co_filename);
+            case "co_name":
+                return Sk.ffi.remapToPy(this.co_name);
+            case "co_firstlineno":
+                return new Sk.builtin.int_(this.co_firstlineno);
+            // Other code object attributes can be added here
+            case "co_argcount":
+                return new Sk.builtin.int_(0);
+            case "co_flags":
+                return new Sk.builtin.int_(0);
+            case "co_nlocals":
+                return new Sk.builtin.int_(0);
+        }
+    }
+
+    // if we have not returned yet, try the genericgetattr
+    return Sk.generic.getAttr(this, name);
+};
+
+Sk.builtin.code.prototype["$r"] = function () {
+    return new Sk.builtin.str("<code object " + this.co_name + ", file \"" + this.co_filename + "\", line " + this.co_firstlineno + ">");
+};
+
+Sk.exportSymbol("Sk.builtin.code", Sk.builtin.code);
+
+
+/**
+ * @constructor
+ */
 Sk.builtin.frame = function (trace, index=0) {
     if (!(this instanceof Sk.builtin.frame)) {
-        return new Sk.builtin.frame(trace);
+        return new Sk.builtin.frame(trace, index);
     }
     this.trace = trace;
     this.index = index;
+    
+    // Initialize frame attributes
+    this.f_back = Sk.builtin.none.none$; // Will be set by fromList
+    this.f_code = new Sk.builtin.code(trace);
+    this.f_globals = Sk.builtin.none.none$; // TODO: implement later
+    this.f_locals = Sk.builtin.none.none$; // TODO: implement later  
+    this.f_builtins = Sk.builtin.none.none$; // TODO: implement later
+    this.f_lasti = new Sk.builtin.int_(-1); // Last instruction
+    this.f_trace = Sk.builtin.none.none$; // Trace function
+    
     this.__class__ = Sk.builtin.frame;
     return this;
 };
@@ -476,23 +541,23 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
 
         switch (_name) {
             case "f_back":
-                return Sk.builtin.none.none$;
+                return this.f_back;
             case "f_builtins":
-                return Sk.builtin.none.none$;
+                return this.f_builtins;
             case "f_code":
-                return Sk.builtin.none.none$;
+                return this.f_code;
             case "f_globals":
-                return Sk.builtin.none.none$;
+                return this.f_globals;
             case "f_lasti":
-                return Sk.builtin.none.none$;
+                return this.f_lasti;
             case "f_lineno":
                 return Sk.ffi.remapToPy(this.trace.lineno);
             case "f_line":
                 return Sk.ffi.remapToPy(line);
             case "f_locals":
-                return Sk.builtin.none.none$;
+                return this.f_locals;
             case "f_trace":
-                return Sk.builtin.none.none$;
+                return this.f_trace;
             case "co_filename":
                 return Sk.ffi.remapToPy(this.trace.filename);
             case "co_name":
@@ -501,7 +566,7 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.frame.prototype["$r"] = function () {
     return new Sk.builtin.str("<frame object>");
@@ -535,13 +600,32 @@ Sk.builtin.traceback = function (trace) {
 
 Sk.abstr.setUpInheritance("traceback", Sk.builtin.traceback, Sk.builtin.object);
 Sk.builtin.traceback.fromList = function (traces) {
-    var current = Sk.builtin.traceback(traces[0]),
-        first = current;
+    if (!traces || traces.length === 0) {
+        return Sk.builtin.none.none$;
+    }
+    
+    var current = new Sk.builtin.traceback(traces[0]);
+    var first = current;
+    var frames = [current.tb_frame]; // Keep track of frames for chaining
+    
+    // Create all traceback objects first
     for (var i = 1; i < traces.length; i++) {
-        current.tb_next = Sk.builtin.traceback(traces[i]);
+        current.tb_next = new Sk.builtin.traceback(traces[i]);
         current = current.tb_next;
+        frames.push(current.tb_frame);
     }
     current.tb_next = Sk.builtin.none.none$;
+    
+    // Now set up the frame chain: each frame's f_back points to the calling frame
+    // The innermost frame (frames[0]) points to frames[1], etc.
+    for (var i = 0; i < frames.length - 1; i++) {
+        frames[i].f_back = frames[i + 1];
+    }
+    // The outermost frame has no caller
+    if (frames.length > 0) {
+        frames[frames.length - 1].f_back = Sk.builtin.none.none$;
+    }
+    
     return first;
 };
 Sk.builtin.traceback.prototype.tp$getattr = function (name) {
@@ -563,7 +647,7 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.traceback.prototype["$r"] = function () {
     return new Sk.builtin.str("<traceback object>");
