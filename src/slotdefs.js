@@ -190,9 +190,9 @@ function slotFuncGetAttribute(pyName, canSuspend) {
         (e) => {
             if (e instanceof Sk.builtin.AttributeError) {
                 return undefined;
-    } else {
+            } else {
                 throw e;
-    }
+            }
         }
     );
     return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
@@ -454,24 +454,24 @@ slots.__getattribute__ = {
                 return slotFuncGetAttribute.call(this, pyName, canSuspend);
             }
             const ret = Sk.misceval.chain(slotFuncGetAttribute.call(this, pyName, canSuspend), (val) =>
-                    Sk.misceval.tryCatch(
-                        () => {
-                            if (val !== undefined) {
-                                return val;
-                            }
+                Sk.misceval.tryCatch(
+                    () => {
+                        if (val !== undefined) {
+                            return val;
+                        }
                         if (getattrFn.tp$descr_get) {
                             getattrFn = getattrFn.tp$descr_get(this);
                         }
                         return Sk.misceval.callsimOrSuspendArray(getattrFn, [pyName]);
-                        },
-                        function (e) {
-                            if (e instanceof Sk.builtin.AttributeError) {
-                                return undefined;
-                            } else {
-                                throw e;
-                            }
+                    },
+                    function (e) {
+                        if (e instanceof Sk.builtin.AttributeError) {
+                            return undefined;
+                        } else {
+                            throw e;
                         }
-                    )
+                    }
+                )
             );
             return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
@@ -650,103 +650,103 @@ slots.__delete__ = {
  * If `tp$richcompare` is defined then the `nativeClass` will get wrapper functions into each `ob$*` slot
  */
 
-    /**
+/**
      * @memberof Sk.slots
      * @method ob$eq
      * @implements __eq__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__eq__ = {
-        $name: "__eq__",
-        $slot_name: "ob$eq",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self==value.",
-    };
+slots.__eq__ = {
+    $name: "__eq__",
+    $slot_name: "ob$eq",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self==value.",
+};
 
-    /**
+/**
      * @memberof Sk.slots
      * @method ob$ge
      * @implements __ge__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__ge__ = {
-        $name: "__ge__",
-        $slot_name: "ob$ge",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self>=value.",
-    };
-    /**
+slots.__ge__ = {
+    $name: "__ge__",
+    $slot_name: "ob$ge",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self>=value.",
+};
+/**
      * @memberof Sk.slots
      * @method ob$gt
      * @implements __gt__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__gt__ = {
-        $name: "__gt__",
-        $slot_name: "ob$gt",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self>value.",
-    };
-    /**
+slots.__gt__ = {
+    $name: "__gt__",
+    $slot_name: "ob$gt",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self>value.",
+};
+/**
      * @memberof Sk.slots
      * @method ob$le
      * @implements __le__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__le__ = {
-        $name: "__le__",
-        $slot_name: "ob$le",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self<=value.",
-    };
-    /**
+slots.__le__ = {
+    $name: "__le__",
+    $slot_name: "ob$le",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self<=value.",
+};
+/**
      * @memberof Sk.slots
      * @method ob$lt
      * @implements __lt__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__lt__ = {
-        $name: "__lt__",
-        $slot_name: "ob$lt",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self<value.",
-    };
-    /**
+slots.__lt__ = {
+    $name: "__lt__",
+    $slot_name: "ob$lt",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self<value.",
+};
+/**
      * @memberof Sk.slots
      * @method ob$ne
      * @implements __ne__
  * @suppress {checkTypes}
      * @returns {boolean}
      */
-    slots.__ne__ = {
-        $name: "__ne__",
-        $slot_name: "ob$ne",
-        $slot_func: slotFuncOneArg,
-        $wrapper: wrapperRichCompare,
-        $textsig: "($self, value, /)",
-        $flags: {OneArg: true},
-        $doc: "Return self!=value.",
-    };
+slots.__ne__ = {
+    $name: "__ne__",
+    $slot_name: "ob$ne",
+    $slot_func: slotFuncOneArg,
+    $wrapper: wrapperRichCompare,
+    $textsig: "($self, value, /)",
+    $flags: {OneArg: true},
+    $doc: "Return self!=value.",
+};
 
 // iters
 
@@ -784,15 +784,15 @@ slots.__next__ = {
             const func = dunderFunc.tp$descr_get ? dunderFunc.tp$descr_get(this) :  dunderFunc;
             const ret = Sk.misceval.tryCatch(
                 () => Sk.misceval.callsimOrSuspendArray(func, []),
-                    (e) => {
-                        if (e instanceof Sk.builtin.StopIteration) {
+                (e) => {
+                    if (e instanceof Sk.builtin.StopIteration) {
                         this.gi$ret = e.$value;
-                            return undefined;
-                        } else {
-                            throw e;
-                        }
+                        return undefined;
+                    } else {
+                        throw e;
                     }
-                );
+                }
+            );
             return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
         };
     },

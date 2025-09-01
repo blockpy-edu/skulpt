@@ -300,7 +300,7 @@ function format(args, kwargs) {
     // return resulting spec to function
     for (let i = 0; i < kwargs.length; i += 2) {
         arg_dict[kwargs[i]] = kwargs[i + 1];
-        }
+    }
     for (let i in args) {
         arg_dict[i] = args[i];
     }
