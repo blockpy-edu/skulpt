@@ -56,6 +56,10 @@ module Python
           | Nonlocal(identifier* names)
           | Expr(expr value)
           | Pass | Break | Continue
+          
+          -- Skulpt addition: match statement
+          | Match(expr subject, match_case* cases)
+          
           -- Skulpt addition (/hack)
           | Print(expr? dest, expr* values, int nl)
           | Debugger
@@ -139,4 +143,6 @@ module Python
     alias = (identifier name, identifier? asname)
 
     withitem = (expr context_expr, expr? optional_vars)
+    
+    match_case = (expr pattern, stmt* body)
 }

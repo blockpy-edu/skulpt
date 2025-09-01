@@ -677,6 +677,11 @@ SymbolTable.prototype.visitStmt = function (s) {
             this.SEQStmt(s.finalbody);
             break;
 
+        case Sk.astnodes.Match:
+            this.visitExpr(s.subject);
+            VISIT_SEQ(this.visit_match_case.bind(this), s.cases);
+            break;
+
         default:
             Sk.asserts.fail("Unhandled type " + s.constructor.name + " in visitStmt");
     }
@@ -687,6 +692,11 @@ SymbolTable.prototype.visit_withitem = function (item) {
     if (item.optional_vars) {
         this.visitExpr(item.optional_vars);
     }
+};
+
+SymbolTable.prototype.visit_match_case = function (match_case) {
+    this.visitExpr(match_case.pattern);
+    this.SEQStmt(match_case.body);
 };
 
 
