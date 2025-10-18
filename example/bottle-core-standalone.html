@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottle Core Library - Standalone Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #app {
+            border: 1px solid #ddd;
+            padding: 20px;
+            min-height: 200px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            background-color: #e7f3fe;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 20px 0;
+        }
+        a {
+            color: #2196F3;
+            text-decoration: none;
+            padding: 5px 10px;
+            display: inline-block;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <strong>Bottle Core Library - Standalone Example</strong>
+        <p>This demonstrates the bottle-core.js library being used independently of Skulpt.</p>
+    </div>
+    
+    <div id="app">
+        <p>Loading...</p>
+    </div>
+
+    <!-- Load the core bottle library -->
+    <script src="../src/lib/bottle-core.js"></script>
+    
+    <script>
+        // Create a Bottle instance
+        const app = new BottleCore();
+
+        // Add routes
+        app.addRoute('/', 'GET', async () => {
+            return `
+                <h1>Welcome to Bottle Core!</h1>
+                <p>This is the home page.</p>
+                <p>Try navigating to:</p>
+                <ul>
+                    <li><a href="/about">About Page</a></li>
+                    <li><a href="/contact">Contact Page</a></li>
+                    <li><a href="/demo">Demo Page</a></li>
+                </ul>
+            `;
+        });
+
+        app.addRoute('/about', 'GET', async () => {
+            return `
+                <h1>About This Example</h1>
+                <p>This demonstrates the Bottle Core library working independently of Skulpt.</p>
+                <p>The core library is framework-agnostic and can be used with:</p>
+                <ul>
+                    <li>Skulpt (Python-to-JS)</li>
+                    <li>Brython (Python in browser)</li>
+                    <li>Pyodide (CPython via WebAssembly)</li>
+                    <li>Or directly in JavaScript projects</li>
+                </ul>
+                <p><a href="/">Back to Home</a></p>
+            `;
+        });
+
+        app.addRoute('/contact', 'GET', async () => {
+            return `
+                <h1>Contact Information</h1>
+                <p>This is a simple demonstration. In a real application, this could be a contact form.</p>
+                <p><a href="/">Back to Home</a></p>
+            `;
+        });
+
+        app.addRoute('/demo', 'GET', async () => {
+            const currentRequest = app.getCurrentRequest();
+            return `
+                <h1>Demo Features</h1>
+                <h2>Current Request Info:</h2>
+                <ul>
+                    <li><strong>URL:</strong> ${currentRequest ? currentRequest.url : 'N/A'}</li>
+                    <li><strong>Method:</strong> ${currentRequest ? currentRequest.method : 'N/A'}</li>
+                </ul>
+                <p><a href="/">Back to Home</a></p>
+            `;
+        });
+
+        // Set up the root element
+        const rootElement = document.getElementById('app');
+        app.setRoot(rootElement);
+
+        // Setup navigation handling
+        app.setupNavigation(rootElement, async (url, params, files) => {
+            console.log('Navigation to:', url);
+            try {
+                const content = await app.loadRoute(url, 'GET', params || {}, files || {});
+                rootElement.innerHTML = content;
+            } catch (error) {
+                if (error instanceof RouteNotFoundError) {
+                    rootElement.innerHTML = `
+                        <h1>404 - Page Not Found</h1>
+                        <p>The requested page could not be found.</p>
+                        <p><a href="/">Back to Home</a></p>
+                    `;
+                } else if (error instanceof ExternalRedirectError) {
+                    window.location.href = error.url;
+                } else {
+                    rootElement.innerHTML = `
+                        <h1>Error</h1>
+                        <p>${error.message}</p>
+                        <p><a href="/">Back to Home</a></p>
+                    `;
+                }
+            }
+        });
+
+        // Load initial route
+        app.loadRoute('/', 'GET').then(content => {
+            rootElement.innerHTML = content;
+        }).catch(error => {
+            rootElement.innerHTML = `<p>Error loading page: ${error.message}</p>`;
+        });
+    </script>
+</body>
+</html>

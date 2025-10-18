@@ -1,5 +1,14 @@
+// Import the core bottle library (loaded globally in browser)
+// The core library provides framework-agnostic functionality
+// This module wraps it for Skulpt/Python integration
+
 function $builtinmodule() {
     const bottle = {"__name__": new Sk.builtin.str("bottle")};
+
+    // Check if BottleCore is available (should be loaded from bottle-core.js)
+    if (typeof BottleCore === 'undefined') {
+        throw new Error("BottleCore library not found. Make sure bottle-core.js is loaded.");
+    }
 
     const {
         object: pyObject,
@@ -61,36 +70,6 @@ function $builtinmodule() {
     const defaultRouteStr = new pyStr("/");
     const getStr = new pyStr("GET");
     const postStr = new pyStr("POST");
-    let oldNavigation = null;
-
-    const changePageNavigation = function(target, callback) {
-        if (oldNavigation) {
-            target.removeEventListener("click", oldNavigation);
-        }
-        oldNavigation = function(event) {
-            // If it's a download link, trigger the default behavior
-            if (event.target.matches("a[download]")) {
-                return;
-            }
-            // TODO: Should this handle external links differently?
-            if (event.target.matches("a")) {
-                event.preventDefault();
-                return callback(event.target.href);
-            }
-            if (event.target.matches('input[type="submit"]') ||
-                event.target.matches('button[type="submit"]')) {
-                event.preventDefault();
-                const closestForm = event.target.closest("form");
-                const formAction = event.target.getAttribute("formaction");
-                if (closestForm) {
-                    const data = Object.fromEntries(new FormData(closestForm, event.target).entries());
-                    console.log("Clicked!", closestForm, data, formAction, event, event.submitter);
-                    return callback(formAction, data);
-                }
-            }
-        };
-        target.addEventListener("click", oldNavigation);
-    };
 
     var run_ = function(kwa, self) {
         //console.log("RUN:", self, kwa);
@@ -113,44 +92,43 @@ function $builtinmodule() {
 
     var bottleClass = function($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self) {
-            // Has to be able to return the current latest request for bottle at this moment
-            this.root = null;
-            this.routes = {GET: {}, POST: {}};
-            this.error_handler = {};
+            // Initialize the core Bottle instance
+            self.bottleCore$ = new BottleCore();
             return Sk.builtin.none.none$;
         });
+        
         $loc.route = new Sk.builtin.func(function (self, path, verb, callback) {
             console.log("NEW ROUTE:", self, path, verb, callback);
-            this.routes[verb.v][path.v] = callback;
+            // Register route in core library
+            self.bottleCore$.addRoute(path.v, verb.v, callback);
         });
+        
         $loc.error = new Sk.builtin.func(function (self, code) {
             console.log("ERROR Handler:", code);
             return new Sk.builtin.func(function(callback) {
-                console.log(this.error_handler);
+                // Register error handler in core library
+                self.bottleCore$.addErrorHandler(code.v, callback);
             });
-            /*return (callback) => {
-                this.error_handler[code] = callback;
-            }*/
         });
+        
         $loc.run = new Sk.builtin.func(run_);
+        
         $loc.load_route = new Sk.builtin.func(function(self, url, method, parameters, body, headers, files) {
             console.log("LOAD ROUTE:", url, method, parameters, body, headers, files);
-            //request = new Request(url, method, parameters, body, headers);
-            // Figure out path
-            // Turn these parameters into the ones that bottle expects
-            let normalUrl = url.v;
-            if (!normalUrl.startsWith("http") && !normalUrl.startsWith("file")) {
-                normalUrl = "https://localhost" + normalUrl;
-            }
-            let fullUrl = new URL(normalUrl);
-            fullUrl.searchParams.forEach((value, key) => {
+            
+            // Parse URL using core library
+            const urlInfo = self.bottleCore$.parseUrl(url.v);
+            
+            // Merge query parameters from URL into parameters dict
+            Object.entries(urlInfo.params).forEach(([key, value]) => {
                 const pyKey = new pyStr(key);
-                console.log("KEY", key, value);
                 if (parameters.mp$lookup(pyKey) === undefined) {
                     parameters.mp$ass_subscript(pyKey, new pyStr(value));
                 }
             });
-            objectSetAttr(bottle.request, new pyStr("url"), new pyStr(normalUrl));
+            
+            // Update the global request object
+            objectSetAttr(bottle.request, new pyStr("url"), new pyStr(urlInfo.normalUrl));
             objectSetAttr(bottle.request, new pyStr("params"), parameters);
             console.log("Params", Sk.ffi.remapToJs(parameters));
             objectSetAttr(bottle.request, new pyStr("method"), method);
@@ -158,20 +136,22 @@ function $builtinmodule() {
                 files = new pyDict([]);
             }
             objectSetAttr(bottle.request, new pyStr("files"), files);
-            let pathName = fullUrl.pathname;
-            if (!(pathName in this.routes[method.v])) {
-                if (normalUrl.startsWith("http")) {
-                    window.location.replace(normalUrl);
+            
+            // Get the route callback from core library
+            const routeCallback = self.bottleCore$.routes[method.v][urlInfo.pathname];
+            
+            if (!routeCallback) {
+                if (urlInfo.normalUrl.startsWith("http")) {
+                    window.location.replace(urlInfo.normalUrl);
                 } else {
-                    throw new RuntimeError("Route not found: " + pathName);
+                    throw new RuntimeError("Route not found: " + urlInfo.pathname);
                 }
             }
-            //let page = this.routes[method.v][pathName].tp$call([]);
-            const routeFunction = this.routes[method.v][pathName];
-            // let page = Sk.misceval.callsimOrSuspendArray(routeFunction, []);
+            
+            // Execute the route and handle the page
             let createPage = () => {
                 console.log("Creating page...");
-                let page = Sk.misceval.callsimOrSuspendArray(routeFunction, []);
+                let page = Sk.misceval.callsimOrSuspendArray(routeCallback, []);
                 while (page instanceof Sk.misceval.Suspension) {
                     if (!page.optional) {
                         return Sk.misceval.promiseToSuspension(Sk.misceval.asyncToPromise(() => page));
@@ -180,21 +160,21 @@ function $builtinmodule() {
                 }
                 return page;
             };
+            
             const loadPage = (page) => {
                 const root = objectGetAttr(self, rootStr);
                 if (root) {
                     console.log("Updating HTML", page);
                     root.innerHTML = page;
-                    return changePageNavigation(root, (newUrl, parameters) => {
+                    
+                    // Setup navigation using core library
+                    const navigationCallback = (newUrl, parameters, files) => {
                         console.log("Page navigation begun!", newUrl, parameters);
                         const newFiles = new pyDict([]);
-                        if (parameters !== undefined) {
-                            Object.entries(parameters).forEach(([key, value]) => {
-                                if (value instanceof File) {
-                                    const newFile = Sk.misceval.callsimArray(bottle.FileUpload, [value.name, value]);
-                                    newFiles.mp$ass_subscript(new pyStr(key), newFile);
-                                    delete parameters[key];
-                                }
+                        if (files !== undefined) {
+                            Object.entries(files).forEach(([key, value]) => {
+                                const newFile = Sk.misceval.callsimArray(bottle.FileUpload, [new pyStr(value.name), value]);
+                                newFiles.mp$ass_subscript(new pyStr(key), newFile);
                             });
                         }
                         const args = [self, new pyStr(newUrl), getStr,
@@ -202,7 +182,10 @@ function $builtinmodule() {
                                       pyStr.$empty, pyStr.$empty, newFiles];
                         const nextPage = self.load_route.tp$call(args);
                         return Sk.misceval.promiseToSuspension(Sk.misceval.asyncToPromise(() => nextPage));
-                    });
+                    };
+                    
+                    self.bottleCore$.setupNavigation(root, navigationCallback);
+                    return pyNone;
                 } else {
                     throw new RuntimeError("Bottle has not yet started. Cannot load any pages.");
                 }
@@ -213,7 +196,7 @@ function $builtinmodule() {
     bottle.Bottle = Sk.misceval.buildClass(bottle, bottleClass, "Bottle", []);
 
     function abort(code, message) {
-        // TODO: Finish the abort function
+        // Use core library for abort logic
         console.error("Bottle Error:", code, message);
         if (Sk.console && Sk.console.drafter && Sk.console.drafter.handleError) {
             Sk.console.drafter.handleError(code, message);
@@ -224,17 +207,19 @@ function $builtinmodule() {
     bottle.abort = new Sk.builtin.func(abort);
 
     function static_file(path, root, mimetype) {
-        console.log("STATIC FILE:", path, root, mimetype);
+        // Use core library for static file logic
+        BottleUtils.staticFile(path.v, root.v, mimetype ? mimetype.v : undefined);
     }
     bottle.static_file = new Sk.builtin.func(static_file);
 
     var fileClass = function($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, filename, fileHandle) {
-            console.log("NEW FILE:", filename, root);
-            this.filename = filename;
+            console.log("NEW FILE:", filename);
+            self.filename$ = filename;
+            self.fileHandle$ = fileHandle;
 
             const fileObject = Sk.misceval.callsimArray(bottle.ReadableFile, [fileHandle, filename]);
-            this.fileObject = fileObject;
+            self.fileObject$ = fileObject;
             objectSetAttr(self, new pyStr("file"), fileObject);
             objectSetAttr(self, new pyStr("filename"), filename);
 
@@ -268,15 +253,18 @@ function $builtinmodule() {
             susp.data = {
                 type: "Sk.promise",
                 promise: new Promise((resolve) => {
-                    // this.contents is a File object, need to read and return it
-                    var reader = new FileReader();
-                    reader.onload = function() {
-                        console.log("READ TEXT", this.result, self.filename$);
-                        const readText = new Uint8Array(this.result);
-                        text = new Sk.builtin.bytes(readText);
+                    // Use FileUploadCore for file reading
+                    const fileUpload = new FileUploadCore(
+                        self.filename$ ? self.filename$.v : "unknown", 
+                        self.contents$
+                    );
+                    fileUpload.read().then((bytes) => {
+                        text = new Sk.builtin.bytes(bytes);
                         resolve(text);
-                    };
-                    reader.readAsArrayBuffer(self.contents$);
+                    }).catch((error) => {
+                        susp.data["error"] = error;
+                        resolve(null);
+                    });
                 })
             };
             return susp;
