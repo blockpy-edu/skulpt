@@ -772,7 +772,7 @@ Sk.builtin.compile = function (source, filename, mode, flags, dont_inherit, opti
     source = source.$jsstr();
     filename = filename.$jsstr();
     mode = mode.$jsstr();
-    return Sk.misceval.chain(Sk.compile(source, filename, mode, true, true), (co) => new pyCode(filename, co));
+    return Sk.misceval.chain(Sk.compileWithCache(source, filename, mode, true, true), (co) => new pyCode(filename, co));
 };
 
 
@@ -1155,9 +1155,9 @@ Sk.builtin.exec = function exec(code, globals, locals) {
     }
 
     if (Sk.builtin.checkString(code)) {
-        code = Sk.compile(code.$jsstr(), filename, "exec", true, true);
+        code = Sk.compileWithCache(code.$jsstr(), filename, "exec", true, true);
     } else if (typeof code === "string") {
-        code = Sk.compile(code, filename, "exec", true, true);
+        code = Sk.compileWithCache(code, filename, "exec", true, true);
     } else if (!(code instanceof pyCode)) {
         throw new Sk.builtin.TypeError("exec() arg 1 must be a string, bytes or code object");
     }

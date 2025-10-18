@@ -4,7 +4,25 @@ const minify = require("babel-minify");
 const beautify = require("js-beautify");
 
 
-var ALLOW_LIST = ["src/lib/posixpath.py", "src/lib/dataclasses.py", "src/lib/traceback.py", "src/lib/io.py", "cisc108/", "unittest/"];
+var ALLOW_LIST = [
+    "src/lib/posixpath.py", 
+    "src/lib/dataclasses.py", 
+    "src/lib/traceback.py", 
+    "src/lib/io.py",
+    "src/lib/collections.py",
+    "src/lib/copy.py",
+    "src/lib/types.py",
+    "src/lib/textwrap.py",
+    "src/lib/itertools.py",
+    "src/lib/heapq.py",
+    "src/lib/bisect.py",
+    "src/lib/reprlib.py",
+    "src/lib/genericpath.py",
+    "src/lib/stat.py",
+    "cisc108/", 
+    "unittest/",
+    "bakery/"
+];
 function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);

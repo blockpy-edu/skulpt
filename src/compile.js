@@ -3153,8 +3153,57 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
 
 Sk.exportSymbol("Sk.compile", Sk.compile);
 
+// Compilation cache to avoid recompiling identical source code
+Sk.compileCache = new Map();
+Sk.compileCacheEnabled = true;
+Sk.compileCacheMaxSize = 1000; // Default max cache size
+
+// Simple hash function for cache keys
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString(36);
+}
+
+// Wrapper around Sk.compile with caching
+Sk.compileWithCache = function(source, filename, mode, canSuspend, annotate) {
+    // Only cache when enabled and for exec mode (module imports)
+    if (!Sk.compileCacheEnabled || mode !== "exec") {
+        return Sk.compile(source, filename, mode, canSuspend, annotate);
+    }
+    
+    // Create cache key from source and compilation parameters
+    const cacheKey = simpleHash(source) + "_" + filename + "_" + 
+                     (canSuspend ? "s" : "n") + "_" + (annotate ? "a" : "n");
+    
+    // Check cache
+    if (Sk.compileCache.has(cacheKey)) {
+        return Sk.compileCache.get(cacheKey);
+    }
+    
+    // Compile and cache
+    const result = Sk.compile(source, filename, mode, canSuspend, annotate);
+    
+    // Check cache size limit and evict oldest entry if needed (simple FIFO)
+    if (Sk.compileCache.size >= Sk.compileCacheMaxSize) {
+        const firstKey = Sk.compileCache.keys().next().value;
+        Sk.compileCache.delete(firstKey);
+    }
+    
+    Sk.compileCache.set(cacheKey, result);
+    
+    return result;
+};
+
+Sk.exportSymbol("Sk.compileWithCache", Sk.compileWithCache);
+
 Sk.resetCompiler = function () {
     Sk.gensymcount = 0;
+    Sk.compileCache.clear();
 };
 
 Sk.exportSymbol("Sk.resetCompiler", Sk.resetCompiler);
