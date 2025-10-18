@@ -4,20 +4,27 @@ const minify = require("babel-minify");
 const beautify = require("js-beautify");
 
 
-var ALLOW_LIST = ["src/lib/posixpath.py", "src/lib/dataclasses.py", "src/lib/traceback.py", "src/lib/io.py", "cisc108/", "unittest/"];
+// Precompile all Python library files for better performance
+// Previously only a small subset was precompiled, causing runtime compilation overhead
+// Exclude directories with hyphens in their names as they cause invalid JS variable names
+var EXCLUDE_LIST = ["lib-dynload/", "lib-tk/"];
 function endsWithAny(string, suffixes) {
     return suffixes.some(function (suffix) {
         return string.endsWith(suffix);
     });
 }
 function inAllowList(filename, extension) {
-    return ALLOW_LIST.some(function (entry) {
-        if (entry.endsWith("/")) {
-            return filename.startsWith("src/lib/"+entry);
-        } else {
-            return filename.endsWith(entry);
+    // Precompile all .py files except those in excluded directories
+    if (extension !== ".py") {
+        return false;
+    }
+    // Check if file is in an excluded directory
+    for (let exclude of EXCLUDE_LIST) {
+        if (filename.includes(exclude)) {
+            return false;
         }
-    });
+    }
+    return true;
 }
 
 
