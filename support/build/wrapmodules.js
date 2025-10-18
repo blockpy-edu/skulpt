@@ -18,9 +18,10 @@ function inAllowList(filename, extension) {
     if (extension !== ".py") {
         return false;
     }
-    // Check if file is in an excluded directory
+    // Check if file is in an excluded directory (use path separator for precise matching)
+    const normalizedPath = filename.replace(/\\/g, '/');
     for (let exclude of EXCLUDE_LIST) {
-        if (filename.includes(exclude)) {
+        if (normalizedPath.includes('/'+exclude) || normalizedPath.includes('src/lib/'+exclude)) {
             return false;
         }
     }
