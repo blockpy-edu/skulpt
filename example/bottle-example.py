@@ -57,13 +57,13 @@ def hello():
 app.route("/hello", "GET", hello)
 
 # Error handler example
-@app.error(404)
 def error404(code):
     return """
     <h1>404 - Page Not Found</h1>
     <p>The requested page could not be found.</p>
     <p><a href="/">Back to Home</a></p>
     """
+app.error(404, error404)
 
 # Run the application
 # This will set up the Bottle application in the browser
