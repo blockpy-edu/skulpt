@@ -3,6 +3,8 @@ This is a BlockPy fork of the Skulpt project. We add a few features:
 * AST parser now captures end of line/column information
 * MatPlotLib module
 * Exec support
+* Compilation cache for dramatically improved performance (~2700x speedup on repeated compilations)
+* Expanded AOT (Ahead-of-Time) precompilation for commonly used standard library modules
 
 Our instructions for installation
 

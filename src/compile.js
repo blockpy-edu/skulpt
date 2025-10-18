@@ -3156,6 +3156,7 @@ Sk.exportSymbol("Sk.compile", Sk.compile);
 // Compilation cache to avoid recompiling identical source code
 Sk.compileCache = new Map();
 Sk.compileCacheEnabled = true;
+Sk.compileCacheMaxSize = 1000; // Default max cache size
 
 // Simple hash function for cache keys
 function simpleHash(str) {
@@ -3186,6 +3187,13 @@ Sk.compileWithCache = function(source, filename, mode, canSuspend, annotate) {
     
     // Compile and cache
     const result = Sk.compile(source, filename, mode, canSuspend, annotate);
+    
+    // Check cache size limit and evict oldest entry if needed (simple FIFO)
+    if (Sk.compileCache.size >= Sk.compileCacheMaxSize) {
+        const firstKey = Sk.compileCache.keys().next().value;
+        Sk.compileCache.delete(firstKey);
+    }
+    
     Sk.compileCache.set(cacheKey, result);
     
     return result;

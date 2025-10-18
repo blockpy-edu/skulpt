@@ -220,6 +220,17 @@ Sk.configure = function (options) {
     Sk.setupDunderMethods(Sk.__future__.python3);
 
     Sk.setupObjects(Sk.__future__.python3);
+    
+    // Compilation cache configuration
+    if ("compileCacheEnabled" in options) {
+        Sk.compileCacheEnabled = options["compileCacheEnabled"];
+        Sk.asserts.assert(typeof Sk.compileCacheEnabled === "boolean");
+    }
+    
+    if ("compileCacheMaxSize" in options) {
+        Sk.compileCacheMaxSize = options["compileCacheMaxSize"];
+        Sk.asserts.assert(typeof Sk.compileCacheMaxSize === "number");
+    }
 };
 
 Sk.exportSymbol("Sk.configure", Sk.configure);
