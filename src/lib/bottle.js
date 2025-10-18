@@ -11,14 +11,13 @@ function $builtinmodule() {
         none: { none$: pyNone },
         bool: { false$: pyFalse, true$: pyTrue },
         NotImplemented: { NotImplemented$: pyNotImplemented },
-        bool: pyBool,
         func: pyFunc,
         method: pyMethod,
         TypeError: pyTypeError,
         RuntimeError,
         ValueError,
         NotImplementedError,
-        AttributeErrror,
+        AttributeError,
         OverflowError,
         checkNone,
         checkBool,
@@ -105,7 +104,7 @@ function $builtinmodule() {
         }
         //console.log(bottleSiteTarget);
         objectSetAttr(self, rootStr, bottleSiteTarget);
-        objectGetAttr(self, rootStr).innerHTML += "System failure during setup; reload, and if it persists than please contact Dr. Bart.";
+        objectGetAttr(self, rootStr).innerHTML = "System failure during setup; reload, and if it persists than please contact Dr. Bart.";
 
         self.load_route.tp$call([self, defaultRouteStr, getStr, new pyDict([]), pyStr.$empty, pyStr.$empty]);
     };
@@ -230,7 +229,7 @@ function $builtinmodule() {
 
     var fileClass = function($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, filename, fileHandle) {
-            console.log("NEW FILE:", filename, root);
+            console.log("NEW FILE:", filename, fileHandle);
             this.filename = filename;
 
             const fileObject = Sk.misceval.callsimArray(bottle.ReadableFile, [fileHandle, filename]);
