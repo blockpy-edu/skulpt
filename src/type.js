@@ -27,8 +27,8 @@ Sk.builtin.type = function type(obj) {
 Object.defineProperties(
     Sk.builtin.type.prototype,
     /**@lends {Sk.builtin.type.prototype}*/ {
-    call: { value: Function.prototype.call },
-    apply: { value: Function.prototype.apply },
+        call: { value: Function.prototype.call },
+        apply: { value: Function.prototype.apply },
         tp$slots: {
             value: {
                 tp$doc: "type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type",
@@ -42,7 +42,7 @@ Object.defineProperties(
         },
         tp$methods: { value: null, writable: true }, // define these later
         tp$getsets: { value: null, writable: true },
-    sk$type: { value: true },
+        sk$type: { value: true },
         $isSubType: { value: $isSubType },
         $allocateSlot: { value: $allocateSlot },
         $allocateSlots: { value: $allocateSlots },
@@ -141,7 +141,7 @@ function tp$new(args, kwargs) {
 
     // set some defaults which can be overridden by the dict object
     if (Sk.globals) {
-    klass.prototype.__module__ = Sk.globals["__name__"];
+        klass.prototype.__module__ = Sk.globals["__name__"];
     }
     klass.prototype.__doc__ = Sk.builtin.none.none$;
 
@@ -291,19 +291,19 @@ function tp$setattr(pyName, value, canSuspend) {
                     // allocate a getter slot in it's place
                 }
             }
-    }
+        }
     } else {
-    this.prototype[jsName] = value;
-    if (jsName in Sk.dunderToSkulpt) {
-        this.$allocateSlot(jsName, value);
-    }
+        this.prototype[jsName] = value;
+        if (jsName in Sk.dunderToSkulpt) {
+            this.$allocateSlot(jsName, value);
+        }
     }
 }
 
 function fastLookup(pyName) {
     var jsName = pyName.$mangled;
     return this.prototype[jsName];
-    }
+}
 
 function slowLookup(pyName) {
     var jsName = pyName.$mangled;
@@ -498,9 +498,9 @@ function $allocateSlots() {
     const proto = this.prototype;
     if (this.prototype.sk$prototypical) {
         Object.keys(proto).forEach((dunder) => {
-        if (dunder in Sk.slots) {
+            if (dunder in Sk.slots) {
                 this.$allocateSlot(dunder, proto[dunder]);
-        }
+            }
         });
     } else {
         Object.keys(Sk.slots).forEach((dunder) => {
@@ -510,8 +510,8 @@ function $allocateSlots() {
                 this.$allocateGetterSlot(dunder);
             }
         });
-        }
     }
+}
 
 function $allocateSlot(dunder, dunderFunc) {
     const slot_def = Sk.slots[dunder];
@@ -707,7 +707,7 @@ const subtype_dict_getset_description = {
         const dict_descr = get_dict_descr_of_builtn_base(this.ob$type);
         if (dict_descr !== undefined) {
             return dict_descr.tp$descr_set(this, value);
-    }
+        }
         if (value === undefined) {
             this.$d = new Sk.builtin.dict([]);
         } else {
@@ -727,14 +727,14 @@ function get_dict_descr_of_builtn_base(type) {
             }
         }
         type = type.prototype.tp$base;
-        }
     }
+}
 
 function check_special_type_attr(type, value, pyName) {
     if (type.sk$klass === undefined) {
         throw new Sk.builtin.TypeError("can't set " + type.prototype.tp$name + "." + pyName.$jsstr());
-        }
+    }
     if (value === undefined) {
         throw new Sk.builtin.TypeError("can't delete " + type.prototype.tp$name + "." + pyName.$jsstr());
-        }
     }
+}

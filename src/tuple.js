@@ -83,13 +83,13 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
         mp$subscript(index) {
             if (Sk.misceval.isIndex(index)) {
                 let i = Sk.misceval.asIndexSized(index);
-                    if (i < 0) {
-                        i = this.v.length + i;
-                    }
-                    if (i < 0 || i >= this.v.length) {
-                        throw new Sk.builtin.IndexError("tuple index out of range");
-                    }
-                    return this.v[i];
+                if (i < 0) {
+                    i = this.v.length + i;
+                }
+                if (i < 0 || i >= this.v.length) {
+                    throw new Sk.builtin.IndexError("tuple index out of range");
+                }
+                return this.v[i];
             } else if (index instanceof Sk.builtin.slice) {
                 const ret = [];
                 index.sssiter$(this.v.length, (i) => {

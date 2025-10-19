@@ -31,19 +31,19 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
         tp$new(args, kwargs) {
             if (this === Sk.builtin.zip_.prototype) {
                 Sk.abstr.checkNoKwargs("zip", kwargs);
-    }
+            }
             const iters = [];
             for (let i = 0; i < args.length; i++) {
-        try {
+                try {
                     iters.push(Sk.abstr.iter(args[i]));
-        } catch (e) {
-            if (e instanceof Sk.builtin.TypeError) {
-                throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");
-            } else {
-                throw e;
+                } catch (e) {
+                    if (e instanceof Sk.builtin.TypeError) {
+                        throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");
+                    } else {
+                        throw e;
+                    }
+                }
             }
-        }
-    }
             if (this === Sk.builtin.zip_.prototype) {
                 return new Sk.builtin.zip_(iters);
             } else {

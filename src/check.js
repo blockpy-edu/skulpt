@@ -120,12 +120,12 @@ Sk.exportSymbol("Sk.builtin.checkSequence", Sk.builtin.checkSequence);
  */
 Sk.builtin.checkIterable = function (arg) {
     if (arg === undefined) {
-                return false;
-            }
+        return false;
+    }
     if (arg.tp$iter) {
         const iter = arg.tp$iter();
         return iter.tp$iternext !== undefined;
-        }
+    }
     return arg.mp$subscript !== undefined;
 };
 Sk.exportSymbol("Sk.builtin.checkIterable", Sk.builtin.checkIterable);

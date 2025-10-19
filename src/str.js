@@ -18,35 +18,35 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
     constructor: function str(x) {
     // new Sk.builtin.str is an internal function called with a JS value x
     // occasionally called with a python object and returns tp$str() or $r();
-    Sk.asserts.assert(this instanceof Sk.builtin.str, "bad call to str - use 'new'");
-    let ret;
-    if (typeof x === "string") {
-        ret = x;
-    } else if (x === undefined) {
-        ret = "";
-    } else if (x === null) {
-        ret = "None";
-    } else if (x.tp$str !== undefined) {
+        Sk.asserts.assert(this instanceof Sk.builtin.str, "bad call to str - use 'new'");
+        let ret;
+        if (typeof x === "string") {
+            ret = x;
+        } else if (x === undefined) {
+            ret = "";
+        } else if (x === null) {
+            ret = "None";
+        } else if (x.tp$str !== undefined) {
         // then we're a python object - all objects inherit from object which has tp$str
-        return x.tp$str();
-    } else if (typeof x === "number") {
+            return x.tp$str();
+        } else if (typeof x === "number") {
             ret = Number.isFinite(x) ? String(x) : String(x).replace("Infinity", "inf").replace("NaN", "nan");
-    } else {
-        throw new Sk.builtin.TypeError("could not convert object of type '" + Sk.abstr.typeName(x) + "' to str");
-    }
+        } else {
+            throw new Sk.builtin.TypeError("could not convert object of type '" + Sk.abstr.typeName(x) + "' to str");
+        }
 
-    const interned = getInterned(ret);
-    // interning required for strings in py
-    if (interned !== undefined) {
-        return interned;
-    } else {
-        setInterned(ret, this);
-    }
+        const interned = getInterned(ret);
+        // interning required for strings in py
+        if (interned !== undefined) {
+            return interned;
+        } else {
+            setInterned(ret, this);
+        }
 
-    this.$mangled = fixReserved(ret);
+        this.$mangled = fixReserved(ret);
         // used by dict key hash function $savedKeyHash
         this.$savedKeyHash = ret.replace(keyhash_regex, "!$&");
-    this.v = ret;
+        this.v = ret;
     },
     slots: /**@lends {Sk.builtin.str.prototype} */ {
         tp$getattr: Sk.generic.getAttr,
@@ -55,48 +55,48 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             "str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",
         tp$new(args, kwargs) {
             kwargs = kwargs || [];
-    if (this !== Sk.builtin.str.prototype) {
-        return this.$subtype_new(args, kwargs);
-    }
+            if (this !== Sk.builtin.str.prototype) {
+                return this.$subtype_new(args, kwargs);
+            }
             if (args.length <= 1 && !kwargs.length) {
                 return new Sk.builtin.str(args[0]);
             } else if (!Sk.__future__.python3) {
                 throw new Sk.builtin.TypeError("str takes at most one argument (" + (args.length + kwargs.length) + " given)");
-    } else {
+            } else {
                 const [x, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs("str", ["object", "encoding", "errors"], args, kwargs);
                 if (x === undefined || (encoding === undefined && errors === undefined)) {
                     return new Sk.builtin.str(x);
-    }
+                }
                 // check the types of encoding and errors
                 Sk.builtin.bytes.check$encodeArgs("str", encoding, errors);
                 if (!Sk.builtin.checkBytes(x)) {
                     throw new Sk.builtin.TypeError("decoding to str: need a bytes-like object, " + Sk.abstr.typeName(x) + " found");
-    }
+                }
                 return Sk.builtin.bytes.$decode.call(x, encoding, errors);
-    }
+            }
         },
         $r() {
-    // single is preferred
+            // single is preferred
             let quote = "'";
-    if (this.v.indexOf("'") !== -1 && this.v.indexOf('"') === -1) {
-        quote = '"';
-    }
-    //jshint ignore:end
+            if (this.v.indexOf("'") !== -1 && this.v.indexOf('"') === -1) {
+                quote = '"';
+            }
+            //jshint ignore:end
             const len = this.v.length;
             let c,
                 cc,
-    ret = quote;
+                ret = quote;
             for (let i = 0; i < len; i++) {
-        c = this.v.charAt(i);
+                c = this.v.charAt(i);
                 cc = this.v.charCodeAt(i);
-        if (c === quote || c === "\\") {
-            ret += "\\" + c;
-        } else if (c === "\t") {
-            ret += "\\t";
-        } else if (c === "\n") {
-            ret += "\\n";
-        } else if (c === "\r") {
-            ret += "\\r";
+                if (c === quote || c === "\\") {
+                    ret += "\\" + c;
+                } else if (c === "\t") {
+                    ret += "\\t";
+                } else if (c === "\n") {
+                    ret += "\\n";
+                } else if (c === "\r") {
+                    ret += "\\r";
                 } else if (((cc > 0xff && cc < 0xd800) || cc >= 0xe000) && !Sk.__future__.python3) {
                     // BMP
                     ret += "\\u" + ("000" + cc.toString(16)).slice(-4);
@@ -117,23 +117,23 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     ret += "\\ufffd";
                 } else if (c < " " || (cc >= 0x7f && !Sk.__future__.python3)) {
                     let ashex = c.charCodeAt(0).toString(16);
-            if (ashex.length < 2) {
-                ashex = "0" + ashex;
+                    if (ashex.length < 2) {
+                        ashex = "0" + ashex;
+                    }
+                    ret += "\\x" + ashex;
+                } else {
+                    ret += c;
+                }
             }
-            ret += "\\x" + ashex;
-        } else {
-            ret += c;
-        }
-    }
-    ret += quote;
-    return new Sk.builtin.str(ret);
+            ret += quote;
+            return new Sk.builtin.str(ret);
         },
         tp$str() {
-    if (this.constructor === Sk.builtin.str) {
-        return this;
-    } else {
-        return new Sk.builtin.str(this.v);
-    }
+            if (this.constructor === Sk.builtin.str) {
+                return this;
+            } else {
+                return new Sk.builtin.str(this.v);
+            }
         },
         tp$iter() {
             return new str_iter_(this);
@@ -141,7 +141,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         tp$richcompare(other, op) {
             if (!(other instanceof Sk.builtin.str)) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
-    }
+            }
             switch (op) {
                 case "Lt":
                     return this.v < other.v;
@@ -155,7 +155,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     return this.v > other.v;
                 case "GtE":
                     return this.v >= other.v;
-    }
+            }
         },
         mp$subscript(index) {
             let len;
@@ -164,15 +164,15 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 len = this.sq$length();
                 if (index < 0) {
                     index = index + len;
-        }
+                }
                 if (index < 0 || index >= len) {
                     throw new Sk.builtin.IndexError("string index out of range");
-    }
+                }
                 if (this.codepoints) {
                     return new Sk.builtin.str(this.v.substring(this.codepoints[index], this.codepoints[index + 1]));
                 } else {
                     return new Sk.builtin.str(this.v.charAt(index));
-    }
+                }
             } else if (index instanceof Sk.builtin.slice) {
                 let ret = "";
                 len = this.sq$length();
@@ -184,9 +184,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     index.sssiter$(len, (i) => {
                         ret += this.v.charAt(i);
                     });
-    }
+                }
                 return new Sk.builtin.str(ret);
-    }
+            }
             throw new Sk.builtin.TypeError("string indices must be integers, not " + Sk.abstr.typeName(index));
         },
         sq$length() {
@@ -195,27 +195,27 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         sq$concat(other) {
             if (!(other instanceof Sk.builtin.str)) {
                 throw new Sk.builtin.TypeError("cannot concatenate 'str' and '" + Sk.abstr.typeName(other) + "' objects");
-    }
+            }
             return new Sk.builtin.str(this.v + other.v);
         },
         sq$repeat(n) {
             if (!Sk.misceval.isIndex(n)) {
                 throw new Sk.builtin.TypeError("can't multiply sequence by non-int of type '" + Sk.abstr.typeName(n) + "'");
-    }
+            }
             n = Sk.misceval.asIndexSized(n, Sk.builtin.OverflowError);
             if (n * this.v.length > Number.MAX_SAFE_INTEGER) {
                 throw new Sk.builtin.OverflowError();
-        }
+            }
             let ret = "";
             for (let i = 0; i < n; i++) {
                 ret += this.v;
-        }
+            }
             return new Sk.builtin.str(ret);
         },
         sq$contains(ob) {
             if (!(ob instanceof Sk.builtin.str)) {
                 throw new Sk.builtin.TypeError("'in <string>' requires string as left operand not " + Sk.abstr.typeName(ob));
-    }
+            }
             return this.v.indexOf(ob.v) !== -1;
         },
         tp$as_number: true,
@@ -244,7 +244,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 return false;
             } else if (this.codepoints !== undefined) {
                 return true;
-    }
+            }
             // Does this string contain astral code points? If so, we have to do things the slow way.
             for (let i = 0; i < this.v.length; i++) {
                 let cc = this.v.charCodeAt(i);
@@ -257,11 +257,11 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                         cc = this.v.charCodeAt(j);
                         if (cc >= 0xd800 && cc < 0xdc00) {
                             j++; // High surrogate. Skip next char
-        }
-    }
+                        }
+                    }
                     return true;
-    }
-    }
+                }
+            }
             this.codepoints = null;
             return false;
         },
@@ -271,12 +271,12 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const codepoints = this.codepoints;
                 for (let i = 0; i < codepoints.length; i++) {
                     ret.push(new Sk.builtin.str(this.v.substring(codepoints[i], codepoints[i + 1])));
-    }
-    } else {
+                }
+            } else {
                 for (let i = 0; i < this.v.length; i++) {
                     ret.push(new Sk.builtin.str(this.v[i]));
-    }
-    }
+                }
+            }
             return ret;
         },
         find$left: mkFind(false),
@@ -284,7 +284,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         get$tgt(tgt) {
             if (tgt instanceof Sk.builtin.str) {
                 return tgt.v;
-    }
+            }
             throw new Sk.builtin.TypeError("a str instance is required not '" + Sk.abstr.typeName(tgt) + "'");
         },
         $isIdentifier() {
@@ -311,7 +311,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const patt = new RegExp(re_escape_(oldS), "g");
                 if (count < 0) {
                     return new Sk.builtin.str(this.v.replace(patt, newS));
-    }
+                }
                 let c = 0;
                 const ret = this.v.replace(patt, (match) => (c++ < count ? newS : match));
                 return new Sk.builtin.str(ret);
@@ -328,7 +328,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const ret = [];
                 for (let i = 0; i < codepoints.length; i++) {
                     ret.push(new Sk.builtin.str(this.v.substring(codepoints[i], codepoints[++i])));
-    }
+                }
                 return new Sk.builtin.list(ret);
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
@@ -347,10 +347,10 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     from = 0;
                 } else {
                     ret.push(new Sk.builtin.str(this.v.slice(0, codepoints[from - 1])));
-    }
+                }
                 for (let i = from; i < codepoints.length; i++) {
                     ret.push(new Sk.builtin.str(this.v.substring(codepoints[i], codepoints[++i])));
-    }
+                }
                 return new Sk.builtin.list(ret);
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
@@ -367,7 +367,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                             throw new Sk.builtin.TypeError(
                                 "sequence item " + arrOfStrs.length + ": expected str, " + Sk.abstr.typeName(i) + " found"
                             );
-    }
+                        }
                         arrOfStrs.push(i.v);
                     }),
                     () => new Sk.builtin.str(arrOfStrs.join(this.v))
@@ -415,16 +415,16 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 ({ start, end } = indices(this, start, end));
                 if (end < start) {
                     return new Sk.builtin.int_(0);
-    }
+                }
                 const normaltext = pat.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
                 const m = new RegExp(normaltext, "g");
                 const slice = this.v.slice(start, end);
                 const ctl = slice.match(m);
-    if (!ctl) {
-        return new Sk.builtin.int_(0);
-    } else {
-        return new Sk.builtin.int_(ctl.length);
-    }
+                if (!ctl) {
+                    return new Sk.builtin.int_(0);
+                } else {
+                    return new Sk.builtin.int_(ctl.length);
+                }
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
@@ -435,9 +435,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             $meth: function expandtabs(tabsize) {
                 if (Sk.builtin.checkInt(tabsize)) {
                     tabsize = Sk.builtin.asnum$(tabsize);
-    } else {
+                } else {
                     throw new Sk.builtin.TypeError("an integer is required, got type" + Sk.abstr.typeName(tabsize));
-    }
+                }
                 const spaces = new Array(tabsize + 1).join(" ");
                 const expanded = this.v.replace(/([^\r\n\t]*)\t/g, (a, b) => b + spaces.slice(b.length % tabsize));
                 return new Sk.builtin.str(expanded);
@@ -468,9 +468,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const val = this.find$left(tgt, start, end);
                 if (val === -1) {
                     throw new Sk.builtin.ValueError("substring not found");
-    } else {
+                } else {
                     return new Sk.builtin.int_(val);
-    }
+                }
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
@@ -512,9 +512,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const val = this.find$right(tgt, start, end);
                 if (val === -1) {
                     throw new Sk.builtin.ValueError("substring not found");
-    } else {
+                } else {
                     return new Sk.builtin.int_(val);
-    }
+                }
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
@@ -558,7 +558,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                         slice = data.slice(sol, eol);
                         if (!keepends) {
                             slice = slice.replace(/(\r|\n)/g, "");
-    }
+                        }
                         final.push(new Sk.builtin.str(slice));
                         sol = eol;
                     } else if ((ch === "\n" && data.charAt(i - 1) !== "\r") || ch === "\r") {
@@ -566,19 +566,19 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                         slice = data.slice(sol, eol);
                         if (!keepends) {
                             slice = slice.replace(/(\r|\n)/g, "");
-    }
+                        }
                         final.push(new Sk.builtin.str(slice));
                         sol = eol;
-    }
-        }
+                    }
+                }
                 if (sol < len) {
                     eol = len;
                     slice = data.slice(sol, eol);
                     if (!keepends) {
                         slice = slice.replace(/(\r|\n)/g, "");
-    }
+                    }
                     final.push(new Sk.builtin.str(slice));
-    }
+                }
                 return new Sk.builtin.list(final);
             },
             $flags: { NamedArgs: ["keepends"], Defaults: [false] },
@@ -674,18 +674,18 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     if (!/[a-z]/.test(ch) && /[A-Z]/.test(ch)) {
                         if (previous_is_cased) {
                             return Sk.builtin.bool.false$;
-    }
+                        }
                         previous_is_cased = true;
                         cased = true;
                     } else if (/[a-z]/.test(ch) && !/[A-Z]/.test(ch)) {
                         if (!previous_is_cased) {
                             return Sk.builtin.bool.false$;
-    }
+                        }
                         cased = true;
-    } else {
+                    } else {
                         previous_is_cased = false;
-    }
-    }
+                    }
+                }
                 return new Sk.builtin.bool(cased);
             },
             $flags: { NoArgs: true },
@@ -771,7 +771,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 const offset = this.v[0] === "+" || this.v[0] === "-" ? 1 : 0;
                 for (let i = 0; i < zeroes; i++) {
                     pad += "0";
-    }
+                }
                 // combine the string and the zeroes
                 return new Sk.builtin.str(this.v.substr(0, offset) + pad + this.v.substr(offset));
             },
@@ -826,16 +826,16 @@ function re_escape_(s) {
         c = s.charAt(i);
         if (re.test(c)) {
             ret.push(c);
-    } else {
+        } else {
             if (c === "\\000") {
                 ret.push("\\000");
-    } else {
+            } else {
                 ret.push("\\" + c);
-    }
-    }
+            }
+        }
     }
     return ret.join("");
-    }
+}
 
 // methods
 var special_chars = /([.*+?=|\\\/()\[\]\{\}^$])/g;
@@ -845,7 +845,7 @@ function splitPoints(self, sep, maxsplit) {
     sep = Sk.builtin.checkNone(sep) ? null : self.get$tgt(sep);
     if (sep !== null && !sep.length) {
         throw new Sk.builtin.ValueError("empty separator");
-        }
+    }
     let jsstr = self.v;
     let offset = 0;
     let regex;
@@ -859,7 +859,7 @@ function splitPoints(self, sep, maxsplit) {
         // Escape special characters in null so we can use a regexp
         const s = sep.replace(special_chars, "\\$1");
         regex = new RegExp(s, "g");
-            }
+    }
     // This is almost identical to re.split,
     // except how the regexp is constructed
     const pairs = [];
@@ -870,19 +870,19 @@ function splitPoints(self, sep, maxsplit) {
     while ((match = regex.exec(jsstr)) != null && splits < maxsplit) {
         if (match.index === regex.lastIndex) {
             // empty match
-                break;
-            }
+            break;
+        }
         pairs.push(index + offset);
         pairs.push(match.index + offset);
         index = regex.lastIndex;
         splits += 1;
-        }
+    }
     if (sep !== null || jsstr.length - index) {
         pairs.push(index + offset);
         pairs.push(jsstr.length + offset);
     }
     return pairs;
-    }
+}
 
 function mkStrip(pat, regf) {
     return function strip(chars) {
@@ -894,10 +894,10 @@ function mkStrip(pat, regf) {
             pattern = new RegExp(regf(regex), "g");
         } else {
             throw new Sk.builtin.TypeError("strip arg must be None or str");
-    }
+        }
         return new Sk.builtin.str(this.v.replace(pattern, ""));
-};
-    }
+    };
+}
 
 function mkPartition(isReversed) {
     return function partition(sep) {
@@ -908,13 +908,13 @@ function mkPartition(isReversed) {
             pos = jsstr.lastIndexOf(sepStr);
             if (pos < 0) {
                 return new Sk.builtin.tuple([new Sk.builtin.str(""), new Sk.builtin.str(""), new Sk.builtin.str(jsstr)]);
-    }
-    } else {
+            }
+        } else {
             pos = jsstr.indexOf(sepStr);
             if (pos < 0) {
                 return new Sk.builtin.tuple([new Sk.builtin.str(jsstr), new Sk.builtin.str(""), new Sk.builtin.str("")]);
             }
-    }
+        }
 
         return new Sk.builtin.tuple([
             new Sk.builtin.str(jsstr.substring(0, pos)),
@@ -922,7 +922,7 @@ function mkPartition(isReversed) {
             new Sk.builtin.str(jsstr.substring(pos + sepStr.length)),
         ]);
     };
-    }
+}
 
 function mkJust(isRight, isCenter) {
     return function strJustify(len, fillchar) {
@@ -933,7 +933,7 @@ function mkJust(isRight, isCenter) {
             throw new Sk.builtin.TypeError("the fill character must be a str of length 1");
         } else {
             fillchar = fillchar.v;
-    }
+        }
 
         const mylen = this.sq$length();
         let newstr;
@@ -945,15 +945,15 @@ function mkJust(isRight, isCenter) {
 
             if ((len - mylen) % 2) {
                 newstr += fillchar;
-    }
+            }
 
             return new Sk.builtin.str(newstr);
         } else {
             newstr = fillchar.repeat(len - mylen);
             return new Sk.builtin.str(isRight ? newstr + this.v : this.v + newstr);
-    }
-};
-    }
+        }
+    };
+}
 
 function indices(self, start, end) {
     ({ start, end } = Sk.builtin.slice.startEnd$wrt(self, start, end));
@@ -967,7 +967,7 @@ function indices(self, start, end) {
         start: start,
         end: end,
     };
-    }
+}
 
 function mkFind(isReversed) {
     return function (tgt, start, end) {
@@ -976,7 +976,7 @@ function mkFind(isReversed) {
         ({ start, end } = indices(this, start, end));
         if (end < start) {
             return -1;
-    }
+        }
         // ...do the search..
         end -= tgt.length;
         let jsidx = isReversed ? this.v.lastIndexOf(tgt, end) : this.v.indexOf(tgt, start);
@@ -990,21 +990,21 @@ function mkFind(isReversed) {
             for (let i = 0; i < len; i++) {
                 if (jsidx == this.codepoints[i]) {
                     idx = i;
-    }
-    }
-    } else {
+                }
+            }
+        } else {
             // No astral codepoints, no conversion required
             idx = jsidx;
-    }
+        }
         return idx;
-};
-    }
+    };
+}
 
 function mkStartsEndswith(funcname, is_match) {
     return function (tgt, start, end) {
         if (!(tgt instanceof Sk.builtin.str) && !(tgt instanceof Sk.builtin.tuple)) {
             throw new Sk.builtin.TypeError(funcname + " first arg must be str or a tuple of str, not " + Sk.abstr.typeName(tgt));
-    }
+        }
 
         ({ start, end } = indices(this, start, end));
 
@@ -1018,15 +1018,15 @@ function mkStartsEndswith(funcname, is_match) {
             for (let it = Sk.abstr.iter(tgt), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
                 if (!(i instanceof Sk.builtin.str)) {
                     throw new Sk.builtin.TypeError("tuple for " + funcname + " must only contain str, not " + Sk.abstr.typeName(i));
-            }
+                }
                 if (is_match(substr, i.v)) {
                     return Sk.builtin.bool.true$;
+                }
             }
-        }
             return Sk.builtin.bool.false$;
-    }
+        }
         return new Sk.builtin.bool(is_match(substr, tgt.v));
-};
+    };
 }
 
 Sk.builtin.str.$py2decode = new Sk.builtin.method_descriptor(Sk.builtin.str, {
