@@ -72,7 +72,7 @@ var $builtinmodule = function (name) {
     }
 
     function isLeapYear(year) {
-        if((year & 3) != 0) return false;
+        if((year & 3) != 0) {return false;}
         return ((year % 100) != 0 || (year % 400) == 0);
     }
 
@@ -82,7 +82,7 @@ var $builtinmodule = function (name) {
         var mn = utc ? date.getUTCMonth() : date.getMonth();
         var dn = utc ? date.getUTCDate() : date.getDate();
         var dayOfYear = dayCount[mn] + dn;
-        if(mn > 1 && isLeapYear(utc ? date.getUTCFullYear() : date.getFullYear())) dayOfYear++;
+        if(mn > 1 && isLeapYear(utc ? date.getUTCFullYear() : date.getFullYear())) {dayOfYear++;}
         return dayOfYear;
     }
 
@@ -149,7 +149,7 @@ var $builtinmodule = function (name) {
         utc = utc || false;
         let tm_info;
         if (utc) {
-            tm_info = [new Sk.builtin.str("UTC"),new Sk.builtin.int_(0) ]
+            tm_info = [new Sk.builtin.str("UTC"),new Sk.builtin.int_(0) ];
         } else {
             var offset = -(stdTimezoneOffset())/60;
             var pad = offset < 0 ? "-" : "+";
@@ -201,14 +201,12 @@ var $builtinmodule = function (name) {
     function asctime_f(time) {
         Sk.builtin.pyCheckArgsLen("asctime", arguments.length, 0, 1);
 
-        if (!time || Sk.builtin.checkNone(time))
-        {
+        if (!time || Sk.builtin.checkNone(time)) {
             time = from_seconds();
         } else if (!(time instanceof struct_time_f)) {
             time = new struct_time_f(time);
         }
-        if (time instanceof Sk.builtin.tuple && time.v.length == 9)
-        {
+        if (time instanceof Sk.builtin.tuple && time.v.length == 9) {
             // todo: test validity??
             var parts = [];
             parts.push(daynames[Sk.builtin.asnum$(time.v[6])]);
@@ -235,14 +233,13 @@ var $builtinmodule = function (name) {
     function mktime_f(time) {
         Sk.builtin.pyCheckArgsLen("mktime", arguments.length, 1, 1);
 
-        if (time instanceof Sk.builtin.tuple && time.v.length == 9)
-        {
+        if (time instanceof Sk.builtin.tuple && time.v.length == 9) {
             var d = new Date(Sk.builtin.asnum$(time.v[0]),
-                Sk.builtin.asnum$(time.v[1]) - 1,
-                Sk.builtin.asnum$(time.v[2]),
-                Sk.builtin.asnum$(time.v[3]),
-                Sk.builtin.asnum$(time.v[4]),
-                Sk.builtin.asnum$(time.v[5]));
+                             Sk.builtin.asnum$(time.v[1]) - 1,
+                             Sk.builtin.asnum$(time.v[2]),
+                             Sk.builtin.asnum$(time.v[3]),
+                             Sk.builtin.asnum$(time.v[4]),
+                             Sk.builtin.asnum$(time.v[5]));
             return Sk.builtin.assk$(d.getTime() / 1000, undefined);
         } else {
             throw new Sk.builtin.TypeError("mktime() requires a struct_time or 9-tuple");
@@ -283,8 +280,7 @@ var $builtinmodule = function (name) {
 
     mod.clock = new Sk.builtin.func(function () {
         var res = 0.0;
-        if (Sk.global.performance && Sk.global.performance.now)
-        {
+        if (Sk.global.performance && Sk.global.performance.now) {
             res = performance.now() / 1000;
         } else {
             res = new Date().getTime() / 1000;
@@ -299,8 +295,7 @@ var $builtinmodule = function (name) {
         if (!Sk.builtin.checkString(format)) {
             throw new Sk.builtin.TypeError("format must be a string");
         }
-        if (!t)
-        {
+        if (!t) {
             t = from_seconds();
         } else if (!(t instanceof struct_time_f)) {
             t = new struct_time_f(t);
@@ -315,8 +310,7 @@ var $builtinmodule = function (name) {
 
     mod.strftime = new Sk.builtin.func(strftime_f);
 
-    function tzset_f()
-    {
+    function tzset_f() {
         throw new Sk.builtin.NotImplementedError("time.tzset() is not yet implemented");
         Sk.builtin.pyCheckArgsLen("tzset", arguments.length, 0, 0);
     }

@@ -6,6 +6,8 @@
     "skulpt"
   ],
   "scripts": {
+    "lint": "eslint src/**/*.js test/**/*.js",
+    "lint:fix": "eslint --fix src/**/*.js test/**/*.js",
     "help": "node support/build/help.js",
     "regenparser": "node support/build/regenparser.js",
     "brun": "node support/run/brun.js -p",

@@ -65,10 +65,10 @@ Sk.builtin.mappingproxy = Sk.abstr.buildNativeClass("mappingproxy", {
         },
         mp$subscript(key, canSuspend) {
             return this.mapping.mp$subscript(key, canSuspend);
-    },
+        },
         sq$contains(key) {
             return this.mapping.sq$contains(key);
-    },
+        },
         sq$length() {
             return this.mapping.sq$length();
         },

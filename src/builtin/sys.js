@@ -105,12 +105,12 @@ var $builtinmodule = function (name) {
         Number.EPSILON,
         2,
         1,
-    ].map(x => Sk.ffi.remapToPy(x)))
+    ].map(x => Sk.ffi.remapToPy(x)));
 
     const int_info_fields = {
         bits_per_digit: "size of a digit in bits",
         sizeof_digit: "size in bytes of the C type used to represent a digit"
-    }
+    };
     const int_info_type = Sk.builtin.make_structseq('sys', 'int_info', int_info_fields);
     sys.int_info = new int_info_type([30, 4].map((x) => Sk.ffi.remapToPy(x)));
 

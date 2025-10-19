@@ -51,4 +51,4 @@ var $builtinmodule = function (name) {
     });
 
     return web;
-}
+};

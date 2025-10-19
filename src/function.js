@@ -160,7 +160,7 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
         __module__: {
             $get() {
                 return this.$module;
-        },
+            },
             $set(v) {
                 this.$module = v || Sk.builtin.none.none$;
             }

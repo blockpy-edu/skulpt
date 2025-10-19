@@ -62,9 +62,9 @@ module.exports = (env, argv) => {
             rules: [
                 {
                     test: /\.js$/,
-                     enforce: 'pre',
+                    enforce: 'pre',
                     exclude: styleexcludes,
-                     loader: 'eslint-loader'
+                    loader: 'eslint-loader'
                 }
             ]
         };
@@ -98,7 +98,7 @@ module.exports = (env, argv) => {
         resolve: {
             alias: {
                 'assert': assertfile
-        }
+            }
         },
 
         module: mod,

@@ -13,10 +13,10 @@
         }],
         "curly": ["error", "all"],
         "semi": ["error", "always"],
-        "brace-style": ["error", "1tbs", {"allowSingleLine": true}],
-        "quotes": ["error", "double", {"avoidEscape": true}]
+        "brace-style": ["error", "1tbs", {"allowSingleLine": true}]
     },
     "parserOptions": {
-        "ecmaVersion": 2019
+        "ecmaVersion": 2019,
+        "sourceType": "module"
     }
 }

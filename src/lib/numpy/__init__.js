@@ -279,7 +279,7 @@ var $builtinmodule = function (name) {
         $loc.tolist = new Sk.builtin.func(function (self) {
             var ndarrayJs = Sk.ffi.remapToJs(self);
             var list = tolist(ndarrayJs.buffer, ndarrayJs.shape, ndarrayJs.strides,
-                ndarrayJs.dtype);
+                              ndarrayJs.dtype);
 
             return list;
         });
@@ -288,7 +288,7 @@ var $builtinmodule = function (name) {
             Sk.builtin.pyCheckArgs("reshape", arguments, 2, 3);
             var ndarrayJs = Sk.ffi.remapToJs(self);
             return Sk.misceval.callsim(mod[CLASS_NDARRAY], shape, ndarrayJs.dtype,
-                new Sk.builtin.list(ndarrayJs.buffer));
+                                       new Sk.builtin.list(ndarrayJs.buffer));
         });
 
         $loc.copy = new Sk.builtin.func(function (self, order) {
@@ -301,7 +301,7 @@ var $builtinmodule = function (name) {
                 return new Sk.builtin.int_(x);
             }));
             return Sk.misceval.callsim(mod[CLASS_NDARRAY], shape, ndarrayJs.dtype,
-                new Sk.builtin.list(buffer));
+                                       new Sk.builtin.list(buffer));
         });
 
         /**
@@ -319,7 +319,7 @@ var $builtinmodule = function (name) {
             for (i = 0; i < ndarrayJs.buffer.length; i++) {
                 if (ndarrayJs.dtype) {
                     ndarrayJs.buffer[i] = Sk.misceval.callsim(ndarrayJs.dtype,
-                        value);
+                                                              value);
                 }
             }
         });
@@ -356,8 +356,8 @@ var $builtinmodule = function (name) {
                             return new Sk.builtin.int_(x);
                         }));
                     return Sk.misceval.callsim(mod[CLASS_NDARRAY], _shape,
-                        undefined,
-                        _buffer);
+                                               undefined,
+                                               _buffer);
                 } else {
                     if (offset >= 0 && offset < ndarrayJs.buffer.length) {
                         return ndarrayJs.buffer[offset];
@@ -393,7 +393,7 @@ var $builtinmodule = function (name) {
                         return new Sk.builtin.int_(x);
                     }));
                 return Sk.misceval.callsim(mod[CLASS_NDARRAY], _shape, undefined,
-                    _buffer);
+                                           _buffer);
             } else {
                 throw new Sk.builtin.ValueError("Index \"" + index +
                     "\" must be int, slice or tuple");
@@ -457,13 +457,13 @@ var $builtinmodule = function (name) {
         $loc.__str__ = new Sk.builtin.func(function (self) {
             var ndarrayJs = remapToJs_shallow(self, false);
             return new Sk.builtin.str(stringify(ndarrayJs.buffer,
-                ndarrayJs.shape, ndarrayJs.dtype));
+                                                ndarrayJs.shape, ndarrayJs.dtype));
         });
 
         $loc.__repr__ = new Sk.builtin.func(function (self) {
             var ndarrayJs = Sk.ffi.remapToJs(self);
             return new Sk.builtin.str("array(" + stringify(ndarrayJs.buffer,
-                ndarrayJs.shape, ndarrayJs.dtype) + ")");
+                                                           ndarrayJs.shape, ndarrayJs.dtype) + ")");
         });
 
         /**
@@ -504,7 +504,7 @@ var $builtinmodule = function (name) {
                 }));
                 buffer = new Sk.builtin.list(_buffer);
                 return Sk.misceval.callsim(mod[CLASS_NDARRAY], shape, undefined,
-                    buffer);
+                                           buffer);
             };
         }
 
@@ -588,7 +588,7 @@ var $builtinmodule = function (name) {
     };
 
     mod[CLASS_NDARRAY] = Sk.misceval.buildClass(mod, ndarray_f,
-        CLASS_NDARRAY, []);
+                                                CLASS_NDARRAY, []);
 
     /**
      Trigonometric functions, all element wise
@@ -791,7 +791,7 @@ var $builtinmodule = function (name) {
         var buffer = Sk.builtin.list(samples);
         var shape = new Sk.builtin.tuple([samples.length]);
         var ndarray = Sk.misceval.callsim(mod[CLASS_NDARRAY], shape, dtype,
-            buffer);
+                                          buffer);
 
         if (retstep_bool === true) {
             return new Sk.builtin.tuple([ndarray, step]);
@@ -802,7 +802,7 @@ var $builtinmodule = function (name) {
 
     // this should allow for named parameters
     linspace_f.co_varnames = ["start", "stop", "num", "endpoint",
-        "retstep"
+                              "retstep"
     ];
     linspace_f.$defaults = [0, 0, 50, true, false];
     mod.linspace =
@@ -854,7 +854,7 @@ var $builtinmodule = function (name) {
         buffer = Sk.builtin.list(arange_buffer);
         var shape = new Sk.builtin.tuple([arange_buffer.length]);
         return Sk.misceval.callsim(mod[CLASS_NDARRAY], shape, dtype,
-            buffer);
+                                   buffer);
     };
 
     arange_f.co_varnames = ["start", "stop", "step", "dtype"];
@@ -952,11 +952,11 @@ var $builtinmodule = function (name) {
         var _buffer = new Sk.builtin.list(elements);
         // create new ndarray instance
         return Sk.misceval.callsim(mod[CLASS_NDARRAY], _shape, dtype,
-            _buffer);
+                                   _buffer);
     };
 
     array_f.co_varnames = ["object", "dtype", "copy", "order",
-        "subok", "ndmin"
+                           "subok", "ndmin"
     ];
     array_f.$defaults = [null, Sk.builtin.none.none$, true, new Sk.builtin.str(
         "C"), false, new Sk.builtin.int_(0)];
@@ -1118,7 +1118,7 @@ var $builtinmodule = function (name) {
     };
     dot_f.co_varnames = ["a", "b"];
     dot_f.$defaults = [Sk.builtin.none.none$,
-        Sk.builtin.none.none$
+                       Sk.builtin.none.none$
     ];
     mod.dot = new Sk.builtin.func(dot_f);
 

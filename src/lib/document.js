@@ -19,12 +19,12 @@ var $builtinmodule = function (name) {
 
 
     mod.getElementsByTagName = new Sk.builtin.func(function (tag) {
-        var r = document.getElementsByTagName(tag.v)
+        var r = document.getElementsByTagName(tag.v);
         var reslist = [];
         for (var i = r.length - 1; i >= 0; i--) {
-            reslist.push(Sk.misceval.callsimArray(mod.Element, [r[i]]))
+            reslist.push(Sk.misceval.callsimArray(mod.Element, [r[i]]));
         }
-        return new Sk.builtin.list(reslist)
+        return new Sk.builtin.list(reslist);
     });
 
     mod.getElementsByClassName = new Sk.builtin.func(function (cname) {
@@ -49,12 +49,11 @@ var $builtinmodule = function (name) {
 
     mod.currentDiv = new Sk.builtin.func(function () {
         if (Sk.divid !== undefined) {
-            return new Sk.builtin.str(Sk.divid)
-        }
-        else {
+            return new Sk.builtin.str(Sk.divid);
+        } else {
             throw new Sk.builtin.AttributeError("There is no value set for divid");
         }
-    })
+    });
 
     elementClass = function ($gbl, $loc) {
         /*
@@ -68,37 +67,37 @@ var $builtinmodule = function (name) {
          a method...
          */
         $loc.__init__ = new Sk.builtin.func(function (self, elem) {
-            self.v = elem
-            self.innerHTML = elem.innerHTML
-            self.innerText = elem.innerText
+            self.v = elem;
+            self.innerHTML = elem.innerHTML;
+            self.innerText = elem.innerText;
             if (elem.value !== undefined) {
-                self.value = elem.value
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('value'), new Sk.builtin.str(self.value))
+                self.value = elem.value;
+                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('value'), new Sk.builtin.str(self.value));
             }
 
             if (elem.checked !== undefined) {
-                self.checked = elem.checked
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('checked'), new Sk.builtin.str(self.checked))
+                self.checked = elem.checked;
+                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('checked'), new Sk.builtin.str(self.checked));
             }
 
-            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), new Sk.builtin.str(self.innerHTML))
-            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), new Sk.builtin.str(self.innerText))
+            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), new Sk.builtin.str(self.innerHTML));
+            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), new Sk.builtin.str(self.innerText));
 
-        })
+        });
 
         $loc.tp$getattr = Sk.generic.getAttr;
 
         $loc.__setattr__ = new Sk.builtin.func(function (self, key, value) {
             key = Sk.ffi.remapToJs(key);
             if (key === 'innerHTML') {
-                self.innerHTML = value
-                self.v.innerHTML = value.v
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), value)
+                self.innerHTML = value;
+                self.v.innerHTML = value.v;
+                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), value);
             }
             if (key === 'innerText') {
-                self.innerText = value
-                self.v.innerText = value.v
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), value)
+                self.innerText = value;
+                self.v.innerText = value.v;
+                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), value);
             }
         });
 
@@ -108,8 +107,8 @@ var $builtinmodule = function (name) {
         });
 
         $loc.removeChild = new Sk.builtin.func(function (self, node) {
-            self.v.removeChild(node.v)
-        })
+            self.v.removeChild(node.v);
+        });
 
         // getCSS
 
@@ -119,27 +118,27 @@ var $builtinmodule = function (name) {
 
 
         $loc.setCSS = new Sk.builtin.func(function (self, attr, value) {
-            self.v.style[attr.v] = value.v
+            self.v.style[attr.v] = value.v;
 
-        })
+        });
 
         $loc.getAttribute = new Sk.builtin.func(function (self, key) {
-            var res = self.v.getAttribute(key.v)
+            var res = self.v.getAttribute(key.v);
             if (res) {
-                return new Sk.builtin.str(res)
+                return new Sk.builtin.str(res);
             } else {
                 return Sk.builtin.none.none$;
             }
         });
 
         $loc.setAttribute = new Sk.builtin.func(function (self, attr, value) {
-            self.v.setAttribute(attr.v, value.v)
+            self.v.setAttribute(attr.v, value.v);
         });
 
         $loc.getProperty = new Sk.builtin.func(function (self, key) {
-            var res = self.v[key.v]
+            var res = self.v[key.v];
             if (res) {
-                return new Sk.builtin.str(res)
+                return new Sk.builtin.str(res);
             } else {
                 return Sk.builtin.none.none$;
             }
@@ -147,12 +146,12 @@ var $builtinmodule = function (name) {
 
         $loc.__str__ = new Sk.builtin.func(function (self) {
             console.log(self.v.tagName);
-            return new Sk.builtin.str(self.v.tagName)
-        })
+            return new Sk.builtin.str(self.v.tagName);
+        });
 
         $loc.__repr__ = new Sk.builtin.func(function (self) {
-            return new Sk.builtin.str('[DOM Element]')
-        })
+            return new Sk.builtin.str('[DOM Element]');
+        });
 
 
     };
@@ -161,4 +160,4 @@ var $builtinmodule = function (name) {
 
     return mod;
 
-}
+};

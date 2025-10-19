@@ -465,13 +465,13 @@ var $builtinmodule = function (name) {
             mod.processing.bezierVertex(v1.v, v2.v, v3.v, v4.v, v5.v, v6.v);
         } else if (typeof (v8) === "undefined") {
             mod.processing.bezierVertex(v1.v, v2.v, v3.v, v4.v, v5.v, v6.v,
-                v7.v);
+                                        v7.v);
         } else if (typeof (v9) === "undefined") {
             mod.processing.bezierVertex(v1.v, v2.v, v3.v, v4.v, v5.v, v6.v,
-                v7.v, v8.v);
+                                        v7.v, v8.v);
         } else {
             mod.processing.bezierVertex(v1.v, v2.v, v3.v, v4.v, v5.v, v6.v,
-                v7.v, v8.v, v9.v);
+                                        v7.v, v8.v, v9.v);
         }
     });
 
@@ -480,11 +480,11 @@ var $builtinmodule = function (name) {
         if (other instanceof Sk.builtin.int_ || other instanceof Sk.builtin.float_) {
             // blend(x,     y,width,height,dx,    dy,dwidth,dheight,MODE)
             mod.processing.blend(v1.v, v2.v, v3.v, v4.v, v5.v,
-                v6.v, v7.v, v8.v, v9.v);
+                                 v6.v, v7.v, v8.v, v9.v);
         } else {
             // blend(srcImg,x,y,    width, height,dx,dy,    dwidth, dheight,MODE)
             mod.processing.blend(v1.v, v2.v, v3.v, v4.v, v5.v,
-                v6.v, v7.v, v8.v, v9.v, v10.v);
+                                 v6.v, v7.v, v8.v, v9.v, v10.v);
         }
     });
 
@@ -517,8 +517,8 @@ var $builtinmodule = function (name) {
             mod.processing.camera();
         } else {
             mod.processing.camera(eyeX.v, eyeY.v, eyeZ.v,
-                centerX.v, centerY.v, centerZ.v,
-                upX.v, upY.v, upZ.v);
+                                  centerX.v, centerY.v, centerZ.v,
+                                  upX.v, upY.v, upZ.v);
         }
     });
 
@@ -531,11 +531,11 @@ var $builtinmodule = function (name) {
         if (other instanceof Sk.builtin.int_ || other instanceof Sk.builtin.float_) {
             // copy(x,     y,width,height,dx,    dy,dwidth,dheight)
             mod.processing.copy(v1.v, v2.v, v3.v, v4.v, v5.v,
-                v6.v, v7.v, v8.v);
+                                v6.v, v7.v, v8.v);
         } else {
             // copy(srcImg,x,y,    width, height,dx,dy,    dwidth, dheight)
             mod.processing.copy(v1.v, v2.v, v3.v, v4.v, v5.v,
-                v6.v, v7.v, v8.v, v9.v);
+                                v6.v, v7.v, v8.v, v9.v);
         }
     });
 
@@ -594,23 +594,23 @@ var $builtinmodule = function (name) {
         // curve(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
         if (typeof (v9) === "undefined") {
             mod.processing.curve(v1.v, v2.v, v3.v, v4.v,
-                v5.v, v6.v, v7.v, v8.v);
+                                 v5.v, v6.v, v7.v, v8.v);
         } else if (typeof (v10) === "undefined") {
             mod.processing.curve(v1.v, v2.v, v3.v, v4.v,
-                v5.v, v6.v, v7.v, v8.v,
-                v9.v);
+                                 v5.v, v6.v, v7.v, v8.v,
+                                 v9.v);
         } else if (typeof (v11) === "undefined") {
             mod.processing.curve(v1.v, v2.v, v3.v, v4.v,
-                v5.v, v6.v, v7.v, v8.v,
-                v9.v, v10.v);
+                                 v5.v, v6.v, v7.v, v8.v,
+                                 v9.v, v10.v);
         } else if (typeof (v12) === "undefined") {
             mod.processing.curve(v1.v, v2.v, v3.v, v4.v,
-                v5.v, v6.v, v7.v, v8.v,
-                v9.v, v10.v, v11.v);
+                                 v5.v, v6.v, v7.v, v8.v,
+                                 v9.v, v10.v, v11.v);
         } else {
             mod.processing.curve(v1.v, v2.v, v3.v, v4.v,
-                v5.v, v6.v, v7.v, v8.v,
-                v9.v, v10.v, v11.v, v12.v);
+                                 v5.v, v6.v, v7.v, v8.v,
+                                 v9.v, v10.v, v11.v, v12.v);
         }
     });
 
@@ -806,7 +806,7 @@ var $builtinmodule = function (name) {
         // map(value,low1,high1,low2,high2)
         // returns float
         return new Sk.builtin.float_(mod.processing.map(value.v, low1.v, high1.v,
-            low2.v, high2.v));
+                                                        low2.v, high2.v));
     });
 
     mod.millis = new Sk.builtin.func(function () {
@@ -1538,7 +1538,7 @@ var $builtinmodule = function (name) {
             };
 
             var callBacks = ["setup", "mouseMoved", "mouseClicked", "mouseDragged", "mouseMoved", "mouseOut",
-                "mouseOver", "mousePressed", "mouseReleased", "keyPressed", "keyReleased", "keyTyped"
+                             "mouseOver", "mousePressed", "mouseReleased", "keyPressed", "keyReleased", "keyTyped"
             ];
             for (var cb in callBacks) {
                 if (Sk.globals[callBacks[cb]]) {
@@ -1799,7 +1799,7 @@ var $builtinmodule = function (name) {
             return new_vec;
         });
 
-        $loc.set = new Sk.builtin.func(function (self, x, y, x) {
+        $loc.set = new Sk.builtin.func(function (self, x, y, z) {
             // set() Sets the x, y, z component of the vector
             if (typeof (z) === "undefined") {
                 self.v.set(x.v, y.v);

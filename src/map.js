@@ -36,10 +36,10 @@ Sk.builtin.map_ = Sk.abstr.buildIteratorClass("map", {
             const iters = [];
             for (let i = 1; i < args.length; i++) {
                 iters.push(Sk.abstr.iter(args[i]));
-        }
+            }
             if (this === Sk.builtin.map_.prototype) {
                 return new Sk.builtin.map_(func, iters);
-                } else {
+            } else {
                 const instance = new this.constructor();
                 Sk.builtin.map_.call(instance, func, iters);
                 return instance;

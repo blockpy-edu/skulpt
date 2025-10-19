@@ -13,39 +13,39 @@
  */
 Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
     constructor: function generator(code, globals, args, closure, closure2) {
-    var k;
-    var i;
-    if (!code) {
-        return;
-    } // ctor hack
+        var k;
+        var i;
+        if (!code) {
+            return;
+        } // ctor hack
 
-    if (!(this instanceof Sk.builtin.generator)) {
+        if (!(this instanceof Sk.builtin.generator)) {
             throw new TypeError("bad internal call to generator, use 'new'");
-    }
+        }
 
 
-    this.func_code = code;
-    this.func_globals = globals || null;
+        this.func_code = code;
+        this.func_globals = globals || null;
         this.gi$running = false;
         this.gi$resumeat = 0;
         this.gi$sentvalue = Sk.builtin.none.none$;
         this.gi$locals = {};
         this.gi$cells = {};
-    if (args.length > 0) {
+        if (args.length > 0) {
         // store arguments into locals because they have to be maintained
         // too. 'fast' var lookups are locals in generator functions.
             for (i = 0; i < code.co_varnames.length; ++i) {
                 this.gi$locals[code.co_varnames[i]] = args[i];
+            }
         }
-    }
-    if (closure2 !== undefined) {
+        if (closure2 !== undefined) {
         // todo; confirm that modification here can't cause problems
-        for (k in closure2) {
-            closure[k] = closure2[k];
+            for (k in closure2) {
+                closure[k] = closure2[k];
+            }
         }
-    }
-    //print(JSON.stringify(closure));
-    this.func_closure = closure;
+        //print(JSON.stringify(closure));
+        this.func_closure = closure;
     },
     slots: {
         $r() {
@@ -53,48 +53,48 @@ Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
         },
     },
     iternext(canSuspend, yielded) {
-    var ret;
-    var args;
-    var self = this;
+        var ret;
+        var args;
+        var self = this;
         if (this.gi$running) {
             throw new Sk.builtin.ValueError("generator already executing");
         }
-    this["gi$running"] = true;
-    if (yielded === undefined) {
-        yielded = Sk.builtin.none.none$;
-    }
-    this["gi$sentvalue"] = yielded;
-
-    // note: functions expect 'this' to be globals to avoid having to
-    // slice/unshift onto the main args
-    args = [this];
-    if (this.func_closure) {
-        args.push(this.func_closure);
-    }
-    ret = this.func_code.apply(this.func_globals, args);
-    return (function finishIteration(ret) {
-        if (ret instanceof Sk.misceval.Suspension) {
-            if (canSuspend) {
-                return new Sk.misceval.Suspension(finishIteration, ret);
-            } else {
-                ret = Sk.misceval.retryOptionalSuspensionOrThrow(ret);
-            }
+        this["gi$running"] = true;
+        if (yielded === undefined) {
+            yielded = Sk.builtin.none.none$;
         }
-        //print("ret", JSON.stringify(ret));
-        self["gi$running"] = false;
-        Sk.asserts.assert(ret !== undefined);
+        this["gi$sentvalue"] = yielded;
+
+        // note: functions expect 'this' to be globals to avoid having to
+        // slice/unshift onto the main args
+        args = [this];
+        if (this.func_closure) {
+            args.push(this.func_closure);
+        }
+        ret = this.func_code.apply(this.func_globals, args);
+        return (function finishIteration(ret) {
+            if (ret instanceof Sk.misceval.Suspension) {
+                if (canSuspend) {
+                    return new Sk.misceval.Suspension(finishIteration, ret);
+                } else {
+                    ret = Sk.misceval.retryOptionalSuspensionOrThrow(ret);
+                }
+            }
+            //print("ret", JSON.stringify(ret));
+            self["gi$running"] = false;
+            Sk.asserts.assert(ret !== undefined);
             if (Array.isArray(ret)) {
             // returns a pair: resume target and yielded value
-            self["gi$resumeat"] = ret[0];
-            ret = ret[1];
-        } else {
+                self["gi$resumeat"] = ret[0];
+                ret = ret[1];
+            } else {
             // todo; StopIteration
                 self.gi$ret = ret;
-            return undefined;
-        }
-        //print("returning:", JSON.stringify(ret));
-        return ret;
-    })(ret);
+                return undefined;
+            }
+            //print("returning:", JSON.stringify(ret));
+            return ret;
+        })(ret);
     },
     methods: {
         send: {

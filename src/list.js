@@ -105,7 +105,7 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
             if (other === this) {
                 // prevent an infinite loop
                 this.v.push(...this.v);
-            return this;
+                return this;
             }
             return Sk.misceval.chain(
                 Sk.misceval.iterFor(Sk.abstr.iter(other), (i) => {
@@ -188,7 +188,7 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
                     return Sk.builtin.none.none$;
                 }
                 return Sk.misceval.chain(
-                	// TODONEW: Check for performance issue, optimize with concat
+                    // TODONEW: Check for performance issue, optimize with concat
                     Sk.misceval.iterFor(Sk.abstr.iter(iterable), (i) => {
                         this.v.push(i);
                     }),
@@ -304,7 +304,7 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
             for (let i = start; i < end && i < this.v.length; i++) {
                 if (this.v[i] === item || Sk.misceval.richCompareBool(this.v[i], item, "Eq")) {
                     return i;
-        }
+                }
             }
             return -1;
         },
@@ -356,16 +356,16 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
         del$subscript(index) {
             if (Sk.misceval.isIndex(index)) {
                 this.del$index(index);
-    } else if (index instanceof Sk.builtin.slice) {
+            } else if (index instanceof Sk.builtin.slice) {
                 const { start, stop, step } = index.slice$indices(this.v.length);
                 if (step === 1) {
                     this.del$slice(start, stop);
-        } else {
+                } else {
                     this.del$ext_slice(index, step > 0 ? 1 : 0);
-    }
+                }
             } else {
-    throw new Sk.builtin.TypeError("list indices must be integers, not " + Sk.abstr.typeName(index));
-    }
+                throw new Sk.builtin.TypeError("list indices must be integers, not " + Sk.abstr.typeName(index));
+            }
         },
         del$index(index) {
             let i = Sk.misceval.asIndexSized(index, Sk.builtin.IndexError);

@@ -60,24 +60,24 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             if (!(other instanceof Sk.builtin.dict) || (op !== "Eq" && op !== "NotEq")) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
             }
-                if (other === this) {
-                    res = true;
-                } else if (this.size !== other.size) {
-                    res = false;
-                } else {
+            if (other === this) {
+                res = true;
+            } else if (this.size !== other.size) {
+                res = false;
+            } else {
                 let otherv;
                 res = this.$items().every(([key, val]) => {
                     otherv = other.mp$lookup(key);
                     return otherv !== undefined && (otherv === val || Sk.misceval.richCompareBool(val, otherv, "Eq"));
                 });
-                }
+            }
             return op === "Eq" ? res : !res;
         },
         // as number slot
         nb$or(other) {
             if (!(other instanceof Sk.builtin.dict)) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
-                }
+            }
             const dict = this.dict$copy();
             dict.dict$merge(other);
             return dict;
@@ -169,7 +169,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
         pop: {
             $meth(key, d) {
                 const item = this.pop$item(key);
-                    if (item !== undefined) {
+                if (item !== undefined) {
                     return item[1];
                 }
                 // Not found in dictionary
@@ -506,7 +506,7 @@ function dict$merge(b) {
         const keyfunc = Sk.abstr.lookupSpecial(b, Sk.builtin.str.$keys);
         if (keyfunc === undefined) {
             throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(b) + "' object is not a mapping");
-            }
+        }
 
         return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(keyfunc), (keys) =>
             Sk.misceval.iterFor(Sk.abstr.iter(keys), (key) =>
@@ -576,10 +576,10 @@ function dict$merge_seq(arg) {
         if (!Sk.builtin.checkIterable(i)) {
             throw new Sk.builtin.TypeError("cannot convert dictionary update sequence element #" + idx + " to a sequence");
         }
-            const seq = Sk.misceval.arrayFromIterable(i);
-            if (seq.length !== 2) {
-                throw new Sk.builtin.ValueError("dictionary update sequence element #" + idx + " has length " + seq.length + "; 2 is required");
-            }
+        const seq = Sk.misceval.arrayFromIterable(i);
+        if (seq.length !== 2) {
+            throw new Sk.builtin.ValueError("dictionary update sequence element #" + idx + " has length " + seq.length + "; 2 is required");
+        }
         this.set$item(seq[0], seq[1]);
         idx++;
     });
@@ -608,14 +608,14 @@ function set$item(key, value) {
             this.$version++;
         } else {
             item[1] = value;
-    }
+        }
     } else {
         item = this.get$bucket_item(key, hash);
-    if (item === undefined) {
+        if (item === undefined) {
             this.set$bucket_item(key, value, hash);
             this.size++;
             this.$version++;
-    } else {
+        } else {
             item[1] = value;
         }
     }
@@ -761,7 +761,7 @@ function buildDictView(typename, slots, reverse_method) {
     };
     options.flags = {
         sk$acceptable_as_base: false,
-};
+    };
     if (typename === "dict_values") {
         // dict_values doesn't have number or richcompare slots
         delete options.slots.tp$as_number;

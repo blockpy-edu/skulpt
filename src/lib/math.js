@@ -254,7 +254,7 @@ const $builtinmodule = function (name) {
             res = _biggcd(_a, _b);
             if (JSBI.lessThan(res, JSBI.__ZERO)) {
                 res = JSBI.multiply(res, JSBI.BigInt(-1));
-        }
+            }
         }
 
         return res;
@@ -418,7 +418,7 @@ const $builtinmodule = function (name) {
         const nargs = args.length;
 
         // lcm() without arguments returns 1
-        if (nargs === 0) return new Sk.builtin.int_(1);
+        if (nargs === 0) {return new Sk.builtin.int_(1);}
 
         // Test & convert all arguments
         let i;
@@ -436,7 +436,7 @@ const $builtinmodule = function (name) {
             arg = args[i];
 
             // If any of the arguments is zero, then the returned value is 0
-            if (arg === 0) return new Sk.builtin.int_(0);
+            if (arg === 0) {return new Sk.builtin.int_(0);}
 
             if (typeof result === "number" && typeof arg === "number") {
                 let tmp = (result / _gcd_internal(result, arg)) * arg;

@@ -128,140 +128,140 @@ Sk.builtin.set = Sk.abstr.buildNativeClass("set", {
         },
     },
     methods: /**@lends {Sk.builtin.set.prototype}*/ {
-    add: {
+        add: {
             $meth(item) {
                 this.set$add(item);
-            return Sk.builtin.none.none$;
+                return Sk.builtin.none.none$;
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Add an element to a set.\n\nThis has no effect if the element is already present.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Add an element to a set.\n\nThis has no effect if the element is already present.",
-    },
-    clear: {
+        clear: {
             $meth() {
                 this.set$clear();
-            return Sk.builtin.none.none$;
+                return Sk.builtin.none.none$;
+            },
+            $flags: {NoArgs: true},
+            $textsig: null,
+            $doc: "Remove all elements from this set.",
         },
-        $flags: {NoArgs: true},
-        $textsig: null,
-        $doc: "Remove all elements from this set.",
-    },
-    copy: {
+        copy: {
             $meth() {
                 return this.set$copy();
+            },
+            $flags: {NoArgs: true},
+            $textsig: null,
+            $doc: "Return a shallow copy of a set.",
         },
-        $flags: {NoArgs: true},
-        $textsig: null,
-        $doc: "Return a shallow copy of a set.",
-    },
-    discard: {
+        discard: {
             $meth(entry) {
                 entry = entry_or_hashable_set(entry);
                 this.set$discard(entry);
-            return Sk.builtin.none.none$;
+                return Sk.builtin.none.none$;
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Remove an element from a set if it is a member.\n\nIf the element is not a member, do nothing.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Remove an element from a set if it is a member.\n\nIf the element is not a member, do nothing.",
-    },
-    difference: {
+        difference: {
             $meth(...args) {
                 const result = this.set$copy();
                 return Sk.misceval.chain(
                     Sk.misceval.iterArray(args, (arg) => result.set$difference_update(arg)),
                     () => result
                 );
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Return the difference of two or more sets as a new set.\n\n(i.e. all elements that are in this set but not the others.)",
-    },
-    difference_update: {
+        difference_update: {
             $meth(...args) {
                 return Sk.misceval.chain(
                     Sk.misceval.iterArray(args, (arg) => this.set$difference_update(arg)),
                     () => Sk.builtin.none.none$
                 );
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Remove all elements of another set from this set.",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Remove all elements of another set from this set.",
-    },
-    intersection: {
+        intersection: {
             $meth(...args) {
                 return this.set$intersection_multi(...args);
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Return the intersection of two sets as a new set.\n\n(i.e. all elements that are in both sets.)",
-    },
-    intersection_update: {
+        intersection_update: {
             $meth(...args) {
                 return Sk.misceval.chain(this.set$intersection_multi(...args), (res) => {
                     this.swap$bodies(res);
-            return Sk.builtin.none.none$;
+                    return Sk.builtin.none.none$;
                 });
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Update a set with the intersection of itself and another.",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Update a set with the intersection of itself and another.",
-    },
-    isdisjoint: {
+        isdisjoint: {
             $meth(other) {
             // requires all items in this to not be in other
                 return Sk.misceval.chain(
                     Sk.misceval.iterFor(Sk.abstr.iter(other), (i) => {
                         if (this.sq$contains(i)) {
                             return new Sk.misceval.Break(Sk.builtin.bool.false$);
-                }
+                        }
                     }),
                     (res) => res || Sk.builtin.bool.true$
                 );
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Return True if two sets have a null intersection.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Return True if two sets have a null intersection.",
-    },
-    issubset: {
+        issubset: {
             $meth(other) {
-            if (!Sk.builtin.checkAnySet(other)) {
+                if (!Sk.builtin.checkAnySet(other)) {
                     other = this.set$make_basetype(other);
                 }
                 return Sk.misceval.chain(other, (other_set) => this.set$issubset(other_set));
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Report whether another set contains this set.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Report whether another set contains this set.",
-    },
-    issuperset: {
+        issuperset: {
             $meth(other) {
-            if (!Sk.builtin.checkAnySet(other)) {
+                if (!Sk.builtin.checkAnySet(other)) {
                     other = this.set$make_basetype(other);
-            }
+                }
                 return Sk.misceval.chain(other, (other_set) => other_set.set$issubset(this));
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Report whether this set contains another set.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Report whether this set contains another set.",
-    },
-    pop: {
+        pop: {
             $meth() {
-            if (this.get$size() === 0) {
-                throw new Sk.builtin.KeyError("pop from an empty set");
-            }
+                if (this.get$size() === 0) {
+                    throw new Sk.builtin.KeyError("pop from an empty set");
+                }
                 const item = Sk.misceval.callsimArray(this.v.popitem, [this.v]);
                 return item.v[0];
+            },
+            $flags: {NoArgs: true},
+            $textsig: null,
+            $doc: "Remove and return an arbitrary set element.\nRaises KeyError if the set is empty.",
         },
-        $flags: {NoArgs: true},
-        $textsig: null,
-        $doc: "Remove and return an arbitrary set element.\nRaises KeyError if the set is empty.",
-    },
-    // __reduce__: {
-    //     $meth: methods.$__reduce__,
-    //     $flags:{},
-    //     $textsig: null,
-    //     $doc: "Return state information for pickling." },
-    remove: {
+        // __reduce__: {
+        //     $meth: methods.$__reduce__,
+        //     $flags:{},
+        //     $textsig: null,
+        //     $doc: "Return state information for pickling." },
+        remove: {
             $meth(entry) {
                 const tmp = entry_or_hashable_set(entry);
                 if (this.v.mp$lookup(tmp)) {
@@ -269,17 +269,17 @@ Sk.builtin.set = Sk.abstr.buildNativeClass("set", {
                     return Sk.builtin.none.none$;
                 }
                 throw new Sk.builtin.KeyError(entry);
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Remove an element from a set; it must be a member.\n\nIf the element is not a member, raise a KeyError.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Remove an element from a set; it must be a member.\n\nIf the element is not a member, raise a KeyError.",
-    },
-    // __sizeof__: {
-    //     $meth: methods.$__sizeof__,
-    //     $flags:{},
-    //     $textsig: null,
-    //     $doc: "S.__sizeof__() -> size of S in memory, in bytes" },
-    symmetric_difference: {
+        // __sizeof__: {
+        //     $meth: methods.$__sizeof__,
+        //     $flags:{},
+        //     $textsig: null,
+        //     $doc: "S.__sizeof__() -> size of S in memory, in bytes" },
+        symmetric_difference: {
             $meth(other) {
                 let other_set;
                 return Sk.misceval.chain(
@@ -290,12 +290,12 @@ Sk.builtin.set = Sk.abstr.buildNativeClass("set", {
                     },
                     () => other_set
                 );
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Return the symmetric difference of two sets as a new set.\n\n(i.e. all elements that are in exactly one of the sets.)",
-    },
-    symmetric_difference_update: {
+        symmetric_difference_update: {
             $meth(other) {
                 if (!Sk.builtin.checkAnySet(other)) {
                     other = this.set$make_basetype(other);
@@ -305,34 +305,34 @@ Sk.builtin.set = Sk.abstr.buildNativeClass("set", {
                     (other_set) => this.set$symmetric_diff_update(other_set),
                     () => Sk.builtin.none.none$
                 );
+            },
+            $flags: {OneArg: true},
+            $textsig: null,
+            $doc: "Update a set with the symmetric difference of itself and another.",
         },
-        $flags: {OneArg: true},
-        $textsig: null,
-        $doc: "Update a set with the symmetric difference of itself and another.",
-    },
-    union: {
+        union: {
             $meth(...args) {
                 const result = this.set$copy();
                 return Sk.misceval.chain(
                     Sk.misceval.iterArray(args, (arg) => result.set$update(arg)),
                     () => result
                 );
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Return the union of sets as a new set.\n\n(i.e. all elements that are in either set.)",
-    },
-    update: {
+        update: {
             $meth(...args) {
                 return Sk.misceval.chain(
                     Sk.misceval.iterArray(args, (arg) => this.set$update(arg)),
                     () => Sk.builtin.none.none$
                 );
+            },
+            $flags: {MinArgs: 0},
+            $textsig: null,
+            $doc: "Update a set with the union of itself and others.",
         },
-        $flags: {MinArgs: 0},
-        $textsig: null,
-        $doc: "Update a set with the union of itself and others.",
-    },
     },
     classmethods: Sk.generic.classGetItem,
     proto: /**@lends {Sk.builtin.set.prototype}*/ Object.assign(set_private_, {
@@ -419,7 +419,7 @@ Sk.builtin.set = Sk.abstr.buildNativeClass("set", {
         },
         swap$bodies(other) {
             this.v = other.v;
-    },
+        },
     }),
 });
 
@@ -485,7 +485,7 @@ Sk.builtin.frozenset = Sk.abstr.buildNativeClass("frozenset", {
                     // in cpython frozenset() on an empty set returns the same object
                     return Sk.builtin.frozenset.$emptyset;
                 }
-            return new Sk.builtin.frozenset(S);
+                return new Sk.builtin.frozenset(S);
             });
         },
         $r: set_proto.$r,
@@ -520,14 +520,14 @@ Sk.builtin.frozenset = Sk.abstr.buildNativeClass("frozenset", {
     proto: /**@lends {Sk.builtin.frozenset.prototype}*/ Object.assign(
         {
             $subtype_new(args, kwargs) {
-            const instance = new this.constructor();
-            // pass the args but ignore the kwargs for subtyping
+                const instance = new this.constructor();
+                // pass the args but ignore the kwargs for subtyping
                 return Sk.misceval.chain(Sk.builtin.frozenset.prototype.tp$new(args), (frozenset) => {
-            instance.v = frozenset.v;
-            return instance;
+                    instance.v = frozenset.v;
+                    return instance;
                 });
+            },
         },
-    },
         set_private_
     ),
 });

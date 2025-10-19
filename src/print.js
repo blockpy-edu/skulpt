@@ -7,7 +7,7 @@ Sk.builtin.print = function print(args, kwargs) {
         sep = " ";
     } else if (Sk.builtin.checkString(sep)) {
         sep = sep.$jsstr();
-        } else {
+    } else {
         throw new Sk.builtin.TypeError("sep must be None or a string, not " + Sk.abstr.typeName(sep));
     }
 
@@ -16,7 +16,7 @@ Sk.builtin.print = function print(args, kwargs) {
         end = "\n";
     } else if (Sk.builtin.checkString(end)) {
         end = end.$jsstr();
-        } else {
+    } else {
         throw new Sk.builtin.TypeError("end must be None or a string, not " + Sk.abstr.typeName(end));
     }
 

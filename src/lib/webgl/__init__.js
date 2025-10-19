@@ -200,9 +200,9 @@ var $builtinmodule = function (name) {
 
         $loc.uniformMatrix4fv = new Sk.builtin.func(
             function (self, location, transpose, values) {
-//        console.log("location  " + (typeof location));
-//        console.log("transpose " + (typeof transpose));
-//        console.log("values.v  " + (typeof values.v));
+                //        console.log("location  " + (typeof location));
+                //        console.log("transpose " + (typeof transpose));
+                //        console.log("values.v  " + (typeof values.v));
                 self.gl.uniformMatrix4fv(Sk.builtin.asnum$(location), transpose, values.v);
             }
         );

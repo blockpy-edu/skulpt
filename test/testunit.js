@@ -97,7 +97,7 @@ function test (python3, opt) {
             console.log("UNCAUGHT EXCEPTION: " + err);
             console.log(err.stack);
         }).then(function () {
-            runtest(tests, passed, failed)
+            runtest(tests, passed, failed);
         });
     }
 

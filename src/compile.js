@@ -363,7 +363,7 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
                 if (e.elts[i].constructor === Sk.astnodes.Starred) {
                     throw new Sk.builtin.SyntaxError("multiple starred expressions in assignment", this.filename, e.lineno, ...get_context(e));
                 }
-        }
+            }
         }
         const breakIdx = hasStars ? starIdx : e.elts.length;
         const numvals = hasStars ? e.elts.length - 1 : breakIdx;
@@ -375,8 +375,8 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
             if (i === starIdx) {
                 this.vexpr(e.elts[i].value, items + "[" + i + "]");
             } else {
-            this.vexpr(e.elts[i], items + "[" + i + "]");
-        }
+                this.vexpr(e.elts[i], items + "[" + i + "]");
+            }
         }
     } else if (e.ctx === Sk.astnodes.Load || tuporlist === "set") {
         //because set's can't be assigned to.
@@ -424,11 +424,11 @@ Compiler.prototype.ctuplelistorset = function (e, data, tuporlist) {
 Compiler.prototype.csubdict = function(e, begin, end) {
     const items = [];
     for (let i = begin; i < end; i++) {
-            items.push(this.vexpr(e.keys[i]));
+        items.push(this.vexpr(e.keys[i]));
         items.push(this.vexpr(e.values[i])); 
     }
     return this._gr("loaddict", "new Sk.builtins['dict']([", items, "])");
-}
+};
 
 Compiler.prototype.cdict = function (e) {
     let have_dict = 0;
@@ -465,7 +465,7 @@ Compiler.prototype.cdict = function (e) {
         }
     }
     if (elements) {
-        sub_dict = this.csubdict(e, n-elements, n)
+        sub_dict = this.csubdict(e, n-elements, n);
         if (have_dict) {
             out(main_dict, ".dict$merge(", sub_dict, ");");
             // update the current dict (this won't suspend)
@@ -605,9 +605,9 @@ Compiler.prototype.cyieldfrom = function (e) {
     out(        "function (e) { ");
     out(            "if (e instanceof Sk.builtin.StopIteration) { ");
     out(                    iterable ,".gi$ret = e.$value;");
-                            // store the return value on the iterator
-                            // otherwise we lose it beause iterator code in skulpt relies on returning undefined;
-                            // one day maybe we can use the js .next protocol {value: ret, done: true} ;-)
+    // store the return value on the iterator
+    // otherwise we lose it beause iterator code in skulpt relies on returning undefined;
+    // one day maybe we can use the js .next protocol {value: ret, done: true} ;-)
     out(                    "return undefined;");
     out(            "} else { throw e; }");
     out(        "}");
@@ -1254,7 +1254,7 @@ Compiler.prototype.outputLocals = function (unit, localNames) {
         return "var " + varnames + "; /* locals */";
     }
     return "";
-}
+};
 
 Compiler.prototype.outputSuspensionHelpers = function (unit) {
     var i, t;
@@ -2379,16 +2379,15 @@ Compiler.prototype.cannotations = function (args, returns) {
  * body has no docstring.
  */
 Compiler.prototype.maybeCDocstringOfBody = function(body) {
-    if (body.length === 0)  // Don't think this can happen?
+    if (body.length === 0)     {
         return null;
+    }
 
     const stmt_0 = body[0];
-    if (stmt_0.constructor !== Sk.astnodes.Expr)
-        return null;
+    if (stmt_0.constructor !== Sk.astnodes.Expr) {return null;}
 
     const expr = stmt_0.value;
-    if (expr.constructor !== Sk.astnodes.Str)
-        return null;
+    if (expr.constructor !== Sk.astnodes.Str) {return null;}
 
     return this.vexpr(expr);
 };
@@ -2400,21 +2399,21 @@ Compiler.prototype.maybeCDocstringOfBody = function(body) {
  */
 Compiler.prototype.cDocstringOfCode = function(node) {
     switch (node.constructor) {
-    case Sk.astnodes.AsyncFunctionDef:  // For when it's supported
-    case Sk.astnodes.FunctionDef:
-        return (
-            this.maybeCDocstringOfBody(node.body)
+        case Sk.astnodes.AsyncFunctionDef:  // For when it's supported
+        case Sk.astnodes.FunctionDef:
+            return (
+                this.maybeCDocstringOfBody(node.body)
             || "Sk.builtin.none.none$"
-        );
+            );
 
-    case Sk.astnodes.Lambda:
-    case Sk.astnodes.GeneratorExp:
-        return "Sk.builtin.none.none$";
+        case Sk.astnodes.Lambda:
+        case Sk.astnodes.GeneratorExp:
+            return "Sk.builtin.none.none$";
 
-    default:
-        Sk.asserts.fail(`unexpected node kind ${node.constructor.name}`);
+        default:
+            Sk.asserts.fail(`unexpected node kind ${node.constructor.name}`);
     }
-}
+};
 
 Compiler.prototype.cfunction = function (s, class_for_super) {
     var funcorgen;

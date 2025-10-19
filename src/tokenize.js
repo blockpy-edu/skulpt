@@ -24,11 +24,11 @@ function TokenInfo(type, string, start, end, line) {
 
 TokenInfo.prototype.exact_type = function () {
     if (this.type == tokens.T_OP && this.string in Sk.token.EXACT_TOKEN_TYPES) {
-    return Sk.token.EXACT_TOKEN_TYPES[this.string]
+        return Sk.token.EXACT_TOKEN_TYPES[this.string];
     } else {
-        return this.type
+        return this.type;
     }
-    }
+};
 
 /** @param {...*} x */
 function group(x) {
@@ -90,7 +90,7 @@ const Other_ID_Continue = "\\u00B7\\u0387\\u1369-\\u1371\\u19DA";
 const id_start = Lu + Ll + Lt + Lm + Lo + Nl + the_underscore + Other_ID_Start;
 const id_continue = id_start + Mn + Mc + Nd + Pc + Other_ID_Continue;
 
-const IDENTIFIER = "[" + id_start + "]+[" + id_continue + "]*"
+const IDENTIFIER = "[" + id_start + "]+[" + id_continue + "]*";
 const IS_IDENTIFIER_REGEX = new RegExp("^" + IDENTIFIER + "$");
 
 
@@ -135,7 +135,7 @@ function _all_string_prefixes() {
 
 // Note that since _all_string_prefixes includes the empty string,
 //  StringPrefix can be the empty string (making it optional).
-var StringPrefix = group.apply(null, _all_string_prefixes())
+var StringPrefix = group.apply(null, _all_string_prefixes());
 
 // these regexes differ from python because .exec doesn't do the
 // same thing as .match in python. It's more like .search.
@@ -174,7 +174,7 @@ function setupTokens(py3) {
     Special = group.apply(
         this,
         EXACT_TOKENS_SORTED.reverse().map(function (t) {
-    return regexEscape(t);
+            return regexEscape(t);
         })
     );
     Funny = group("\\r?\\n", Special);
@@ -192,14 +192,14 @@ Sk.token.setupTokens = setupTokens;
 // First (or only) line of ' or " string.
 var ContStr = group(StringPrefix + "'[^\\n'\\\\]*(?:\\\\.[^\\n'\\\\]*)*" +
                 group("'", '\\\\\\r?\\n'),
-                StringPrefix + '"[^\\n"\\\\]*(?:\\\\.[^\\n"\\\\]*)*' +
-                group('"', '\\\\\\r?\\n'))
+                    StringPrefix + '"[^\\n"\\\\]*(?:\\\\.[^\\n"\\\\]*)*' +
+                group('"', '\\\\\\r?\\n'));
 var PseudoExtras = group('\\\\\\r?\\n|$', Comment_, Triple);
 
 // For a given string prefix plus quotes, endpats maps it to a regex
 //  to match the remainder of that string. _prefix can be empty, for
 //  a normal single or triple quoted string (with no prefix).
-var endpats = {}
+var endpats = {};
 var prefixes = _all_string_prefixes();
 for (let _prefix of prefixes) {
     endpats[_prefix + "'"] = RegExp(Single);
@@ -210,8 +210,8 @@ for (let _prefix of prefixes) {
 
 // A set of all of the single and triple quoted string prefixes,
 //  including the opening quotes.
-let single_quoted = []
-let triple_quoted = []
+let single_quoted = [];
+let triple_quoted = [];
 for (let t of prefixes) {
     single_quoted.push(t + '"');
     single_quoted.push(t + "'");

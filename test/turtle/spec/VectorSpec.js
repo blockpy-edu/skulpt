@@ -22,7 +22,7 @@ describe("Vector", function () {
         var v =  new Vector([0, 1, 0]);
         expect(v.toAngle()).toEqual(90);
         expect(v.rotate(90).toAngle()).toEqual(180);
-        expect(Vector.angle2vec(90)).toEqual(new Vector([0, 1, 0]))
+        expect(Vector.angle2vec(90)).toEqual(new Vector([0, 1, 0]));
     });
     
     it("basics", function () {

@@ -20,7 +20,7 @@ Sk.getSysModulesPolitely = function() {
         }
     } catch (x) {}
     return sysmodules;
-}
+};
 
 /**
  * @param {string} name to look for

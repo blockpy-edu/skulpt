@@ -482,10 +482,10 @@ Sk.misceval.richCompareBool = function (v, w, op, canSuspend) {
     }
 
     if (!w_is_subclass) {
-    swapped_shortcut = op2shortcut[Sk.misceval.swappedOp_[op]];
-    if ((ret = w[swapped_shortcut](v)) !== Sk.builtin.NotImplemented.NotImplemented$) {
-        return Sk.misceval.isTrue(ret);
-    }
+        swapped_shortcut = op2shortcut[Sk.misceval.swappedOp_[op]];
+        if ((ret = w[swapped_shortcut](v)) !== Sk.builtin.NotImplemented.NotImplemented$) {
+            return Sk.misceval.isTrue(ret);
+        }
     }
 
     if (!Sk.__future__.python3) {
@@ -1227,7 +1227,7 @@ Sk.misceval.arrayFromIterable = function (iterable, canSuspend) {
     const L = [];
     const ret = Sk.misceval.chain(
         Sk.misceval.iterFor(Sk.abstr.iter(iterable), (i) => {
-        L.push(i);
+            L.push(i);
         }),
         () => L
     );

@@ -50,7 +50,7 @@ Sk.builtin.file = function (name, mode, buffering, encoding, errors, newline, cl
     }
     this.pos$ = 0;
 
-	// TODONEW: Is this necessary?
+    // TODONEW: Is this necessary?
     this.__class__ = Sk.builtin.file;
 
     if (Sk.fileopen && this.fileno >= 10) {

@@ -166,7 +166,7 @@ function collections_mod(collections) {
                     Sk.abstr.checkArgsLen("subtract", args, 0, 1);
                     const other = args[0];
                     if (other !== undefined) {
-                    if (other instanceof Sk.builtin.dict) {
+                        if (other instanceof Sk.builtin.dict) {
                             for (let iter = Sk.abstr.iter(other), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
                                 const count = this.mp$subscript(k);
                                 this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, other.mp$subscript(k), "Sub"));
@@ -324,7 +324,7 @@ function collections_mod(collections) {
                     if (Sk.misceval.richCompareBool(count, this.$zero, "LtE")) {
                         this.mp$ass_subscript(elem); // delete the element
                     }
-    });
+                });
                 return this;
             },
             $zero: new Sk.builtin.int_(0),
@@ -446,7 +446,7 @@ function collections_mod(collections) {
                     if (v !== otherv && !Sk.misceval.isTrue(Sk.misceval.richCompareBool(v, otherv, "Eq"))) {
                         return !ret;
                     }
-                    }
+                }
                 return ret;
             },
         },
@@ -484,7 +484,7 @@ function collections_mod(collections) {
                         this.entries[foundhash] = item;
                     } else {
                         this.entries = { [foundhash]: item, ...this.entries };
-                }
+                    }
                     return Sk.builtin.none.none$;
                 },
             },
@@ -1114,10 +1114,10 @@ function collections_mod(collections) {
 
     // deque end
 
-        // regex tests for name and fields
-        const startsw = new RegExp(/^[0-9].*/);
-        const startsw2 = new RegExp(/^[0-9_].*/);
-        const alnum = new RegExp(/^\w*$/);
+    // regex tests for name and fields
+    const startsw = new RegExp(/^[0-9].*/);
+    const startsw2 = new RegExp(/^[0-9_].*/);
+    const alnum = new RegExp(/^\w*$/);
     const comma = /,/g;
     const spaces = /\s+/;
 
@@ -1150,7 +1150,7 @@ function collections_mod(collections) {
         }
 
         // rename fields
-            let seen = new Set();
+        let seen = new Set();
         if (Sk.misceval.isTrue(rename)) {
             for (let i = 0; i < flds.length; i++) {
                 if (
@@ -1169,16 +1169,16 @@ function collections_mod(collections) {
         // check the field names
             for (let i = 0; i < flds.length; i++) {
                 if (Sk.misceval.isTrue(Sk.misceval.callsimArray(collections._iskeyword, [field_names[i]]))) {
-                throw new Sk.builtin.ValueError("Type names and field names cannot be a keyword: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError("Type names and field names cannot be a keyword: '" + flds[i] + "'");
                 } else if (startsw2.test(flds[i])) {
-                throw new Sk.builtin.ValueError("Field names cannot start with an underscore: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError("Field names cannot start with an underscore: '" + flds[i] + "'");
                 } else if (!alnum.test(flds[i]) || !flds[i]) {
-                throw new Sk.builtin.ValueError("Type names and field names must be valid identifiers: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError("Type names and field names must be valid identifiers: '" + flds[i] + "'");
                 } else if (seen.has(flds[i])) {
-                throw new Sk.builtin.ValueError("Encountered duplicate field name: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError("Encountered duplicate field name: '" + flds[i] + "'");
+                }
+                seen.add(flds[i]);
             }
-            seen.add(flds[i]);
-        }
         }
         const _field_names = new Sk.builtin.tuple(field_names);
 
@@ -1187,13 +1187,13 @@ function collections_mod(collections) {
         let dflts = [];
         if (!Sk.builtin.checkNone(defaults)) {
             dflts = Sk.misceval.arrayFromIterable(defaults);
-        if (dflts.length > flds.length) {
-            throw new Sk.builtin.TypeError("Got more default values than field names");
-        }
+            if (dflts.length > flds.length) {
+                throw new Sk.builtin.TypeError("Got more default values than field names");
+            }
             for (let j = 0, i = field_names.length - dflts.length; i < field_names.length; j++, i++) {
                 dflts_dict.push(field_names[i]);
                 dflts_dict.push(dflts[j]);
-        }
+            }
         }
         // _field_defaults
         const _field_defaults = new Sk.builtin.dict(dflts_dict);
@@ -1201,7 +1201,7 @@ function collections_mod(collections) {
         // _make
         function _make(_cls, iterable) {
             return _cls.prototype.tp$new(Sk.misceval.arrayFromIterable(iterable));
-            }
+        }
         _make.co_varnames = ["_cls", "iterable"];
 
         // _asdict
@@ -1231,20 +1231,20 @@ function collections_mod(collections) {
                 throw new Sk.builtin.ValueError("Got unexpectd field names: [" + keys.map((x) => "'" + x.$jsstr() + "'") + "]");
             }
             return res;
-            }
+        }
         _replace.co_kwargs = 1;
         _replace.co_varnames = ["_self"];
 
         // create property getters for each field
         const getters = {};
-            for (let i = 0; i < flds.length; i++) {
+        for (let i = 0; i < flds.length; i++) {
             getters[field_names[i].$mangled] = new Sk.builtin.property(
                 new collections._itemgetter([new Sk.builtin.int_(i)]),
                 undefined,
                 undefined,
                 new Sk.builtin.str("Alias for field number " + i)
             );
-            }
+        }
 
         // build namedtuple class
         return Sk.abstr.buildNativeClass(js_name, {
@@ -1265,18 +1265,18 @@ function collections_mod(collections) {
             },
             proto: Object.assign(
                 {
-                __module__: Sk.builtin.checkNone(module) ? Sk.globals["__name__"] : module,
-                __slots__: new Sk.builtin.tuple(),
+                    __module__: Sk.builtin.checkNone(module) ? Sk.globals["__name__"] : module,
+                    __slots__: new Sk.builtin.tuple(),
                     _fields: _field_names,
-                _field_defaults: _field_defaults,
+                    _field_defaults: _field_defaults,
                     _make: new Sk.builtin.classmethod(new Sk.builtin.func(_make)),
                     _asdict: new Sk.builtin.func(_asdict),
                     _replace: new Sk.builtin.func(_replace),
-            },
+                },
                 getters
             ),
         });
-        }
+    }
 
     namedtuple.co_argcount = 2;
     namedtuple.co_kwonlyargcount = 3;

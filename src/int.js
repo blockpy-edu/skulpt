@@ -135,10 +135,10 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
         nb$abs: numberUnarySlot(Math.abs, BigIntAbs),
 
         nb$lshift: numberShiftSlot((v, w) => {
-                const tmp = v * 2 * shiftconsts[w];
-                if (numberOrStringWithinThreshold(tmp)) {
-                    return tmp;
-                }
+            const tmp = v * 2 * shiftconsts[w];
+            if (numberOrStringWithinThreshold(tmp)) {
+                return tmp;
+            }
             return undefined; // fall through to using BigInt shift
         }, JSBI.leftShift),
         nb$rshift: numberShiftSlot(
@@ -167,18 +167,18 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             if (wNeg && mod === undefined) {
                 return this.nb$float().nb$power(other.nb$float());
             }
-                let v = this.v;
-                let w = other.v;
-                if (typeof v === "number" && typeof w === "number") {
+            let v = this.v;
+            let w = other.v;
+            if (typeof v === "number" && typeof w === "number") {
                 const power = Math.pow(v, w);
-                    if (numberOrStringWithinThreshold(power)) {
+                if (numberOrStringWithinThreshold(power)) {
                     ret = new Sk.builtin.int_(power);
                     if (mod === undefined) {
                         return ret;
                     }
                 }
-                }
-                if (mod !== undefined) {
+            }
+            if (mod !== undefined) {
                 if (wNeg) {
                     /** @todo - python 3.8 supports this - https://github.com/python/cpython/pull/13266 */
                     throw new Sk.builtin.ValueError(
@@ -186,7 +186,7 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
                     );
                 } else if (mod.v === 0) {
                     throw new Sk.builtin.ValueError("pow() 3rd argument cannot be 0");
-                    }
+                }
                 if (ret !== undefined) {
                     return ret.nb$remainder(mod);
                 }
@@ -315,12 +315,12 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             if (!Sk.__future__.bankers_rounding) {
                 return new Sk.builtin.int_(Math.round(v / multiplier) * multiplier);
             }
-                const num10 = v / multiplier;
-                const rounded = Math.round(num10);
+            const num10 = v / multiplier;
+            const rounded = Math.round(num10);
             const bankRound =
                 (num10 > 0 ? num10 : -num10) % 1 === 0.5 ? (0 === rounded % 2 ? rounded : rounded - 1) : rounded;
-                const result = bankRound * multiplier;
-                return new Sk.builtin.int_(result);
+            const result = bankRound * multiplier;
+            return new Sk.builtin.int_(result);
         },
         valueOf() {
             return this.v;
@@ -355,19 +355,19 @@ function numberSlot(number_func, bigint_func) {
         if (!(other instanceof Sk.builtin.int_)) {
             return Sk.builtin.NotImplemented.NotImplemented$;
         }
-            /**@type {number|JSBI} */
-            let v = this.v;
-            /**@type {number|JSBI} */
-            let w = other.v;
-            if (typeof v === "number" && typeof w === "number") {
-                const res = number_func(v, w);
-                if (numberOrStringWithinThreshold(res)) {
-                    return new Sk.builtin.int_(res);
-                }
+        /**@type {number|JSBI} */
+        let v = this.v;
+        /**@type {number|JSBI} */
+        let w = other.v;
+        if (typeof v === "number" && typeof w === "number") {
+            const res = number_func(v, w);
+            if (numberOrStringWithinThreshold(res)) {
+                return new Sk.builtin.int_(res);
             }
-            v = bigUp(v);
-            w = bigUp(w);
-            return new Sk.builtin.int_(bigint_func(v, w));
+        }
+        v = bigUp(v);
+        w = bigUp(w);
+        return new Sk.builtin.int_(bigint_func(v, w));
     };
 }
 
@@ -376,14 +376,14 @@ function compareSlot(number_func, bigint_func) {
         if (!(other instanceof Sk.builtin.int_)) {
             return Sk.builtin.NotImplemented.NotImplemented$;
         }
-            let v = this.v;
-            let w = other.v;
-            if (typeof v === "number" && typeof w === "number") {
-                return number_func(v, w);
-            }
-            v = bigUp(v);
-            w = bigUp(w);
-            return bigint_func(v, w);
+        let v = this.v;
+        let w = other.v;
+        if (typeof v === "number" && typeof w === "number") {
+            return number_func(v, w);
+        }
+        v = bigUp(v);
+        w = bigUp(w);
+        return bigint_func(v, w);
     };
 }
 
@@ -491,17 +491,17 @@ function numberDivisionSlot(number_func, bigint_func) {
         if (!(other instanceof Sk.builtin.int_)) {
             return Sk.builtin.NotImplemented.NotImplemented$;
         }
-            let v = this.v;
-            let w = other.v;
-            if (w === 0) {
-                throw new Sk.builtin.ZeroDivisionError("integer division or modulo by zero");
-            }
-            if (typeof v === "number" && typeof w === "number") {
-                // it's integer division so no need to check if the number got bigger!
-                return new Sk.builtin.int_(number_func(v, w));
-            }
-            v = bigUp(v);
-            w = bigUp(w);
+        let v = this.v;
+        let w = other.v;
+        if (w === 0) {
+            throw new Sk.builtin.ZeroDivisionError("integer division or modulo by zero");
+        }
+        if (typeof v === "number" && typeof w === "number") {
+            // it's integer division so no need to check if the number got bigger!
+            return new Sk.builtin.int_(number_func(v, w));
+        }
+        v = bigUp(v);
+        w = bigUp(w);
         return new Sk.builtin.int_(JSBI.numberIfSafe(bigint_func(v, w)));
     };
 }
@@ -510,24 +510,24 @@ function numberShiftSlot(number_func, bigint_func) {
     return function (other) {
         if (!(other instanceof Sk.builtin.int_)) {
             return Sk.builtin.NotImplemented.NotImplemented$;
-            }
+        }
         const wNeg = other.nb$isnegative();
         if (wNeg) {
-                    throw new Sk.builtin.ValueError("negative shift count");
-                }
+            throw new Sk.builtin.ValueError("negative shift count");
+        }
         let v = this.v;
         if (v === 0) {
             return new Sk.builtin.int_(0);
-                    }
+        }
         let w = other.v;
         if (typeof v === "number" && typeof w === "number" && w < 53) {
             // we use the shiftconsts below in the implementation for << and >>
             const ret = number_func(v, w);
             if (ret !== undefined) {
                 return new Sk.builtin.int_(ret);
-                }
             }
-            v = bigUp(v);
+        }
+        v = bigUp(v);
         w = bigUp(w);
         return new Sk.builtin.int_(bigint_func(v, w)); // can't convert if safe for leftshift
     };
@@ -538,13 +538,13 @@ function numberBitSlot(number_func, bigint_func) {
         if (!(other instanceof Sk.builtin.int_)) {
             return Sk.builtin.NotImplemented.NotImplemented$;
         }
-            let v = this.v;
-            let w = other.v;
+        let v = this.v;
+        let w = other.v;
         if (typeof v === "number" && typeof w === "number" && Math.abs(v) < 2 ** 31 && Math.abs(w) < 2 ** 31) {
             return new Sk.builtin.int_(number_func(v, w));
-            }
-            v = bigUp(v);
-            w = bigUp(w);
+        }
+        v = bigUp(v);
+        w = bigUp(w);
         return new Sk.builtin.int_(JSBI.numberIfSafe(bigint_func(v, w)));
     };
 }
@@ -732,7 +732,7 @@ Sk.builtin.int_.py2$methods = {};
  */
 Sk.longFromStr = function (s, base) {
     if (Sk.__future__.python3) {
-    return new Sk.builtin.int_(stringToNumberOrBig(s));
+        return new Sk.builtin.int_(stringToNumberOrBig(s));
     } else {
         const num = Sk.str2number(s, base);
         return new Sk.builtin.lng(num);

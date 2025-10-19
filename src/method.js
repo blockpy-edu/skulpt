@@ -67,8 +67,8 @@ Sk.builtin.method = Sk.abstr.buildNativeClass("method", {
         tp$getattr(pyName, canSuspend) {
             const descr = Sk.abstr.lookupSpecial(this, pyName);
             if (descr !== undefined) {
-                    return descr;
-                }
+                return descr;
+            }
             return this.im_func.tp$getattr(pyName, canSuspend);
         },
     },

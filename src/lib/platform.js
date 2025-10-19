@@ -64,7 +64,7 @@ var $builtinmodule = function (name) {
     mod.architecture = new Sk.builtin.func(function () {
         Sk.builtin.pyCheckArgsLen("architecture", arguments.length, 0, 0);
         return new Sk.builtin.tuple([new Sk.builtin.str("64bit"),
-            new Sk.builtin.str("")]);
+                                     new Sk.builtin.str("")]);
     });
 
     mod.processor = new Sk.builtin.func(function () {

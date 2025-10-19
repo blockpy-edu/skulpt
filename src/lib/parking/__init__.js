@@ -42,7 +42,7 @@ var $builtinmodule = function (name) {
         var comparison = function (operation, self, other) {
             if (Sk.builtin.isinstance(other, mod.Time).v) {
                 if (operation(convert_time(self.hour.v % 12, self.minute.v, self.meridian.v),
-                    convert_time(other.hour.v % 12, other.minute.v, other.meridian.v))) {
+                              convert_time(other.hour.v % 12, other.minute.v, other.meridian.v))) {
                     return Sk.ffi.remapToPy(true);
                 } else {
                     return Sk.ffi.remapToPy(false);

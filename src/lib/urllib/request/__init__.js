@@ -15,7 +15,7 @@ var $builtinmodule = function (name) {
             return Sk.builtin.none.none$;
         });
         $loc.__init__.co_varnames = ["path", "data", "headers", "origin_req_host", "unverifiable", "method"];
-        $loc.__init__.$defaults = [Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.bool.false$, Sk.builtin.none.none$]
+        $loc.__init__.$defaults = [Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.none.none$, Sk.builtin.bool.false$, Sk.builtin.none.none$];
     };
 
     request.Request =

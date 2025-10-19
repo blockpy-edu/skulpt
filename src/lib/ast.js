@@ -225,7 +225,7 @@ var $builtinmodule = function (name) {
         $loc.visit = new Sk.builtin.func(function (self, node) {
             depth += 1;
             /** Visit a node. **/
-                //print(" ".repeat(depth), "VISIT", node.jsNode._astname)
+            //print(" ".repeat(depth), "VISIT", node.jsNode._astname)
             var method_name = "visit_" + node.jsNode._astname;
             //print(" ".repeat(depth), "I'm looking for", method_name)
             method_name = Sk.ffi.remapToPy(method_name);
@@ -245,7 +245,7 @@ var $builtinmodule = function (name) {
         // Takes in Python Nodes, not JS Nodes
         $loc.generic_visit = new Sk.builtin.func(function (self, node) {
             /** Called if no explicit visitor function exists for a node. **/
-                //print(" ".repeat(depth), "Generically checked", node.astname)
+            //print(" ".repeat(depth), "Generically checked", node.astname)
             var fieldList = mod.iter_fields(node).v;
             for (var i = 0; i < fieldList.length; i += 1) {
                 var field = fieldList[i].v[0].v, value = fieldList[i].v[1];

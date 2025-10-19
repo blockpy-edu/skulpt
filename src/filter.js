@@ -27,7 +27,7 @@ Sk.builtin.filter_ = Sk.abstr.buildIteratorClass("filter", {
             // in theory you could subclass
             if (this === Sk.builtin.filter_.prototype) {
                 return new Sk.builtin.filter_(func, iterable);
-        } else {
+            } else {
                 const instance = new this.constructor();
                 Sk.builtin.filter_.call(instance, func, iterable);
                 return instance;
@@ -41,7 +41,7 @@ Sk.builtin.filter_ = Sk.abstr.buildIteratorClass("filter", {
                 res = item;
             } else {
                 res = Sk.misceval.callsimOrSuspendArray(this.$func, [item]);
-        }
+            }
             return Sk.misceval.chain(res, (ret) => (Sk.misceval.isTrue(ret) ? item : undefined));
         },
     },

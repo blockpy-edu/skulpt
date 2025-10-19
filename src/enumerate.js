@@ -6,18 +6,18 @@
  */
 Sk.builtin.enumerate = Sk.abstr.buildIteratorClass("enumerate", {
     constructor: function enumerate(iterable, start) {
-    if (!(this instanceof Sk.builtin.enumerate)) {
+        if (!(this instanceof Sk.builtin.enumerate)) {
             throw TypeError("Failed to construct 'enumerate': Please use the 'new' operator");
         }
         this.$iterable = iterable;
-    this.$index = start;
+        this.$index = start;
         return this;
     },
     iternext(canSuspend) {
         const ret = Sk.misceval.chain(this.$iterable.tp$iternext(canSuspend), (i) => {
             if (i === undefined) {
-            return undefined;
-        }
+                return undefined;
+            }
             return new Sk.builtin.tuple([new Sk.builtin.int_(this.$index++), i]);
         });
         return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
