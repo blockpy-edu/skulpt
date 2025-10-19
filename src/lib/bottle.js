@@ -18,7 +18,7 @@ function $builtinmodule() {
         RuntimeError,
         ValueError,
         NotImplementedError,
-        AttributeErrror,
+        AttributeError,
         OverflowError,
         checkNone,
         checkBool,
@@ -119,7 +119,7 @@ function $builtinmodule() {
         }
         //console.log(bottleSiteTarget);
         objectSetAttr(self, rootStr, bottleSiteTarget);
-        objectGetAttr(self, rootStr).innerHTML += "System failure during setup; reload, and if it persists than please contact Dr. Bart.";
+        objectGetAttr(self, rootStr).innerHTML += "System failure during setup; reload, and if it persists then please contact Dr. Bart.";
 
         self.load_route.tp$call([self, defaultRouteStr, getStr, new pyDict([]), pyStr.$empty, pyStr.$empty]);
     };
