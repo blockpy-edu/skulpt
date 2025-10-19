@@ -461,6 +461,7 @@ Sk.importBuiltinWithBody = function (name, dumpJS, body, canSuspend) {
 Sk.builtin.__import__ = function (name, globals, locals, fromlist, level, askeyword=false) {
     //print("Importing: ", JSON.stringify(name), JSON.stringify(fromlist), level);
     //if (name == "") { debugger; }
+    var builtinModuleVersion;
 
     // TODO: Need to check if there is a builtins with the name __import__
     if (askeyword && Sk.globals["__builtins__"] !== undefined) {

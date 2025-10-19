@@ -1471,7 +1471,7 @@ Sk.misceval.errorUL = function (mangled) {
 Sk.exportSymbol("Sk.misceval.errorUL", Sk.misceval.errorUL);
 
 Sk.misceval.loadattr = function(val, mname) {
-    $ret = val.tp$getattr(mname, true);
+    const $ret = val.tp$getattr(mname, true);
     if ($ret === undefined) {
         const error_name = val.sk$type ? "type object '"+val.prototype.tp$name+"\'" : "'"+ Sk.abstr.typeName(val) +"' object";
         throw new Sk.builtin.AttributeError(error_name+" has no attribute '"+mname.$jsstr()+"'");
