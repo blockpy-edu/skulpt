@@ -63,6 +63,20 @@ function $builtinmodule() {
     const postStr = new pyStr("POST");
     let oldNavigation = null;
 
+    // If Sk.bottle is not defined, create an object for it
+    if (typeof Sk.bottle === "undefined") {
+        Sk.bottle = {
+            changeLocation(url) {
+                this.servers.forEach((server) => {
+                    // TODO: Accept parameters (and maybe files)
+                    const args = [server, new pyStr(url), getStr, new pyDict([]), pyStr.$empty, pyStr.$empty, new pyDict([])];
+                    return server.load_route.tp$call(args);
+                });
+            },
+            servers: []
+        };
+    }
+
     const changePageNavigation = function(target, callback) {
         if (oldNavigation) {
             target.removeEventListener("click", oldNavigation);
@@ -117,6 +131,7 @@ function $builtinmodule() {
             this.root = null;
             this.routes = {GET: {}, POST: {}};
             this.error_handler = {};
+            Sk.bottle.servers.push(self);
             return Sk.builtin.none.none$;
         });
         $loc.route = new Sk.builtin.func(function (self, path, verb, callback) {
@@ -230,7 +245,6 @@ function $builtinmodule() {
 
     var fileClass = function($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, filename, fileHandle) {
-            console.log("NEW FILE:", filename, root);
             this.filename = filename;
 
             const fileObject = Sk.misceval.callsimArray(bottle.ReadableFile, [fileHandle, filename]);
