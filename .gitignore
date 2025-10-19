@@ -8,6 +8,7 @@ doc/ProgMan/
 vendor/
 dist/*
 node_modules/
+node_modules_old/
 *.pyc
 .DS_Store
 test/namedtests.js

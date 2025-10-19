@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const minify = require("babel-minify");
+const terser = require("terser");
 const beautify = require("js-beautify");
 
 
@@ -66,7 +66,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                     if (exts.includes(ext)) {
                         let contents = fs.readFileSync(fullname, "utf8");
                         if (minifyjs && (ext === ".js")) {
-                            let result = minify(contents);
+                            let result = (terser.minify_sync(contents));
                             contents = result.code;
                         // AOT compilation
                         } else if (ext === ".py" && //endsWithAny(fullname, ALLOW_LIST)
@@ -84,7 +84,7 @@ function processDirectories(dirs, recursive, exts, ret, minifyjs, excludes) {
                             fullname = fullname.replace(/\.py$/, ".js");
                             contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
                             //fs.writeFileSync("dist/parts/"+file+".js", beautify(contents), 'utf8');
-                            contents = minify(contents).code;
+                            contents = terser.minify_sync(contents).code;
                             //fs.writeFileSync("dist/parts/"+file+".minified.js", contents, 'utf8');
                             //fs.writeFileSync("dist/parts/"+file+".minified.beautified.js", beautify(contents), 'utf8');
                         }
