@@ -29,8 +29,10 @@
     "test": "node test/testwrapper.js && node test/testunit.js --python3",
     "start": "node support/run/runfile.js",
     "precompile": "node support/precompile/precompile.js",
-    "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js -o",
+    "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js",
+    "cpuprofile": "node --cpu-prof support/run/runfile.js",
     "postprofile": "node --prof-process v8.log",
+    "heatgraph": "0x -- node support/run/runfile.js",
     "standaloneparser": "webpack src/standalone_parser.js -o dist/python_parser.js"
   },
   "repository": {
