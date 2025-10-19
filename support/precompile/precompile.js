@@ -25,7 +25,7 @@ Sk.configure({__future__: Sk.python3});
 
 const fs = require("fs");
 const path = require("path");
-const minify = require("babel-minify");
+const terser = require("terser");
 const beautify = require("js-beautify");
 
 function buildPythonFile(ret, fullname, contents, shouldMinify) {
@@ -51,7 +51,7 @@ function buildPythonFile(ret, fullname, contents, shouldMinify) {
     internalName = internalName.replace(/\.py$/, ".js");
     contents = co.code + "\nvar $builtinmodule = " + co.funcname + ";";
     if (shouldMinify) {
-        contents = minify(contents).code;
+        contents = terser.minify_sync(contents).code;
     }
     ret[internalName] = contents;
 }
