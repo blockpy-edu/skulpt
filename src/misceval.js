@@ -47,6 +47,39 @@ Sk.misceval.Suspension = function Suspension(resume, child, data) {
 Sk.exportSymbol("Sk.misceval.Suspension", Sk.misceval.Suspension);
 
 /**
+ * Global storage for source code by filename
+ * @type {Object.<string, Array.<string>>}
+ */
+Sk.sourceMaps = Sk.sourceMaps || {};
+
+/**
+ * Register source code for a filename
+ * @param {string} filename The name of the file
+ * @param {string} source The source code as a string
+ */
+Sk.registerSourceMap = function(filename, source) {
+    if (source) {
+        Sk.sourceMaps[filename] = source.split("\n");
+    }
+};
+Sk.exportSymbol("Sk.registerSourceMap", Sk.registerSourceMap);
+
+/**
+ * Get a specific line of source code
+ * @param {string} filename The name of the file
+ * @param {number} lineno The line number (1-indexed)
+ * @returns {string|undefined} The source line, or undefined if not found
+ */
+Sk.getSourceLine = function(filename, lineno) {
+    var sourceLines = Sk.sourceMaps[filename];
+    if (sourceLines && lineno > 0 && lineno <= sourceLines.length) {
+        return sourceLines[lineno - 1];
+    }
+    return undefined;
+};
+Sk.exportSymbol("Sk.getSourceLine", Sk.getSourceLine);
+
+/**
  * @description
  * Well this seems pretty obvious by the name what it should do..
  *
@@ -1393,10 +1426,21 @@ Sk.misceval.handleTraceback = function (err, currLineNo, currColNo, currSource, 
         err = new Sk.builtin.ExternalError(err);
     }
     Sk.err = err;
+    
+    // Look up source from the source map instead of using embedded source
+    var source = currSource;
+    if (!source && filename && currLineNo) {
+        source = Sk.getSourceLine(filename, currLineNo);
+        // Truncate long lines like the old behavior
+        if (source && source.length > 24) {
+            source = source.substr(0, 24) + "...";
+        }
+    }
+    
     err.traceback.push({
         lineno: currLineNo,
         colno: currColNo,
-        source: currSource,
+        source: source,
         filename: filename,
         scope: scopeName
     });
@@ -1445,7 +1489,7 @@ Sk.misceval.timeoutCheck = function(d) {
 };
 Sk.exportSymbol("Sk.misceval.timeoutCheck", Sk.misceval.timeoutCheck);
 
-Sk.misceval.injectSusp = function($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$source,$tmps) {
+Sk.misceval.injectSusp = function($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$tmps) {
     var susp = new Sk.misceval.Suspension();
     susp.child=$child;
     susp.data=susp.child.data;
@@ -1458,7 +1502,6 @@ Sk.misceval.injectSusp = function($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$
     susp.$filename=$filename;
     susp.$lineno=$lineno;
     susp.$colno=$colno;
-    susp.source=$source;
     susp.optional=susp.child.optional;
     susp.$tmps=$tmps;
     return susp;
