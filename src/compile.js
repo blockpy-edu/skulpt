@@ -3110,8 +3110,10 @@ Compiler.prototype.cmod = function (mod) {
 
 Compiler.prototype.handleTraceback = function (doContinue, scopeName) {
     doContinue = doContinue ? "continue" : "";
+    // Use $getSource to decode position if available, otherwise use $currSource directly
+    var sourceExpr = "(typeof $getSource!=='undefined'?$getSource($currSource):$currSource)";
     return "}catch(err){" +
-        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,$currSource,$fname,'" + scopeName + "');" +
+        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo," + sourceExpr + ",$fname,'" + scopeName + "');" +
         "if($exc.length>0){$err=err;$blk=$exc.pop();" + doContinue + "}else{throw err;}}}";
 };
 
