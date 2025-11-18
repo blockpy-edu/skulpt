@@ -1,19 +1,19 @@
-if ((typeof Sk !== 'undefined') && (Sk.inBrowser)) {
-    goog.require('goog.dom');
-    goog.require('goog.ui.ComboBox');
+if (typeof Sk !== "undefined" && Sk.inBrowser) {
+    goog.require("goog.dom");
+    goog.require("goog.ui.ComboBox");
 } else {
-    var fs = require('fs');
-    var sprintf = require('./sprintf.js');
+    var fs = require("fs");
+    var sprintf = require("./sprintf.js");
 }
 
 var tokenizefail = 0;
 var tokenizepass = 0;
 
 function dump_tokens(fn, input) {
-    var uneval = function(t) {
-        return new Sk.builtins['repr'](new Sk.builtins['str'](t)).v;
+    var uneval = function (t) {
+        return new Sk.builtins["repr"](new Sk.builtins["str"](t)).v;
     };
-    var ret = '',
+    var ret = "",
         lines = input.split("\n"),
         curIndex = 0,
         printer = function (type, token, st, en, line) {
@@ -21,7 +21,15 @@ function dump_tokens(fn, input) {
                 scol = st[1],
                 erow = en[0],
                 ecol = en[1];
-            var data = sprintf("%-12.12s %-13.13s (%d, %d) (%d, %d)", Sk.Tokenizer.tokenNames[type], uneval(token), srow, scol, erow, ecol);
+            var data = sprintf(
+                "%-12.12s %-13.13s (%d, %d) (%d, %d)",
+                Sk.Tokenizer.tokenNames[type],
+                uneval(token),
+                srow,
+                scol,
+                erow,
+                ecol
+            );
             //console.log("DUMP:"+data);
             ret += data;
             ret += "\n";
@@ -30,14 +38,20 @@ function dump_tokens(fn, input) {
     var tokenizer = new Sk.Tokenizer(fn, false, printer);
     var done = false;
     for (var i = 0; i < lines.length && !done; ++i) {
-        done = tokenizer.generateTokens(lines[i] + ((i === lines.length - 1) ? "" : "\n"));
+        done = tokenizer.generateTokens(lines[i] + (i === lines.length - 1 ? "" : "\n"));
     }
-    if (!done) {tokenizer.generateTokens();}
+    if (!done) {
+        tokenizer.generateTokens();
+    }
     return ret;
 }
 
 function testTokenize(name) {
-    try { var input = fs.readFileSync(name + ".py", "utf8"); } catch (e) { return; }
+    try {
+        var input = fs.readFileSync(name + ".py", "utf8");
+    } catch (e) {
+        return;
+    }
 
     if (input.charAt(input.length - 1) !== "\n") {
         throw "input wasn't nl term";
@@ -48,7 +62,7 @@ function testTokenize(name) {
     }
 
     var expect = fs.readFileSync(name + ".expect", "utf8");
-    var got = '';
+    var got = "";
     try {
         got = dump_tokens(name + ".py", input);
     } catch (e) {
@@ -70,7 +84,11 @@ var parsefail = 0;
 var parsepass = 0;
 
 function testParse(name) {
-    try { var input = fs.readFileSync(name + ".py", "utf8"); } catch (e) { return; }
+    try {
+        var input = fs.readFileSync(name + ".py", "utf8");
+    } catch (e) {
+        return;
+    }
 
     var expect = fs.readFileSync(name + ".expect", "utf8");
     var got;
@@ -99,10 +117,16 @@ var transformfail = 0;
 var transformdisabled = 0;
 
 function testTransform(name) {
-    try { var input = fs.readFileSync(name + ".py", "utf8"); } catch (e) { return; }
+    try {
+        var input = fs.readFileSync(name + ".py", "utf8");
+    } catch (e) {
+        return;
+    }
 
-    var expect = 'NO_.TRANS_FILE';
-    try { expect = fs.readFileSync(name + ".trans", "utf8"); } catch (e) {
+    var expect = "NO_.TRANS_FILE";
+    try {
+        expect = fs.readFileSync(name + ".trans", "utf8");
+    } catch (e) {
         transformdisabled += 1;
         return;
     }
@@ -131,11 +155,17 @@ var symtabpass = 0;
 var symtabfail = 0;
 var symtabdisabled = 0;
 function testSymtab(name) {
-    try { var input = fs.readFileSync(name + ".py", "utf8"); } catch (e) { return; }
+    try {
+        var input = fs.readFileSync(name + ".py", "utf8");
+    } catch (e) {
+        return;
+    }
     //console.log(name);
 
-    var expect = 'NO_.SYMTAB_FILE';
-    try { expect = fs.readFileSync(name + ".py.symtab", "utf8"); } catch (e) {
+    var expect = "NO_.SYMTAB_FILE";
+    try {
+        expect = fs.readFileSync(name + ".py.symtab", "utf8");
+    } catch (e) {
         symtabdisabled += 1;
         return;
     }
@@ -162,35 +192,49 @@ var runpass = 0;
 var runfail = 0;
 var rundisabled = 0;
 function testRun(name, nocatch, debugMode) {
-    try { var input = fs.readFileSync(process.cwd() + '/' + name + ".py", "utf8"); } catch (e) {
-        try { fs.readFileSync(name + ".py.disabled", "utf8"); rundisabled += 1;} catch (e) {}
+    try {
+        var input = fs.readFileSync(process.cwd() + "/" + name + ".py", "utf8");
+    } catch (e) {
+        try {
+            fs.readFileSync(name + ".py.disabled", "utf8");
+            rundisabled += 1;
+        } catch (e) {
+            // TODO: Log that the file is unable to be found
+        }
         return;
     }
 
     AllRunTests.unshift(name);
 
-    var got = '';
-    var justpath = name.substr(0, name.lastIndexOf('/'));
+    var got = "";
+    var justpath = name.substr(0, name.lastIndexOf("/"));
     Sk.configure({
-        output: function(str) { got += str; },
-        sysargv: [ name + '.py' ],
-        read: (fname) => { return fs.readFileSync(fname, "utf8"); },
+        output: function (str) {
+            got += str;
+        },
+        sysargv: [name + ".py"],
+        read: (fname) => {
+            return fs.readFileSync(fname, "utf8");
+        },
         debugging: debugMode,
         __future__: Sk.python2,
-        syspath: [ justpath ]
+        syspath: [justpath],
     });
 
     var expect = fs.readFileSync(name + ".py.real", "utf8");
     var expectalt;
-    try { expectalt = fs.readFileSync(name + ".py.real.alt", "utf8"); } catch (e) {}
+    try {
+        expectalt = fs.readFileSync(name + ".py.real.alt", "utf8");
+    } catch (e) {
+    }
 
-    var justname = name.substr(name.lastIndexOf('/') + 1);
-    var promise = Sk.misceval.asyncToPromise(function() {
+    var justname = name.substr(name.lastIndexOf("/") + 1);
+    var promise = Sk.misceval.asyncToPromise(function () {
         return Sk.importMain(justname, false, true);
     });
 
     if (!nocatch) {
-        promise = promise.then(null, function(e) {
+        promise = promise.then(null, function (e) {
             if (e instanceof Sk.builtin.SystemExit) {
                 // SystemExit isn't a failing exception, so treat it specially
                 got += e.toString() + "\n";
@@ -204,8 +248,8 @@ function testRun(name, nocatch, debugMode) {
         });
 
         var origPromise = promise;
-        promise = new Promise(function(resolve) {
-            var compareResult = function(module) {
+        promise = new Promise(function (resolve) {
+            var compareResult = function (module) {
                 if (expect !== got && (expectalt === undefined || expectalt !== got)) {
                     console.log("FAILED: (" + name + ".py)\n-----");
                     console.log(input);
@@ -218,10 +262,22 @@ function testRun(name, nocatch, debugMode) {
                     console.log("len wanted: " + expect.length + "\n");
                     var longest = got.length > expect.length ? got : expect;
                     for (var i in longest) {
-                        if (got[i] !== expect[i]){
-                            try{
-                                console.log("firstdiff at: " + i + " got: " + got[i].charCodeAt(0) + " (" + got.substr(i) + ") expect: " + expect[i].charCodeAt(0) + " (" + expect.substr(i) + ")");
-                            } catch (err){
+                        if (got[i] !== expect[i]) {
+                            try {
+                                console.log(
+                                    "firstdiff at: " +
+                                        i +
+                                        " got: " +
+                                        got[i].charCodeAt(0) +
+                                        " (" +
+                                        got.substr(i) +
+                                        ") expect: " +
+                                        expect[i].charCodeAt(0) +
+                                        " (" +
+                                        expect.substr(i) +
+                                        ")"
+                                );
+                            } catch (err) {
                                 break;
                             }
                             break;
@@ -250,15 +306,22 @@ var interactivepass = 0;
 var interactivefail = 0;
 var interactivedisabled = 0;
 function testInteractive(name) {
-    try { var input = fs.readFileSync(name + ".py", "utf8"); } catch (e) {
-        try { fs.readFileSync(name + ".py.disabled", "utf8"); interactivedisabled += 1;} catch (e) {}
+    try {
+        var input = fs.readFileSync(name + ".py", "utf8");
+    } catch (e) {
+        try {
+            fs.readFileSync(name + ".py.disabled", "utf8");
+            interactivedisabled += 1;
+        } catch (e) {}
         return;
     }
 
     var expect = fs.readFileSync(name + ".py.real", "utf8");
 
-    var got = '';
-    sk$output = function(str) { got += str; };
+    var got = "";
+    sk$output = function (str) {
+        got += str;
+    };
 
     var lines = input.split("\n");
     var ic = new Skulpt.InteractiveContext();
@@ -269,8 +332,12 @@ function testInteractive(name) {
         if (js !== false) {
             try {
                 var ret = eval(js);
-                if (ret && ret.$r !== undefined) {got += ret.$r().v + "\n";}
-            } catch (e) { got += "EXCEPTION: " + e.name + "\n"; }
+                if (ret && ret.$r !== undefined) {
+                    got += ret.$r().v + "\n";
+                }
+            } catch (e) {
+                got += "EXCEPTION: " + e.name + "\n";
+            }
             //console.log("made new context");
             ic = new Skulpt.InteractiveContext();
         }
@@ -295,9 +362,10 @@ var doTestSymtab = false;
 var doTestRun = true;
 var testInDebugMode = process.argv.indexOf("--debug-mode") != -1;
 function testsMain() {
-    var i, promise = Promise.resolve();
+    var i,
+        promise = Promise.resolve();
     var starttime, endtime, elapsed;
-    
+
     if (doTestToken) {
         for (i = 0; i <= 100; i += 1) {
             testTokenize(sprintf("test/tokenize/t%02d", i));
@@ -314,57 +382,76 @@ function testsMain() {
         for (i = 0; i <= 1000; ++i) {
             testTransform(sprintf("test/run/t%02d", i));
         }
-        console.log(sprintf("transform: %d/%d (+%d disabled)", transformpass, transformpass + transformfail, transformdisabled));
+        console.log(
+            sprintf(
+                "transform: %d/%d (+%d disabled)",
+                transformpass,
+                transformpass + transformfail,
+                transformdisabled
+            )
+        );
     }
     if (doTestSymtab) {
         for (i = 0; i <= 1000; ++i) {
             testSymtab(sprintf("test/run/t%02d", i));
         }
-        console.log(sprintf("symtab: %d/%d (+%d disabled)", symtabpass, symtabpass + symtabfail, symtabdisabled));
+        console.log(
+            sprintf(
+                "symtab: %d/%d (+%d disabled)",
+                symtabpass,
+                symtabpass + symtabfail,
+                symtabdisabled
+            )
+        );
     }
     if (doTestRun) {
         starttime = Date.now();
         for (i = 0; i <= 1000; ++i) {
-            (function(i) {
-                promise = promise.then(function(p) {
+            (function (i) {
+                promise = promise.then(function (p) {
                     return testRun(sprintf("test/run/t%02d", i), undefined, testInDebugMode);
                 });
             })(i);
         }
-        promise = promise.then(function() {
-            endtime = Date.now();
-            console.log(sprintf("run: %d/%d (+%d disabled)", runpass, runpass + runfail, rundisabled));
-            elapsed = (endtime - starttime) / 1000;
-            console.log("Total run time for all tests: " + elapsed.toString() + "s");
-        }, function(e) {
-            console.log("Internal error: "+e);
-        });
+        promise = promise.then(
+            function () {
+                endtime = Date.now();
+                console.log(
+                    sprintf("run: %d/%d (+%d disabled)", runpass, runpass + runfail, rundisabled)
+                );
+                elapsed = (endtime - starttime) / 1000;
+                console.log("Total run time for all tests: " + elapsed.toString() + "s");
+            },
+            function (e) {
+                console.log("Internal error: " + e);
+            }
+        );
     }
     if (Sk.inBrowser) {
         var origrunfail = runfail;
         runpass = runfail = rundisabled = 0;
         for (i = 0; i <= 20; ++i) {
-            (function(i) {
-                promise = promise.then(function() {
+            (function (i) {
+                promise = promise.then(function () {
                     testRun(sprintf("test/closure/t%02d", i));
                 });
             })(i);
         }
-        promise = promise.then(function() {
+        promise = promise.then(function () {
             console.log(sprintf("closure: %d/%d", runpass, runpass + runfail));
             runfail += origrunfail; // for exit code
 
             // make a combobox of all tests so we can run just one
-            var el = goog.dom.getElement('one-test');
+            var el = goog.dom.getElement("one-test");
             var cb = new goog.ui.ComboBox();
             cb.setUseDropdownArrow(true);
-            cb.setDefaultText('Run one test...');
+            cb.setDefaultText("Run one test...");
             for (var i = 0; i < AllRunTests.length; ++i) {
                 cb.addItem(new goog.ui.ComboBoxItem(AllRunTests[i]));
             }
             cb.render(el);
-            goog.events.listen(cb, 'change', function(e) {
-                goog.dom.setTextContent(goog.dom.getElement('output'), "");
+            goog.events.listen(cb, "change", function (e) {
+                goog.dom.setTextContent(goog.dom.getElement("output"), "");
                 console.log("running", e.target.getValue());
                 testRun(e.target.getValue(), true);
             });
@@ -380,10 +467,11 @@ function testsMain() {
     //    console.log(sprintf("interactive: %d/%d (+%d disabled)", interactivepass, interactivepass + interactivefail, interactivedisabled));
     //console.log('exiting with: ' + tokenizefail + parsefail + transformfail + symtabfail + runfail + interactivefail);
     if (!Sk.inBrowser) {
-        promise.then(function(x) {
+        promise.then(function (x) {
             console.log("Quitting");
 
-            var exitCode = tokenizefail + parsefail + transformfail + symtabfail + runfail + interactivefail;
+            var exitCode =
+                tokenizefail + parsefail + transformfail + symtabfail + runfail + interactivefail;
             if (exitCode > 0) {
                 process.exit(exitCode);
             }

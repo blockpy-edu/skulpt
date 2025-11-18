@@ -23,7 +23,6 @@ Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
             throw new TypeError("bad internal call to generator, use 'new'");
         }
 
-
         this.func_code = code;
         this.func_globals = globals || null;
         this.gi$running = false;
@@ -32,14 +31,14 @@ Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
         this.gi$locals = {};
         this.gi$cells = {};
         if (args.length > 0) {
-        // store arguments into locals because they have to be maintained
-        // too. 'fast' var lookups are locals in generator functions.
+            // store arguments into locals because they have to be maintained
+            // too. 'fast' var lookups are locals in generator functions.
             for (i = 0; i < code.co_varnames.length; ++i) {
                 this.gi$locals[code.co_varnames[i]] = args[i];
             }
         }
         if (closure2 !== undefined) {
-        // todo; confirm that modification here can't cause problems
+            // todo; confirm that modification here can't cause problems
             for (k in closure2) {
                 closure[k] = closure2[k];
             }
@@ -84,11 +83,11 @@ Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
             self["gi$running"] = false;
             Sk.asserts.assert(ret !== undefined);
             if (Array.isArray(ret)) {
-            // returns a pair: resume target and yielded value
+                // returns a pair: resume target and yielded value
                 self["gi$resumeat"] = ret[0];
                 ret = ret[1];
             } else {
-            // todo; StopIteration
+                // todo; StopIteration
                 self.gi$ret = ret;
                 return undefined;
             }
@@ -105,7 +104,9 @@ Sk.builtin.generator = Sk.abstr.buildIteratorClass("generator", {
                         // this is a weird quirk - and only for printing purposes StopIteration(None) vs StopIteration()
                         // .value ends up being None. But the repr prints the args we pass to StopIteration.
                         // See tests in test_yield_from and search for StopIteration()
-                        throw v !== undefined && v !== Sk.builtin.none.none$ ? new Sk.builtin.StopIteration(v) : new Sk.builtin.StopIteration();
+                        throw v !== undefined && v !== Sk.builtin.none.none$
+                            ? new Sk.builtin.StopIteration(v)
+                            : new Sk.builtin.StopIteration();
                     }
                     return ret;
                 });

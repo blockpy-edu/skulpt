@@ -2,24 +2,20 @@
 @constructor
 */
 function Layout(p) {
-	/** initilize 1 */
-	this.init = function(p) {
-	}
-	
-	/** get the id */
-	this.getId = function() {
-	}
-	
-	/** @type string */
-	this.orientation = "landscape";
-	
-	function getInnerElements(elementSecretId){
-	}
+    /** initilize 1 */
+    this.init = function (p) {};
+
+    /** get the id */
+    this.getId = function () {};
+
+    /** @type string */
+    this.orientation = "landscape";
+
+    function getInnerElements(elementSecretId) {}
 }
 
 /** A static method. */
-Layout.units = function() {
-}
+Layout.units = function () {};
 
 /**
 @constructor
@@ -28,9 +24,8 @@ Layout.units = function() {
 @borrows Layout.units
 */
 function Page() {
-	/** reset the page */
-	this.reset = function(b) {
-	}
+    /** reset the page */
+    this.reset = function (b) {};
 }
 
 /**
@@ -40,7 +35,6 @@ function Page() {
 @inherits Page.prototype.reset as #reset
 */
 function ThreeColumnPage() {
-	/** initilize 2 */
-	this.init = function(p) {
-	}
+    /** initilize 2 */
+    this.init = function (p) {};
 }

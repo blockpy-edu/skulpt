@@ -299,7 +299,9 @@ function $builtinmodule() {
         function _strptime(data_string, format = "%a %b %d %H:%M:%S %Y") {
             function _checkString(str, i) {
                 if (typeof str !== "string" && !checkString(str)) {
-                    throw new TypeError(`strptime() argument ${i} must be a str, not '${typeName(str)}'`);
+                    throw new TypeError(
+                        `strptime() argument ${i} must be a str, not '${typeName(str)}'`
+                    );
                 }
             }
             _checkString(data_string, 0);
@@ -329,7 +331,9 @@ function $builtinmodule() {
                         if (bad_directive == "\\") {
                             bad_directive = "%";
                         }
-                        throw new ValueError(`'${bad_directive}' is a bad directive in format '${format}'`);
+                        throw new ValueError(
+                            `'${bad_directive}' is a bad directive in format '${format}'`
+                        );
                     } else if (err instanceof IndexError) {
                         throw new ValueError("stray %% in format '" + format + "'");
                     }
@@ -340,11 +344,15 @@ function $builtinmodule() {
             const found = data_string.match(format_regex);
 
             if (found === null) {
-                throw new ValueError(`time data '${data_string}' does not match format '${format}'`);
+                throw new ValueError(
+                    `time data '${data_string}' does not match format '${format}'`
+                );
             }
 
             if (data_string.length !== found[0].length) {
-                throw new ValueError(`unconverted data remains: ${data_string.slice(found[0].length)}`);
+                throw new ValueError(
+                    `unconverted data remains: ${data_string.slice(found[0].length)}`
+                );
             }
 
             let iso_year = pyNone,
@@ -481,7 +489,11 @@ function $builtinmodule() {
                     for (let tz_values of locale_time.timezone) {
                         if (tz_values.includes(found_zone)) {
                             const tzname = time_mod.tzname.v;
-                            if (richCompareBool(tzname[0], tzname[1], "Eq") && isTrue(time_mod.daylight) && !["utc", "gmt"].includes(found_zone)) {
+                            if (
+                                richCompareBool(tzname[0], tzname[1], "Eq") &&
+                                isTrue(time_mod.daylight) &&
+                                !["utc", "gmt"].includes(found_zone)
+                            ) {
                                 break;
                             } else {
                                 tz = value;
@@ -494,16 +506,24 @@ function $builtinmodule() {
 
             if (year === pyNone && iso_year !== pyNone) {
                 if (iso_week === pyNone || weekday === pyNone) {
-                    throw new ValueError("ISO year directive '%G' must be used with the ISO week directive '%V' and a weekday directive ('%A','%a', '%w', or '%u').");
+                    throw new ValueError(
+                        "ISO year directive '%G' must be used with the ISO week directive '%V' and a weekday directive ('%A','%a', '%w', or '%u')."
+                    );
                 }
                 if (julian !== pyNone) {
-                    throw new ValueError("Day of the year directive '%j' is not compatible with ISO year directive '%G'.Use '%Y' instead.");
+                    throw new ValueError(
+                        "Day of the year directive '%j' is not compatible with ISO year directive '%G'.Use '%Y' instead."
+                    );
                 }
             } else if (week_of_year === pyNone && iso_week !== pyNone) {
                 if (weekday === pyNone) {
-                    throw new ValueError("ISO week directive '%V' must be used with the ISO year directive '%G' and a weekday directive ('%A', '%a', '%w', or '%u').");
+                    throw new ValueError(
+                        "ISO week directive '%V' must be used with the ISO year directive '%G' and a weekday directive ('%A', '%a', '%w', or '%u')."
+                    );
                 } else {
-                    throw new ValueError("ISO week directive '%V' is incompatible with the year directive '%Y'. Use the ISO year '%G' instead.");
+                    throw new ValueError(
+                        "ISO week directive '%V' is incompatible with the year directive '%Y'. Use the ISO year '%G' instead."
+                    );
                 }
             }
 
@@ -530,9 +550,14 @@ function $builtinmodule() {
             }
 
             if (julian === pyNone) {
-                julian = new datetime_date(year, month, day).$toOrdinal() - new datetime_date(year, 1, 1).$toOrdinal() + 1;
+                julian =
+                    new datetime_date(year, month, day).$toOrdinal() -
+                    new datetime_date(year, 1, 1).$toOrdinal() +
+                    1;
             } else {
-                const datetime_result = _fromordinal(julian - 1 + new datetime_date(year, 1, 1).$toOrdinal());
+                const datetime_result = _fromordinal(
+                    julian - 1 + new datetime_date(year, 1, 1).$toOrdinal()
+                );
                 year = datetime_result.$year;
                 month = datetime_result.$month;
                 day = datetime_result.$day;
@@ -546,7 +571,11 @@ function $builtinmodule() {
             if (leap_year_fix) {
                 year = 1900;
             }
-            return [[year, month, day, hour, minute, second, weekday, julian, tz, tzname, gmtoff], fraction, gmtoff_fraction];
+            return [
+                [year, month, day, hour, minute, second, weekday, julian, tz, tzname, gmtoff],
+                fraction,
+                gmtoff_fraction,
+            ];
         }
 
         function _strptime_time(data_string, format = "%a %b %d %H:%M:%S %Y") {
@@ -577,11 +606,17 @@ function $builtinmodule() {
         setUpModuleMethods("_strptime", mod, {
             _strptime_time: {
                 $meth: _strptime_time,
-                $flags: { NamedArgs: ["data_string", "format"], Defaults: ["%a %b %d %H:%M:%S %Y"] },
+                $flags: {
+                    NamedArgs: ["data_string", "format"],
+                    Defaults: ["%a %b %d %H:%M:%S %Y"],
+                },
             },
             _strptime_datetime: {
                 $meth: _strptime_datetime,
-                $flags: { NamedArgs: ["cls", "data_string", "format"], Defaults: ["%a %b %d %H:%M:%S %Y"] },
+                $flags: {
+                    NamedArgs: ["cls", "data_string", "format"],
+                    Defaults: ["%a %b %d %H:%M:%S %Y"],
+                },
             },
             _strptime: {
                 $meth(data_string, format) {
@@ -591,7 +626,10 @@ function $builtinmodule() {
                     res[2] = new pyInt(res[2]);
                     return new pyTuple(res);
                 },
-                $flags: { NamedArgs: ["data_string", "format"], Defaults: ["%a %b %d %H:%M:%S %Y"] },
+                $flags: {
+                    NamedArgs: ["data_string", "format"],
+                    Defaults: ["%a %b %d %H:%M:%S %Y"],
+                },
             },
             _getlang: {
                 $meth() {

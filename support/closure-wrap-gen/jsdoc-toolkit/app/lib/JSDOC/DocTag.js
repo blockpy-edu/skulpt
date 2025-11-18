@@ -3,67 +3,67 @@ if (typeof JSDOC == "undefined") JSDOC = {};
 /**
 	@constructor
  */
-JSDOC.DocTag = function(src) {
-	this.init();
-	if (typeof src != "undefined") {
-		this.parse(src);
-	}
-}
+JSDOC.DocTag = function (src) {
+    this.init();
+    if (typeof src != "undefined") {
+        this.parse(src);
+    }
+};
 
 /**
 	Create and initialize the properties of this.
  */
-JSDOC.DocTag.prototype.init = function() {
-	this.title        = "";
-	this.type         = "";
-	this.name         = "";
-	this.isOptional   = false;
-	this.defaultValue = "";
-	this.desc         = "";
-	
-	return this;
-}
+JSDOC.DocTag.prototype.init = function () {
+    this.title = "";
+    this.type = "";
+    this.name = "";
+    this.isOptional = false;
+    this.defaultValue = "";
+    this.desc = "";
+
+    return this;
+};
 
 /**
 	Populate the properties of this from the given tag src.
 	@param {string} src
  */
-JSDOC.DocTag.prototype.parse = function(src) {
-	if (typeof src != "string") throw "src must be a string not "+(typeof src);
+JSDOC.DocTag.prototype.parse = function (src) {
+    if (typeof src != "string") throw "src must be a string not " + typeof src;
 
-	try {
-		src = this.nibbleTitle(src);
-		if (JSDOC.PluginManager) {
-			JSDOC.PluginManager.run("onDocTagSynonym", this);
-		}
-		
-		src = this.nibbleType(src);
-		
-		// only some tags are allowed to have names.
-		if (this.title == "param" || this.title == "property" || this.title == "config") { // @config is deprecated
-			src = this.nibbleName(src);
-		}
-	}
-	catch(e) {
-		if (LOG) LOG.warn(e);
-		else throw e;
-	}
-	this.desc = src; // whatever is left
-	
-	// example tags need to have whitespace preserved
-	if (this.title != "example") this.desc = this.desc.trim();
-	
-	if (JSDOC.PluginManager) {
-		JSDOC.PluginManager.run("onDocTag", this);
-	}
-}
+    try {
+        src = this.nibbleTitle(src);
+        if (JSDOC.PluginManager) {
+            JSDOC.PluginManager.run("onDocTagSynonym", this);
+        }
+
+        src = this.nibbleType(src);
+
+        // only some tags are allowed to have names.
+        if (this.title == "param" || this.title == "property" || this.title == "config") {
+            // @config is deprecated
+            src = this.nibbleName(src);
+        }
+    } catch (e) {
+        if (LOG) LOG.warn(e);
+        else throw e;
+    }
+    this.desc = src; // whatever is left
+
+    // example tags need to have whitespace preserved
+    if (this.title != "example") this.desc = this.desc.trim();
+
+    if (JSDOC.PluginManager) {
+        JSDOC.PluginManager.run("onDocTag", this);
+    }
+};
 
 /**
 	Automatically called when this is stringified.
  */
-JSDOC.DocTag.prototype.toString = function() {
-	return this.desc;
-}
+JSDOC.DocTag.prototype.toString = function () {
+    return this.desc;
+};
 
 /*t:
 	plan(1, "testing JSDOC.DocTag#toString");
@@ -77,17 +77,17 @@ JSDOC.DocTag.prototype.toString = function() {
 	@param {string} src
 	@return src
  */
-JSDOC.DocTag.prototype.nibbleTitle = function(src) {
-	if (typeof src != "string") throw "src must be a string not "+(typeof src);
-	
-	var parts = src.match(/^\s*(\S+)(?:\s([\s\S]*))?$/);
+JSDOC.DocTag.prototype.nibbleTitle = function (src) {
+    if (typeof src != "string") throw "src must be a string not " + typeof src;
 
-	if (parts && parts[1]) this.title = parts[1];
-	if (parts && parts[2]) src = parts[2];
-	else src = "";
-	
-	return src;
-}
+    var parts = src.match(/^\s*(\S+)(?:\s([\s\S]*))?$/);
+
+    if (parts && parts[1]) this.title = parts[1];
+    if (parts && parts[2]) src = parts[2];
+    else src = "";
+
+    return src;
+};
 
 /*t:
 	plan(8, "testing JSDOC.DocTag#nibbleTitle");
@@ -119,21 +119,24 @@ JSDOC.DocTag.prototype.nibbleTitle = function(src) {
 	@param {string} src
 	@return src
  */
-JSDOC.DocTag.prototype.nibbleType = function(src) {
-	if (typeof src != "string") throw "src must be a string not "+(typeof src);
-	
-	if (src.match(/^\s*\{/)) {
-		var typeRange = src.balance("{", "}");
-		if (typeRange[1] == -1) {
-			throw "Malformed comment tag ignored. Tag type requires an opening { and a closing }: "+src;
-		}
-		this.type = src.substring(typeRange[0]+1, typeRange[1]).trim();
-		this.type = this.type.replace(/\s*,\s*/g, "|"); // multiples can be separated by , or |
-		src = src.substring(typeRange[1]+1);
-	}
-	
-	return src;
-}
+JSDOC.DocTag.prototype.nibbleType = function (src) {
+    if (typeof src != "string") throw "src must be a string not " + typeof src;
+
+    if (src.match(/^\s*\{/)) {
+        var typeRange = src.balance("{", "}");
+        if (typeRange[1] == -1) {
+            throw (
+                "Malformed comment tag ignored. Tag type requires an opening { and a closing }: " +
+                src
+            );
+        }
+        this.type = src.substring(typeRange[0] + 1, typeRange[1]).trim();
+        this.type = this.type.replace(/\s*,\s*/g, "|"); // multiples can be separated by , or |
+        src = src.substring(typeRange[1] + 1);
+    }
+
+    return src;
+};
 
 /*t:
 	plan(5, "testing JSDOC.DocTag.parser.nibbleType");
@@ -163,40 +166,42 @@ JSDOC.DocTag.prototype.nibbleType = function(src) {
 	@param {string} src
 	@return src
  */
-JSDOC.DocTag.prototype.nibbleName = function(src) {
-	if (typeof src != "string") throw "src must be a string not "+(typeof src);
-	
-	src = src.trim();
-	
-	// is optional?
-	if (src.charAt(0) == "[") {
-		var nameRange = src.balance("[", "]");
-		if (nameRange[1] == -1) {
-			throw "Malformed comment tag ignored. Tag optional name requires an opening [ and a closing ]: "+src;
-		}
-		this.name = src.substring(nameRange[0]+1, nameRange[1]).trim();
-		this.isOptional = true;
-		
-		src = src.substring(nameRange[1]+1);
-		
-		// has default value?
-		var nameAndValue = this.name.split("=");
-		if (nameAndValue.length) {
-			this.name = nameAndValue.shift().trim();
-			this.defaultValue = nameAndValue.join("=");
-		}
-	}
-	else {
-		var parts = src.match(/^([a-zA-Z0-9_$.]+)(?:[\s-]+([\s\S]*))?$/);
-		if (parts) {
-			if (parts[1]) this.name = parts[1];
-			if (parts[2]) src = parts[2].trim();
-			else src = "";
-		}
-	}	
+JSDOC.DocTag.prototype.nibbleName = function (src) {
+    if (typeof src != "string") throw "src must be a string not " + typeof src;
 
-	return src;
-}
+    src = src.trim();
+
+    // is optional?
+    if (src.charAt(0) == "[") {
+        var nameRange = src.balance("[", "]");
+        if (nameRange[1] == -1) {
+            throw (
+                "Malformed comment tag ignored. Tag optional name requires an opening [ and a closing ]: " +
+                src
+            );
+        }
+        this.name = src.substring(nameRange[0] + 1, nameRange[1]).trim();
+        this.isOptional = true;
+
+        src = src.substring(nameRange[1] + 1);
+
+        // has default value?
+        var nameAndValue = this.name.split("=");
+        if (nameAndValue.length) {
+            this.name = nameAndValue.shift().trim();
+            this.defaultValue = nameAndValue.join("=");
+        }
+    } else {
+        var parts = src.match(/^([a-zA-Z0-9_$.]+)(?:[\s-]+([\s\S]*))?$/);
+        if (parts) {
+            if (parts[1]) this.name = parts[1];
+            if (parts[2]) src = parts[2].trim();
+            else src = "";
+        }
+    }
+
+    return src;
+};
 
 /*t:
 	requires("../frame/String.js");

@@ -50,7 +50,10 @@ Sk.builtin.GenericAlias = Sk.abstr.buildNativeClass("types.GenericAlias", {
             try {
                 obj.tp$setattr(new Sk.builtin.str("__orig_class__"), this);
             } catch (e) {
-                if (!(e instanceof Sk.builtin.AttributeError) && !(e instanceof Sk.builtin.TypeError)) {
+                if (
+                    !(e instanceof Sk.builtin.AttributeError) &&
+                    !(e instanceof Sk.builtin.TypeError)
+                ) {
                     throw e;
                 }
             }
@@ -74,7 +77,9 @@ Sk.builtin.GenericAlias = Sk.abstr.buildNativeClass("types.GenericAlias", {
             }
             const nparams = this.$params.sq$length();
             if (nparams === 0) {
-                throw new Sk.builtin.TypeError("There are no type variables left in " + Sk.misceval.objectRepr(this));
+                throw new Sk.builtin.TypeError(
+                    "There are no type variables left in " + Sk.misceval.objectRepr(this)
+                );
             }
 
             /**@todo the following only makes sense when we do typing*/
@@ -112,13 +117,17 @@ Sk.builtin.GenericAlias = Sk.abstr.buildNativeClass("types.GenericAlias", {
         },
         __instancecheck__: {
             $meth(_) {
-                throw new Sk.builtin.TypeError("isinstance() argument 2 cannot be a parameterized generic");
+                throw new Sk.builtin.TypeError(
+                    "isinstance() argument 2 cannot be a parameterized generic"
+                );
             },
             $flags: { OneArg: true },
         },
         __subclasscheck__: {
             $meth(_) {
-                throw new Sk.builtin.TypeError("issubclass() argument 2 cannot be a parameterized generic");
+                throw new Sk.builtin.TypeError(
+                    "issubclass() argument 2 cannot be a parameterized generic"
+                );
             },
             $flags: { OneArg: true },
         },

@@ -23,10 +23,15 @@ Sk.builtin.enumerate = Sk.abstr.buildIteratorClass("enumerate", {
         return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
     },
     slots: {
-        tp$doc:
-            "Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",
+        tp$doc: "Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",
         tp$new(args, kwargs) {
-            let [iterable, start] = Sk.abstr.copyKeywordsToNamedArgs("enumerate", ["iterable", "start"], args, kwargs, [new Sk.builtin.int_(0)]);
+            let [iterable, start] = Sk.abstr.copyKeywordsToNamedArgs(
+                "enumerate",
+                ["iterable", "start"],
+                args,
+                kwargs,
+                [new Sk.builtin.int_(0)]
+            );
             iterable = Sk.abstr.iter(iterable);
             start = Sk.misceval.asIndexOrThrow(start);
             if (this === Sk.builtin.enumerate.prototype) {

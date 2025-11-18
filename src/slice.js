@@ -49,7 +49,7 @@ Sk.builtin.slice = Sk.abstr.buildNativeClass("slice", {
             return t1.tp$richcompare(t2, op);
         },
     },
-    getsets: /**@lends {Sk.builtin.slice.prototype} */{
+    getsets: /**@lends {Sk.builtin.slice.prototype} */ {
         start: {
             $get() {
                 return this.start;
@@ -66,25 +66,28 @@ Sk.builtin.slice = Sk.abstr.buildNativeClass("slice", {
             },
         },
     },
-    methods: /**@lends {Sk.builtin.slice.prototype} */{
+    methods: /**@lends {Sk.builtin.slice.prototype} */ {
         indices: {
             $meth: function indices(length) {
                 length = Sk.misceval.asIndexSized(length, Sk.builtin.OverflowError); // let's not support lengths larger than this.
-                // don't support large lengths here which seems fair. 
+                // don't support large lengths here which seems fair.
                 if (length < 0) {
                     throw new Sk.builtin.TypeError("length should not be negative");
                 }
-                const {start, stop, step} = this.slice$indices(length);
-                return new Sk.builtin.tuple([new Sk.builtin.int_(start), new Sk.builtin.int_(stop), new Sk.builtin.int_(step)]);
+                const { start, stop, step } = this.slice$indices(length);
+                return new Sk.builtin.tuple([
+                    new Sk.builtin.int_(start),
+                    new Sk.builtin.int_(stop),
+                    new Sk.builtin.int_(step),
+                ]);
             },
-            $doc:
-                "S.indices(len) -> (start, stop, stride)\n\nAssuming a sequence of length len, calculate the start and stop\nindices, and the stride length of the extended slice described by\nS. Out of bounds indices are clipped in a manner consistent with the\nhandling of normal slices.",
+            $doc: "S.indices(len) -> (start, stop, stride)\n\nAssuming a sequence of length len, calculate the start and stop\nindices, and the stride length of the extended slice described by\nS. Out of bounds indices are clipped in a manner consistent with the\nhandling of normal slices.",
             $textsig: null,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
         },
     },
-    proto: /**@lends {Sk.builtin.slice.prototype} */{
-        slice$as_indices (sized) {
+    proto: /**@lends {Sk.builtin.slice.prototype} */ {
+        slice$as_indices(sized) {
             let start, stop, step;
             const msg = "slice indices must be integers or None or have an __index__ method";
             let getIndex;
@@ -111,12 +114,13 @@ Sk.builtin.slice = Sk.abstr.buildNativeClass("slice", {
             } else {
                 stop = getIndex(this.stop);
             }
-            return {start: start, stop: stop, step: step};
+            return { start: start, stop: stop, step: step };
         },
         $wrt(length, start, stop, step, sized) {
             let idxFromNeg;
             if (sized) {
-                idxFromNeg = (idx) => JSBI.__isBigInt(idx) ? JSBI.add(idx, JSBI.BigInt(length)) : idx + length;
+                idxFromNeg = (idx) =>
+                    JSBI.__isBigInt(idx) ? JSBI.add(idx, JSBI.BigInt(length)) : idx + length;
             } else {
                 idxFromNeg = (idx) => idx + length;
             }
@@ -155,19 +159,19 @@ Sk.builtin.slice = Sk.abstr.buildNativeClass("slice", {
                 }
             }
 
-            return {start: start, stop: stop, step: step};
+            return { start: start, stop: stop, step: step };
         },
         slice$indices(length, sized) {
-            let {start, stop, step} = this.slice$as_indices(true, sized);
+            let { start, stop, step } = this.slice$as_indices(true, sized);
             return this.$wrt(length, start, stop, step, sized);
         },
         /**
          * used by objects like str, list, tuple that can return a slice
-         * @param {number} len 
+         * @param {number} len
          * @param {Function} f
          */
         sssiter$(len, f) {
-            let {start, stop, step} = this.slice$indices(len, true);
+            let { start, stop, step } = this.slice$indices(len, true);
             if (step > 0) {
                 for (let i = start; i < stop; i += step) {
                     f(i);
@@ -185,13 +189,13 @@ Sk.builtin.slice = Sk.abstr.buildNativeClass("slice", {
 });
 
 /**
- * 
- * @param {*} pyObj 
- * @param {*} start 
- * @param {*} end 
- * 
+ *
+ * @param {*} pyObj
+ * @param {*} start
+ * @param {*} end
+ *
  * @private
- * 
+ *
  * @description
  * helper function for methods that adjust their start, end arguments with respect to
  * a python sequence type object

@@ -4,7 +4,7 @@
 */
 
 Response.prototype = {
-	/**
+    /**
 	 @name Response#text
 	 @function
 	 @description
@@ -13,7 +13,7 @@ Response.prototype = {
 		Response as text
 	*/
 
-	text: function() {
-		return this.nativeResponse.responseText;
-	}
-}
+    text: function () {
+        return this.nativeResponse.responseText;
+    },
+};

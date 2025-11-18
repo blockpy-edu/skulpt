@@ -1,13 +1,21 @@
 Sk.builtin.structseq_types = {};
 
-Sk.builtin.make_structseq = function (module, name, visible_fields, hidden_fields={}, doc=null) {
+Sk.builtin.make_structseq = function (
+    module,
+    name,
+    visible_fields,
+    hidden_fields = {},
+    doc = null
+) {
     const nm = module + "." + name;
     const flds = [];
     const getsets = {};
     Object.keys(visible_fields).forEach((key, i) => {
         flds.push(key);
         getsets[key] = {
-            $get() { return this.v[i]; },
+            $get() {
+                return this.v[i];
+            },
             $doc: visible_fields[key],
         };
     });
@@ -41,9 +49,23 @@ Sk.builtin.make_structseq = function (module, name, visible_fields, hidden_field
                 Sk.abstr.checkOneArg(nm, args, kwargs);
                 const arg = Sk.misceval.arrayFromIterable(args[0]);
                 if (arg.length < n_flds) {
-                    throw new Sk.builtin.TypeError(nm + "() takes an at least " + n_flds + "-sequence (" + arg.length + "-sequence given)");
+                    throw new Sk.builtin.TypeError(
+                        nm +
+                            "() takes an at least " +
+                            n_flds +
+                            "-sequence (" +
+                            arg.length +
+                            "-sequence given)"
+                    );
                 } else if (arg.length > n_total_flds) {
-                    throw new Sk.builtin.TypeError(nm + "() takes an at most " + n_total_flds + "-sequence (" + arg.length + "-sequence given)"); 
+                    throw new Sk.builtin.TypeError(
+                        nm +
+                            "() takes an at most " +
+                            n_total_flds +
+                            "-sequence (" +
+                            arg.length +
+                            "-sequence given)"
+                    );
                 }
                 return new structseq(arg.slice(0, n_flds), arg.slice(n_flds));
             },
@@ -65,20 +87,19 @@ Sk.builtin.make_structseq = function (module, name, visible_fields, hidden_field
                 }
                 return new Sk.builtin.str(nm + "(" + ret + ")");
             },
-
         },
         methods: {
             __reduce__: {
                 $meth() {
                     throw new Sk.builtin.NotImplementedError("__reduce__ is not implemented");
                 },
-                $flags: {NoArgs: true}
-            }
+                $flags: { NoArgs: true },
+            },
         },
         getsets: getsets,
         proto: {
-            num_sequence_fields: new Sk.builtin.int_(n_flds)
-        }
+            num_sequence_fields: new Sk.builtin.int_(n_flds),
+        },
     });
     return structseq;
 };

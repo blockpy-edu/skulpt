@@ -2,13 +2,12 @@
  * @name bar
  * @namespace
  */
- 
-new function() {
+
+new (function () {
     /**
      * @name bar-foo
      * @function
      * @param {number} x
      */
-    function foo(x) {
-    }
-}
+    function foo(x) {}
+})();

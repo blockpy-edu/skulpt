@@ -128,7 +128,9 @@ Sk.configure = function (options) {
     Sk.asserts.assert(typeof Sk.imageProxy === "string" || typeof Sk.imageProxy === "function");
 
     Sk.BottleSiteTarget = options["BottleSiteTarget"] || "#website";
-    Sk.asserts.assert(typeof Sk.BottleSiteTarget === "string" || typeof Sk.BottleSiteTarget === "function");
+    Sk.asserts.assert(
+        typeof Sk.BottleSiteTarget === "string" || typeof Sk.BottleSiteTarget === "function"
+    );
 
     Sk.inputfun = options["inputfun"] || Sk.inputfun;
     Sk.asserts.assert(typeof Sk.inputfun === "function");
@@ -148,7 +150,7 @@ Sk.configure = function (options) {
     Sk.killableFor = options["killableFor"] || false;
     Sk.asserts.assert(typeof Sk.killableFor === "boolean");
 
-    Sk.signals = typeof options["signals"] !== undefined ? options["signals"] : null;
+    Sk.signals = typeof options["signals"] !== "undefined" ? options["signals"] : null;
     if (Sk.signals === true) {
         Sk.signals = {
             listeners: [],
@@ -214,7 +216,9 @@ Sk.configure = function (options) {
 
     Sk.switch_version(Sk.__future__.python3);
 
-    Sk.builtin.str.$next = Sk.__future__.python3 ? new Sk.builtin.str("__next__") : new Sk.builtin.str("next");
+    Sk.builtin.str.$next = Sk.__future__.python3
+        ? new Sk.builtin.str("__next__")
+        : new Sk.builtin.str("next");
 
     Sk.setupOperators(Sk.__future__.python3);
     Sk.setupDunderMethods(Sk.__future__.python3);
@@ -247,7 +251,6 @@ Sk.timeoutMsg = function () {
 };
 Sk.exportSymbol("Sk.timeoutMsg", Sk.timeoutMsg);
 
-
 /**
  * If the timer needs to be paused, store it here.
  * @type {number}
@@ -273,8 +276,7 @@ Sk.execStack = [];
 /*
  * Replacable output redirection (called from print, etc).
  */
-Sk.output = function (x) {
-};
+Sk.output = function (x) {};
 
 /*
  * Replacable function to load modules with (called via import, etc.)
@@ -307,16 +309,14 @@ Sk.syspath = [];
 
 Sk.inBrowser = Sk.global["document"] !== undefined;
 
-Sk.afterSingleExecution = function (args) {
-};
+Sk.afterSingleExecution = function (args) {};
 Sk.exportSymbol("Sk.afterSingleExecution", Sk.afterSingleExecution);
 
 /**
  * Internal function used for debug output.
  * @param {...} args
  */
-Sk.debugout = function (args) {
-};
+Sk.debugout = function (args) {};
 
 (function () {
     // set up some sane defaults based on availability
@@ -345,10 +345,8 @@ Sk.inputfun = function (args) {
 /**
  * currently can't seem to remove these functions without a serious slow down of 2x
  */
-Sk.setup_method_mappings = function () {
-};
-Sk.setupDictIterators = function (python3) {
-};
+Sk.setup_method_mappings = function () {};
+Sk.setupDictIterators = function (python3) {};
 
 Sk.switch_version = function (py3) {
     const methods_to_map = {
@@ -405,7 +403,10 @@ Sk.switch_version = function (py3) {
             const method_name = method_names[i];
             delete klass.prototype[method_name];
             if (in_version[i]) {
-                klass.prototype[method_name] = new Sk.builtin.method_descriptor(klass, new_methods[method_name]);
+                klass.prototype[method_name] = new Sk.builtin.method_descriptor(
+                    klass,
+                    new_methods[method_name]
+                );
             }
         }
     }

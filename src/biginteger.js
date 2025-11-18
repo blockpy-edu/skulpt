@@ -36,7 +36,6 @@
  * and disclaimer.
  */
 
-
 // (public) Constructor
 /**
  * @constructor

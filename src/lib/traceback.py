@@ -233,7 +233,8 @@ def extract_stack(f=None, limit=None):
     from oldest to newest stack frame.
     """
     if f is None:
-        f = sys._getframe().f_back
+        f = sys._getframe()
+        f = f.f_back
     stack = StackSummary.extract(walk_stack(f), limit=limit)
     stack.reverse()
     return stack

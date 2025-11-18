@@ -7,21 +7,21 @@ Always reference these instructions first and fallback to search or bash command
 ## Working Effectively
 
 - Bootstrap, build, and test the repository:
-  - `npm install --legacy-peer-deps` -- installs dependencies. REQUIRED: Use `--legacy-peer-deps` flag due to closure compiler dependency conflicts.
-  - `npm run devbuild` -- development build (unoptimized). Takes ~25 seconds. NEVER CANCEL. Set timeout to 60+ minutes.
-  - `npm run build` -- production build (optimized). **CURRENT ISSUE**: Fails due to extensive ESLint indentation errors in the codebase.
-  - `npm test` -- runs all tests. Takes ~5 seconds. NEVER CANCEL. Set timeout to 30+ minutes.
-  - `npm run dist` -- full distribution (build + test + docs). **WARNING**: Currently fails due to production build issues.
+    - `npm install --legacy-peer-deps` -- installs dependencies. REQUIRED: Use `--legacy-peer-deps` flag due to closure compiler dependency conflicts.
+    - `npm run devbuild` -- development build (unoptimized). Takes ~25 seconds. NEVER CANCEL. Set timeout to 60+ minutes.
+    - `npm run build` -- production build (optimized). **CURRENT ISSUE**: Fails due to extensive ESLint indentation errors in the codebase.
+    - `npm test` -- runs all tests. Takes ~5 seconds. NEVER CANCEL. Set timeout to 30+ minutes.
+    - `npm run dist` -- full distribution (build + test + docs). **WARNING**: Currently fails due to production build issues.
 
 - Run Python code:
-  - `npm start py3 <file.py>` -- run Python 3 file (requires devbuild first)
-  - `npm start py2 <file.py>` -- run Python 2 file (requires devbuild first)
-  - `npm run repl py3` -- open Python 3 REPL (requires devbuild first)
-  - `npm run repl py2` -- open Python 2 REPL (requires devbuild first)
+    - `npm start py3 <file.py>` -- run Python 3 file (requires devbuild first)
+    - `npm start py2 <file.py>` -- run Python 2 file (requires devbuild first)
+    - `npm run repl py3` -- open Python 3 REPL (requires devbuild first)
+    - `npm run repl py2` -- open Python 2 REPL (requires devbuild first)
 
 - Browser testing:
-  - `npm run brun <file.py>` -- runs Python file in browser (opens local server at localhost:8080)
-  - `npm run btest` -- runs unit tests in browser
+    - `npm run brun <file.py>` -- runs Python file in browser (opens local server at localhost:8080)
+    - `npm run btest` -- runs unit tests in browser
 
 ## Build Issues and Workarounds
 
@@ -34,11 +34,11 @@ Always reference these instructions first and fallback to search or bash command
 
 - Always use `npm run devbuild` first before testing any changes.
 - Test basic functionality with the REPL: `npm run repl py3`, then try:
-  ```python
-  print("Hello, Skulpt!")
-  import math
-  math.sqrt(16)
-  ```
+    ```python
+    print("Hello, Skulpt!")
+    import math
+    math.sqrt(16)
+    ```
 - Test file execution by creating a test script and running: `npm start py3 <file.py>`
 - ALWAYS manually test Python functionality after making changes to ensure the interpreter works correctly.
 - Test results show ~553/563 tests pass (98.2% pass rate).
@@ -52,7 +52,7 @@ The following are outputs from frequently run commands. Reference them instead o
 ```bash
 # Essential workflow (use these commands in order):
 npm install --legacy-peer-deps    # ~55 seconds
-npm run devbuild                  # ~25 seconds  
+npm run devbuild                  # ~25 seconds
 npm test                          # ~5 seconds
 npm start py3 <file.py>          # Run Python file
 npm run repl py3                 # Interactive Python shell

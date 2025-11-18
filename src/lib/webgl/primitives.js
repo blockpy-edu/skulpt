@@ -3,7 +3,6 @@
 var $builtinmodule = function (name) {
     var mod = {};
 
-
     /**
      * AttribBuffer manages a TypedArray as an array of vectors.
      *
@@ -14,8 +13,7 @@ var $builtinmodule = function (name) {
      *     create. Default = 'Float32Array'.
      * @param {!Array.<number>} opt_data The data for the array.
      */
-    var AttribBuffer = function (
-        numComponents, numElements, opt_type) {
+    var AttribBuffer = function (numComponents, numElements, opt_type) {
         opt_type = opt_type || "Float32Array";
         var type = window[opt_type];
         if (numElements.length) {
@@ -56,8 +54,7 @@ var $builtinmodule = function (name) {
     };
 
     AttribBuffer.prototype.clone = function () {
-        var copy = new AttribBuffer(
-            this.numComponents, this.numElements, this.type);
+        var copy = new AttribBuffer(this.numComponents, this.numElements, this.type);
         copy.pushArray(this);
         return copy;
     };
@@ -74,16 +71,15 @@ var $builtinmodule = function (name) {
         }
     };
 
-    AttribBuffer.prototype.pushArrayWithOffset =
-        function (array, offset) {
-            for (var ii = 0; ii < array.numElements; ++ii) {
-                var elem = array.getElement(ii);
-                for (var jj = 0; jj < offset.length; ++jj) {
-                    elem[jj] += offset[jj];
-                }
-                this.push(elem);
+    AttribBuffer.prototype.pushArrayWithOffset = function (array, offset) {
+        for (var ii = 0; ii < array.numElements; ++ii) {
+            var elem = array.getElement(ii);
+            for (var jj = 0; jj < offset.length; ++jj) {
+                elem[jj] += offset[jj];
             }
-        };
+            this.push(elem);
+        }
+    };
 
     /**
      * Computes the extents
@@ -103,9 +99,8 @@ var $builtinmodule = function (name) {
                 maxExtent[jj] = Math.max(maxExtent[jj], element[jj]);
             }
         }
-        return {min: minExtent, max: maxExtent};
+        return { min: minExtent, max: maxExtent };
     };
-
 
     /**
      * Creates the vertices and indices for a cube. The
@@ -122,7 +117,7 @@ var $builtinmodule = function (name) {
             [6, 7, 3, 2],
             [0, 1, 5, 4],
             [5, 7, 6, 4],
-            [2, 3, 1, 0]
+            [2, 3, 1, 0],
         ];
 
         var k = size / 2;
@@ -135,7 +130,7 @@ var $builtinmodule = function (name) {
             [-k, -k, +k],
             [+k, -k, +k],
             [-k, +k, +k],
-            [+k, +k, +k]
+            [+k, +k, +k],
         ];
 
         var faceNormals = [
@@ -144,14 +139,14 @@ var $builtinmodule = function (name) {
             [+0, +1, +0],
             [+0, -1, +0],
             [+0, +0, +1],
-            [+0, +0, -1]
+            [+0, +0, -1],
         ];
 
         var uvCoords = [
             [0, 0],
             [1, 0],
             [1, 1],
-            [0, 1]
+            [0, 1],
         ];
 
         var numVertices = 6 * 4;
@@ -172,7 +167,6 @@ var $builtinmodule = function (name) {
                 positions.push(position);
                 normals.push(normal);
                 texCoords.push(uv);
-
             }
             // Two triangles make a square face.
             var offset = 4 * f;
@@ -184,7 +178,7 @@ var $builtinmodule = function (name) {
             position: positions,
             normal: normals,
             texCoord: texCoords,
-            indices: indices
+            indices: indices,
         };
     });
 

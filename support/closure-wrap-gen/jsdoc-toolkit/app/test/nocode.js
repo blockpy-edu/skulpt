@@ -1,13 +1,9 @@
 /**#nocode+*/
-    /**
+/**
       @name star
       @function
     */
-    function blahblah() {
-    
-    }
+function blahblah() {}
 /**#nocode-*/
 
-function yaddayadda() {
-
-}
+function yaddayadda() {}

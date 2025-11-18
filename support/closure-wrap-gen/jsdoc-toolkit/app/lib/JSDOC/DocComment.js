@@ -4,63 +4,66 @@ if (typeof JSDOC == "undefined") JSDOC = {};
 	Create a new DocComment. This takes a raw documentation comment,
 	and wraps it in useful accessors.
 	@class Represents a documentation comment object.
- */ 
-JSDOC.DocComment = function(/**String*/comment) {
-	this.init();
-	if (typeof comment != "undefined") {
-		this.parse(comment);
-	}
-}
+ */
+JSDOC.DocComment = function (/**String*/ comment) {
+    this.init();
+    if (typeof comment != "undefined") {
+        this.parse(comment);
+    }
+};
 
-JSDOC.DocComment.prototype.init = function() {
-	this.isUserComment = true;
-	this.src           = "";
-	this.meta          = "";
-	this.tagTexts      = [];
-	this.tags          = [];
-}
+JSDOC.DocComment.prototype.init = function () {
+    this.isUserComment = true;
+    this.src = "";
+    this.meta = "";
+    this.tagTexts = [];
+    this.tags = [];
+};
 
 /**
 	@requires JSDOC.DocTag
  */
-JSDOC.DocComment.prototype.parse = function(/**String*/comment) {
-	if (comment == "") {
-		comment = "/** @desc */";
-		this.isUserComment = false;
-	}
-	
-	this.src = JSDOC.DocComment.unwrapComment(comment);
-	
-	this.meta = "";
-	if (this.src.indexOf("#") == 0) {
-		this.src.match(/#(.+[+-])([\s\S]*)$/);
-		if (RegExp.$1) this.meta = RegExp.$1;
-		if (RegExp.$2) this.src = RegExp.$2;
-	}
-	
-	if (typeof JSDOC.PluginManager != "undefined") {
-		JSDOC.PluginManager.run("onDocCommentSrc", this);
-	}
-	
-	this.fixDesc();
+JSDOC.DocComment.prototype.parse = function (/**String*/ comment) {
+    if (comment == "") {
+        comment = "/** @desc */";
+        this.isUserComment = false;
+    }
 
-	this.src = JSDOC.DocComment.shared+"\n"+this.src;
-	
-	this.tagTexts = 
-		this.src
-		.split(/(?:^|[\r\n])\s*@/) // hat tip: trev.moz
-		.filter(function($){return $.match(/\S/)});
-	
-	/**
+    this.src = JSDOC.DocComment.unwrapComment(comment);
+
+    this.meta = "";
+    if (this.src.indexOf("#") == 0) {
+        this.src.match(/#(.+[+-])([\s\S]*)$/);
+        if (RegExp.$1) this.meta = RegExp.$1;
+        if (RegExp.$2) this.src = RegExp.$2;
+    }
+
+    if (typeof JSDOC.PluginManager != "undefined") {
+        JSDOC.PluginManager.run("onDocCommentSrc", this);
+    }
+
+    this.fixDesc();
+
+    this.src = JSDOC.DocComment.shared + "\n" + this.src;
+
+    this.tagTexts = this.src
+        .split(/(?:^|[\r\n])\s*@/) // hat tip: trev.moz
+        .filter(function ($) {
+            return $.match(/\S/);
+        });
+
+    /**
 		The tags found in the comment.
 		@type JSDOC.DocTag[]
 	 */
-	this.tags = this.tagTexts.map(function($){return new JSDOC.DocTag($)});
-	
-	if (typeof JSDOC.PluginManager != "undefined") {
-		JSDOC.PluginManager.run("onDocCommentTags", this);
-	}
-}
+    this.tags = this.tagTexts.map(function ($) {
+        return new JSDOC.DocTag($);
+    });
+
+    if (typeof JSDOC.PluginManager != "undefined") {
+        JSDOC.PluginManager.run("onDocCommentTags", this);
+    }
+};
 
 /*t:
 	plan(5, "testing JSDOC.DocComment");
@@ -83,12 +86,12 @@ JSDOC.DocComment.prototype.parse = function(/**String*/comment) {
 /**
 	If no @desc tag is provided, this function will add it.
  */
-JSDOC.DocComment.prototype.fixDesc = function() {
-	if (this.meta && this.meta != "@+") return;
-	if (/^\s*[^@\s]/.test(this.src)) {				
-		this.src = "@desc "+this.src;
-	}
-}
+JSDOC.DocComment.prototype.fixDesc = function () {
+    if (this.meta && this.meta != "@+") return;
+    if (/^\s*[^@\s]/.test(this.src)) {
+        this.src = "@desc " + this.src;
+    }
+};
 
 /*t:
 	plan(5, "testing JSDOC.DocComment#fixDesc");
@@ -120,11 +123,11 @@ JSDOC.DocComment.prototype.fixDesc = function() {
 	Remove slash-star comment wrapper from a raw comment string.
 	@type String
  */
-JSDOC.DocComment.unwrapComment = function(/**String*/comment) {
-	if (!comment) return "";
-	var unwrapped = comment.replace(/(^\/\*\*|\*\/$)/g, "").replace(/^\s*\* ?/gm, "");
-	return unwrapped;
-}
+JSDOC.DocComment.unwrapComment = function (/**String*/ comment) {
+    if (!comment) return "";
+    var unwrapped = comment.replace(/(^\/\*\*|\*\/$)/g, "").replace(/^\s*\* ?/gm, "");
+    return unwrapped;
+};
 
 /*t:
 	plan(5, "testing JSDOC.DocComment.unwrapComment");
@@ -154,9 +157,9 @@ JSDOC.DocComment.unwrapComment = function(/**String*/comment) {
 	Provides a printable version of the comment.
 	@type String
  */
-JSDOC.DocComment.prototype.toString = function() {
-	return this.src;
-}
+JSDOC.DocComment.prototype.toString = function () {
+    return this.src;
+};
 
 /*t:
 	plan(1, "testing JSDOC.DocComment#fixDesc");
@@ -169,13 +172,17 @@ JSDOC.DocComment.prototype.toString = function() {
 	Given the title of a tag, returns all tags that have that title.
 	@type JSDOC.DocTag[]
  */
-JSDOC.DocComment.prototype.getTag = function(/**String*/tagTitle) {
-	return this.tags.filter(function($){return $.title == tagTitle});
-}
+JSDOC.DocComment.prototype.getTag = function (/**String*/ tagTitle) {
+    return this.tags.filter(function ($) {
+        return $.title == tagTitle;
+    });
+};
 
-JSDOC.DocComment.prototype.deleteTag = function(/**String*/tagTitle) {
-	this.tags = this.tags.filter(function($){return $.title != tagTitle})
-}
+JSDOC.DocComment.prototype.deleteTag = function (/**String*/ tagTitle) {
+    this.tags = this.tags.filter(function ($) {
+        return $.title != tagTitle;
+    });
+};
 
 /*t:
 	plan(1, "testing JSDOC.DocComment#getTag");

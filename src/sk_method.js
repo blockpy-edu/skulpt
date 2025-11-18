@@ -79,7 +79,13 @@ Sk.builtin.sk_method = Sk.abstr.buildNativeClass("builtin_function_or_method", {
             return this.$meth(args[0]);
         },
         $callNamedArgs(args, kwargs) {
-            args = Sk.abstr.copyKeywordsToNamedArgs(this.$name, this.$flags.NamedArgs, args, kwargs, this.$flags.Defaults);
+            args = Sk.abstr.copyKeywordsToNamedArgs(
+                this.$name,
+                this.$flags.NamedArgs,
+                args,
+                kwargs,
+                this.$flags.Defaults
+            );
             return this.$meth(...args);
         },
         $callMinArgs(args, kwargs) {
@@ -102,14 +108,20 @@ Sk.builtin.sk_method = Sk.abstr.buildNativeClass("builtin_function_or_method", {
             return Sk.builtin.func.prototype.$resolveArgs.call(this);
         },
     },
-    flags: {sk$unacceptableBase: true},
+    flags: { sk$unacceptableBase: true },
     slots: {
         tp$getattr: Sk.generic.getAttr,
         $r() {
             if (this.$self === null) {
                 return new Sk.builtin.str("<built-in function " + this.$name + ">");
             }
-            return new Sk.builtin.str("<built-in method " + this.$name + " of " + Sk.abstr.typeName(this.$self) + " object>");
+            return new Sk.builtin.str(
+                "<built-in method " +
+                    this.$name +
+                    " of " +
+                    Sk.abstr.typeName(this.$self) +
+                    " object>"
+            );
         },
         tp$call(args, kwargs) {
             return this.tp$call(args, kwargs);

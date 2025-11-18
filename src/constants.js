@@ -1,5 +1,3 @@
-
-
 /* Constants used for kwargs */
 
 // String constants
@@ -67,11 +65,10 @@ Sk.builtin.str.$write = new Sk.builtin.str("write");
 Sk.builtin.str.$sys = new Sk.builtin.str("sys");
 
 Sk.misceval.op2method_ = {
-    "Eq": Sk.builtin.str.$eq,
-    "NotEq": Sk.builtin.str.$ne,
-    "Gt": Sk.builtin.str.$gt,
-    "GtE": Sk.builtin.str.$ge,
-    "Lt": Sk.builtin.str.$lt,
-    "LtE": Sk.builtin.str.$le
+    Eq: Sk.builtin.str.$eq,
+    NotEq: Sk.builtin.str.$ne,
+    Gt: Sk.builtin.str.$gt,
+    GtE: Sk.builtin.str.$ge,
+    Lt: Sk.builtin.str.$lt,
+    LtE: Sk.builtin.str.$le,
 };
-

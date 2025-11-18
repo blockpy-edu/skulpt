@@ -1,10 +1,9 @@
 /**@constructor*/
 function Foo() {
-	/**
+    /**
 		@public
 		@static
 		@field
 	*/
-	var bar = function(x) {
-	}
+    var bar = function (x) {};
 }

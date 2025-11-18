@@ -59,17 +59,22 @@ function parse_mod(parse) {
         gattr: objectGetAttr,
     } = Sk.abstr;
 
-    const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
-
+    const {
+        getSetDict: genericGetSetDict,
+        getAttr: genericGetAttr,
+        setAttr: genericSetAttr,
+    } = Sk.generic;
 
     const emptyString = new Sk.builtin.str("");
 
-    const _ParseResult = (pyCall(
+    const _ParseResult = pyCall(
         parse._namedtuple,
-        ["ParseResult", ["scheme", "netloc", "path", "params", "query", "fragment"]].map((x) => toPy(x)),
+        ["ParseResult", ["scheme", "netloc", "path", "params", "query", "fragment"]].map((x) =>
+            toPy(x)
+        ),
         ["module", new pyStr("parse")]
-    ));
-    _ParseResult.geturl = new Sk.builtin.func(function(self) {
+    );
+    _ParseResult.geturl = new Sk.builtin.func(function (self) {
         console.log("TEST");
         console.log(self, arguments);
     });
@@ -80,7 +85,7 @@ function parse_mod(parse) {
         },
         methods: {
             geturl: {
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $meth() {
                     const baseUrl = new URL("https://localhost");
                     baseUrl.protocol = toJs(this.tp$getattr(new pyStr("scheme")));
@@ -91,15 +96,16 @@ function parse_mod(parse) {
                     baseUrl.hash = "#" + toJs(this.tp$getattr(new pyStr("fragment")));
                     return new pyStr(baseUrl.toString());
                 },
-            }
-        }
+            },
+        },
     });
     parse._ParseResult = _ParseResultExtended;
 
     var urlparse_ = function (urlstring, scheme, allow_fragments) {
         Sk.builtin.pyCheckArgs("urlparse", arguments, 1, 3, true, false);
 
-        let components, usedBase = false;
+        let components,
+            usedBase = false;
         try {
             components = new URL(urlstring.v);
         } catch (e) {
@@ -113,30 +119,32 @@ function parse_mod(parse) {
         }
         scheme = scheme.v;
 
-        return pyCallOrSuspend(_ParseResultExtended,  [
-            scheme || (usedBase ? "" : components.protocol),
-            usedBase ? "" : components.host,
-            components.pathname,
-            emptyString, // Nobody actually uses params
-            components.search.slice(1),
-            components.hash.slice(1)
-
-        ].map((x) => toPy(x)));
+        return pyCallOrSuspend(
+            _ParseResultExtended,
+            [
+                scheme || (usedBase ? "" : components.protocol),
+                usedBase ? "" : components.host,
+                components.pathname,
+                emptyString, // Nobody actually uses params
+                components.search.slice(1),
+                components.hash.slice(1),
+            ].map((x) => toPy(x))
+        );
     };
     urlparse_.co_varnames = ["urlstring", "scheme", "allow_fragments"];
     urlparse_.$defaults = [emptyString, emptyString, pyTrue];
     parse.urlparse = new Sk.builtin.func(urlparse_);
 
-    var quote_plus_ = function(string, safe, encoding, errors) {
+    var quote_plus_ = function (string, safe, encoding, errors) {
         Sk.builtin.pyCheckArgs("quote_plus", arguments, 1, 4, true, false);
-        let encoded = encodeURIComponent(string.v).replace(/%20/g,"+");
+        let encoded = encodeURIComponent(string.v).replace(/%20/g, "+");
         return new pyStr(encoded);
     };
     quote_plus_.co_varnames = ["string", "safe", "encoding", "errors"];
     quote_plus_.$defaults = [emptyString, emptyString, pyNone, pyNone];
     parse.quote_plus = new Sk.builtin.func(quote_plus_);
 
-    var unquote_ = function(string, encoding, errors) {
+    var unquote_ = function (string, encoding, errors) {
         Sk.builtin.pyCheckArgs("unquote", arguments, 1, 3, true, false);
         let decoded = decodeURIComponent(string.v);
         return new pyStr(decoded);
@@ -147,7 +155,15 @@ function parse_mod(parse) {
 
     // urlencode, urlparse, parse_qs
     // TODO: geturl (and make sure _replace works)
-    var parse_qs_ = function(qs, keep_blank_values, strict_parsing, encoding, errors, max_num_fields, separator) {
+    var parse_qs_ = function (
+        qs,
+        keep_blank_values,
+        strict_parsing,
+        encoding,
+        errors,
+        max_num_fields,
+        separator
+    ) {
         Sk.builtin.pyCheckArgs("parse_qs", arguments, 1, 7, true, false);
 
         let params;
@@ -171,11 +187,27 @@ function parse_mod(parse) {
 
         return new pyDict(asDict);
     };
-    parse_qs_.co_varnames = ["qs", "keep_blank_values", "strict_parsing", "encoding", "errors", "max_num_fields", "separator"];
-    parse_qs_.$defaults = [emptyString, pyFalse, pyFalse, new pyStr("utf-8"), new pyStr("replace"), pyNone, new pyStr("&")];
+    parse_qs_.co_varnames = [
+        "qs",
+        "keep_blank_values",
+        "strict_parsing",
+        "encoding",
+        "errors",
+        "max_num_fields",
+        "separator",
+    ];
+    parse_qs_.$defaults = [
+        emptyString,
+        pyFalse,
+        pyFalse,
+        new pyStr("utf-8"),
+        new pyStr("replace"),
+        pyNone,
+        new pyStr("&"),
+    ];
     parse.parse_qs = new Sk.builtin.func(parse_qs_);
 
-    var urlencode_ = function(query, doseq, safe, encoding, errors, quote_via) {
+    var urlencode_ = function (query, doseq, safe, encoding, errors, quote_via) {
         Sk.builtin.pyCheckArgs("urlencode", arguments, 1, 6, true, false);
         const encoded = [];
         query.$items().forEach(([key, val]) => {
@@ -190,4 +222,4 @@ function parse_mod(parse) {
     parse.urlencode = new Sk.builtin.func(urlencode_);
 
     return parse;
-};
+}

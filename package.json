@@ -1,77 +1,83 @@
 {
-  "name": "skulpt",
-  "version": "1.0.0",
-  "description": "Skulpt is a Javascript implementation of Python 2.x. Python that runs in your browser!",
-  "keywords": [
-    "skulpt"
-  ],
-  "scripts": {
-    "lint": "eslint src/**/*.js test/**/*.js",
-    "lint:fix": "eslint --fix src/**/*.js test/**/*.js",
-    "help": "node support/build/help.js",
-    "regenparser": "node support/build/regenparser.js",
-    "brun": "node support/run/brun.js -p",
-    "prebtest": "node support/build/wrapmodules.js unit2 && node support/build/wrapmodules.js unit3",
-    "btest": "node support/run/brun.js -t",
-    "doc": "echo 'Building Documentation in docs/ProgMan' && jsdoc -c jsdoc.json HACKING.md",
-    "dist": "npm run build && npm run test && npm run doc && node support/build/copy2docs.js",
-    "repl": "node repl/repl.js",
-    "prebuild": "node support/build/wrapmodules.js internal",
-    "build": "node build.js && terser dist/skulpt.js -o dist/skulpt.min.js --source-map",
-    "postbuild": "node support/build/wrapmodules.js builtin",
-    "build-es3": "npm run build -- --env.languageOut=ECMASCRIPT3",
-    "build-es5": "npm run build -- --env.languageOut=ECMASCRIPT5",
-    "build-es19": "npm run build -- --env.languageOut=ECMASCRIPT_2019",
-    "predevbuild": "node support/build/wrapmodules.js internal",
-    "devbuild": "node build.js",
-    "postdevbuild": "node support/build/wrapmodules.js builtin",
-    "watch": "esbuild --watch --bundle src/main.js --outfile=dist/skulpt.js --sourcemap",
-    "test": "node test/testunit.js --python3",
-    "start": "node support/run/runfile.js py3",
-    "precompile": "node support/precompile/precompile.js",
-    "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js",
-    "cpuprofile": "node --cpu-prof support/run/runfile.js",
-    "postprofile": "node --prof-process v8.log",
-    "heatgraph": "0x -- node support/run/runfile.js",
-    "standaloneparser": "webpack src/standalone_parser.js -o dist/python_parser.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/skulpt/skulpt.git"
-  },
-  "bugs": {
-    "url": "https://github.com/skulpt/skulpt/issues"
-  },
-  "homepage": "http://www.skulpt.org/",
-  "author": {
-    "name": "Brad Miller"
-  },
-  "license": "MIT",
-  "private": true,
-  "devDependencies": {
-    "acorn": "^6.4.1",
-    "chalk": "^2.4.2",
-    "commander": "^2.20.3",
-    "ejs": "^2.7.4",
-    "esbuild": "^0.25.11",
-    "eslint": "^5.16.0",
-    "express": "^4.17.0",
-    "google-closure-compiler": "^20190415.0.0",
-    "js-beautify": "^1.11.0",
-    "jsdoc": "^3.6.3",
-    "micro-strptime": "^0.2.3",
-    "open": "^6.4.0",
-    "readline-sync": "^1.4.10",
-    "setimmediate": "^1.0.5",
-    "shelljs": "^0.8.4",
-    "strftime": "^0.10.0",
-    "terser": "^5.44.0"
-  },
-  "engines": {
-    "node": ">=10.4"
-  },
-  "dependencies": {
-    "fastestsmallesttextencoderdecoder": "^1.0.22",
-    "jsbi": "^3.1.3"
-  }
+    "name": "skulpt",
+    "version": "1.0.0",
+    "description": "Skulpt is a Javascript implementation of Python 2.x. Python that runs in your browser!",
+    "keywords": [
+        "skulpt"
+    ],
+    "scripts": {
+        "lint": "eslint src/**/*.js test/**/*.js",
+        "lint:fix": "eslint --fix src/**/*.js test/**/*.js",
+        "lint:errors": "eslint src/**/*.js test/**/*.js --quiet",
+        "format": "prettier --write .",
+        "help": "node support/build/help.js",
+        "regenparser": "node support/build/regenparser.js",
+        "brun": "node support/run/brun.js -p",
+        "prebtest": "node support/build/wrapmodules.js unit2 && node support/build/wrapmodules.js unit3",
+        "btest": "node support/run/brun.js -t",
+        "doc": "echo 'Building Documentation in docs/ProgMan' && jsdoc -c jsdoc.json HACKING.md",
+        "dist": "npm run build && npm run test && npm run doc && node support/build/copy2docs.js",
+        "repl": "node repl/repl.js",
+        "prebuild": "node support/build/wrapmodules.js internal",
+        "build": "node build.js && terser dist/skulpt.js -o dist/skulpt.min.js --source-map",
+        "postbuild": "node support/build/wrapmodules.js builtin",
+        "build-es3": "npm run build -- --env.languageOut=ECMASCRIPT3",
+        "build-es5": "npm run build -- --env.languageOut=ECMASCRIPT5",
+        "build-es19": "npm run build -- --env.languageOut=ECMASCRIPT_2019",
+        "predevbuild": "node support/build/wrapmodules.js internal",
+        "devbuild": "node build.js",
+        "postdevbuild": "node support/build/wrapmodules.js builtin",
+        "watch": "esbuild --watch --bundle src/main.js --outfile=dist/skulpt.js --sourcemap",
+        "test": "node test/testunit.js --python3",
+        "start": "node support/run/runfile.js py3",
+        "precompile": "node support/precompile/precompile.js",
+        "profile": "node --prof --no-logfile-per-isolate --log-internal-timer-events support/run/runfile.js",
+        "cpuprofile": "node --cpu-prof support/run/runfile.js",
+        "postprofile": "node --prof-process v8.log",
+        "heatgraph": "0x -- node support/run/runfile.js",
+        "standaloneparser": "webpack src/standalone_parser.js -o dist/python_parser.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/skulpt/skulpt.git"
+    },
+    "bugs": {
+        "url": "https://github.com/skulpt/skulpt/issues"
+    },
+    "homepage": "http://www.skulpt.org/",
+    "author": {
+        "name": "Brad Miller"
+    },
+    "license": "MIT",
+    "private": true,
+    "devDependencies": {
+        "acorn": "^6.4.1",
+        "chalk": "^2.4.2",
+        "commander": "^2.20.3",
+        "ejs": "^2.7.4",
+        "esbuild": "^0.25.11",
+        "eslint": "^9.38.0",
+        "eslint-config-prettier": "^10.1.8",
+        "express": "^4.17.0",
+        "google-closure-compiler": "^20190415.0.0",
+        "js-beautify": "^1.11.0",
+        "jsdoc": "^3.6.3",
+        "micro-strptime": "^0.2.3",
+        "open": "^6.4.0",
+        "prettier": "^3.6.2",
+        "readline-sync": "^1.4.10",
+        "setimmediate": "^1.0.5",
+        "shelljs": "^0.8.4",
+        "strftime": "^0.10.0",
+        "terser": "^5.44.0",
+        "xhr2": "^0.2.1"
+    },
+    "engines": {
+        "node": ">=10.4"
+    },
+    "dependencies": {
+        "@eslint/js": "^9.38.0",
+        "fastestsmallesttextencoderdecoder": "^1.0.22",
+        "jsbi": "^3.1.3"
+    }
 }

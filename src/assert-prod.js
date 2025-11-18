@@ -16,6 +16,5 @@ Sk.exportSymbol("Sk.asserts.assert", Sk.asserts.assert);
  *
  * @param {string=} message error message
  */
-Sk.asserts.fail = function (message) {
-};
+Sk.asserts.fail = function (message) {};
 Sk.exportSymbol("Sk.asserts.fail", Sk.asserts.fail);

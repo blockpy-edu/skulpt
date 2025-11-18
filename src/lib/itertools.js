@@ -16,7 +16,9 @@ var $builtinmodule = function (name) {
         },
         iternext: function (canSuspend) {
             if (this.first_iter !== undefined) {
-                this.total = Sk.builtin.checkNone(this.total) ? this.iter.tp$iternext() : this.total;
+                this.total = Sk.builtin.checkNone(this.total)
+                    ? this.iter.tp$iternext()
+                    : this.total;
                 this.first_iter = undefined;
                 return this.total;
             }
@@ -28,18 +30,22 @@ var $builtinmodule = function (name) {
             return;
         },
         slots: {
-            tp$doc:
-                "accumulate(iterable[, func, initial]) --> accumulate object\n\nReturn series of accumulated sums (or other binary function results).",
+            tp$doc: "accumulate(iterable[, func, initial]) --> accumulate object\n\nReturn series of accumulated sums (or other binary function results).",
             tp$new: function (args, kwargs) {
                 let iter, func, initial;
                 // initial is a keyword only argument;
                 Sk.abstr.checkArgsLen("accumulate", args, 0, 2);
-                [iter, func, initial] = Sk.abstr.copyKeywordsToNamedArgs("accumulate", ["iterable", "func", "initial"], args, kwargs, [
-                    Sk.builtin.none.none$,
-                    Sk.builtin.none.none$,
-                ]);
+                [iter, func, initial] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "accumulate",
+                    ["iterable", "func", "initial"],
+                    args,
+                    kwargs,
+                    [Sk.builtin.none.none$, Sk.builtin.none.none$]
+                );
                 iter = Sk.abstr.iter(iter);
-                func = Sk.builtin.checkNone(func) ? new Sk.builtin.func((a, b) => Sk.abstr.numberBinOp(a, b, "Add")) : func;
+                func = Sk.builtin.checkNone(func)
+                    ? new Sk.builtin.func((a, b) => Sk.abstr.numberBinOp(a, b, "Add"))
+                    : func;
                 if (this === mod.accumulate.prototype) {
                     return new mod.accumulate(iter, func, initial);
                 } else {
@@ -83,8 +89,7 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "chain(*iterables) --> chain object\n\nReturn a chain object whose .__next__() method returns elements from the\nfirst iterable until it is exhausted, then elements from the next\niterable, until all of the iterables are exhausted.",
+            tp$doc: "chain(*iterables) --> chain object\n\nReturn a chain object whose .__next__() method returns elements from the\nfirst iterable until it is exhausted, then elements from the next\niterable, until all of the iterables are exhausted.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkNoKwargs("chain", kwargs);
                 args = new Sk.builtin.tuple(args.slice(0)).tp$iter();
@@ -103,9 +108,8 @@ var $builtinmodule = function (name) {
                     const iterables = Sk.abstr.iter(iterable);
                     return new mod.chain(iterables);
                 },
-                $flags: {OneArg: true},
-                $doc:
-                    "chain.from_iterable(iterable) --> chain object\n\nAlternate chain() constructor taking a single iterable argument\nthat evaluates lazily.",
+                $flags: { OneArg: true },
+                $doc: "chain.from_iterable(iterable) --> chain object\n\nAlternate chain() constructor taking a single iterable argument\nthat evaluates lazily.",
                 $textsig: null,
             },
         },
@@ -119,7 +123,13 @@ var $builtinmodule = function (name) {
      */
     function combinationsNew(combinations_proto, args, kwargs) {
         let iterable, r;
-        [iterable, r] = Sk.abstr.copyKeywordsToNamedArgs(combinations_proto.tp$name, ["iterable", "r"], args, kwargs, []);
+        [iterable, r] = Sk.abstr.copyKeywordsToNamedArgs(
+            combinations_proto.tp$name,
+            ["iterable", "r"],
+            args,
+            kwargs,
+            []
+        );
         const pool = Sk.misceval.arrayFromIterable(iterable);
         r = Sk.misceval.asIndexOrThrow(r);
         if (r < 0) {
@@ -170,62 +180,68 @@ var $builtinmodule = function (name) {
             return new Sk.builtin.tuple(res);
         },
         slots: {
-            tp$doc:
-                "combinations(iterable, r) --> combinations object\n\nReturn successive r-length combinations of elements in the iterable.\n\ncombinations(range(4), 3) --> (0,1,2), (0,1,3), (0,2,3), (1,2,3)",
+            tp$doc: "combinations(iterable, r) --> combinations object\n\nReturn successive r-length combinations of elements in the iterable.\n\ncombinations(range(4), 3) --> (0,1,2), (0,1,3), (0,2,3), (1,2,3)",
             tp$new: function (args, kwargs) {
                 return combinationsNew.call(this, mod.combinations.prototype, args, kwargs);
             },
         },
     });
 
-    mod.combinations_with_replacement = Sk.abstr.buildIteratorClass("itertools.combinations_with_replacement", {
-        constructor: function (pool, r) {
-            this.pool = pool;
-            this.r = r;
-            this.indices = new Array(r).fill(0);
-            this.n = pool.length;
-            this.initial = true;
-        },
-        iternext: function (canSuspend) {
-            if (this.r && !this.n) {
-                return;
-            }
-            if (this.initial !== undefined) {
-                this.initial = undefined;
+    mod.combinations_with_replacement = Sk.abstr.buildIteratorClass(
+        "itertools.combinations_with_replacement",
+        {
+            constructor: function (pool, r) {
+                this.pool = pool;
+                this.r = r;
+                this.indices = new Array(r).fill(0);
+                this.n = pool.length;
+                this.initial = true;
+            },
+            iternext: function (canSuspend) {
+                if (this.r && !this.n) {
+                    return;
+                }
+                if (this.initial !== undefined) {
+                    this.initial = undefined;
+                    const res = this.indices.map((i) => this.pool[i]);
+                    return new Sk.builtin.tuple(res);
+                }
+                let found = false;
+                let i;
+                for (i = this.r - 1; i >= 0; i--) {
+                    if (this.indices[i] != this.n - 1) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    this.r = 0;
+                    return;
+                }
+                const val = this.indices[i] + 1;
+                for (let j = i; j < this.r; j++) {
+                    this.indices[j] = val;
+                }
                 const res = this.indices.map((i) => this.pool[i]);
                 return new Sk.builtin.tuple(res);
-            }
-            let found = false;
-            let i;
-            for (i = this.r - 1; i >= 0; i--) {
-                if (this.indices[i] != this.n - 1) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                this.r = 0;
-                return;
-            }
-            const val = this.indices[i] + 1;
-            for (let j = i; j < this.r; j++) {
-                this.indices[j] = val;
-            }
-            const res = this.indices.map((i) => this.pool[i]);
-            return new Sk.builtin.tuple(res);
-        },
-        slots: {
-            tp$doc:
-                "combinations_with_replacement(iterable, r) --> combinations_with_replacement object\n\nReturn successive r-length combinations of elements in the iterable\nallowing individual elements to have successive repeats.\ncombinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC",
-            tp$new: function (args, kwargs) {
-                return combinationsNew.call(this, mod.combinations_with_replacement.prototype, args, kwargs);
             },
-        },
-    });
+            slots: {
+                tp$doc: "combinations_with_replacement(iterable, r) --> combinations_with_replacement object\n\nReturn successive r-length combinations of elements in the iterable\nallowing individual elements to have successive repeats.\ncombinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC",
+                tp$new: function (args, kwargs) {
+                    return combinationsNew.call(
+                        this,
+                        mod.combinations_with_replacement.prototype,
+                        args,
+                        kwargs
+                    );
+                },
+            },
+        }
+    );
 
     mod.compress = Sk.abstr.buildIteratorClass("itertools.compress", {
         constructor: function (data, selectors) {
-            (this.data = data), (this.selectors = selectors);
+            ((this.data = data), (this.selectors = selectors));
         },
         iternext: function () {
             let d = this.data.tp$iternext();
@@ -239,11 +255,16 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "compress(data, selectors) --> iterator over selected data\n\nReturn data elements corresponding to true selector elements.\nForms a shorter iterator from selected data elements using the\nselectors to choose the data elements.",
+            tp$doc: "compress(data, selectors) --> iterator over selected data\n\nReturn data elements corresponding to true selector elements.\nForms a shorter iterator from selected data elements using the\nselectors to choose the data elements.",
             tp$new: function (args, kwargs) {
                 let data, selectors;
-                [data, selectors] = Sk.abstr.copyKeywordsToNamedArgs("compress", ["data", "selectors"], args, kwargs, []);
+                [data, selectors] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "compress",
+                    ["data", "selectors"],
+                    args,
+                    kwargs,
+                    []
+                );
                 data = Sk.abstr.iter(data);
                 selectors = Sk.abstr.iter(selectors);
                 if (this === mod.count.prototype) {
@@ -268,13 +289,15 @@ var $builtinmodule = function (name) {
             return tmp;
         },
         slots: {
-            tp$doc:
-                "count(start=0, step=1) --> count object\n\nReturn a count object whose .__next__() method returns consecutive values.\nEquivalent to:\n\n    def count(firstval=0, step=1):\n        x = firstval\n        while 1:\n            yield x\n            x += step\n",
+            tp$doc: "count(start=0, step=1) --> count object\n\nReturn a count object whose .__next__() method returns consecutive values.\nEquivalent to:\n\n    def count(firstval=0, step=1):\n        x = firstval\n        while 1:\n            yield x\n            x += step\n",
             tp$new: function (args, kwargs) {
-                const [start, step] = Sk.abstr.copyKeywordsToNamedArgs("count", ["start", "step"], args, kwargs, [
-                    new Sk.builtin.int_(0),
-                    new Sk.builtin.int_(1),
-                ]);
+                const [start, step] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "count",
+                    ["start", "step"],
+                    args,
+                    kwargs,
+                    [new Sk.builtin.int_(0), new Sk.builtin.int_(1)]
+                );
                 if (!Sk.builtin.checkNumber(start) && !Sk.builtin.checkComplex(start)) {
                     throw new Sk.builtin.TypeError("a number is required");
                 }
@@ -293,7 +316,9 @@ var $builtinmodule = function (name) {
                 const start_repr = Sk.misceval.objectRepr(this.start);
                 let step_repr = Sk.misceval.objectRepr(this.step);
                 step_repr = step_repr === "1" ? "" : ", " + step_repr;
-                return new Sk.builtin.str(Sk.abstr.typeName(this) + "(" + start_repr + step_repr + ")");
+                return new Sk.builtin.str(
+                    Sk.abstr.typeName(this) + "(" + start_repr + step_repr + ")"
+                );
             },
         },
     });
@@ -326,8 +351,7 @@ var $builtinmodule = function (name) {
             return element;
         },
         slots: {
-            tp$doc:
-                "cycle(iterable) --> cycle object\n\nReturn elements from the iterable until it is exhausted.\nThen repeat the sequence indefinitely.",
+            tp$doc: "cycle(iterable) --> cycle object\n\nReturn elements from the iterable until it is exhausted.\nThen repeat the sequence indefinitely.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkOneArg("cycle", args, kwargs);
                 const iter = Sk.abstr.iter(args[0]);
@@ -361,8 +385,7 @@ var $builtinmodule = function (name) {
             return x;
         },
         slots: {
-            tp$doc:
-                "dropwhile(predicate, iterable) --> dropwhile object\n\nDrop items from the iterable while predicate(item) is true.\nAfterwards, return every element until the iterable is exhausted.",
+            tp$doc: "dropwhile(predicate, iterable) --> dropwhile object\n\nDrop items from the iterable while predicate(item) is true.\nAfterwards, return every element until the iterable is exhausted.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkNoKwargs("dropwhile", kwargs);
                 Sk.abstr.checkArgsLen("dropwhile", args, 2, 2);
@@ -400,8 +423,7 @@ var $builtinmodule = function (name) {
             return x;
         },
         slots: {
-            tp$doc:
-                "filterfalse(function or None, sequence) --> filterfalse object\n\nReturn those items of sequence for which function(item) is false.\nIf function is None, return the items that are false.",
+            tp$doc: "filterfalse(function or None, sequence) --> filterfalse object\n\nReturn those items of sequence for which function(item) is false.\nIf function is None, return the items that are false.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkNoKwargs("filterfalse", kwargs);
                 Sk.abstr.checkArgsLen("filterfalse", args, 2, 2);
@@ -430,7 +452,9 @@ var $builtinmodule = function (name) {
                 let tmp = this.groupby.currval;
                 this.groupby.currval = this.groupby.iter.tp$iternext();
                 if (this.groupby.currval !== undefined) {
-                    this.groupby.currkey = Sk.misceval.callsimArray(this.groupby.keyf, [this.groupby.currval]);
+                    this.groupby.currkey = Sk.misceval.callsimArray(this.groupby.keyf, [
+                        this.groupby.currval,
+                    ]);
                 }
                 return tmp;
             }
@@ -462,11 +486,16 @@ var $builtinmodule = function (name) {
             return new Sk.builtin.tuple([this.currkey, grouper]);
         },
         slots: {
-            tp$doc:
-                "groupby(iterable, key=None) -> make an iterator that returns consecutive\nkeys and groups from the iterable.  If the key function is not specified or\nis None, the element itself is used for grouping.\n",
+            tp$doc: "groupby(iterable, key=None) -> make an iterator that returns consecutive\nkeys and groups from the iterable.  If the key function is not specified or\nis None, the element itself is used for grouping.\n",
             tp$new: function (args, kwargs) {
                 let iter, key;
-                [iter, key] = Sk.abstr.copyKeywordsToNamedArgs("groupby", ["iterable", "key"], args, kwargs, [Sk.builtin.none.none$]);
+                [iter, key] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "groupby",
+                    ["iterable", "key"],
+                    args,
+                    kwargs,
+                    [Sk.builtin.none.none$]
+                );
                 iter = Sk.abstr.iter(iter);
                 key = Sk.builtin.checkNone(key) ? new Sk.builtin.func((x) => x) : key;
                 if (this === mod.groupby.prototype) {
@@ -522,8 +551,7 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "islice(iterable, stop) --> islice object\nislice(iterable, start, stop[, step]) --> islice object\n\nReturn an iterator whose next() method returns selected values from an\niterable.  If start is specified, will skip all preceding elements;\notherwise, start defaults to zero.  Step defaults to one.  If\nspecified as another value, step determines how many values are \nskipped between successive calls.  Works like a slice() on a list\nbut returns an iterator.",
+            tp$doc: "islice(iterable, stop) --> islice object\nislice(iterable, start, stop[, step]) --> islice object\n\nReturn an iterator whose next() method returns selected values from an\niterable.  If start is specified, will skip all preceding elements;\notherwise, start defaults to zero.  Step defaults to one.  If\nspecified as another value, step determines how many values are \nskipped between successive calls.  Works like a slice() on a list\nbut returns an iterator.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkNoKwargs("islice", kwargs);
                 Sk.abstr.checkArgsLen("islice", args, 2, 4);
@@ -541,31 +569,45 @@ var $builtinmodule = function (name) {
 
                 // check stop first
                 if (!(Sk.builtin.checkNone(stop) || Sk.misceval.isIndex(stop))) {
-                    throw new Sk.builtin.ValueError("Stop for islice() must be None or an integer: 0 <= x <= sys.maxsize.");
+                    throw new Sk.builtin.ValueError(
+                        "Stop for islice() must be None or an integer: 0 <= x <= sys.maxsize."
+                    );
                 } else {
-                    stop = Sk.builtin.checkNone(stop) ? Number.MAX_SAFE_INTEGER : Sk.misceval.asIndex(stop);
+                    stop = Sk.builtin.checkNone(stop)
+                        ? Number.MAX_SAFE_INTEGER
+                        : Sk.misceval.asIndex(stop);
                     if (stop < 0 || stop > Number.MAX_SAFE_INTEGER) {
-                        throw new Sk.builtin.ValueError("Stop for islice() must be None or an integer: 0 <= x <= sys.maxsize.");
+                        throw new Sk.builtin.ValueError(
+                            "Stop for islice() must be None or an integer: 0 <= x <= sys.maxsize."
+                        );
                     }
                 }
 
                 // check start
                 if (!(Sk.builtin.checkNone(start) || Sk.misceval.isIndex(start))) {
-                    throw new Sk.builtin.ValueError("Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize.");
+                    throw new Sk.builtin.ValueError(
+                        "Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize."
+                    );
                 } else {
                     start = Sk.builtin.checkNone(start) ? 0 : Sk.misceval.asIndex(start);
                     if (start < 0 || start > Number.MAX_SAFE_INTEGER) {
-                        throw new Sk.builtin.ValueError("Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize.");
+                        throw new Sk.builtin.ValueError(
+                            "Indices for islice() must be None or an integer: 0 <= x <= sys.maxsize."
+                        );
                     }
                 }
 
                 // check step
                 if (!(Sk.builtin.checkNone(step) || Sk.misceval.isIndex(step))) {
-                    throw new Sk.builtin.ValueError("Step for islice() must be a positive integer or None");
+                    throw new Sk.builtin.ValueError(
+                        "Step for islice() must be a positive integer or None"
+                    );
                 } else {
                     step = Sk.builtin.checkNone(step) ? 1 : Sk.misceval.asIndex(step);
                     if (step <= 0 || step > Number.MAX_SAFE_INTEGER) {
-                        throw new Sk.builtin.ValueError("Step for islice() must be a positive integer or None.");
+                        throw new Sk.builtin.ValueError(
+                            "Step for islice() must be a positive integer or None."
+                        );
                     }
                 }
 
@@ -606,7 +648,10 @@ var $builtinmodule = function (name) {
                     this.cycles[i] = this.n - i;
                 } else {
                     j = this.cycles[i];
-                    [this.indices[i], this.indices[this.n - j]] = [this.indices[this.n - j], this.indices[i]]; //swap elements;
+                    [this.indices[i], this.indices[this.n - j]] = [
+                        this.indices[this.n - j],
+                        this.indices[i],
+                    ]; //swap elements;
                     const res = this.indices.map((i) => this.pool[i]).slice(0, this.r);
                     return new Sk.builtin.tuple(res);
                 }
@@ -615,11 +660,16 @@ var $builtinmodule = function (name) {
             return;
         },
         slots: {
-            tp$doc:
-                "permutations(iterable[, r]) --> permutations object\n\nReturn successive r-length permutations of elements in the iterable.\n\npermutations(range(3), 2) --> (0,1), (0,2), (1,0), (1,2), (2,0), (2,1)",
+            tp$doc: "permutations(iterable[, r]) --> permutations object\n\nReturn successive r-length permutations of elements in the iterable.\n\npermutations(range(3), 2) --> (0,1), (0,2), (1,0), (1,2), (2,0), (2,1)",
             tp$new: function (args, kwargs) {
                 let iterable, r;
-                [iterable, r] = Sk.abstr.copyKeywordsToNamedArgs("permutations", ["iterable", "r"], args, kwargs, [Sk.builtin.none.none$]);
+                [iterable, r] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "permutations",
+                    ["iterable", "r"],
+                    args,
+                    kwargs,
+                    [Sk.builtin.none.none$]
+                );
                 const pool = Sk.misceval.arrayFromIterable(iterable);
                 r = Sk.builtin.checkNone(r) ? pool.length : Sk.misceval.asIndexOrThrow(r);
                 if (r < 0) {
@@ -674,10 +724,11 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "product(*iterables, repeat=1) --> product object\n\nCartesian product of input iterables.  Equivalent to nested for-loops.\n\nFor example, product(A, B) returns the same as:  ((x,y) for x in A for y in B).\nThe leftmost iterators are in the outermost for-loop, so the output tuples\ncycle in a manner similar to an odometer (with the rightmost element changing\non every iteration).\n\nTo compute the product of an iterable with itself, specify the number\nof repetitions with the optional repeat keyword argument. For example,\nproduct(A, repeat=4) means the same as product(A, A, A, A).\n\nproduct('ab', range(3)) --> ('a',0) ('a',1) ('a',2) ('b',0) ('b',1) ('b',2)\nproduct((0,1), (0,1), (0,1)) --> (0,0,0) (0,0,1) (0,1,0) (0,1,1) (1,0,0) ...",
+            tp$doc: "product(*iterables, repeat=1) --> product object\n\nCartesian product of input iterables.  Equivalent to nested for-loops.\n\nFor example, product(A, B) returns the same as:  ((x,y) for x in A for y in B).\nThe leftmost iterators are in the outermost for-loop, so the output tuples\ncycle in a manner similar to an odometer (with the rightmost element changing\non every iteration).\n\nTo compute the product of an iterable with itself, specify the number\nof repetitions with the optional repeat keyword argument. For example,\nproduct(A, repeat=4) means the same as product(A, A, A, A).\n\nproduct('ab', range(3)) --> ('a',0) ('a',1) ('a',2) ('b',0) ('b',1) ('b',2)\nproduct((0,1), (0,1), (0,1)) --> (0,0,0) (0,0,1) (0,1,0) (0,1,1) (1,0,0) ...",
             tp$new: function (args, kwargs) {
-                let [repeat] = Sk.abstr.copyKeywordsToNamedArgs("product", ["repeat"], [], kwargs, [new Sk.builtin.int_(1)]);
+                let [repeat] = Sk.abstr.copyKeywordsToNamedArgs("product", ["repeat"], [], kwargs, [
+                    new Sk.builtin.int_(1),
+                ]);
                 repeat = Sk.misceval.asIndexOrThrow(repeat);
                 if (repeat < 0) {
                     throw new Sk.builtin.ValueError("repeat argument cannot be negative");
@@ -714,11 +765,16 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "repeat(object [,times]) -> create an iterator which returns the object\nfor the specified number of times.  If not specified, returns the object\nendlessly.",
+            tp$doc: "repeat(object [,times]) -> create an iterator which returns the object\nfor the specified number of times.  If not specified, returns the object\nendlessly.",
             tp$new: function (args, kwargs) {
                 let object, times;
-                [object, times] = Sk.abstr.copyKeywordsToNamedArgs("repeat", ["object", "times"], args, kwargs, [Sk.builtin.none.none$]);
+                [object, times] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "repeat",
+                    ["object", "times"],
+                    args,
+                    kwargs,
+                    [Sk.builtin.none.none$]
+                );
                 if (!Sk.builtin.checkNone(times)) {
                     times = Sk.misceval.asIndexOrThrow(times);
                     times = times < 0 ? 0 : times; //not important for the algorithm but the repr
@@ -736,7 +792,9 @@ var $builtinmodule = function (name) {
             $r: function () {
                 object_repr = Sk.misceval.objectRepr(this.object);
                 times_repr = this.times === undefined ? "" : ", " + this.times;
-                return new Sk.builtin.str(Sk.abstr.typeName(this) + "(" + object_repr + times_repr + ")");
+                return new Sk.builtin.str(
+                    Sk.abstr.typeName(this) + "(" + object_repr + times_repr + ")"
+                );
             },
         },
         methods: {
@@ -747,7 +805,7 @@ var $builtinmodule = function (name) {
                     }
                     return new Sk.builtin.int_(this.times);
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
             },
         },
@@ -770,7 +828,13 @@ var $builtinmodule = function (name) {
         slots: {
             tp$new: function (args, kwargs) {
                 let func, iter;
-                [func, iter] = Sk.abstr.copyKeywordsToNamedArgs("starmap", ["func", "iterable"], args, kwargs, []);
+                [func, iter] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "starmap",
+                    ["func", "iterable"],
+                    args,
+                    kwargs,
+                    []
+                );
                 iter = Sk.abstr.iter(iter);
                 func = Sk.builtin.checkNone(func) ? Sk.builtin.bool : func;
                 if (this === mod.starmap.prototype) {
@@ -802,8 +866,7 @@ var $builtinmodule = function (name) {
             }
         },
         slots: {
-            tp$doc:
-                "takewhile(predicate, iterable) --> takewhile object\n\nReturn successive entries from an iterable as long as the \npredicate evaluates to true for each entry.",
+            tp$doc: "takewhile(predicate, iterable) --> takewhile object\n\nReturn successive entries from an iterable as long as the \npredicate evaluates to true for each entry.",
             tp$new: function (args, kwargs) {
                 Sk.abstr.checkNoKwargs("takewhile", kwargs);
                 Sk.abstr.checkArgsLen("takewhile", args, 2, 2);
@@ -851,10 +914,15 @@ var $builtinmodule = function (name) {
             return new Sk.builtin.tuple(values);
         },
         slots: {
-            tp$doc:
-                "zip_longest(iter1 [,iter2 [...]], [fillvalue=None]) --> zip_longest object\n\nReturn a zip_longest object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the longest iterable in the argument sequence\nis exhausted and then it raises StopIteration.  When the shorter iterables\nare exhausted, the fillvalue is substituted in their place.  The fillvalue\ndefaults to None or can be specified by a keyword argument.\n",
+            tp$doc: "zip_longest(iter1 [,iter2 [...]], [fillvalue=None]) --> zip_longest object\n\nReturn a zip_longest object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the longest iterable in the argument sequence\nis exhausted and then it raises StopIteration.  When the shorter iterables\nare exhausted, the fillvalue is substituted in their place.  The fillvalue\ndefaults to None or can be specified by a keyword argument.\n",
             tp$new: function (args, kwargs) {
-                const [fillvalue] = Sk.abstr.copyKeywordsToNamedArgs("zip_longest", ["fillvalue"], [], kwargs, [Sk.builtin.none.none$]);
+                const [fillvalue] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "zip_longest",
+                    ["fillvalue"],
+                    [],
+                    kwargs,
+                    [Sk.builtin.none.none$]
+                );
                 const iterables = [];
                 for (let i = 0; i < args.length; i++) {
                     iterables.push(Sk.abstr.iter(args[i]));

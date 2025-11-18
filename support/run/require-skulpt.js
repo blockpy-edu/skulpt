@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+const chalk = require("chalk");
 
 module.exports = {
     requireSkulpt: function (requireOptimized) {
@@ -10,7 +10,9 @@ module.exports = {
         } catch (err) {
             if (requireOptimized) {
                 skulpt = null;
-                console.log(chalk.red("No optimized skulpt distribution, run 'npm run build' first."));
+                console.log(
+                    chalk.red("No optimized skulpt distribution, run 'npm run build' first.")
+                );
             } else {
                 try {
                     skulpt = require("../../dist/skulpt.js");
@@ -18,11 +20,15 @@ module.exports = {
                 } catch (err) {
                     skulpt = null;
                     console.error(err);
-                    console.log(chalk.red("No skulpt distribution, run 'npm run build' or 'npm run devbuild' first."));
+                    console.log(
+                        chalk.red(
+                            "No skulpt distribution, run 'npm run build' or 'npm run devbuild' first."
+                        )
+                    );
                 }
             }
         }
 
         return skulpt;
-    }
-}
+    },
+};

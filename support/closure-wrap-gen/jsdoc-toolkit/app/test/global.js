@@ -2,12 +2,9 @@
 var x = [1, 2, 4];
 
 var y = {
-	foo: function(){
-	}
-}
+    foo: function () {},
+};
 
-bar = function() {
-}
+bar = function () {};
 
-function zop() {
-}
+function zop() {}

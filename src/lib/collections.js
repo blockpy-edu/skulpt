@@ -65,7 +65,7 @@ function collections_mod(collections) {
                         return ret;
                     }
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
             },
         },
         getsets: {
@@ -80,8 +80,7 @@ function collections_mod(collections) {
             },
         },
         slots: {
-            tp$doc:
-                "defaultdict(default_factory[, ...]) --> dict with default factory\n\nThe default factory is called without arguments to produce\na new value when a key is not present, in __getitem__ only.\nA defaultdict compares equal to a dict with the same items.\nAll remaining arguments are treated the same as if they were\npassed to the dict constructor, including keyword arguments.\n",
+            tp$doc: "defaultdict(default_factory[, ...]) --> dict with default factory\n\nThe default factory is called without arguments to produce\na new value when a key is not present, in __getitem__ only.\nA defaultdict compares equal to a dict with the same items.\nAll remaining arguments are treated the same as if they were\npassed to the dict constructor, including keyword arguments.\n",
             tp$init(args, kwargs) {
                 const default_ = args.shift();
                 if (default_ === undefined) {
@@ -120,14 +119,18 @@ function collections_mod(collections) {
         base: Sk.builtin.dict,
         methods: {
             elements: {
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $meth() {
                     // this is how Cpython does it
-                    const from_iterable = collections._chain.tp$getattr(new Sk.builtin.str("from_iterable"));
+                    const from_iterable = collections._chain.tp$getattr(
+                        new Sk.builtin.str("from_iterable")
+                    );
                     const starmap = collections._starmap;
                     const repeat = collections._repeat;
                     const tp_call = Sk.misceval.callsimArray;
-                    return tp_call(from_iterable, [tp_call(starmap, [repeat, tp_call(this.tp$getattr(this.str$items))])]);
+                    return tp_call(from_iterable, [
+                        tp_call(starmap, [repeat, tp_call(this.tp$getattr(this.str$items))]),
+                    ]);
                 },
             },
             most_common: {
@@ -150,31 +153,47 @@ function collections_mod(collections) {
                         }
                     });
 
-                    return new Sk.builtin.list(most_common_elem.slice(0, n).map((x) => new Sk.builtin.tuple(x)));
+                    return new Sk.builtin.list(
+                        most_common_elem.slice(0, n).map((x) => new Sk.builtin.tuple(x))
+                    );
                 },
             },
             update: {
-                $flags: {FastCall: true},
+                $flags: { FastCall: true },
                 $meth(args, kwargs) {
                     Sk.abstr.checkArgsLen("update", args, 0, 1);
                     return this.counter$update(args, kwargs);
                 },
             },
             subtract: {
-                $flags: {FastCall: true},
+                $flags: { FastCall: true },
                 $meth(args, kwargs) {
                     Sk.abstr.checkArgsLen("subtract", args, 0, 1);
                     const other = args[0];
                     if (other !== undefined) {
                         if (other instanceof Sk.builtin.dict) {
-                            for (let iter = Sk.abstr.iter(other), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+                            for (
+                                let iter = Sk.abstr.iter(other), k = iter.tp$iternext();
+                                k !== undefined;
+                                k = iter.tp$iternext()
+                            ) {
                                 const count = this.mp$subscript(k);
-                                this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, other.mp$subscript(k), "Sub"));
+                                this.mp$ass_subscript(
+                                    k,
+                                    Sk.abstr.numberBinOp(count, other.mp$subscript(k), "Sub")
+                                );
                             }
                         } else {
-                            for (let iter = Sk.abstr.iter(other), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+                            for (
+                                let iter = Sk.abstr.iter(other), k = iter.tp$iternext();
+                                k !== undefined;
+                                k = iter.tp$iternext()
+                            ) {
                                 const count = this.mp$subscript(k);
-                                this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, this.$one, "Sub"));
+                                this.mp$ass_subscript(
+                                    k,
+                                    Sk.abstr.numberBinOp(count, this.$one, "Sub")
+                                );
                             }
                         }
                     }
@@ -204,8 +223,7 @@ function collections_mod(collections) {
             __dict__: Sk.generic.getSetDict,
         },
         slots: {
-            tp$doc:
-                "Dict subclass for counting hashable items.  Sometimes called a bag\n    or multiset.  Elements are stored as dictionary keys and their counts\n    are stored as dictionary values.\n\n    >>> c = Counter('abcdeabcdabcaba')  # count elements from a string\n\n    >>> c.most_common(3)                # three most common elements\n    [('a', 5), ('b', 4), ('c', 3)]\n    >>> sorted(c)                       # list all unique elements\n    ['a', 'b', 'c', 'd', 'e']\n    >>> ''.join(sorted(c.elements()))   # list elements with repetitions\n    'aaaaabbbbcccdde'\n    >>> sum(c.values())                 # total of all counts\n    15\n\n    >>> c['a']                          # count of letter 'a'\n    5\n    >>> for elem in 'shazam':           # update counts from an iterable\n    ...     c[elem] += 1                # by adding 1 to each element's count\n    >>> c['a']                          # now there are seven 'a'\n    7\n    >>> del c['b']                      # remove all 'b'\n    >>> c['b']                          # now there are zero 'b'\n    0\n\n    >>> d = Counter('simsalabim')       # make another counter\n    >>> c.update(d)                     # add in the second counter\n    >>> c['a']                          # now there are nine 'a'\n    9\n\n    >>> c.clear()                       # empty the counter\n    >>> c\n    Counter()\n\n    Note:  If a count is set to zero or reduced to zero, it will remain\n    in the counter until the entry is deleted or the counter is cleared:\n\n    >>> c = Counter('aaabbc')\n    >>> c['b'] -= 2                     # reduce the count of 'b' by two\n    >>> c.most_common()                 # 'b' is still in, but its count is zero\n    [('a', 3), ('c', 1), ('b', 0)]\n\n",
+            tp$doc: "Dict subclass for counting hashable items.  Sometimes called a bag\n    or multiset.  Elements are stored as dictionary keys and their counts\n    are stored as dictionary values.\n\n    >>> c = Counter('abcdeabcdabcaba')  # count elements from a string\n\n    >>> c.most_common(3)                # three most common elements\n    [('a', 5), ('b', 4), ('c', 3)]\n    >>> sorted(c)                       # list all unique elements\n    ['a', 'b', 'c', 'd', 'e']\n    >>> ''.join(sorted(c.elements()))   # list elements with repetitions\n    'aaaaabbbbcccdde'\n    >>> sum(c.values())                 # total of all counts\n    15\n\n    >>> c['a']                          # count of letter 'a'\n    5\n    >>> for elem in 'shazam':           # update counts from an iterable\n    ...     c[elem] += 1                # by adding 1 to each element's count\n    >>> c['a']                          # now there are seven 'a'\n    7\n    >>> del c['b']                      # remove all 'b'\n    >>> c['b']                          # now there are zero 'b'\n    0\n\n    >>> d = Counter('simsalabim')       # make another counter\n    >>> c.update(d)                     # add in the second counter\n    >>> c['a']                          # now there are nine 'a'\n    9\n\n    >>> c.clear()                       # empty the counter\n    >>> c\n    Counter()\n\n    Note:  If a count is set to zero or reduced to zero, it will remain\n    in the counter until the entry is deleted or the counter is cleared:\n\n    >>> c = Counter('aaabbc')\n    >>> c['b'] -= 2                     # reduce the count of 'b' by two\n    >>> c.most_common()                 # 'b' is still in, but its count is zero\n    [('a', 3), ('c', 1), ('b', 0)]\n\n",
             tp$init(args, kwargs) {
                 Sk.abstr.checkArgsLen(this.tpjs_name, args, 0, 1);
                 return this.counter$update(args, kwargs);
@@ -218,7 +236,10 @@ function collections_mod(collections) {
             tp$as_sequence_or_mapping: true,
             mp$ass_subscript(key, value) {
                 if (value === undefined) {
-                    return this.mp$lookup(key) && Sk.builtin.dict.prototype.mp$ass_subscript.call(this, key, value);
+                    return (
+                        this.mp$lookup(key) &&
+                        Sk.builtin.dict.prototype.mp$ass_subscript.call(this, key, value)
+                    );
                 }
                 return Sk.builtin.dict.prototype.mp$ass_subscript.call(this, key, value);
             },
@@ -233,7 +254,10 @@ function collections_mod(collections) {
             nb$negative: counterNumberSlot(function (result) {
                 this.$items().forEach(([elem, count]) => {
                     if (Sk.misceval.richCompareBool(count, this.$zero, "Lt")) {
-                        result.mp$ass_subscript(elem, Sk.abstr.numberBinOp(this.$zero, count, "Sub"));
+                        result.mp$ass_subscript(
+                            elem,
+                            Sk.abstr.numberBinOp(this.$zero, count, "Sub")
+                        );
                     }
                 });
             }),
@@ -245,8 +269,14 @@ function collections_mod(collections) {
                     }
                 });
                 other.$items().forEach(([elem, count]) => {
-                    if (this.mp$lookup(elem) === undefined && Sk.misceval.richCompareBool(count, this.$zero, "Lt")) {
-                        result.mp$ass_subscript(elem, Sk.abstr.numberBinOp(this.$zero, count, "Sub"));
+                    if (
+                        this.mp$lookup(elem) === undefined &&
+                        Sk.misceval.richCompareBool(count, this.$zero, "Lt")
+                    ) {
+                        result.mp$ass_subscript(
+                            elem,
+                            Sk.abstr.numberBinOp(this.$zero, count, "Sub")
+                        );
                     }
                 });
             }),
@@ -258,33 +288,49 @@ function collections_mod(collections) {
                     }
                 });
                 other.$items().forEach(([elem, count]) => {
-                    if (this.mp$lookup(elem) === undefined && Sk.misceval.richCompareBool(count, this.$zero, "Gt")) {
+                    if (
+                        this.mp$lookup(elem) === undefined &&
+                        Sk.misceval.richCompareBool(count, this.$zero, "Gt")
+                    ) {
                         result.mp$ass_subscript(elem, count);
                     }
                 });
             }),
             nb$inplace_add: counterInplaceSlot("+", function (other) {
                 other.$items().forEach(([elem, count]) => {
-                    const newcount = Sk.abstr.numberInplaceBinOp(this.mp$subscript(elem), count, "Add");
+                    const newcount = Sk.abstr.numberInplaceBinOp(
+                        this.mp$subscript(elem),
+                        count,
+                        "Add"
+                    );
                     this.mp$ass_subscript(elem, newcount);
                 });
             }),
             nb$inplace_subtract: counterInplaceSlot("-", function (other) {
                 other.$items().forEach(([elem, count]) => {
-                    const newcount = Sk.abstr.numberInplaceBinOp(this.mp$subscript(elem), count, "Sub");
+                    const newcount = Sk.abstr.numberInplaceBinOp(
+                        this.mp$subscript(elem),
+                        count,
+                        "Sub"
+                    );
                     this.mp$ass_subscript(elem, newcount);
                 });
             }),
             nb$or: counterNumberSlot(function (result, other) {
                 this.$items().forEach(([elem, count]) => {
                     const other_count = other.mp$subscript(elem);
-                    const newcount = Sk.misceval.richCompareBool(count, other_count, "Lt") ? other_count : count;
+                    const newcount = Sk.misceval.richCompareBool(count, other_count, "Lt")
+                        ? other_count
+                        : count;
                     if (Sk.misceval.richCompareBool(newcount, this.$zero, "Gt")) {
                         result.mp$ass_subscript(elem, newcount);
                     }
                 });
                 other.$items().forEach(([elem, count]) => {
-                    if (this.mp$lookup(elem) === undefined && Sk.misceval.richCompareBool(count, this.$zero, "Gt")) {
+                    if (
+                        this.mp$lookup(elem) === undefined &&
+                        Sk.misceval.richCompareBool(count, this.$zero, "Gt")
+                    ) {
                         result.mp$ass_subscript(elem, count);
                     }
                 });
@@ -292,7 +338,9 @@ function collections_mod(collections) {
             nb$and: counterNumberSlot(function (result, other) {
                 this.$items().forEach(([elem, count]) => {
                     const other_count = other.mp$subscript(elem);
-                    const newcount = Sk.misceval.richCompareBool(count, other_count, "Lt") ? count : other_count;
+                    const newcount = Sk.misceval.richCompareBool(count, other_count, "Lt")
+                        ? count
+                        : other_count;
                     if (Sk.misceval.richCompareBool(newcount, this.$zero, "Gt")) {
                         result.mp$ass_subscript(elem, newcount);
                     }
@@ -338,13 +386,24 @@ function collections_mod(collections) {
                             // reach out to dict update function
                             this.update$common(args, undefined, "update");
                         } else {
-                            for (let iter = Sk.abstr.iter(iterable), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+                            for (
+                                let iter = Sk.abstr.iter(iterable), k = iter.tp$iternext();
+                                k !== undefined;
+                                k = iter.tp$iternext()
+                            ) {
                                 const count = this.mp$subscript(k);
-                                this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, iterable.mp$subscript(k), "Add"));
+                                this.mp$ass_subscript(
+                                    k,
+                                    Sk.abstr.numberBinOp(count, iterable.mp$subscript(k), "Add")
+                                );
                             }
                         }
                     } else {
-                        for (let iter = Sk.abstr.iter(iterable), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+                        for (
+                            let iter = Sk.abstr.iter(iterable), k = iter.tp$iternext();
+                            k !== undefined;
+                            k = iter.tp$iternext()
+                        ) {
                             const count = this.mp$subscript(k);
                             this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, this.$one, "Add"));
                         }
@@ -358,7 +417,10 @@ function collections_mod(collections) {
                         for (let i = 0; i < kwargs.length; i += 2) {
                             const k = new Sk.builtin.str(kwargs[i]);
                             const count = this.mp$subscript(k);
-                            this.mp$ass_subscript(k, Sk.abstr.numberBinOp(count, kwargs[i + 1], "Add"));
+                            this.mp$ass_subscript(
+                                k,
+                                Sk.abstr.numberBinOp(count, kwargs[i + 1], "Add")
+                            );
                         }
                     }
                 }
@@ -369,7 +431,9 @@ function collections_mod(collections) {
         classmethods: {
             fromkeys: {
                 $meth: function fromkeys() {
-                    throw new Sk.builtin.NotImplementedError("Counter.fromkeys() is undefined.  Use Counter(iterable) instead.");
+                    throw new Sk.builtin.NotImplementedError(
+                        "Counter.fromkeys() is undefined.  Use Counter(iterable) instead."
+                    );
                 },
                 $flags: { MinArgs: 1, MaxArgs: 2 },
             },
@@ -390,7 +454,9 @@ function collections_mod(collections) {
         return function (other) {
             // can add anything with items defined but just support dict instances...
             if (!(other instanceof Sk.builtin.dict)) {
-                throw new Sk.builtin.TypeError("Counter " + symbol + "= " + Sk.abstr.typeName(other) + " is not supported");
+                throw new Sk.builtin.TypeError(
+                    "Counter " + symbol + "= " + Sk.abstr.typeName(other) + " is not supported"
+                );
             }
             f.call(this, other);
             return this.keep$positive();
@@ -410,7 +476,8 @@ function collections_mod(collections) {
                 }
                 this.in$repr = true;
                 let pairs = this.$items().map(
-                    ([key, val]) => `(${Sk.misceval.objectRepr(key)}, ${Sk.misceval.objectRepr(val)})`
+                    ([key, val]) =>
+                        `(${Sk.misceval.objectRepr(key)}, ${Sk.misceval.objectRepr(val)})`
                 );
                 if (pairs.length === 0) {
                     pairs = "";
@@ -438,12 +505,18 @@ function collections_mod(collections) {
                     const oitem = oitems[i];
                     const k = item[0];
                     const otherk = oitem[0];
-                    if (k !== otherk && !Sk.misceval.isTrue(Sk.misceval.richCompareBool(k, otherk, "Eq"))) {
+                    if (
+                        k !== otherk &&
+                        !Sk.misceval.isTrue(Sk.misceval.richCompareBool(k, otherk, "Eq"))
+                    ) {
                         return !ret;
                     }
                     const v = item[1];
                     const otherv = oitem[1];
-                    if (v !== otherv && !Sk.misceval.isTrue(Sk.misceval.richCompareBool(v, otherv, "Eq"))) {
+                    if (
+                        v !== otherv &&
+                        !Sk.misceval.isTrue(Sk.misceval.richCompareBool(v, otherv, "Eq"))
+                    ) {
                         return !ret;
                     }
                 }
@@ -452,7 +525,7 @@ function collections_mod(collections) {
         },
         methods: {
             popitem: {
-                $flags: {NamedArgs: ["last"], Defaults: [Sk.builtin.bool.true$]},
+                $flags: { NamedArgs: ["last"], Defaults: [Sk.builtin.bool.true$] },
                 $meth(last) {
                     const size = this.get$size();
                     if (size === 0) {
@@ -469,7 +542,10 @@ function collections_mod(collections) {
                     let foundhash;
                     for (let keyhash in this.entries) {
                         const orderedkey = this.entries[keyhash][0];
-                        if (orderedkey === key || Sk.misceval.richCompareBool(orderedkey, key, "Eq")) {
+                        if (
+                            orderedkey === key ||
+                            Sk.misceval.richCompareBool(orderedkey, key, "Eq")
+                        ) {
                             foundhash = keyhash;
                             break;
                         }
@@ -504,9 +580,18 @@ function collections_mod(collections) {
             tp$hash: Sk.builtin.none.none$,
             tp$new: Sk.generic.new,
             tp$init(args, kwargs) {
-                let [iterable, maxlen] = Sk.abstr.copyKeywordsToNamedArgs("deque", ["iterable", "maxlen"], args, kwargs);
+                let [iterable, maxlen] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "deque",
+                    ["iterable", "maxlen"],
+                    args,
+                    kwargs
+                );
                 if (maxlen !== undefined && !Sk.builtin.checkNone(maxlen)) {
-                    maxlen = Sk.misceval.asIndexSized(maxlen, Sk.builtin.OverflowError, "an integer is required");
+                    maxlen = Sk.misceval.asIndexSized(
+                        maxlen,
+                        Sk.builtin.OverflowError,
+                        "an integer is required"
+                    );
                     if (maxlen < 0) {
                         throw new Sk.builtin.ValueError("maxlen must be non-negative");
                     } else {
@@ -537,7 +622,11 @@ function collections_mod(collections) {
                     i = Math.max(vl, wl);
                 if (vl === wl) {
                     for (i = 0; i < vl && i < wl; ++i) {
-                        k = Sk.misceval.richCompareBool(v[(this.head + i) & this.mask], w[(wd.head + i) & wd.mask], "Eq");
+                        k = Sk.misceval.richCompareBool(
+                            v[(this.head + i) & this.mask],
+                            w[(wd.head + i) & wd.mask],
+                            "Eq"
+                        );
                         if (!k) {
                             break;
                         }
@@ -570,7 +659,11 @@ function collections_mod(collections) {
                     return true;
                 }
                 // or, compare the differing element using the proper operator
-                return Sk.misceval.richCompareBool(v[(this.head + i) & this.mask], w[(wd.head + i) & wd.mask], op);
+                return Sk.misceval.richCompareBool(
+                    v[(this.head + i) & this.mask],
+                    w[(wd.head + i) & wd.mask],
+                    op
+                );
             },
             tp$iter() {
                 return new deque_iter_(this);
@@ -589,7 +682,14 @@ function collections_mod(collections) {
                 }
                 const name = Sk.abstr.typeName(this);
                 if (this.maxlen !== undefined) {
-                    return new Sk.builtin.str(name + "([" + ret.filter(Boolean).join(", ") + "], maxlen=" + this.maxlen + ")");
+                    return new Sk.builtin.str(
+                        name +
+                            "([" +
+                            ret.filter(Boolean).join(", ") +
+                            "], maxlen=" +
+                            this.maxlen +
+                            ")"
+                    );
                 }
                 this.$entered_repr = undefined;
                 return new Sk.builtin.str(name + "([" + ret.filter(Boolean).join(", ") + "])");
@@ -601,7 +701,11 @@ function collections_mod(collections) {
 
             tp$as_sequence_or_mapping: true,
             sq$contains(item) {
-                for (let it = this.tp$iter(), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+                for (
+                    let it = this.tp$iter(), i = it.tp$iternext();
+                    i !== undefined;
+                    i = it.tp$iternext()
+                ) {
                     if (Sk.misceval.richCompareBool(i, item, "Eq")) {
                         return true;
                     }
@@ -611,11 +715,19 @@ function collections_mod(collections) {
             sq$concat(other) {
                 // check type
                 if (!(other instanceof collections.deque)) {
-                    throw new Sk.builtin.TypeError("can only concatenate deque (not '" + Sk.abstr.typeName(other) + "') to deque");
+                    throw new Sk.builtin.TypeError(
+                        "can only concatenate deque (not '" +
+                            Sk.abstr.typeName(other) +
+                            "') to deque"
+                    );
                 }
                 // TODO this can't be the right constructor
                 const new_deque = this.$copy();
-                for (let iter = other.tp$iter(), k = iter.tp$iternext(); k !== undefined; k = iter.tp$iternext()) {
+                for (
+                    let iter = other.tp$iter(), k = iter.tp$iternext();
+                    k !== undefined;
+                    k = iter.tp$iternext()
+                ) {
                     new_deque.$push(k);
                 }
                 return new_deque;
@@ -624,7 +736,10 @@ function collections_mod(collections) {
                 return (this.tail - this.head) & this.mask;
             },
             sq$repeat(n) {
-                n = Sk.misceval.asIndexOrThrow(n, "can't multiply sequence by non-int of type '{tp$name}'");
+                n = Sk.misceval.asIndexOrThrow(
+                    n,
+                    "can't multiply sequence by non-int of type '{tp$name}'"
+                );
                 const size = (this.tail - this.head) & this.mask;
                 const new_deque = this.$copy();
                 let pos;
@@ -662,13 +777,21 @@ function collections_mod(collections) {
             },
             nb$inplace_add(other) {
                 this.maxlen = undefined;
-                for (let it = Sk.abstr.iter(other), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+                for (
+                    let it = Sk.abstr.iter(other), i = it.tp$iternext();
+                    i !== undefined;
+                    i = it.tp$iternext()
+                ) {
                     this.$push(i);
                 }
                 return this;
             },
             nb$inplace_multiply(n) {
-                n = Sk.misceval.asIndexSized(n, Sk.builtin.OverflowError, "can't multiply sequence by non-int of type '{tp$name}'");
+                n = Sk.misceval.asIndexSized(
+                    n,
+                    Sk.builtin.OverflowError,
+                    "can't multiply sequence by non-int of type '{tp$name}'"
+                );
                 if (n <= 0) {
                     this.$clear();
                 }
@@ -694,7 +817,7 @@ function collections_mod(collections) {
                     this.$push(value);
                     return Sk.builtin.none.none$;
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "Add an element to the right side of the deque.",
             },
@@ -703,7 +826,7 @@ function collections_mod(collections) {
                     this.$pushLeft(value);
                     return Sk.builtin.none.none$;
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "Add an element to the left side of the deque.",
             },
@@ -712,7 +835,7 @@ function collections_mod(collections) {
                     this.$clear();
                     return Sk.builtin.none.none$;
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "Remove all elements from the deque.",
             },
@@ -720,7 +843,7 @@ function collections_mod(collections) {
                 $meth() {
                     return this.$copy();
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "Return a shallow copy of a deque.",
             },
@@ -728,7 +851,7 @@ function collections_mod(collections) {
                 $meth() {
                     return this.$copy();
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "Return a shallow copy of a deque.",
             },
@@ -737,13 +860,19 @@ function collections_mod(collections) {
                     const size = (this.tail - this.head) & this.mask;
                     let count = 0;
                     for (let i = 0; i < size; i++) {
-                        if (Sk.misceval.richCompareBool(this.v[(this.head + i) & this.mask], x, "Eq")) {
+                        if (
+                            Sk.misceval.richCompareBool(
+                                this.v[(this.head + i) & this.mask],
+                                x,
+                                "Eq"
+                            )
+                        ) {
                             count++;
                         }
                     }
                     return new Sk.builtin.int_(count);
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "D.count(value) -> integer -- return number of occurrences of value",
             },
@@ -752,18 +881,22 @@ function collections_mod(collections) {
                     this.$extend(iterable);
                     return Sk.builtin.none.none$;
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "Extend the right side of the deque with elements from the iterable",
             },
             extendleft: {
                 $meth(iterable) {
-                    for (let it = Sk.abstr.iter(iterable), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+                    for (
+                        let it = Sk.abstr.iter(iterable), i = it.tp$iternext();
+                        i !== undefined;
+                        i = it.tp$iternext()
+                    ) {
                         this.$pushLeft(i);
                     }
                     return Sk.builtin.none.none$;
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "Extend the left side of the deque with elements from the iterable",
             },
@@ -775,13 +908,16 @@ function collections_mod(collections) {
                     }
                     throw new Sk.builtin.ValueError(Sk.misceval.objectRepr(x) + " is not in deque");
                 },
-                $flags: {MinArgs: 1, MaxArgs: 3},
+                $flags: { MinArgs: 1, MaxArgs: 3 },
                 $textsig: null,
                 $doc: "D.index(value, [start, [stop]]) -> integer -- return first index of value.\nRaises ValueError if the value is not present.",
             },
             insert: {
                 $meth(index, value) {
-                    index = Sk.misceval.asIndexOrThrow(index, "integer argument expected, got {tp$name}");
+                    index = Sk.misceval.asIndexOrThrow(
+                        index,
+                        "integer argument expected, got {tp$name}"
+                    );
                     const size = (this.tail - this.head) & this.mask;
                     if (this.maxlen !== undefined && size >= this.maxlen) {
                         throw new Sk.builtin.IndexError("deque already at its maximum size");
@@ -809,7 +945,7 @@ function collections_mod(collections) {
                     }
                     return Sk.builtin.none.none$;
                 },
-                $flags: {MinArgs: 2, MaxArgs: 2},
+                $flags: { MinArgs: 2, MaxArgs: 2 },
                 $textsig: null,
                 $doc: "D.insert(index, object) -- insert object before index",
             },
@@ -817,7 +953,7 @@ function collections_mod(collections) {
                 $meth() {
                     return this.$pop();
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "Remove and return the rightmost element.",
             },
@@ -825,7 +961,7 @@ function collections_mod(collections) {
                 $meth() {
                     return this.$popLeft();
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "Remove and return the leftmost element.",
             },
@@ -839,7 +975,9 @@ function collections_mod(collections) {
                 $meth(value) {
                     const index = this.$index(value);
                     if (index === undefined) {
-                        throw new Sk.builtin.ValueError(Sk.misceval.objectRepr(value) + " is not in deque");
+                        throw new Sk.builtin.ValueError(
+                            Sk.misceval.objectRepr(value) + " is not in deque"
+                        );
                     }
                     const pos = (this.head + index) & this.mask;
                     let cur = pos;
@@ -855,7 +993,7 @@ function collections_mod(collections) {
                         this.$resize(size, this.v.length >>> 1);
                     }
                 },
-                $flags: {OneArg: true},
+                $flags: { OneArg: true },
                 $textsig: null,
                 $doc: "D.remove(value) -- remove first occurrence of value.",
             },
@@ -863,7 +1001,7 @@ function collections_mod(collections) {
                 $meth() {
                     return new _deque_reverse_iterator_iter_(this);
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "D.__reversed__() -- return a reverse iterator over the deque",
             },
@@ -882,7 +1020,7 @@ function collections_mod(collections) {
                     }
                     return Sk.builtin.none.none$;
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
                 $textsig: null,
                 $doc: "D.reverse() -- reverse *IN PLACE*",
             },
@@ -918,7 +1056,7 @@ function collections_mod(collections) {
                     }
                     return Sk.builtin.none.none$;
                 },
-                $flags: {MinArgs: 0, MaxArgs: 1},
+                $flags: { MinArgs: 0, MaxArgs: 1 },
                 $textsig: null,
                 $doc: "Rotate the deque n steps to the right (default n=1).  If n is negative, rotates left.",
             },
@@ -927,7 +1065,9 @@ function collections_mod(collections) {
         getsets: {
             maxlen: {
                 $get() {
-                    return this.maxlen === undefined ? Sk.builtin.none.none$ : new Sk.builtin.int_(this.maxlen);
+                    return this.maxlen === undefined
+                        ? Sk.builtin.none.none$
+                        : new Sk.builtin.int_(this.maxlen);
                 },
                 $doc: "maximum size of a deque or None if unbounded",
             },
@@ -940,10 +1080,20 @@ function collections_mod(collections) {
                 this.v = new Array(2);
             },
             $copy() {
-                return new collections.deque(this.v.slice(0), this.maxlen, this.head, this.tail, this.mask);
+                return new collections.deque(
+                    this.v.slice(0),
+                    this.maxlen,
+                    this.head,
+                    this.tail,
+                    this.mask
+                );
             },
             $extend(iterable) {
-                for (let it = Sk.abstr.iter(iterable), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+                for (
+                    let it = Sk.abstr.iter(iterable), i = it.tp$iternext();
+                    i !== undefined;
+                    i = it.tp$iternext()
+                ) {
                     this.$push(i);
                 }
             },
@@ -1087,30 +1237,33 @@ function collections_mod(collections) {
                 $meth: function __length_hint__() {
                     return new Sk.builtin.int_(this.$length - this.$index);
                 },
-                $flags: {NoArgs: true},
+                $flags: { NoArgs: true },
             },
         },
     });
 
-    const _deque_reverse_iterator_iter_ = Sk.abstr.buildIteratorClass("_collections._deque_reverse_iterator", {
-        constructor: function _deque_reverse_iterator(dq) {
-            this.$index = ((dq.tail - dq.head) & dq.mask) - 1;
-            this.dq = dq.v;
-            this.$head = dq.head;
-            this.$mask = dq.mask;
-        },
-        iternext() {
-            if (this.$index < 0) {
-                return undefined;
-            }
-            const pos = (this.$head + this.$index) & this.$mask;
-            this.$index--;
-            return this.dq[pos];
-        },
-        methods: {
-            __length_hint__: Sk.generic.iterReverseLengthHintMethodDef,
-        },
-    });
+    const _deque_reverse_iterator_iter_ = Sk.abstr.buildIteratorClass(
+        "_collections._deque_reverse_iterator",
+        {
+            constructor: function _deque_reverse_iterator(dq) {
+                this.$index = ((dq.tail - dq.head) & dq.mask) - 1;
+                this.dq = dq.v;
+                this.$head = dq.head;
+                this.$mask = dq.mask;
+            },
+            iternext() {
+                if (this.$index < 0) {
+                    return undefined;
+                }
+                const pos = (this.$head + this.$index) & this.$mask;
+                this.$index--;
+                return this.dq[pos];
+            },
+            methods: {
+                __length_hint__: Sk.generic.iterReverseLengthHintMethodDef,
+            },
+        }
+    );
 
     // deque end
 
@@ -1124,11 +1277,17 @@ function collections_mod(collections) {
     function namedtuple(name, fields, rename, defaults, module) {
         name = name.tp$str();
         if (Sk.misceval.isTrue(Sk.misceval.callsimArray(collections._iskeyword, [name]))) {
-            throw new Sk.builtin.ValueError("Type names and field names cannot be a keyword: '" + Sk.misceval.objectRepr(name) + "'");
+            throw new Sk.builtin.ValueError(
+                "Type names and field names cannot be a keyword: '" +
+                    Sk.misceval.objectRepr(name) +
+                    "'"
+            );
         }
         const js_name = name.$jsstr();
         if (startsw.test(js_name) || !alnum.test(js_name) || !js_name) {
-            throw new Sk.builtin.ValueError("Type names and field names must be valid identifiers: '" + js_name + "'");
+            throw new Sk.builtin.ValueError(
+                "Type names and field names must be valid identifiers: '" + js_name + "'"
+            );
         }
 
         let flds, field_names;
@@ -1142,7 +1301,11 @@ function collections_mod(collections) {
         } else {
             flds = [];
             field_names = [];
-            for (let iter = Sk.abstr.iter(fields), i = iter.tp$iternext(); i !== undefined; i = iter.tp$iternext()) {
+            for (
+                let iter = Sk.abstr.iter(fields), i = iter.tp$iternext();
+                i !== undefined;
+                i = iter.tp$iternext()
+            ) {
                 i = i.tp$str();
                 field_names.push(i);
                 flds.push(i.$jsstr());
@@ -1154,7 +1317,9 @@ function collections_mod(collections) {
         if (Sk.misceval.isTrue(rename)) {
             for (let i = 0; i < flds.length; i++) {
                 if (
-                    Sk.misceval.isTrue(Sk.misceval.callsimArray(collections._iskeyword, [field_names[i]])) ||
+                    Sk.misceval.isTrue(
+                        Sk.misceval.callsimArray(collections._iskeyword, [field_names[i]])
+                    ) ||
                     startsw2.test(flds[i]) ||
                     !alnum.test(flds[i]) ||
                     !flds[i] ||
@@ -1166,16 +1331,28 @@ function collections_mod(collections) {
                 seen.add(flds[i]);
             }
         } else {
-        // check the field names
+            // check the field names
             for (let i = 0; i < flds.length; i++) {
-                if (Sk.misceval.isTrue(Sk.misceval.callsimArray(collections._iskeyword, [field_names[i]]))) {
-                    throw new Sk.builtin.ValueError("Type names and field names cannot be a keyword: '" + flds[i] + "'");
+                if (
+                    Sk.misceval.isTrue(
+                        Sk.misceval.callsimArray(collections._iskeyword, [field_names[i]])
+                    )
+                ) {
+                    throw new Sk.builtin.ValueError(
+                        "Type names and field names cannot be a keyword: '" + flds[i] + "'"
+                    );
                 } else if (startsw2.test(flds[i])) {
-                    throw new Sk.builtin.ValueError("Field names cannot start with an underscore: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError(
+                        "Field names cannot start with an underscore: '" + flds[i] + "'"
+                    );
                 } else if (!alnum.test(flds[i]) || !flds[i]) {
-                    throw new Sk.builtin.ValueError("Type names and field names must be valid identifiers: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError(
+                        "Type names and field names must be valid identifiers: '" + flds[i] + "'"
+                    );
                 } else if (seen.has(flds[i])) {
-                    throw new Sk.builtin.ValueError("Encountered duplicate field name: '" + flds[i] + "'");
+                    throw new Sk.builtin.ValueError(
+                        "Encountered duplicate field name: '" + flds[i] + "'"
+                    );
                 }
                 seen.add(flds[i]);
             }
@@ -1190,7 +1367,11 @@ function collections_mod(collections) {
             if (dflts.length > flds.length) {
                 throw new Sk.builtin.TypeError("Got more default values than field names");
             }
-            for (let j = 0, i = field_names.length - dflts.length; i < field_names.length; j++, i++) {
+            for (
+                let j = 0, i = field_names.length - dflts.length;
+                i < field_names.length;
+                j++, i++
+            ) {
                 dflts_dict.push(field_names[i]);
                 dflts_dict.push(dflts[j]);
             }
@@ -1228,7 +1409,9 @@ function collections_mod(collections) {
             const res = call(_make, [call(Sk.builtin.map_, [pop, _field_names, _self])]);
             if (kwargs.sq$length()) {
                 const keys = kwargs.sk$asarray();
-                throw new Sk.builtin.ValueError("Got unexpectd field names: [" + keys.map((x) => "'" + x.$jsstr() + "'") + "]");
+                throw new Sk.builtin.ValueError(
+                    "Got unexpectd field names: [" + keys.map((x) => "'" + x.$jsstr() + "'") + "]"
+                );
             }
             return res;
         }
@@ -1260,7 +1443,9 @@ function collections_mod(collections) {
                 },
                 $r() {
                     const bits = this.v.map((x, i) => flds[i] + "=" + Sk.misceval.objectRepr(x));
-                    return new Sk.builtin.str(Sk.abstr.typeName(this) + "(" + bits.join(", ") + ")");
+                    return new Sk.builtin.str(
+                        Sk.abstr.typeName(this) + "(" + bits.join(", ") + ")"
+                    );
                 },
             },
             proto: Object.assign(

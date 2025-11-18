@@ -15,8 +15,7 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
     slots: {
         tp$getattr: Sk.generic.getAttr,
         tp$as_sequence_or_mapping: true,
-        tp$doc:
-            "range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",
+        tp$doc: "range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",
         tp$new(args, kwargs) {
             Sk.abstr.checkNoKwargs("range", kwargs);
             Sk.abstr.checkArgsLen("range", args, 1, 3);
@@ -82,7 +81,9 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
                 }
                 return new Sk.builtin.range_(start, stop, step, ret);
             }
-            throw new Sk.builtin.TypeError("range indices must be integers or slices, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError(
+                "range indices must be integers or slices, not " + Sk.abstr.typeName(index)
+            );
         },
     },
     getsets: {
@@ -107,7 +108,7 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
             $meth() {
                 return new reverserange_iter_(this);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Return a reverse iterator.",
         },
@@ -126,7 +127,7 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
                 }
                 return new Sk.builtin.int_(count);
             },
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: null,
             $doc: "rangeobject.count(value) -> integer -- return number of occurrences of value",
         },
@@ -139,7 +140,7 @@ Sk.builtin.range_ = Sk.abstr.buildNativeClass("range", {
                 }
                 throw new Sk.builtin.ValueError(Sk.misceval.objectRepr(item) + "is not in range");
             },
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: null,
             $doc: "rangeobject.index(value, [start, [stop]]) -> integer -- return index of value.\nRaise ValueError if the value is not present.",
         },

@@ -19,7 +19,7 @@
 
 var $builtinmodule = function (name) {
     var mod = {};
-    "use strict";
+    ("use strict");
 
     /**
      * Add integers, wrapping at 2^32.

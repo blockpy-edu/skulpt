@@ -1,2 +1,1 @@
-startOver = function(){
-}
+startOver = function () {};

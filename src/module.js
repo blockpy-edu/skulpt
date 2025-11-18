@@ -34,7 +34,7 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
             // ok we've failed to find anything check if there is __getattr__ defined as per pep 562
             const getattr = this.$d.__getattr__;
             if (getattr !== undefined) {
-                const res  = Sk.misceval.tryCatch(
+                const res = Sk.misceval.tryCatch(
                     () => Sk.misceval.callsimOrSuspendArray(getattr, [pyName]),
                     (e) => {
                         if (e instanceof Sk.builtin.AttributeError) {
@@ -49,7 +49,13 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
         tp$setattr: Sk.generic.setAttr,
         tp$new: Sk.generic.new,
         tp$init(args, kwargs) {
-            const [name, doc] = Sk.abstr.copyKeywordsToNamedArgs("module", ["name", "doc"], args, kwargs, [Sk.builtin.none.none$]);
+            const [name, doc] = Sk.abstr.copyKeywordsToNamedArgs(
+                "module",
+                ["name", "doc"],
+                args,
+                kwargs,
+                [Sk.builtin.none.none$]
+            );
             Sk.builtin.pyCheckType("module", "string", name);
             this.init$dict(name, doc);
         },
@@ -71,7 +77,7 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
         __dict__: {
             $get() {
                 // modules in skulpt have a $d as a js object so just return it as a mapping proxy;
-                // TODO we should really have a dict object 
+                // TODO we should really have a dict object
                 return new Sk.builtin.mappingproxy(this.$d);
             },
         },
@@ -124,7 +130,9 @@ Sk.builtin.module = Sk.abstr.buildNativeClass("module", {
                 return " (built-in)";
             }
             const loader = this.tp$getattr(Sk.builtin.str.$loader);
-            return loader === undefined || Sk.builtin.checkNone(loader) ? "" : " (" + Sk.misceval.objectRepr(loader) + ")";
+            return loader === undefined || Sk.builtin.checkNone(loader)
+                ? ""
+                : " (" + Sk.misceval.objectRepr(loader) + ")";
         },
         get$mod_reprf() {
             const loader = this.tp$getattr(Sk.builtin.str.$loader);

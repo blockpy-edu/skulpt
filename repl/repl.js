@@ -28,17 +28,25 @@ if (program.args[0] == "py2") {
 } else if (program.args[0] == "py3") {
     py3 = true;
 } else {
-    console.log(chalk.red("error: must specify python version ('py2' or 'py3'), not '" + program.args[0] + "'"));
+    console.log(
+        chalk.red(
+            "error: must specify python version ('py2' or 'py3'), not '" + program.args[0] + "'"
+        )
+    );
     process.exit(1);
 }
 
-const gbl = {__file__: new Sk.builtin.str("<repl>"), __name__: new Sk.builtin.str("__main__")};
+const gbl = { __file__: new Sk.builtin.str("<repl>"), __name__: new Sk.builtin.str("__main__") };
 
 Sk.configure({
-        output: (args) => { process.stdout.write(args); },
-        read: (fname) => { return fs.readFileSync(fname, "utf8"); },
-        systemexit: true,
-        retainglobals: true,
+    output: (args) => {
+        process.stdout.write(args);
+    },
+    read: (fname) => {
+        return fs.readFileSync(fname, "utf8");
+    },
+    systemexit: true,
+    retainglobals: true,
     inputfun: readline,
     __future__: py3 ? Sk.python3 : Sk.python2,
 });
@@ -55,7 +63,8 @@ var //finds lines starting with "print"
     //this regex checks whether or not a line starts with
     //an identifier followed with some whitspace and then an = and then some more white space.
     //it also checks if the identifier is a tuple.
-    assignment = /^((\s*\(\s*(\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*,)*\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*\)\s*)|(\s*\s*(\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*,)*\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*\s*))([+-/*%&\^\|]?|[/<>*]{2})=/,
+    assignment =
+        /^((\s*\(\s*(\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*,)*\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*\)\s*)|(\s*\s*(\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*,)*\s*((\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*)|(\s*\(\s*(\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*,)*\s*((\s*[_a-zA-Z]\w*\s*)|(\s*\(\s*(\s*[_a-zA-Z]\w*\s*,)*\s*[_a-zA-Z]\w*\s*\)\s*))\s*\)\s*))\s*\s*))([+-/*%&\^\|]?|[/<>*]{2})=/,
     lines = [],
     origLines,
     printevaluationresult;
@@ -68,26 +77,28 @@ if (Sk.__future__.python3) {
     printevaluationresult = "if not evaluationresult == None: print repr(evaluationresult)";
 }
 console.log("[node: " + process.version + "] on a system");
-console.log('Don\'t type "help", "copyright", "credits" or "license" unless you\'ve assigned something to them');
+console.log(
+    'Don\'t type "help", "copyright", "credits" or "license" unless you\'ve assigned something to them'
+);
 
 function isBalanced(lines) {
     "use strict";
-        var depth = 0,
+    var depth = 0,
         mlsopened = false,
-                l;
+        l;
 
     for (l = 0; l < lines.length; l = l + 1) {
-                if (lines[l] !== undefined) {
+        if (lines[l] !== undefined) {
             if (lines[l].match(/'''|"""/) !== null && lines[l].match(/'''|"""/).length === 1) {
-                                mlsopened = !mlsopened;
-                        }
-                        if (!mlsopened && lines[l].substr(lines[l].length - 1) === ":") {
-                                depth = depth + 1;
-                        }
-                        if (!mlsopened && lines[l] === "" && depth > 0) {
-                                depth = 0;
-                        }
-                }
+                mlsopened = !mlsopened;
+            }
+            if (!mlsopened && lines[l].substr(lines[l].length - 1) === ":") {
+                depth = depth + 1;
+            }
+            if (!mlsopened && lines[l] === "" && depth > 0) {
+                depth = 0;
+            }
+        }
     }
     return depth === 0 && !mlsopened;
 }
@@ -104,17 +115,25 @@ while (true) {
     lines.push(l);
 
     //See if it is ready to be evaluated;
-    if (!isBalanced(lines)) { continue; }
+    if (!isBalanced(lines)) {
+        continue;
+    }
 
     origLines = lines.slice();
 
     //it's a one-liner
     if (lines.length === 1) {
         //if it's a statement that should be printed (not containing an = or def or class or an empty line)
-        if (!assignment.test(lines[0]) && !defre.test(lines[0]) && !importre.test(lines[0]) && !comment.test(lines[0]) && lines[0].length > 0) {
+        if (
+            !assignment.test(lines[0]) &&
+            !defre.test(lines[0]) &&
+            !importre.test(lines[0]) &&
+            !comment.test(lines[0]) &&
+            lines[0].length > 0
+        ) {
             //if it doesn't contain print make sure it doesn't print None
             if (!re.test(lines[0])) {
-                                //remove the statement
+                //remove the statement
                 //evaluate it if nessecary
                 lines.push("evaluationresult = " + lines.pop());
                 //print the result if not None
@@ -128,7 +147,10 @@ while (true) {
         if (!lines || /^\s*$/.test(lines)) {
             continue;
         } else {
-            Sk.misceval.retryOptionalSuspensionOrThrow(Sk.builtin.exec(lines.join("\n"), gbl), "repl does not support suspensions");
+            Sk.misceval.retryOptionalSuspensionOrThrow(
+                Sk.builtin.exec(lines.join("\n"), gbl),
+                "repl does not support suspensions"
+            );
         }
     } catch (err) {
         if (err instanceof Sk.builtin.SystemExit) {
@@ -145,10 +167,14 @@ while (true) {
         var line = 0;
         //print the accumulated code with a ">" before the broken line.
         //Don't add the last statement to the accumulated code
-        console.log(origLines.map(function (str) {
-            return ++line + (index === line ? ">" : " ") + ": " + str;
-        }).join("\n"));
+        console.log(
+            origLines
+                .map(function (str) {
+                    return ++line + (index === line ? ">" : " ") + ": " + str;
+                })
+                .join("\n")
+        );
     } finally {
-                lines = [];
-        }
+        lines = [];
+    }
 }

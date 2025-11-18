@@ -43,7 +43,7 @@ response = requests.request('DELETE', 'https://api.example.com/resource/1')
 All request methods support these parameters:
 
 - **params**: URL query parameters (dict)
-- **data**: Request body data (dict or string) 
+- **data**: Request body data (dict or string)
 - **json**: JSON data (automatically sets Content-Type header)
 - **headers**: Custom HTTP headers (dict)
 - **cookies**: Cookies to send (dict)
@@ -51,7 +51,7 @@ All request methods support these parameters:
 
 ```python
 # URL parameters
-response = requests.get('https://api.example.com/search', 
+response = requests.get('https://api.example.com/search',
                        params={'q': 'python', 'page': 1})
 # Results in: https://api.example.com/search?q=python&page=1
 
@@ -132,7 +132,7 @@ response1 = s.get('https://api.example.com/user')
 response2 = s.get('https://api.example.com/posts')
 
 # You can override session defaults for individual requests
-response3 = s.get('https://api.example.com/public', 
+response3 = s.get('https://api.example.com/public',
                  headers={'Authorization': None})
 
 # Session supports all HTTP methods
@@ -167,6 +167,7 @@ except requests.RequestException as e:
 ```
 
 Available exception classes:
+
 - `RequestException` - Base class for all exceptions
 - `HTTPError` - HTTP error occurred (4xx, 5xx)
 - `ConnectionError` - Connection error
@@ -191,26 +192,29 @@ print(response.ok)          # True
 ## Known Limitations
 
 1. **DELETE method**: Due to `delete` being a JavaScript reserved word, you cannot use `requests.delete()` directly. Instead, use:
-   ```python
-   response = requests.request('DELETE', url)
-   ```
+
+    ```python
+    response = requests.request('DELETE', url)
+    ```
 
 2. **Keyword arguments**: Some methods like `iter_content()` may not support keyword arguments in the current implementation. Use positional arguments:
-   ```python
-   # Use this:
-   for chunk in response.iter_content(1024):
-       process(chunk)
-   
-   # Instead of:
-   for chunk in response.iter_content(chunk_size=1024):
-       process(chunk)
-   ```
+
+    ```python
+    # Use this:
+    for chunk in response.iter_content(1024):
+        process(chunk)
+
+    # Instead of:
+    for chunk in response.iter_content(chunk_size=1024):
+        process(chunk)
+    ```
 
 3. **Real HTTP Requests**: Actual HTTP requests use XMLHttpRequest which is subject to browser CORS policies. Mock data is recommended for educational environments.
 
 ## Backward Compatibility
 
 All existing functionality is preserved:
+
 - `requests.get()` and `requests.post()` work exactly as before
 - Response iteration, read(), readline(), readlines() unchanged
 - Mock data integration via Sk.requestsGet still works
@@ -219,6 +223,7 @@ All existing functionality is preserved:
 ## Examples
 
 ### Simple GET Request
+
 ```python
 import requests
 
@@ -228,6 +233,7 @@ print(f"User: {response.json()['name']}")
 ```
 
 ### POST with JSON
+
 ```python
 import requests
 
@@ -237,6 +243,7 @@ print(f"Created: {response.json()}")
 ```
 
 ### Session Example
+
 ```python
 import requests
 
@@ -252,17 +259,18 @@ s.close()
 ```
 
 ### Error Handling
+
 ```python
 import requests
 
 try:
     response = requests.get('https://api.example.com/data', timeout=10)
     response.raise_for_status()  # Raise exception for 4xx/5xx
-    
+
     if response.ok:
         data = response.json()
         print("Success:", data)
-    
+
 except requests.Timeout:
     print("Request timed out")
 except requests.HTTPError:

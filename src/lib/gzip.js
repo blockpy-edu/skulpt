@@ -54,11 +54,16 @@ function $builtinmodule() {
         gattr: objectGetAttr,
     } = Sk.abstr;
 
-    const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
+    const {
+        getSetDict: genericGetSetDict,
+        getAttr: genericGetAttr,
+        setAttr: genericSetAttr,
+    } = Sk.generic;
 
     // https://stackoverflow.com/a/59469189/1718155
     function promiseCompress(string, encoding) {
-        const byteArray = string; new TextEncoder().encode(string);
+        const byteArray = string;
+        new TextEncoder().encode(string);
         const cs = new CompressionStream(encoding);
         const writer = cs.writable.getWriter();
         writer.write(byteArray);
@@ -76,25 +81,28 @@ function $builtinmodule() {
         });
     }
 
-    var compress = function(data, compresslevel, mtime) {
-        return new Sk.misceval.promiseToSuspension(new Promise(function (resolve) {
-            promiseCompress(data.v, "gzip").then((result) => {
-                return resolve(new Sk.builtin.bytes(new Uint8Array(result)));
-            });
-        }));
+    var compress = function (data, compresslevel, mtime) {
+        return new Sk.misceval.promiseToSuspension(
+            new Promise(function (resolve) {
+                promiseCompress(data.v, "gzip").then((result) => {
+                    return resolve(new Sk.builtin.bytes(new Uint8Array(result)));
+                });
+            })
+        );
     };
     compress.co_varnames = ["data", "compresslevel", "mtime"];
     compress.$defaults = [new pyInt(9), pyNone];
     gzip.compress = new Sk.builtin.func(compress);
 
-
-    var decompress = function(data) {
+    var decompress = function (data) {
         Sk.builtin.pyCheckArgs("decompress", arguments, 1, 1, false, false);
-        return new Sk.misceval.promiseToSuspension(new Promise(function (resolve) {
-            promiseDecompress(data.v, "gzip").then((result) => {
-                return resolve(new Sk.builtin.bytes(new Uint8Array(result)));
-            });
-        }));
+        return new Sk.misceval.promiseToSuspension(
+            new Promise(function (resolve) {
+                promiseDecompress(data.v, "gzip").then((result) => {
+                    return resolve(new Sk.builtin.bytes(new Uint8Array(result)));
+                });
+            })
+        );
     };
     decompress.co_varnames = ["data"];
     gzip.decompress = new Sk.builtin.func(decompress);

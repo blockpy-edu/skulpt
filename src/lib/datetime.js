@@ -10,7 +10,14 @@ function $builtinmodule() {
         callsimArray: pyCall,
         callsimOrSuspendArray: pyCallOrSuspend,
     } = Sk.misceval;
-    const { numberBinOp, typeName, buildNativeClass, checkArgsLen, objectHash, copyKeywordsToNamedArgs } = Sk.abstr;
+    const {
+        numberBinOp,
+        typeName,
+        buildNativeClass,
+        checkArgsLen,
+        objectHash,
+        copyKeywordsToNamedArgs,
+    } = Sk.abstr;
     const {
         int_: pyInt,
         float_: pyFloat,
@@ -103,7 +110,11 @@ function $builtinmodule() {
     function _as_int_ratio(other) {
         let int_ratio = pyCall(other.tp$getattr(str_int_ratio));
         if (!(int_ratio instanceof pyTuple)) {
-            throw new TypeError("unexpected return type from as_integer_ratio(): expected tuple, got '" + typeName(int_ratio) + "'");
+            throw new TypeError(
+                "unexpected return type from as_integer_ratio(): expected tuple, got '" +
+                    typeName(int_ratio) +
+                    "'"
+            );
         }
         int_ratio = int_ratio.v;
         if (int_ratio.length !== 2) {
@@ -117,7 +128,18 @@ function $builtinmodule() {
 
         const mod = {
             __name__: new pyStr("datetime"),
-            __all__: new Sk.builtin.list(["date", "datetime", "time", "timedelta", "timezone", "tzinfo", "MINYEAR", "MAXYEAR"].map((x) => new pyStr(x))),
+            __all__: new Sk.builtin.list(
+                [
+                    "date",
+                    "datetime",
+                    "time",
+                    "timedelta",
+                    "timezone",
+                    "tzinfo",
+                    "MINYEAR",
+                    "MAXYEAR",
+                ].map((x) => new pyStr(x))
+            ),
         };
 
         function _cmp(x, y) {
@@ -228,13 +250,29 @@ function $builtinmodule() {
         }
 
         // # Month and day names.  For localized versions, see the calendar module.
-        const _MONTHNAMES = [null, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const _MONTHNAMES = [
+            null,
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+        ];
         const _DAYNAMES = [null, "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
         function _build_struct_time(y, m, d, hh, mm, ss, dstflag) {
             const wday = (_ymd2ord(y, m, d) + 6) % 7;
             const dnum = _days_before_month(y, m) + d;
-            return _time.struct_time.tp$call([new pyTuple([y, m, d, hh, mm, ss, wday, dnum, dstflag].map((x) => new pyInt(x)))]);
+            return _time.struct_time.tp$call([
+                new pyTuple([y, m, d, hh, mm, ss, wday, dnum, dstflag].map((x) => new pyInt(x))),
+            ]);
         }
 
         const _specs = {
@@ -324,18 +362,21 @@ function $builtinmodule() {
                                     if (offset !== pyNone) {
                                         let sign = "+";
                                         if (offset.$days < 0) {
-                                            offset = new timedelta(-offset.$days, -offset.$secs, -offset.$micro);
+                                            offset = new timedelta(
+                                                -offset.$days,
+                                                -offset.$secs,
+                                                -offset.$micro
+                                            );
                                             sign = "-";
                                         }
                                         let h, m, rest;
                                         [h, rest] = pyDivMod(offset, td_hour);
                                         [m, rest] = pyDivMod(rest, td_min);
-                                        h = h;
-                                        m = m;
                                         const s = rest.$secs;
                                         const u = offset.$micro;
                                         if (u) {
-                                            zreplace = sign + _d(h) + _d(m) + _d(s) + "." + _d(u, "0", 6);
+                                            zreplace =
+                                                sign + _d(h) + _d(m) + _d(s) + "." + _d(u, "0", 6);
                                         } else if (s) {
                                             zreplace = sign + _d(h) + _d(m) + _d(s);
                                         } else {
@@ -353,9 +394,14 @@ function $builtinmodule() {
                                     let s = pyCall(tzname_f);
                                     if (s !== pyNone) {
                                         const replace_f = s.tp$getattr(str_replace);
-                                        Zreplace = pyCall(replace_f, [new pyStr("%"), new pyStr("%%")]);
+                                        Zreplace = pyCall(replace_f, [
+                                            new pyStr("%"),
+                                            new pyStr("%%"),
+                                        ]);
                                         if (!checkString(Zreplace)) {
-                                            throw new TypeError("tzname.replace() did not return a string");
+                                            throw new TypeError(
+                                                "tzname.replace() did not return a string"
+                                            );
                                         }
                                     }
                                 }
@@ -454,7 +500,11 @@ function $builtinmodule() {
                     tzi = timezone.prototype.utc;
                 } else {
                     const tzsign = tstr[tz_pos - 1] === "-" ? -1 : 1;
-                    const td = new timedelta(0, tzsign * (tz_comps[0] * 3600 + tz_comps[1] * 60 + tz_comps[2]), tzsign * tz_comps[3]);
+                    const td = new timedelta(
+                        0,
+                        tzsign * (tz_comps[0] * 3600 + tz_comps[1] * 60 + tz_comps[2]),
+                        tzsign * tz_comps[3]
+                    );
                     tzi = new timezone(td);
                 }
             }
@@ -465,7 +515,9 @@ function $builtinmodule() {
 
         function _check_tzname(name) {
             if (name !== pyNone && !checkString(name)) {
-                throw new TypeError("tzinfo.tzname() must return None or string, not '" + typeName(name) + "'");
+                throw new TypeError(
+                    "tzinfo.tzname() must return None or string, not '" + typeName(name) + "'"
+                );
             }
         }
 
@@ -474,10 +526,19 @@ function $builtinmodule() {
                 return;
             }
             if (!(offset instanceof timedelta)) {
-                throw new TypeError(`tzinfo.${name}() must return None or timedelta, not '${typeName(offset)}'`);
+                throw new TypeError(
+                    `tzinfo.${name}() must return None or timedelta, not '${typeName(offset)}'`
+                );
             }
-            if (!(richCompareBool(td_neg_day, offset, "Lt") && richCompareBool(offset, td_day, "Lt"))) {
-                throw new ValueError(`${name}()=${offset.toString()}, must be strictly between -timedelta(hours=24) and timedelta(hours=24)`);
+            if (
+                !(
+                    richCompareBool(td_neg_day, offset, "Lt") &&
+                    richCompareBool(offset, td_day, "Lt")
+                )
+            ) {
+                throw new ValueError(
+                    `${name}()=${offset.toString()}, must be strictly between -timedelta(hours=24) and timedelta(hours=24)`
+                );
             }
         }
 
@@ -491,7 +552,10 @@ function $builtinmodule() {
             month = asIndexOrThrow(month);
             day = asIndexOrThrow(day);
             if (!(MINYEAR <= year && year <= MAXYEAR)) {
-                throw new ValueError("year must be in " + MINYEAR + ".." + MAXYEAR, new pyInt(year));
+                throw new ValueError(
+                    "year must be in " + MINYEAR + ".." + MAXYEAR,
+                    new pyInt(year)
+                );
             }
             if (!(1 <= month && month <= 12)) {
                 throw new ValueError("month must be in 1..12", new pyInt(month));
@@ -562,19 +626,32 @@ function $builtinmodule() {
             },
             slots: {
                 tp$new(args, kws) {
-                    let [days, seconds, microseconds, milliseconds, minutes, hours, weeks] = copyKeywordsToNamedArgs(
-                        "timedelta",
-                        ["days", "seconds", "microseconds", "milliseconds", "minutes", "hours", "weeks"],
-                        args,
-                        kws,
-                        new Array(7).fill(int0)
-                    );
+                    let [days, seconds, microseconds, milliseconds, minutes, hours, weeks] =
+                        copyKeywordsToNamedArgs(
+                            "timedelta",
+                            [
+                                "days",
+                                "seconds",
+                                "microseconds",
+                                "milliseconds",
+                                "minutes",
+                                "hours",
+                                "weeks",
+                            ],
+                            args,
+                            kws,
+                            new Array(7).fill(int0)
+                        );
                     let d, s, us;
                     d = s = us = int0;
 
                     // normalize to days, secs, microsecs
                     days = binOp(days, binOp(weeks, _7, "Mult"), "Add");
-                    seconds = binOp(seconds, binOp(binOp(minutes, _60, "Mult"), binOp(hours, _3600, "Mult"), "Add"), "Add");
+                    seconds = binOp(
+                        seconds,
+                        binOp(binOp(minutes, _60, "Mult"), binOp(hours, _3600, "Mult"), "Add"),
+                        "Add"
+                    );
 
                     microseconds = binOp(microseconds, binOp(milliseconds, _1000, "Mult"), "Add");
                     let dayfrac, daysecondsfrac, daysecondswhole;
@@ -627,7 +704,9 @@ function $builtinmodule() {
                     us = asIndexOrThrow(us);
 
                     if (Math.abs(d) > 999999999) {
-                        throw new OverflowError("timedelta # of days is too large: " + days.toString());
+                        throw new OverflowError(
+                            "timedelta # of days is too large: " + days.toString()
+                        );
                     }
 
                     if (this === timedelta.prototype) {
@@ -675,13 +754,21 @@ function $builtinmodule() {
                 tp$as_number: true,
                 nb$add(other) {
                     if (other instanceof timedelta) {
-                        return new timedelta(this.$days + other.$days, this.$secs + other.$secs, this.$micro + other.$micro);
+                        return new timedelta(
+                            this.$days + other.$days,
+                            this.$secs + other.$secs,
+                            this.$micro + other.$micro
+                        );
                     }
                     return pyNotImplemented;
                 },
                 nb$subtract(other) {
                     if (other instanceof timedelta) {
-                        return new timedelta(this.$days - other.$days, this.$secs - other.$secs, this.$micro - other.$micro);
+                        return new timedelta(
+                            this.$days - other.$days,
+                            this.$secs - other.$secs,
+                            this.$micro - other.$micro
+                        );
                     }
                     return pyNotImplemented;
                 },
@@ -700,7 +787,11 @@ function $builtinmodule() {
                 nb$multiply(other) {
                     if (checkInt(other)) {
                         other = asIndexSized(other, OverflowError);
-                        return new timedelta(this.$days * other, this.$secs * other, this.$micro * other);
+                        return new timedelta(
+                            this.$days * other,
+                            this.$secs * other,
+                            this.$micro * other
+                        );
                     } else if (checkFloat(other)) {
                         const usec = this.$toMicrosecs();
                         let [a, b] = _as_int_ratio(other);
@@ -777,7 +868,9 @@ function $builtinmodule() {
                 },
                 tp$hash() {
                     if (this.$hashcode === -1) {
-                        this.$hashcode = objectHash(new pyTuple(this.$getState().map((x) => new pyInt(x))));
+                        this.$hashcode = objectHash(
+                            new pyTuple(this.$getState().map((x) => new pyInt(x)))
+                        );
                     }
                     return this.$hashcode;
                 },
@@ -788,14 +881,19 @@ function $builtinmodule() {
             methods: {
                 total_seconds: {
                     $meth() {
-                        return new pyFloat(((this.$days * 86400 + this.$secs) * 10 ** 6 + this.$micro) / 10 ** 6);
+                        return new pyFloat(
+                            ((this.$days * 86400 + this.$secs) * 10 ** 6 + this.$micro) / 10 ** 6
+                        );
                     },
                     $flags: { NoArgs: true },
                     $doc: "Total seconds in the duration.",
                 },
                 __reduce__: {
                     $meth() {
-                        return new pyTuple([this.ob$type, new pyTuple(this.$getState().map((x) => toPy(x)))]);
+                        return new pyTuple([
+                            this.ob$type,
+                            new pyTuple(this.$getState().map((x) => toPy(x))),
+                        ]);
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -857,10 +955,13 @@ function $builtinmodule() {
             },
             slots: {
                 tp$new(args, kws) {
-                    let [year, month, day] = copyKeywordsToNamedArgs("date", ["year", "month", "day"], args, kws, [
-                        null,
-                        null,
-                    ]);
+                    let [year, month, day] = copyKeywordsToNamedArgs(
+                        "date",
+                        ["year", "month", "day"],
+                        args,
+                        kws,
+                        [null, null]
+                    );
                     let asBytes;
                     if (
                         month === null &&
@@ -883,7 +984,9 @@ function $builtinmodule() {
                     }
                 },
                 $r() {
-                    return new pyStr(`${this.tp$name}(${this.$year}, ${this.$month}, ${this.$day})`);
+                    return new pyStr(
+                        `${this.tp$name}(${this.$year}, ${this.$month}, ${this.$day})`
+                    );
                 },
                 tp$str() {
                     return this.tp$getattr(str_isoformat).tp$call([]);
@@ -956,7 +1059,10 @@ function $builtinmodule() {
                             out_of_range = true;
                             if (week === 53) {
                                 first_weekday = _ymd2ord(year, 1, 1) % 7;
-                                if (first_weekday === 4 || (first_weekday === 3 && _is_leap(year))) {
+                                if (
+                                    first_weekday === 4 ||
+                                    (first_weekday === 3 && _is_leap(year))
+                                ) {
                                     out_of_range = false;
                                 }
                             }
@@ -1011,7 +1117,9 @@ function $builtinmodule() {
                         const weekday = this.$toOrdinal() % 7 || 7;
                         const day_name = _DAYNAMES[weekday];
                         const month_name = _MONTHNAMES[this.$month];
-                        return new pyStr(`${day_name} ${month_name} ${_d(this.$day, " ", 2)} 00:00:00 ${_d(this.$year, "0", 4)}`);
+                        return new pyStr(
+                            `${day_name} ${month_name} ${_d(this.$day, " ", 2)} 00:00:00 ${_d(this.$year, "0", 4)}`
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1067,7 +1175,11 @@ function $builtinmodule() {
                                 week = 0;
                             }
                         }
-                        return new IsoCalendarDate(new pyInt(year), new pyInt(week + 1), new pyInt(day + 1));
+                        return new IsoCalendarDate(
+                            new pyInt(year),
+                            new pyInt(week + 1),
+                            new pyInt(day + 1)
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1118,7 +1230,10 @@ function $builtinmodule() {
                         }
                         return this.ob$type.tp$call([year, month, day]);
                     },
-                    $flags: { NamedArgs: ["year", "month", "day"], Defaults: [pyNone, pyNone, pyNone] },
+                    $flags: {
+                        NamedArgs: ["year", "month", "day"],
+                        Defaults: [pyNone, pyNone, pyNone],
+                    },
                     $textsig: null,
                     $doc: "Return date with new specified fields.",
                 },
@@ -1172,10 +1287,20 @@ function $builtinmodule() {
                     return _ymd2ord(this.$year, this.$month, this.$day);
                 },
                 $isoformat() {
-                    return new pyStr(`${_d(this.$year, "0", 4)}-${_d(this.$month, "0", 2)}-${_d(this.$day, "0", 2)}`);
+                    return new pyStr(
+                        `${_d(this.$year, "0", 4)}-${_d(this.$month, "0", 2)}-${_d(this.$day, "0", 2)}`
+                    );
                 },
                 $timetuple() {
-                    return _build_struct_time(this.$year, this.$month, this.$day, this.$hour || 0, this.$min || 0, this.$sec || 0, -1);
+                    return _build_struct_time(
+                        this.$year,
+                        this.$month,
+                        this.$day,
+                        this.$hour || 0,
+                        this.$min || 0,
+                        this.$sec || 0,
+                        -1
+                    );
                 },
                 $strftime(fmt = "") {
                     // convenience method
@@ -1225,7 +1350,9 @@ function $builtinmodule() {
                         }
                         const dtoff = pyCall(dt.tp$getattr(str_utcoff));
                         if (dtoff === pyNone) {
-                            throw new ValueError("fromutc() requires a non-None utcoffset() result");
+                            throw new ValueError(
+                                "fromutc() requires a non-None utcoffset() result"
+                            );
                         }
                         let dtdst = pyCall(dt.tp$getattr(str_dst));
                         if (dtdst === pyNone) {
@@ -1236,7 +1363,9 @@ function $builtinmodule() {
                             dt = binOp(dt, delta, "Add");
                             dtdst = pyCall(dt.tp$getattr(str_dst));
                             if (dtdst === pyNone) {
-                                throw new ValueError("fromutc(): dt.dst gave inconsistent results; cannot convert");
+                                throw new ValueError(
+                                    "fromutc(): dt.dst gave inconsistent results; cannot convert"
+                                );
                             }
                         }
                         return binOp(dt, dtdst, "Add");
@@ -1285,11 +1414,18 @@ function $builtinmodule() {
             },
             slots: {
                 tp$new(args, kws) {
-                    const [year, week, weekday] = copyKeywordsToNamedArgs("IsoCalendarDate", ["year", "week", "weekday"], args, kws);
+                    const [year, week, weekday] = copyKeywordsToNamedArgs(
+                        "IsoCalendarDate",
+                        ["year", "week", "weekday"],
+                        args,
+                        kws
+                    );
                     return new this.constructor(year, week, weekday);
                 },
                 $r() {
-                    return new pyStr(`${this.tp$name}(year=${this.y}, week=${this.w}, weekday=${this.wd})`);
+                    return new pyStr(
+                        `${this.tp$name}(year=${this.y}, week=${this.w}, weekday=${this.wd})`
+                    );
                 },
             },
             getsets: {
@@ -1312,7 +1448,14 @@ function $builtinmodule() {
         });
 
         const time = (mod.time = buildNativeClass("datetime.time", {
-            constructor: function time(hour = 0, min = 0, sec = 0, micro = 0, tzinfo = null, fold = 0) {
+            constructor: function time(
+                hour = 0,
+                min = 0,
+                sec = 0,
+                micro = 0,
+                tzinfo = null,
+                fold = 0
+            ) {
                 this.$hour = hour;
                 this.$min = min;
                 this.$sec = sec;
@@ -1342,7 +1485,13 @@ function $builtinmodule() {
                         self.$setState(asBytes, minute === int0 ? pyNone : minute);
                         return self;
                     }
-                    [hour, minute, second, microsecond, fold] = _check_time_fields(hour, minute, second, microsecond, fold);
+                    [hour, minute, second, microsecond, fold] = _check_time_fields(
+                        hour,
+                        minute,
+                        second,
+                        microsecond,
+                        fold
+                    );
                     _check_tzinfo_arg(tzinfo);
                     if (this === time.prototype) {
                         return new time(hour, minute, second, microsecond, tzinfo, fold);
@@ -1360,12 +1509,19 @@ function $builtinmodule() {
                 },
                 tp$hash() {
                     if (this.$hashcode === -1) {
-                        const t = this.$fold ? pyCall(this.tp$getattr(str_replace), [], ["fold", int0]) : this;
+                        const t = this.$fold
+                            ? pyCall(this.tp$getattr(str_replace), [], ["fold", int0])
+                            : this;
                         const tzoff = pyCall(t.tp$getattr(str_utcoff));
                         if (!isTrue(tzoff)) {
                             this.$hashcode = objectHash(t.$getState()[0]);
                         } else {
-                            let [h, m] = pyDivMod(new timedelta(0, this.$hour * 3600 + this.$min * 60).nb$subtract(tzoff), td_hour);
+                            let [h, m] = pyDivMod(
+                                new timedelta(0, this.$hour * 3600 + this.$min * 60).nb$subtract(
+                                    tzoff
+                                ),
+                                td_hour
+                            );
                             m = m.nb$floor_divide(td_min);
 
                             if (0 <= h && h <= 24) {
@@ -1373,7 +1529,14 @@ function $builtinmodule() {
                                 m = asnum$(m);
                                 this.$hashcode = objectHash(new time(h, m, this.$sec, this.$micro));
                             } else {
-                                this.$hashcode = objectHash(new pyTuple([h, m, new pyInt(this.$sec), new pyInt(this.$micro)]));
+                                this.$hashcode = objectHash(
+                                    new pyTuple([
+                                        h,
+                                        m,
+                                        new pyInt(this.$sec),
+                                        new pyInt(this.$micro),
+                                    ])
+                                );
                             }
                         }
                     }
@@ -1404,7 +1567,13 @@ function $builtinmodule() {
             methods: {
                 isoformat: {
                     $meth: function isoformat(timespec) {
-                        let s = _format_time(this.$hour, this.$min, this.$sec, this.$micro, timespec);
+                        let s = _format_time(
+                            this.$hour,
+                            this.$min,
+                            this.$sec,
+                            this.$micro,
+                            timespec
+                        );
                         const tz = this.$tzstr();
                         if (tz) {
                             s += tz;
@@ -1421,7 +1590,11 @@ function $builtinmodule() {
                             throw new TypeError("must be str, not " + typeName(fmt));
                         }
                         fmt = fmt.toString();
-                        const timetuple = new pyTuple([1900, 1, 1, this.$hour, this.$min, this.$sec, 0, 1, -1].map((x) => new pyInt(x)));
+                        const timetuple = new pyTuple(
+                            [1900, 1, 1, this.$hour, this.$min, this.$sec, 0, 1, -1].map(
+                                (x) => new pyInt(x)
+                            )
+                        );
                         return _wrap_strftime(this, fmt, timetuple);
                     },
                     $flags: { OneArg: true },
@@ -1487,13 +1660,14 @@ function $builtinmodule() {
                 replace: {
                     $meth: function replace(args, kws) {
                         checkArgsLen("replace", args, 0, 5);
-                        let [hour, minute, second, microsecond, tzinfo, fold] = copyKeywordsToNamedArgs(
-                            "replace",
-                            ["hour", "minute", "second", "microsecond", "tzinfo", "fold"],
-                            args,
-                            kws,
-                            [pyNone, pyNone, pyNone, pyNone, pyTrue, pyNone]
-                        );
+                        let [hour, minute, second, microsecond, tzinfo, fold] =
+                            copyKeywordsToNamedArgs(
+                                "replace",
+                                ["hour", "minute", "second", "microsecond", "tzinfo", "fold"],
+                                args,
+                                kws,
+                                [pyNone, pyNone, pyNone, pyNone, pyTrue, pyNone]
+                            );
                         if (hour === pyNone) {
                             hour = new pyInt(this.$hour);
                         }
@@ -1512,7 +1686,10 @@ function $builtinmodule() {
                         if (fold === pyNone) {
                             fold = new pyInt(this.$fold);
                         }
-                        return this.ob$type.tp$call([hour, minute, second, microsecond, tzinfo], ["fold", fold]);
+                        return this.ob$type.tp$call(
+                            [hour, minute, second, microsecond, tzinfo],
+                            ["fold", fold]
+                        );
                     },
                     $flags: { FastCall: true },
                     $textsig: null,
@@ -1520,7 +1697,10 @@ function $builtinmodule() {
                 },
                 __reduce_ex__: {
                     $meth(protocol) {
-                        return new pyTuple([this.ob$type, new pyTuple(this.$getState(toJs(protocol)))]);
+                        return new pyTuple([
+                            this.ob$type,
+                            new pyTuple(this.$getState(toJs(protocol))),
+                        ]);
                     },
                     $flags: { OneArg: true },
                     $textsig: null,
@@ -1600,7 +1780,10 @@ function $builtinmodule() {
                         base_compare = richCompareBool(myoff, otoff, "Eq");
                     }
                     if (base_compare) {
-                        return _cmp([this.$hour, this.$min, this.$sec, this.$micro], [other.$hour, other.$min, other.$sec, other.$micro]);
+                        return _cmp(
+                            [this.$hour, this.$min, this.$sec, this.$micro],
+                            [other.$hour, other.$min, other.$sec, other.$micro]
+                        );
                     }
                     if (myoff === pyNone || otoff === pyNone) {
                         if (op === "Eq" || op === "NotEq") {
@@ -1609,9 +1792,14 @@ function $builtinmodule() {
                             throw new TypeError("cannot compare naive and aware times");
                         }
                     }
-                    const myhhmm = this.$hour * 60 + this.$min - asIndexSized(myoff.nb$floor_divide(td_min));
-                    const othhmm = other.$hour * 60 + other.$min - asIndexSized(otoff.nb$floor_divide(td_min));
-                    return _cmp([myhhmm, this.$sec, this.$micro], [othhmm, other.$sec, other.$micro]);
+                    const myhhmm =
+                        this.$hour * 60 + this.$min - asIndexSized(myoff.nb$floor_divide(td_min));
+                    const othhmm =
+                        other.$hour * 60 + other.$min - asIndexSized(otoff.nb$floor_divide(td_min));
+                    return _cmp(
+                        [myhhmm, this.$sec, this.$micro],
+                        [othhmm, other.$sec, other.$micro]
+                    );
                 },
                 $tzstr() {
                     const off = pyCall(this.tp$getattr(str_utcoff));
@@ -1654,7 +1842,17 @@ function $builtinmodule() {
 
         const datetime = (mod.datetime = buildNativeClass("datetime.datetime", {
             base: date,
-            constructor: function datetime(year, month, day, hour = 0, minute = 0, second = 0, microsecond = 0, tzinfo = null, fold = 0) {
+            constructor: function datetime(
+                year,
+                month,
+                day,
+                hour = 0,
+                minute = 0,
+                second = 0,
+                microsecond = 0,
+                tzinfo = null,
+                fold = 0
+            ) {
                 this.$year = year;
                 this.$month = month;
                 this.$day = day;
@@ -1669,13 +1867,24 @@ function $builtinmodule() {
             slots: {
                 tp$new(args, kws) {
                     checkArgsLen("datetime", args, 0, 9);
-                    let [year, month, day, hour, minute, second, microsecond, tzinfo, fold] = copyKeywordsToNamedArgs(
-                        "time",
-                        ["year", "month", "day", "hour", "minute", "second", "microsecond", "tzinfo", "fold"],
-                        args,
-                        kws,
-                        [null, null, int0, int0, int0, int0, pyNone, int0]
-                    );
+                    let [year, month, day, hour, minute, second, microsecond, tzinfo, fold] =
+                        copyKeywordsToNamedArgs(
+                            "time",
+                            [
+                                "year",
+                                "month",
+                                "day",
+                                "hour",
+                                "minute",
+                                "second",
+                                "microsecond",
+                                "tzinfo",
+                                "fold",
+                            ],
+                            args,
+                            kws,
+                            [null, null, int0, int0, int0, int0, pyNone, int0]
+                        );
                     if (tzinfo == null) {
                         tzinfo = pyNone;
                     }
@@ -1691,18 +1900,53 @@ function $builtinmodule() {
                         return self;
                     }
                     [year, month, day] = _check_date_fields(year, month, day);
-                    [hour, minute, second, microsecond, fold] = _check_time_fields(hour, minute, second, microsecond, fold);
+                    [hour, minute, second, microsecond, fold] = _check_time_fields(
+                        hour,
+                        minute,
+                        second,
+                        microsecond,
+                        fold
+                    );
                     _check_tzinfo_arg(tzinfo);
                     if (this === datetime.prototype) {
-                        return new datetime(year, month, day, hour, minute, second, microsecond, tzinfo, fold);
+                        return new datetime(
+                            year,
+                            month,
+                            day,
+                            hour,
+                            minute,
+                            second,
+                            microsecond,
+                            tzinfo,
+                            fold
+                        );
                     } else {
                         const instance = new this.constructor();
-                        datetime.call(instance, year, month, day, hour, minute, second, microsecond, tzinfo, fold);
+                        datetime.call(
+                            instance,
+                            year,
+                            month,
+                            day,
+                            hour,
+                            minute,
+                            second,
+                            microsecond,
+                            tzinfo,
+                            fold
+                        );
                         return instance;
                     }
                 },
                 $r() {
-                    const L = [this.$year, this.$month, this.$day, this.$hour, this.$min, this.$sec, this.$micro];
+                    const L = [
+                        this.$year,
+                        this.$month,
+                        this.$day,
+                        this.$hour,
+                        this.$min,
+                        this.$sec,
+                        this.$micro,
+                    ];
                     if (L[L.length - 1] === 0) {
                         L.pop();
                     }
@@ -1731,14 +1975,20 @@ function $builtinmodule() {
                     if (op === "Eq" || op === "NotEq") {
                         return op === "NotEq";
                     }
-                    throw new TypeError(`can't compare '${typeName(this)}' to '${typeName(other)}'`);
+                    throw new TypeError(
+                        `can't compare '${typeName(this)}' to '${typeName(other)}'`
+                    );
                 },
                 tp$as_number: true,
                 nb$add(other) {
                     if (!(other instanceof timedelta)) {
                         return pyNotImplemented;
                     }
-                    let delta = new timedelta(this.$toOrdinal(), this.$hour * 3600 + this.$min * 60 + this.$sec, this.$micro);
+                    let delta = new timedelta(
+                        this.$toOrdinal(),
+                        this.$hour * 3600 + this.$min * 60 + this.$sec,
+                        this.$micro
+                    );
 
                     delta = binOp(delta, other, "Add");
                     let [hour, rem] = $divMod(delta.$secs, 3600);
@@ -1746,7 +1996,10 @@ function $builtinmodule() {
                     if (0 < delta.$days && delta.$days <= _MAXORDINAL) {
                         return this.ob$type
                             .tp$getattr(new pyStr("combine"))
-                            .tp$call([date.tp$call(_ord2ymd(delta.$days)), new time(hour, minute, second, delta.$micro, this.$tzinfo)]);
+                            .tp$call([
+                                date.tp$call(_ord2ymd(delta.$days)),
+                                new time(hour, minute, second, delta.$micro, this.$tzinfo),
+                            ]);
                     }
                     throw new OverflowError("result out of range");
                 },
@@ -1761,7 +2014,11 @@ function $builtinmodule() {
                     const days2 = other.$toOrdinal();
                     const secs1 = this.$sec + this.$min * 60 + this.$hour * 3600;
                     const secs2 = other.$sec + other.$min * 60 + other.$hour * 3600;
-                    const base = new timedelta(days1 - days2, secs1 - secs2, this.$micro - other.$micro);
+                    const base = new timedelta(
+                        days1 - days2,
+                        secs1 - secs2,
+                        this.$micro - other.$micro
+                    );
                     if (this.$tzinfo === other.$tzinfo) {
                         return base;
                     }
@@ -1778,14 +2035,18 @@ function $builtinmodule() {
                 nb$reflected_subtract: null,
                 tp$hash() {
                     if (this.$hashcode === -1) {
-                        const t = this.$fold ? pyCall(this.tp$getattr(str_replace), [], ["fold", int0]) : this;
+                        const t = this.$fold
+                            ? pyCall(this.tp$getattr(str_replace), [], ["fold", int0])
+                            : this;
                         const tzoff = pyCall(t.tp$getattr(str_utcoff));
                         if (tzoff === pyNone) {
                             this.$hashcode = objectHash(t.$getState()[0]);
                         } else {
                             const days = _ymd2ord(this.$year, this.$month, this.$day);
                             const seconds = this.$hour * 3600 + this.$min * 60 + this.$sec;
-                            this.$hashcode = objectHash(new timedelta(days, seconds, this.$micro).nb$subtract(tzoff));
+                            this.$hashcode = objectHash(
+                                new timedelta(days, seconds, this.$micro).nb$subtract(tzoff)
+                            );
                         }
                     }
                     return this.$hashcode;
@@ -1802,7 +2063,14 @@ function $builtinmodule() {
                 },
                 time: {
                     $meth: function _time() {
-                        return new time(this.$hour, this.$min, this.$sec, this.$micro, pyNone, this.$fold);
+                        return new time(
+                            this.$hour,
+                            this.$min,
+                            this.$sec,
+                            this.$micro,
+                            pyNone,
+                            this.$fold
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1810,7 +2078,14 @@ function $builtinmodule() {
                 },
                 timetz: {
                     $meth: function timetz() {
-                        return new time(this.$hour, this.$min, this.$sec, this.$micro, this.$tzinfo, this.$fold);
+                        return new time(
+                            this.$hour,
+                            this.$min,
+                            this.$sec,
+                            this.$micro,
+                            this.$tzinfo,
+                            this.$fold
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1843,7 +2118,15 @@ function $builtinmodule() {
                         } else {
                             dst = 0;
                         }
-                        return _build_struct_time(this.$year, this.$month, this.$day, this.$hour, this.$min, this.$sec, dst);
+                        return _build_struct_time(
+                            this.$year,
+                            this.$month,
+                            this.$day,
+                            this.$hour,
+                            this.$min,
+                            this.$sec,
+                            dst
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1857,7 +2140,10 @@ function $builtinmodule() {
                             return new pyFloat(s + this.$micro / 1e6);
                         } else {
                             const diff = binOp(this, _EPOCH, "Sub");
-                            return new pyFloat(((diff.$days * 86400 + diff.$secs) * 10 ** 6 + diff.$micro) / 10 ** 6);
+                            return new pyFloat(
+                                ((diff.$days * 86400 + diff.$secs) * 10 ** 6 + diff.$micro) /
+                                    10 ** 6
+                            );
                         }
                     },
                     $flags: { NoArgs: true },
@@ -1871,7 +2157,15 @@ function $builtinmodule() {
                         if (isTrue(offset)) {
                             self = binOp(self, offset, "Sub");
                         }
-                        return _build_struct_time(self.$year, self.$month, self.$day, self.$hour, self.$min, self.$sec, 0);
+                        return _build_struct_time(
+                            self.$year,
+                            self.$month,
+                            self.$day,
+                            self.$hour,
+                            self.$min,
+                            self.$sec,
+                            0
+                        );
                     },
                     $flags: { NoArgs: true },
                     $textsig: null,
@@ -1882,7 +2176,9 @@ function $builtinmodule() {
                         if (!checkString(sep)) {
                             throw new TypeError("sep must be str, not " + typeName(sep));
                         }
-                        let s = `${_d(this.$year, "0", 4)}-${_d(this.$month, "0", 2)}-${_d(this.$day, "0", 2)}` + sep.toString();
+                        let s =
+                            `${_d(this.$year, "0", 4)}-${_d(this.$month, "0", 2)}-${_d(this.$day, "0", 2)}` +
+                            sep.toString();
                         s += _format_time(this.$hour, this.$min, this.$sec, this.$micro, timespec);
                         const off = pyCall(this.tp$getattr(str_utcoff));
                         const tz = _format_offset(off);
@@ -1891,10 +2187,12 @@ function $builtinmodule() {
                         }
                         return new pyStr(s);
                     },
-                    $flags: { NamedArgs: ["sep", "timespec"], Defaults: [new pyStr("T"), str_auto] },
+                    $flags: {
+                        NamedArgs: ["sep", "timespec"],
+                        Defaults: [new pyStr("T"), str_auto],
+                    },
                     $textsig: null,
-                    $doc:
-                        "[sep] -> string in ISO 8601 format, YYYY-MM-DDT[HH[:MM[:SS[.mmm[uuu]]]]][+HH:MM].\nsep is used to separate the year from the time, and defaults to 'T'.\ntimespec specifies what components of the time to include (allowed values are 'auto', 'hours', 'minutes', 'seconds', 'milliseconds', and 'microseconds').\n",
+                    $doc: "[sep] -> string in ISO 8601 format, YYYY-MM-DDT[HH[:MM[:SS[.mmm[uuu]]]]][+HH:MM].\nsep is used to separate the year from the time, and defaults to 'T'.\ntimespec specifies what components of the time to include (allowed values are 'auto', 'hours', 'minutes', 'seconds', 'milliseconds', and 'microseconds').\n",
                 },
                 utcoffset: {
                     $meth: function utcoffset() {
@@ -1941,13 +2239,34 @@ function $builtinmodule() {
                 replace: {
                     $meth: function replace(args, kws) {
                         checkArgsLen("replace", args, 0, 8);
-                        let [year, month, day, hour, minute, second, microsecond, tzinfo, fold] = copyKeywordsToNamedArgs(
-                            "replace",
-                            ["year", "month", "day", "hour", "minute", "second", "microsecond", "tzinfo", "fold"],
-                            args,
-                            kws,
-                            [pyNone, pyNone, pyNone, pyNone, pyNone, pyNone, pyNone, pyTrue, pyNone]
-                        );
+                        let [year, month, day, hour, minute, second, microsecond, tzinfo, fold] =
+                            copyKeywordsToNamedArgs(
+                                "replace",
+                                [
+                                    "year",
+                                    "month",
+                                    "day",
+                                    "hour",
+                                    "minute",
+                                    "second",
+                                    "microsecond",
+                                    "tzinfo",
+                                    "fold",
+                                ],
+                                args,
+                                kws,
+                                [
+                                    pyNone,
+                                    pyNone,
+                                    pyNone,
+                                    pyNone,
+                                    pyNone,
+                                    pyNone,
+                                    pyNone,
+                                    pyTrue,
+                                    pyNone,
+                                ]
+                            );
                         if (year === pyNone) {
                             year = new pyInt(this.$year);
                         }
@@ -1975,7 +2294,10 @@ function $builtinmodule() {
                         if (fold === pyNone) {
                             fold = new pyInt(this.$fold);
                         }
-                        return this.ob$type.tp$call([year, month, day, hour, minute, second, microsecond, tzinfo], ["fold", fold]);
+                        return this.ob$type.tp$call(
+                            [year, month, day, hour, minute, second, microsecond, tzinfo],
+                            ["fold", fold]
+                        );
                     },
                     $flags: { FastCall: true },
                     $textsig: null,
@@ -1996,14 +2318,22 @@ function $builtinmodule() {
                         } else {
                             myoffset = pyCall(mytz.tp$getattr(str_utcoff), [this]);
                             if (myoffset === pyNone) {
-                                mytz = pyCall(this.tp$getattr(str_replace), [], ["tzinfo", pyNone]).$localTimezone();
+                                mytz = pyCall(
+                                    this.tp$getattr(str_replace),
+                                    [],
+                                    ["tzinfo", pyNone]
+                                ).$localTimezone();
                                 myoffset = pyCall(mytz.tp$getattr(str_utcoff), [this]);
                             }
                         }
                         if (tz === mytz) {
                             return this;
                         }
-                        const utc = pyCall(this.nb$subtract(myoffset).tp$getattr(str_replace), [], ["tzinfo", tz]);
+                        const utc = pyCall(
+                            this.nb$subtract(myoffset).tp$getattr(str_replace),
+                            [],
+                            ["tzinfo", tz]
+                        );
                         return tz.tp$getattr(str_fromutc).tp$call([utc]);
                     },
                     $flags: { NamedArgs: ["tz"], Defaults: [pyNone] },
@@ -2012,7 +2342,10 @@ function $builtinmodule() {
                 },
                 __reduce_ex__: {
                     $meth(protocol) {
-                        return new pyTuple([this.ob$type, new pyTuple(this.$getState(toJs(protocol)))]);
+                        return new pyTuple([
+                            this.ob$type,
+                            new pyTuple(this.$getState(toJs(protocol))),
+                        ]);
                     },
                     $flags: { OneArg: true },
                     $textsig: null,
@@ -2035,8 +2368,7 @@ function $builtinmodule() {
                     },
                     $flags: { NamedArgs: ["tz"], Defaults: [pyNone] },
                     $textsig: "($type, /, tz=None)",
-                    $doc:
-                        "Returns new datetime object representing current time local to tz.\n\n  tz\n    Timezone object.\n\nIf no tz is specified, uses local timezone.",
+                    $doc: "Returns new datetime object representing current time local to tz.\n\n  tz\n    Timezone object.\n\nIf no tz is specified, uses local timezone.",
                 },
                 utcnow: {
                     $meth: function utcnow() {
@@ -2067,10 +2399,15 @@ function $builtinmodule() {
                 strptime: {
                     $meth: function strptime(date_string, format) {
                         if (_strptime_datetime === null) {
-                            return Sk.misceval.chain(Sk.importModule("_strptime", false, true), (s_mod) => {
-                                _strptime_datetime = s_mod.tp$getattr(new pyStr("_strptime_datetime"));
-                                return _strptime_datetime.tp$call([this, date_string, format]);
-                            });
+                            return Sk.misceval.chain(
+                                Sk.importModule("_strptime", false, true),
+                                (s_mod) => {
+                                    _strptime_datetime = s_mod.tp$getattr(
+                                        new pyStr("_strptime_datetime")
+                                    );
+                                    return _strptime_datetime.tp$call([this, date_string, format]);
+                                }
+                            );
                         }
                         return _strptime_datetime.tp$call([this, date_string, format]);
                     },
@@ -2089,7 +2426,15 @@ function $builtinmodule() {
                         if (tzinfo === pyTrue) {
                             tzinfo = t.$tzinfo;
                         }
-                        const args = [d.$year, d.$month, d.$day, t.$hour, t.$min, t.$sec, t.$micro].map((x) => new pyInt(x));
+                        const args = [
+                            d.$year,
+                            d.$month,
+                            d.$day,
+                            t.$hour,
+                            t.$min,
+                            t.$sec,
+                            t.$micro,
+                        ].map((x) => new pyInt(x));
                         args.push(tzinfo);
                         return this.tp$call(args, ["fold", new pyInt(t.$fold)]);
                     },
@@ -2116,7 +2461,9 @@ function $builtinmodule() {
                             try {
                                 time_components = _parse_isoformat_time(tstr);
                             } catch (e) {
-                                throw new ValueError("Invalid isoformat string: '" + date_string + "'");
+                                throw new ValueError(
+                                    "Invalid isoformat string: '" + date_string + "'"
+                                );
                             }
                         } else {
                             time_components = [int0, int0, int0, int0, pyNone];
@@ -2173,12 +2520,32 @@ function $builtinmodule() {
                         myoff = pyCall(this.tp$getattr(str_utcoff));
                         otoff = pyCall(other.tp$getattr(str_utcoff));
                         if (op === "Eq" || op === "NotEq") {
-                            const my_replace = pyCall(this.tp$getattr(str_replace), [], ["fold", new pyInt(Number(!this.$fold))]);
-                            if (richCompareBool(myoff, pyCall(my_replace.tp$getattr(str_utcoff)), "NotEq")) {
+                            const my_replace = pyCall(
+                                this.tp$getattr(str_replace),
+                                [],
+                                ["fold", new pyInt(Number(!this.$fold))]
+                            );
+                            if (
+                                richCompareBool(
+                                    myoff,
+                                    pyCall(my_replace.tp$getattr(str_utcoff)),
+                                    "NotEq"
+                                )
+                            ) {
                                 return 2;
                             }
-                            const ot_replace = pyCall(other.tp$getattr(str_replace), [], ["fold", new pyInt(Number(!other.$fold))]);
-                            if (richCompareBool(otoff, pyCall(ot_replace.tp$getattr(str_utcoff)), "NotEq")) {
+                            const ot_replace = pyCall(
+                                other.tp$getattr(str_replace),
+                                [],
+                                ["fold", new pyInt(Number(!other.$fold))]
+                            );
+                            if (
+                                richCompareBool(
+                                    otoff,
+                                    pyCall(ot_replace.tp$getattr(str_utcoff)),
+                                    "NotEq"
+                                )
+                            ) {
                                 return 2;
                             }
                         }
@@ -2186,8 +2553,24 @@ function $builtinmodule() {
                     }
                     if (base_compare) {
                         return _cmp(
-                            [this.$year, this.$month, this.$day, this.$hour, this.$min, this.$sec, this.$micro],
-                            [other.$year, other.$month, other.$day, other.$hour, other.$min, other.$sec, other.$micro]
+                            [
+                                this.$year,
+                                this.$month,
+                                this.$day,
+                                this.$hour,
+                                this.$min,
+                                this.$sec,
+                                this.$micro,
+                            ],
+                            [
+                                other.$year,
+                                other.$month,
+                                other.$day,
+                                other.$hour,
+                                other.$min,
+                                other.$sec,
+                                other.$micro,
+                            ]
                         );
                     }
                     if (myoff === pyNone || otoff === pyNone) {
@@ -2209,14 +2592,19 @@ function $builtinmodule() {
                     const t = this.nb$subtract(epoch).nb$floor_divide(td_sec);
                     function local(u) {
                         const [y, m, d, hh, mm, ss] = _time.localtime.tp$call([u]).v;
-                        return datetime.tp$call([y, m, d, hh, mm, ss]).nb$subtract(epoch).nb$floor_divide(td_sec);
+                        return datetime
+                            .tp$call([y, m, d, hh, mm, ss])
+                            .nb$subtract(epoch)
+                            .nb$floor_divide(td_sec);
                     }
                     let a = local(t).nb$subtract(t);
                     let u1 = t.nb$subtract(a);
                     let t1 = local(u1);
                     let u2, b;
                     if (t1.ob$eq(t)) {
-                        u2 = u1.nb$add([new pyInt(-max_fold_seconds), new pyInt(max_fold_seconds)][this.$fold]);
+                        u2 = u1.nb$add(
+                            [new pyInt(-max_fold_seconds), new pyInt(max_fold_seconds)][this.$fold]
+                        );
                         b = local(u2).nb$subtract(u2);
                         if (a.ob$eq(b)) {
                             return u1;
@@ -2269,11 +2657,19 @@ function $builtinmodule() {
                     let result = pyCall(this, [y, m, d, hh, mm, ss, us, tz]);
                     if (tz === pyNone) {
                         const max_fold_seconds = 24 * 3600;
-                        [y, m, d, hh, mm, ss] = converter(binOp(t, new pyInt(max_fold_seconds), "Sub"));
+                        [y, m, d, hh, mm, ss] = converter(
+                            binOp(t, new pyInt(max_fold_seconds), "Sub")
+                        );
                         const probe1 = pyCall(this, [y, m, d, hh, mm, ss, us, tz]);
-                        const trans = binOp(binOp(result, probe1, "Sub"), new timedelta(0, max_fold_seconds), "Sub");
+                        const trans = binOp(
+                            binOp(result, probe1, "Sub"),
+                            new timedelta(0, max_fold_seconds),
+                            "Sub"
+                        );
                         if (trans.$days < 0) {
-                            [y, m, d, hh, mm, ss] = converter(binOp(t, binOp(trans, td_sec, "FloorDiv"), "Add"));
+                            [y, m, d, hh, mm, ss] = converter(
+                                binOp(t, binOp(trans, td_sec, "FloorDiv"), "Add")
+                            );
                             const probe2 = pyCall(this, [y, m, d, hh, mm, ss, us, tz]);
                             if (richCompareBool(probe2, result, "Eq")) {
                                 result.$fold = 1;
@@ -2305,7 +2701,18 @@ function $builtinmodule() {
                     if (this.$fold && protocol > 3) {
                         m += 128;
                     }
-                    const basestate = new pyBytes([yhi, ylo, m, this.$day, this.$hour, this.$min, this.$sec, us1, us2, us3]);
+                    const basestate = new pyBytes([
+                        yhi,
+                        ylo,
+                        m,
+                        this.$day,
+                        this.$hour,
+                        this.$min,
+                        this.$sec,
+                        us1,
+                        us2,
+                        us3,
+                    ]);
                     if (this.$tzinfo === pyNone) {
                         return [basestate];
                     } else {
@@ -2352,13 +2759,26 @@ function $builtinmodule() {
             constructor: function timezone(offset, name) {
                 this.$offset = offset;
                 this.$name = name || pyNone;
-                if (!(richCompareBool(this.$minoffset, offset, "LtE") && richCompareBool(this.$maxoffset, offset, "GtE"))) {
-                    throw new ValueError("offset must be a timedelta strictly between -timedelta(hours=24) and timedelta(hours=24).");
+                if (
+                    !(
+                        richCompareBool(this.$minoffset, offset, "LtE") &&
+                        richCompareBool(this.$maxoffset, offset, "GtE")
+                    )
+                ) {
+                    throw new ValueError(
+                        "offset must be a timedelta strictly between -timedelta(hours=24) and timedelta(hours=24)."
+                    );
                 }
             },
             slots: {
                 tp$new(args, kws) {
-                    let [offset, name] = copyKeywordsToNamedArgs("timezone", ["offset", "name"], args, kws, [null]);
+                    let [offset, name] = copyKeywordsToNamedArgs(
+                        "timezone",
+                        ["offset", "name"],
+                        args,
+                        kws,
+                        [null]
+                    );
                     if (!(offset instanceof timedelta)) {
                         throw new TypeError("offset must be a timedelta");
                     }
@@ -2397,7 +2817,9 @@ function $builtinmodule() {
                     if (this.$name === pyNone) {
                         return new pyStr(`${this.tp$name}(${objectRepr(this.$offset)})`);
                     }
-                    return new pyStr(`${this.tp$name}(${objectRepr(this.$offset)}, ${objectRepr(this.$name)})`);
+                    return new pyStr(
+                        `${this.tp$name}(${objectRepr(this.$offset)}, ${objectRepr(this.$name)})`
+                    );
                 },
                 tp$str() {
                     return this.tp$getattr(str_tzname).tp$call([pyNone]);
@@ -2415,7 +2837,9 @@ function $builtinmodule() {
                             }
                             return this.$name;
                         }
-                        throw new TypeError("tzname() argument must be a datetime instance or None");
+                        throw new TypeError(
+                            "tzname() argument must be a datetime instance or None"
+                        );
                     },
                     $flags: { OneArg: true },
                     $textsig: null,
@@ -2426,7 +2850,9 @@ function $builtinmodule() {
                         if (dt instanceof datetime || dt === pyNone) {
                             return this.$offset;
                         }
-                        throw new TypeError("utcoffset() argument must be a datetime instance or None");
+                        throw new TypeError(
+                            "utcoffset() argument must be a datetime instance or None"
+                        );
                     },
                     $flags: { OneArg: true },
                     $textsig: null,
@@ -2451,7 +2877,9 @@ function $builtinmodule() {
                             }
                             return binOp(dt, this.$offset, "Add");
                         }
-                        throw new TypeError("fromutc() argument must be a datetime instance or None");
+                        throw new TypeError(
+                            "fromutc() argument must be a datetime instance or None"
+                        );
                     },
                     $flags: { OneArg: true },
                     $textsig: null,
@@ -2466,7 +2894,7 @@ function $builtinmodule() {
                         return new pyTuple([this.$offset, this.$name]);
                     },
                     $flags: { NoArgs: true },
-                }
+                },
             },
             proto: {
                 $maxoffset: new timedelta(0, 86399, 999999),

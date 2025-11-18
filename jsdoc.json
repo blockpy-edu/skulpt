@@ -42,7 +42,7 @@
         }
     },
     "opts": {
-    "encoding": "utf8",               // same as -e utf8
-    "destination": "./doc/ProgMan"          // same as -d ./out/
+        "encoding": "utf8", // same as -e utf8
+        "destination": "./doc/ProgMan" // same as -d ./out/
     }
 }

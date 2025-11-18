@@ -7,7 +7,6 @@
  * work, etc.
  */
 
-
 Sk.builtin.asnum$ = function (a) {
     if (a === undefined) {
         return a;
@@ -150,12 +149,16 @@ Sk.builtin.round = function round(number, ndigits) {
         if (number.round$) {
             return number.round$(ndigits);
         } else {
-            throw new Sk.builtin.AttributeError(Sk.abstr.typeName(number) + " instance has no attribute '__float__'");
+            throw new Sk.builtin.AttributeError(
+                Sk.abstr.typeName(number) + " instance has no attribute '__float__'"
+            );
         }
     }
 
     if (ndigits !== undefined && !Sk.builtin.checkNone(ndigits) && !Sk.misceval.isIndex(ndigits)) {
-        throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(ndigits) + "' object cannot be interpreted as an index");
+        throw new Sk.builtin.TypeError(
+            "'" + Sk.abstr.typeName(ndigits) + "' object cannot be interpreted as an index"
+        );
     }
 
     // try calling internal magic method
@@ -178,7 +181,9 @@ Sk.builtin.len = function len(item) {
     if (item.sq$length) {
         res = item.sq$length(true);
     } else {
-        throw new Sk.builtin.TypeError("object of type '" + Sk.abstr.typeName(item) + "' has no len()");
+        throw new Sk.builtin.TypeError(
+            "object of type '" + Sk.abstr.typeName(item) + "' has no len()"
+        );
     }
     return Sk.misceval.chain(res, (r) => {
         return new Sk.builtin.int_(r);
@@ -191,11 +196,19 @@ Sk.builtin.min = function min(args, kwargs) {
     if (!nargs) {
         throw new Sk.builtin.TypeError("min expected 1 argument, got 0");
     }
-    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs("min", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
+    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs(
+        "min",
+        ["default", "key"],
+        [],
+        kwargs,
+        [null, Sk.builtin.none.none$]
+    );
 
     // if args is not a single iterable then default should not be included as a kwarg
     if (nargs > 1 && $default !== null) {
-        throw new Sk.builtin.TypeError("Cannot specify a default for min() with multiple positional arguments");
+        throw new Sk.builtin.TypeError(
+            "Cannot specify a default for min() with multiple positional arguments"
+        );
     }
 
     if (nargs == 1) {
@@ -223,15 +236,22 @@ Sk.builtin.min = function min(args, kwargs) {
                     }
                 });
             } else {
-                return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [lowest]), (lowest_compare) =>
-                    Sk.misceval.iterFor(iter, (i) =>
-                        Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [i]), (i_compare) => {
-                            if (Sk.misceval.richCompareBool(i_compare, lowest_compare, "Lt")) {
-                                lowest = i;
-                                lowest_compare = i_compare;
-                            }
-                        })
-                    )
+                return Sk.misceval.chain(
+                    Sk.misceval.callsimOrSuspendArray(key, [lowest]),
+                    (lowest_compare) =>
+                        Sk.misceval.iterFor(iter, (i) =>
+                            Sk.misceval.chain(
+                                Sk.misceval.callsimOrSuspendArray(key, [i]),
+                                (i_compare) => {
+                                    if (
+                                        Sk.misceval.richCompareBool(i_compare, lowest_compare, "Lt")
+                                    ) {
+                                        lowest = i;
+                                        lowest_compare = i_compare;
+                                    }
+                                }
+                            )
+                        )
                 );
             }
         },
@@ -255,11 +275,19 @@ Sk.builtin.max = function max(args, kwargs) {
     if (!nargs) {
         throw new Sk.builtin.TypeError("max expected 1 argument, got 0");
     }
-    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs("max", ["default", "key"], [], kwargs, [null, Sk.builtin.none.none$]);
+    const [$default, key] = Sk.abstr.copyKeywordsToNamedArgs(
+        "max",
+        ["default", "key"],
+        [],
+        kwargs,
+        [null, Sk.builtin.none.none$]
+    );
 
     // if args is not a single iterable then default should not be included as a kwarg
     if (nargs > 1 && $default !== null) {
-        throw new Sk.builtin.TypeError("Cannot specify a default for max() with multiple positional arguments");
+        throw new Sk.builtin.TypeError(
+            "Cannot specify a default for max() with multiple positional arguments"
+        );
     }
 
     if (nargs === 1) {
@@ -286,15 +314,26 @@ Sk.builtin.max = function max(args, kwargs) {
                     }
                 });
             } else {
-                return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [highest]), (highest_compare) =>
-                    Sk.misceval.iterFor(iter, (i) =>
-                        Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(key, [i]), (i_compare) => {
-                            if (Sk.misceval.richCompareBool(i_compare, highest_compare, "Gt")) {
-                                highest = i;
-                                highest_compare = i_compare;
-                            }
-                        })
-                    )
+                return Sk.misceval.chain(
+                    Sk.misceval.callsimOrSuspendArray(key, [highest]),
+                    (highest_compare) =>
+                        Sk.misceval.iterFor(iter, (i) =>
+                            Sk.misceval.chain(
+                                Sk.misceval.callsimOrSuspendArray(key, [i]),
+                                (i_compare) => {
+                                    if (
+                                        Sk.misceval.richCompareBool(
+                                            i_compare,
+                                            highest_compare,
+                                            "Gt"
+                                        )
+                                    ) {
+                                        highest = i;
+                                        highest_compare = i_compare;
+                                    }
+                                }
+                            )
+                        )
                 );
             }
         },
@@ -460,16 +499,22 @@ Sk.builtin.ord = function ord(x) {
     if (Sk.builtin.checkString(x)) {
         if ([...x.v].length !== 1 && x.sq$length() !== 1) {
             // ^^ avoid the astral check unless necessary ^^
-            throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
+            throw new Sk.builtin.TypeError(
+                "ord() expected a character, but string of length " + x.v.length + " found"
+            );
         }
         return new Sk.builtin.int_(x.v.codePointAt(0));
     } else if (Sk.builtin.checkBytes(x)) {
         if (x.sq$length() !== 1) {
-            throw new Sk.builtin.TypeError("ord() expected a character, but string of length " + x.v.length + " found");
+            throw new Sk.builtin.TypeError(
+                "ord() expected a character, but string of length " + x.v.length + " found"
+            );
         }
         return new Sk.builtin.int_(x.v[0]);
     }
-    throw new Sk.builtin.TypeError("ord() expected a string of length 1, but " + Sk.abstr.typeName(x) + " found");
+    throw new Sk.builtin.TypeError(
+        "ord() expected a string of length 1, but " + Sk.abstr.typeName(x) + " found"
+    );
 };
 
 Sk.builtin.chr = function chr(x) {
@@ -478,11 +523,11 @@ Sk.builtin.chr = function chr(x) {
     }
     x = Sk.builtin.asnum$(x);
     if (Sk.__future__.python3) {
-        if ((x < 0) || (x >= 0x110000)) {
+        if (x < 0 || x >= 0x110000) {
             throw new Sk.builtin.ValueError("chr() arg not in range(0x110000)");
         }
     } else {
-        if ((x < 0) || (x >= 256)) {
+        if (x < 0 || x >= 256) {
             throw new Sk.builtin.ValueError("chr() arg not in range(256)");
         }
     }
@@ -526,7 +571,11 @@ Sk.builtin.int2str_ = function helper_(x, radix, prefix) {
     } else {
         str = prefix + str;
     }
-    if (radix !== 2 && !Sk.__future__.python3 && (x instanceof Sk.builtin.lng || JSBI.__isBigInt(v))) {
+    if (
+        radix !== 2 &&
+        !Sk.__future__.python3 &&
+        (x instanceof Sk.builtin.lng || JSBI.__isBigInt(v))
+    ) {
         str += "L";
     }
     return new Sk.builtin.str(str);
@@ -552,16 +601,19 @@ Sk.builtin.oct = function oct(x) {
 
 Sk.builtin.bin = function bin(x) {
     if (!Sk.misceval.isIndex(x)) {
-        throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(x) + "' object can't be interpreted as an index");
+        throw new Sk.builtin.TypeError(
+            "'" + Sk.abstr.typeName(x) + "' object can't be interpreted as an index"
+        );
     }
     return Sk.builtin.int2str_(x, 2, "0b");
 };
 
-
 Sk.builtin.dir = function dir(obj) {
     if (obj !== undefined) {
         const obj_dir_func = Sk.abstr.lookupSpecial(obj, Sk.builtin.str.$dir);
-        return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(obj_dir_func, []), (dir) => Sk.builtin.sorted(dir));
+        return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(obj_dir_func, []), (dir) =>
+            Sk.builtin.sorted(dir)
+        );
         // now iter through the keys and check they are all stings
     }
     // then we want all the objects in the global scope
@@ -573,12 +625,12 @@ Sk.builtin.repr = function repr(x) {
     return x.$r();
 };
 
-Sk.builtin.ascii = function ascii (x) {
+Sk.builtin.ascii = function ascii(x) {
     return Sk.misceval.chain(x.$r(), (r) => {
         let ret;
         let i;
         // Fast path
-        for (i=0; i < r.v.length; i++) {
+        for (i = 0; i < r.v.length; i++) {
             if (r.v.charCodeAt(i) >= 0x7f) {
                 ret = r.v.substr(0, i);
                 break;
@@ -597,16 +649,16 @@ Sk.builtin.ascii = function ascii (x) {
                     ashex = "0" + ashex;
                 }
                 ret += "\\x" + ashex;
-            } else if (cc > 0x7f && cc < 0xd800 || cc >= 0xe000) {
+            } else if ((cc > 0x7f && cc < 0xd800) || cc >= 0xe000) {
                 // BMP
-                ret += "\\u" + ("000"+cc.toString(16)).slice(-4);
+                ret += "\\u" + ("000" + cc.toString(16)).slice(-4);
             } else if (cc >= 0xd800) {
                 // Surrogate pair stuff
                 let val = r.v.codePointAt(i);
                 i++;
 
                 val = val.toString(16);
-                let s = ("0000000"+val.toString(16));
+                let s = "0000000" + val.toString(16);
                 if (val.length > 4) {
                     ret += "\\U" + s.slice(-8);
                 } else {
@@ -620,7 +672,16 @@ Sk.builtin.ascii = function ascii (x) {
     });
 };
 
-Sk.builtin.open = function open(filename, mode, bufsize, encoding, errors, newline, closedf, opener) {
+Sk.builtin.open = function open(
+    filename,
+    mode,
+    bufsize,
+    encoding,
+    errors,
+    newline,
+    closedf,
+    opener
+) {
     if (mode === undefined) {
         mode = new Sk.builtin.str("r");
     }
@@ -630,17 +691,21 @@ Sk.builtin.open = function open(filename, mode, bufsize, encoding, errors, newli
 
     if (/\+/.test(mode.v)) {
         throw "todo; haven't implemented read/write mode";
-    } else if ((mode.v === "w" || mode.v === "wb" || mode.v === "a" || mode.v === "ab") && !Sk.nonreadopen) {
+    } else if (
+        (mode.v === "w" || mode.v === "wb" || mode.v === "a" || mode.v === "ab") &&
+        !Sk.nonreadopen
+    ) {
         throw "todo; haven't implemented non-read opens";
     }
 
     return new Sk.builtin.file(filename, mode, bufsize, encoding, errors, newline, closedf, opener);
 };
 
-
 Sk.builtin.isinstance = function isinstance(obj, type) {
     if (!Sk.builtin.checkClass(type) && !(type instanceof Sk.builtin.tuple)) {
-        throw new Sk.builtin.TypeError("isinstance() arg 2 must be a class, type, or tuple of classes and types");
+        throw new Sk.builtin.TypeError(
+            "isinstance() arg 2 must be a class, type, or tuple of classes and types"
+        );
     }
 
     // Fast path
@@ -694,7 +759,9 @@ Sk.builtin.getattr = function getattr(obj, pyName, default_) {
             if (default_ !== undefined) {
                 return default_;
             }
-            throw new Sk.builtin.AttributeError(obj.sk$attrError() + " has no attribute " + Sk.misceval.objectRepr(pyName));
+            throw new Sk.builtin.AttributeError(
+                obj.sk$attrError() + " has no attribute " + Sk.misceval.objectRepr(pyName)
+            );
         }
         return r;
     });
@@ -718,10 +785,15 @@ Sk.builtin.raw_input = function (prompt) {
             return Sk.misceval.chain(
                 undefined,
                 function () {
-                    return Sk.misceval.callsimOrSuspendArray(sys["$d"]["stdout"]["write"], [sys["$d"]["stdout"], new Sk.builtin.str(lprompt)]);
+                    return Sk.misceval.callsimOrSuspendArray(sys["$d"]["stdout"]["write"], [
+                        sys["$d"]["stdout"],
+                        new Sk.builtin.str(lprompt),
+                    ]);
                 },
                 function () {
-                    return Sk.misceval.callsimOrSuspendArray(sys["$d"]["stdin"]["readline"], [sys["$d"]["stdin"]]);
+                    return Sk.misceval.callsimOrSuspendArray(sys["$d"]["stdin"]["readline"], [
+                        sys["$d"]["stdin"],
+                    ]);
                 }
             );
         }
@@ -764,7 +836,6 @@ const pyCode = Sk.abstr.buildNativeClass("code", {
     },
 });
 
-
 Sk.builtin.compile = function (source, filename, mode, flags, dont_inherit, optimize) {
     Sk.builtin.pyCheckType("source", "str", Sk.builtin.checkString(source));
     Sk.builtin.pyCheckType("filename", "str", Sk.builtin.checkString(filename));
@@ -772,9 +843,11 @@ Sk.builtin.compile = function (source, filename, mode, flags, dont_inherit, opti
     source = source.$jsstr();
     filename = filename.$jsstr();
     mode = mode.$jsstr();
-    return Sk.misceval.chain(Sk.compile(source, filename, mode, true, true), (co) => new pyCode(filename, co));
+    return Sk.misceval.chain(
+        Sk.compile(source, filename, mode, true, true),
+        (co) => new pyCode(filename, co)
+    );
 };
-
 
 Sk.builtin.eval = function (source, globals, locals) {
     if (Sk.builtin.checkString(source)) {
@@ -819,7 +892,9 @@ Sk.builtin.map = function map(fun, seq) {
         for (i = 0; i < iterables.length; i++) {
             if (!Sk.builtin.checkIterable(iterables[i])) {
                 argnum = parseInt(i, 10) + 2;
-                throw new Sk.builtin.TypeError("argument " + argnum + " to map() must support iteration");
+                throw new Sk.builtin.TypeError(
+                    "argument " + argnum + " to map() must support iteration"
+                );
             }
             iterables[i] = Sk.abstr.iter(iterables[i]);
         }
@@ -866,9 +941,12 @@ Sk.builtin.map = function map(fun, seq) {
                     item = [item];
                 }
 
-                return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(fun, item), function (result) {
-                    retval.push(result);
-                });
+                return Sk.misceval.chain(
+                    Sk.misceval.callsimOrSuspendArray(fun, item),
+                    function (result) {
+                        retval.push(result);
+                    }
+                );
             }
         }),
         function () {
@@ -925,7 +1003,9 @@ Sk.builtin.filter = function filter(fun, iterable) {
     var ctor;
     Sk.builtin.pyCheckArgsLen("filter", arguments.length, 2, 2);
     if (!Sk.builtin.checkIterable(iterable)) {
-        throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(iterable) + "' object is not iterable");
+        throw new Sk.builtin.TypeError(
+            "'" + Sk.abstr.typeName(iterable) + "' object is not iterable"
+        );
     }
     ctor = function () {
         return [];
@@ -956,7 +1036,11 @@ Sk.builtin.filter = function filter(fun, iterable) {
 
     retval = ctor();
 
-    for (iter = Sk.abstr.iter(iterable), item = iter.tp$iternext(); item !== undefined; item = iter.tp$iternext()) {
+    for (
+        iter = Sk.abstr.iter(iterable), item = iter.tp$iternext();
+        item !== undefined;
+        item = iter.tp$iternext()
+    ) {
         if (fun === Sk.builtin.none.none$) {
             result = new Sk.builtin.bool(item);
         } else {
@@ -985,7 +1069,9 @@ Sk.builtin.hasattr = function hasattr(obj, pyName) {
             }
         }
     );
-    return Sk.misceval.chain(res, (val) => (val === undefined ? Sk.builtin.bool.false$ : Sk.builtin.bool.true$));
+    return Sk.misceval.chain(res, (val) =>
+        val === undefined ? Sk.builtin.bool.false$ : Sk.builtin.bool.true$
+    );
 };
 
 Sk.builtin.pow = function pow(v, w, z) {
@@ -999,7 +1085,13 @@ Sk.builtin.pow = function pow(v, w, z) {
             return v.nb$power(w, z); // these slots for float and complex throw the correct errors
         }
         throw new Sk.builtin.TypeError(
-            "unsupported operand type(s) for ** or pow(): '" + Sk.abstr.typeName(v) + "', '" + Sk.abstr.typeName(w) + "', '" + Sk.abstr.typeName(z) + "'"
+            "unsupported operand type(s) for ** or pow(): '" +
+                Sk.abstr.typeName(v) +
+                "', '" +
+                Sk.abstr.typeName(w) +
+                "', '" +
+                Sk.abstr.typeName(z) +
+                "'"
         );
     }
     return v.nb$power(w, z);
@@ -1086,7 +1178,6 @@ Sk.builtin.execfile = function execfile() {
     throw new Sk.builtin.NotImplementedError("execfile is not yet implemented");
 };
 
-
 var extractDict = function (obj) {
     var ret = {};
     var k, v, kAsJs, iter;
@@ -1105,7 +1196,7 @@ var extractDict = function (obj) {
     return ret;
 };
 
-var mergeDict = function(obj1, obj2) {
+var mergeDict = function (obj1, obj2) {
     var k, v, kAsJs, iter;
     if (obj2 === undefined) {
         return obj1;
@@ -1204,23 +1295,28 @@ Sk.builtin.exec = function exec(code, globals, locals) {
             caughtError = null;
 
             // Guard against exceptions so we can recover gracefully
-            return Sk.misceval.tryCatch(() => {
-                let result = Sk.global["eval"](co.code)(globals, locals);
-                // Ensure it terminates
-                // If the result has a promise, we need to execute that first
-                // Then attach the result/error to the suspension
-                // And then finally call resume on the suspension
-                while (result instanceof Sk.misceval.Suspension) {
-                    if (!result.optional) {
-                        return Sk.misceval.promiseToSuspension(Sk.misceval.asyncToPromise(() => result));
+            return Sk.misceval.tryCatch(
+                () => {
+                    let result = Sk.global["eval"](co.code)(globals, locals);
+                    // Ensure it terminates
+                    // If the result has a promise, we need to execute that first
+                    // Then attach the result/error to the suspension
+                    // And then finally call resume on the suspension
+                    while (result instanceof Sk.misceval.Suspension) {
+                        if (!result.optional) {
+                            return Sk.misceval.promiseToSuspension(
+                                Sk.misceval.asyncToPromise(() => result)
+                            );
+                        }
+                        result = result.resume();
                     }
-                    result = result.resume();
+                    return result;
+                },
+                (e) => {
+                    console.error("exec error:", e, locals, globals);
+                    caughtError = e;
                 }
-                return result;
-            }, (e) => {
-                console.error("exec error:", e, locals, globals);
-                caughtError = e;
-            });
+            );
         },
         (new_locals) => {
             // Restore the Original globals
@@ -1265,7 +1361,9 @@ Sk.builtin.memoryview = function memoryview() {
 
 Sk.builtin.next_ = function next_(iter, default_) {
     if (!iter.tp$iternext) {
-        throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(iter) + "' object is not an iterator");
+        throw new Sk.builtin.TypeError(
+            "'" + Sk.abstr.typeName(iter) + "' object is not an iterator"
+        );
     }
     return Sk.misceval.chain(iter.tp$iternext(true), (nxt) => {
         if (nxt === undefined) {

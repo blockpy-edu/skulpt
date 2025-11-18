@@ -1,4 +1,3 @@
-
 /**
  * @Constructor
  * @desc 配置文件
@@ -7,4 +6,3 @@
 function Test(conf) {
     // do something;
 }
-

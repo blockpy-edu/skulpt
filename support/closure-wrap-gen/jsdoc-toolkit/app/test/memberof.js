@@ -1,19 +1,19 @@
 /** @constructor */
-pack = function() {
-	this.init = function(){}
-	function config(){}
-}
- 
- pack.build = function(task) {};
+pack = function () {
+    this.init = function () {};
+    function config() {}
+};
+
+pack.build = function (task) {};
 
 /** @memberOf pack */
-pack.install = function() {}
+pack.install = function () {};
 
 /** @memberOf pack */
-pack.install.overwrite = function() {}
+pack.install.overwrite = function () {};
 
 /** @memberOf pack */
-clean = function() {}
+clean = function () {};
 
 /** @memberOf pack-config */
-install = function() {};
+install = function () {};

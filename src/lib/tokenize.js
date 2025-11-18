@@ -17,9 +17,15 @@ var $builtinmodule = function (name) {
                 new Sk.builtin.tuple([
                     Sk.ffi.remapToPy(token.type),
                     Sk.ffi.remapToPy(token.string),
-                    new Sk.builtin.tuple([Sk.ffi.remapToPy(token.start[0]), Sk.ffi.remapToPy(token.start[1])]),
-                    new Sk.builtin.tuple([Sk.ffi.remapToPy(token.end[0]), Sk.ffi.remapToPy(token.end[1])]),
-                    Sk.ffi.remapToPy(token.line)
+                    new Sk.builtin.tuple([
+                        Sk.ffi.remapToPy(token.start[0]),
+                        Sk.ffi.remapToPy(token.start[1]),
+                    ]),
+                    new Sk.builtin.tuple([
+                        Sk.ffi.remapToPy(token.end[0]),
+                        Sk.ffi.remapToPy(token.end[1]),
+                    ]),
+                    Sk.ffi.remapToPy(token.line),
                 ])
             );
         }
@@ -33,7 +39,6 @@ var $builtinmodule = function (name) {
 
         return new Sk.builtin.list(tokens);
     });
-
 
     /**
      * @constructor

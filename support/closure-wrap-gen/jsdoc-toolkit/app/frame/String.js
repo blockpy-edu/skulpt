@@ -4,16 +4,16 @@
 */
 
 /** @author Steven Levithan, released as public domain. */
-String.prototype.trim = function() {
-	var str = this.replace(/^\s+/, '');
-	for (var i = str.length - 1; i >= 0; i--) {
-		if (/\S/.test(str.charAt(i))) {
-			str = str.substring(0, i + 1);
-			break;
-		}
-	}
-	return str;
-}
+String.prototype.trim = function () {
+    var str = this.replace(/^\s+/, "");
+    for (var i = str.length - 1; i >= 0; i--) {
+        if (/\S/.test(str.charAt(i))) {
+            str = str.substring(0, i + 1);
+            break;
+        }
+    }
+    return str;
+};
 /*t:
 	plan(6, "Testing String.prototype.trim.");
 	
@@ -37,25 +37,25 @@ String.prototype.trim = function() {
 
 */
 
-String.prototype.balance = function(open, close) {
-	var i = 0;
-	while (this.charAt(i) != open) {
-		if (i == this.length) return [-1, -1];
-		i++;
-	}
-	
-	var j = i+1;
-	var balance = 1;
-	while (j < this.length) {
-		if (this.charAt(j) == open) balance++;
-		if (this.charAt(j) == close) balance--;
-		if (balance == 0) break;
-		j++;
-		if (j == this.length) return [-1, -1];
-	}
-	
-	return [i, j];
-}
+String.prototype.balance = function (open, close) {
+    var i = 0;
+    while (this.charAt(i) != open) {
+        if (i == this.length) return [-1, -1];
+        i++;
+    }
+
+    var j = i + 1;
+    var balance = 1;
+    while (j < this.length) {
+        if (this.charAt(j) == open) balance++;
+        if (this.charAt(j) == close) balance--;
+        if (balance == 0) break;
+        j++;
+        if (j == this.length) return [-1, -1];
+    }
+
+    return [i, j];
+};
 /*t:
 	plan(16, "Testing String.prototype.balance.");
 	

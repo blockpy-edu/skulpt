@@ -27,7 +27,10 @@
  */
 Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
     constructor: function func(code, globals, closure, closure2) {
-        Sk.asserts.assert(this instanceof Sk.builtin.func, "builtin func should be called as a class with `new`");
+        Sk.asserts.assert(
+            this instanceof Sk.builtin.func,
+            "builtin func should be called as a class with `new`"
+        );
 
         this.func_code = code;
         this.func_globals = globals || null;
@@ -53,7 +56,6 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
         } else {
             this.tp$call = Sk.builtin.func.prototype.tp$call.bind(this); // keep func the same shape
         }
-
     },
     slots: {
         tp$getattr: Sk.generic.getAttr,
@@ -79,7 +81,12 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
 
             // Fast path for JS-native functions (which should be implemented
             // in a separate tp$call, really)
-            if (this.co_argcount === undefined && this.co_varnames === undefined && !this.co_kwargs && !this.func_closure) {
+            if (
+                this.co_argcount === undefined &&
+                this.co_varnames === undefined &&
+                !this.co_kwargs &&
+                !this.func_closure
+            ) {
                 // It's a JS function with no type info, don't hang around
                 // resolving anything.
                 if (kw && kw.length !== 0) {
@@ -139,7 +146,7 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
                 } else {
                     throw new Sk.builtin.TypeError("__annotations__ must be set to a dict object");
                 }
-            }
+            },
         },
         __defaults__: {
             $get() {
@@ -163,8 +170,8 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             },
             $set(v) {
                 this.$module = v || Sk.builtin.none.none$;
-            }
-        }
+            },
+        },
     },
     proto: {
         $memoiseFlags() {
@@ -180,10 +187,8 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
             this.$kwdefs = this.func_code.$kwdefs || [];
         },
         $resolveArgs,
-
-    }
+    },
 });
-
 
 function $resolveArgs(posargs, kw) {
     // The rest of this function is a logical Javascript port of
@@ -200,11 +205,19 @@ function $resolveArgs(posargs, kw) {
     let totalArgs = co_argcount + co_kwonlyargcount;
 
     // Fast path from _PyFunction_FastCallDict
-    if (co_kwonlyargcount === 0 && !this.co_kwargs && (!kw || kw.length === 0) && !this.co_varargs) {
+    if (
+        co_kwonlyargcount === 0 &&
+        !this.co_kwargs &&
+        (!kw || kw.length === 0) &&
+        !this.co_varargs
+    ) {
         if (posargs.length == co_argcount) {
             return posargs;
-        } else if (posargs.length === 0 && this.$defaults &&
-            this.$defaults.length === co_argcount) {
+        } else if (
+            posargs.length === 0 &&
+            this.$defaults &&
+            this.$defaults.length === co_argcount
+        ) {
             for (let i = 0; i != this.$defaults.length; i++) {
                 posargs[i] = this.$defaults[i];
             }
@@ -212,8 +225,6 @@ function $resolveArgs(posargs, kw) {
         }
     }
     // end fast path from _PyFunction_FastCallDict
-
-
 
     let kwargs;
 
@@ -224,15 +235,24 @@ function $resolveArgs(posargs, kw) {
 
     /* Copy positional arguments into arguments to our JS function*/
     let nposargs = posargs.length;
-    let args = (posargs.length <= co_argcount) ? posargs : posargs.slice(0, co_argcount);
-
+    let args = posargs.length <= co_argcount ? posargs : posargs.slice(0, co_argcount);
 
     /* Pack other positional arguments into the *args argument */
     if (this.co_varargs) {
-        let vararg = (posargs.length > args.length) ? posargs.slice(args.length) : [];
+        let vararg = posargs.length > args.length ? posargs.slice(args.length) : [];
         args[totalArgs] = new Sk.builtin.tuple(vararg);
     } else if (nposargs > co_argcount) {
-        throw new Sk.builtin.TypeError(this.$name + "() takes " + co_argcount + " positional argument" + (co_argcount == 1 ? "" : "s") + " but " + nposargs + (nposargs == 1 ? " was " : " were ") + " given");
+        throw new Sk.builtin.TypeError(
+            this.$name +
+                "() takes " +
+                co_argcount +
+                " positional argument" +
+                (co_argcount == 1 ? "" : "s") +
+                " but " +
+                nposargs +
+                (nposargs == 1 ? " was " : " were ") +
+                " given"
+        );
     }
 
     /* Handle keyword arguments */
@@ -248,13 +268,17 @@ function $resolveArgs(posargs, kw) {
 
             if (idx >= 0) {
                 if (args[idx] !== undefined) {
-                    throw new Sk.builtin.TypeError(this.$name + "() got multiple values for argument '" + name + "'");
+                    throw new Sk.builtin.TypeError(
+                        this.$name + "() got multiple values for argument '" + name + "'"
+                    );
                 }
                 args[idx] = value;
             } else if (kwargs) {
                 kwargs.push(new Sk.builtin.str(name), value);
             } else {
-                throw new Sk.builtin.TypeError(this.$name + "() got an unexpected keyword argument '" + name + "'");
+                throw new Sk.builtin.TypeError(
+                    this.$name + "() got an unexpected keyword argument '" + name + "'"
+                );
             }
         }
     }
@@ -266,7 +290,9 @@ function $resolveArgs(posargs, kw) {
        (also checks for missing args where no defaults) */
     {
         let defaults = this.$defaults || [];
-        let i = 0, missing = [], missingUnnamed = false;
+        let i = 0,
+            missing = [],
+            missingUnnamed = false;
         // Positional args for which we *don't* have a default
         let defaultStart = co_argcount - defaults.length;
         for (; i < defaultStart; i++) {
@@ -310,7 +336,15 @@ function $resolveArgs(posargs, kw) {
             }
         }
         if (missing.length !== 0) {
-            throw new Sk.builtin.TypeError(this.$name + "() missing " + missing.length + " required keyword argument" + (missing.length == 1 ? "" : "s") + ": " + missing.join(", "));
+            throw new Sk.builtin.TypeError(
+                this.$name +
+                    "() missing " +
+                    missing.length +
+                    " required keyword argument" +
+                    (missing.length == 1 ? "" : "s") +
+                    ": " +
+                    missing.join(", ")
+            );
         }
     }
 
@@ -329,5 +363,4 @@ function $resolveArgs(posargs, kw) {
     }
 
     return args;
-};
-
+}

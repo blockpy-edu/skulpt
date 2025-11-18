@@ -64,7 +64,7 @@ Sk.ffi.remapToPy = function (obj) {
         return new Sk.builtin.func(obj);
     }
 
-    Sk.asserts.fail("unhandled remap type " + typeof (obj));
+    Sk.asserts.fail("unhandled remap type " + typeof obj);
 };
 Sk.exportSymbol("Sk.ffi.remapToPy", Sk.ffi.remapToPy);
 
@@ -117,7 +117,13 @@ Sk.ffi.callback = function (fn) {
         return fn;
     }
     return function () {
-        return Sk.misceval.apply(fn, undefined, undefined, undefined, Array.prototype.slice.call(arguments, 0));
+        return Sk.misceval.apply(
+            fn,
+            undefined,
+            undefined,
+            undefined,
+            Array.prototype.slice.call(arguments, 0)
+        );
     };
 };
 Sk.exportSymbol("Sk.ffi.callback", Sk.ffi.callback);

@@ -119,7 +119,7 @@ Sk.builtin.timSort.prototype.count_run = function (a) {
             }
         }
     }
-    return {"run": new Sk.builtin.listSlice(a.list, a.base, n), "descending": descending};
+    return { run: new Sk.builtin.listSlice(a.list, a.base, n), descending: descending };
 };
 
 Sk.builtin.timSort.prototype.sort = function () {
@@ -239,7 +239,7 @@ Sk.builtin.timSort.prototype.gallop = function (key, a, hint, rightmost) {
     } else {
         // key <= a[hint] -- gallop left, until
         // a[hint - ofs] < key <= a[hint - lastofs]
-        maxofs = hint + 1;   // a[0] is lowest
+        maxofs = hint + 1; // a[0] is lowest
         while (ofs < maxofs) {
             if (lower(a.getitem(p - ofs), key)) {
                 break;
@@ -272,12 +272,12 @@ Sk.builtin.timSort.prototype.gallop = function (key, a, hint, rightmost) {
     while (lastofs < ofs) {
         m = lastofs + ((ofs - lastofs) >> 1);
         if (lower(a.getitem(a.base + m), key)) {
-            lastofs = m + 1;   // a[m] < key
+            lastofs = m + 1; // a[m] < key
         } else {
-            ofs = m;         // key <= a[m]
+            ofs = m; // key <= a[m]
         }
     }
-    Sk.asserts.assert(lastofs == ofs);         // so a[ofs-1] < key <= a[ofs]
+    Sk.asserts.assert(lastofs == ofs); // so a[ofs-1] < key <= a[ofs]
     return ofs;
 };
 
@@ -330,8 +330,8 @@ Sk.builtin.timSort.prototype.merge_lo = function (a, b) {
         }
 
         while (true) {
-            acount = 0;   // number of times A won in a row
-            bcount = 0;   // number of times B won in a row
+            acount = 0; // number of times A won in a row
+            bcount = 0; // number of times B won in a row
 
             // Do the straightforward thing until (if ever) one run
             // appears to win consistently.
@@ -414,7 +414,7 @@ Sk.builtin.timSort.prototype.merge_lo = function (a, b) {
                     break;
                 }
 
-                min_gallop++;  // penalize it for leaving galloping mode
+                min_gallop++; // penalize it for leaving galloping mode
                 this.min_gallop = min_gallop;
             }
         }
@@ -458,8 +458,8 @@ Sk.builtin.timSort.prototype.merge_hi = function (a, b) {
         }
 
         while (true) {
-            acount = 0;   // number of times A won in a row
-            bcount = 0;   // number of times B won in a row
+            acount = 0; // number of times A won in a row
+            bcount = 0; // number of times B won in a row
 
             // Do the straightforward thing until (if ever) one run
             // appears to win consistently.
@@ -546,7 +546,7 @@ Sk.builtin.timSort.prototype.merge_hi = function (a, b) {
                     break;
                 }
 
-                min_gallop++;  // penalize it for leaving galloping mode
+                min_gallop++; // penalize it for leaving galloping mode
                 this.min_gallop = min_gallop;
             }
         }
@@ -656,9 +656,9 @@ Sk.builtin.timSort.prototype.merge_force_collapse = function () {
 // See listsort.txt for more info.
 
 Sk.builtin.timSort.prototype.merge_compute_minrun = function (n) {
-    var r = 0;    // becomes 1 if any 1 bits are shifted off
+    var r = 0; // becomes 1 if any 1 bits are shifted off
     while (n >= 64) {
-        r = r | n & 1;
+        r = r | (n & 1);
         n >>= 1;
     }
     return n + r;
@@ -683,7 +683,11 @@ Sk.builtin.listSlice.prototype.copyitems = function () {
     var start = this.base;
     var stop = this.base + this.len;
     Sk.asserts.assert(0 <= start <= stop);
-    return new Sk.builtin.listSlice(new Sk.builtin.list(this.list.v.slice(start, stop)), 0, this.len);
+    return new Sk.builtin.listSlice(
+        new Sk.builtin.list(this.list.v.slice(start, stop)),
+        0,
+        this.len
+    );
 };
 
 Sk.builtin.listSlice.prototype.advance = function (n) {

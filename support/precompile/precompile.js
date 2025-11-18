@@ -3,9 +3,7 @@
 
 const program = require("commander");
 
-program
-    .option("-m, --minify", "minify the resulting code")
-    .parse(process.argv);
+program.option("-m, --minify", "minify the resulting code").parse(process.argv);
 
 if (program.args.length < 2 || program.args.length > 3) {
     console.log("error: must specify output directory, input directory, and module name");
@@ -21,7 +19,7 @@ const skulpt = reqskulpt(false);
 if (skulpt === null) {
     process.exit(1);
 }
-Sk.configure({__future__: Sk.python3});
+Sk.configure({ __future__: Sk.python3 });
 
 const fs = require("fs");
 const path = require("path");
@@ -37,13 +35,13 @@ function buildPythonFile(ret, fullname, contents, shouldMinify) {
             internalName = internalName.slice(SOURCE_DIR.length);
         }
     }
-    internalName = "src/lib/"+internalName;
+    internalName = "src/lib/" + internalName;
     try {
         // TODO: Support compile mode where we remove type annotations and docstrings
         co = Sk.compile(contents, internalName, "exec", true, true);
-        console.log("Compiled: "+internalName);
+        console.log("Compiled: " + internalName);
     } catch (e) {
-        console.log("Failed to compile: "+internalName);
+        console.log("Failed to compile: " + internalName);
         console.log(e);
         console.log(e.stack);
         console.error(e.args);
@@ -88,13 +86,13 @@ if (MODULE_NAME === undefined && SOURCE_DIR.endsWith(".py")) {
     let contents = fs.readFileSync(fullname, "utf8");
     buildPythonFile(result, fullname, contents, program.minify);
 } else {
-    processDirectories([SOURCE_DIR+MODULE_NAME], true, ".py", result, program.minify, []);
+    processDirectories([SOURCE_DIR + MODULE_NAME], true, ".py", result, program.minify, []);
 }
 let output = [];
 for (let filename in result) {
     let contents = result[filename];
-    output.push("Sk.builtinFiles.files['"+filename+"'] = "+JSON.stringify(contents));
+    output.push("Sk.builtinFiles.files['" + filename + "'] = " + JSON.stringify(contents));
 }
-fs.writeFileSync(OUTPUT_FILE, output.join("\n"), "utf8", {flag: "w"});
+fs.writeFileSync(OUTPUT_FILE, output.join("\n"), "utf8", { flag: "w" });
 
 console.log(Object.keys(result));

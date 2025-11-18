@@ -3,15 +3,13 @@ myProject = myProject || {};
 
 /** @namespace */
 myProject.myModule = (function () {
-	/** describe myPrivateVar here */
-	var myPrivateVar = "";
+    /** describe myPrivateVar here */
+    var myPrivateVar = "";
 
-	var myPrivateMethod = function () {
-	}
+    var myPrivateMethod = function () {};
 
-	/** @scope myProject.myModule */
-	return {
-		myPublicMethod: function () {
-		}
-	};
+    /** @scope myProject.myModule */
+    return {
+        myPublicMethod: function () {},
+    };
 })();

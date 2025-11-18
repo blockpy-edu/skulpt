@@ -1,6 +1,6 @@
 const $builtinmodule = function (name) {
     const math = {
-    // Mathematical Constants
+        // Mathematical Constants
         pi: new Sk.builtin.float_(Math.PI),
         e: new Sk.builtin.float_(Math.E),
         tau: new Sk.builtin.float_(2 * Math.PI),
@@ -16,7 +16,7 @@ const $builtinmodule = function (name) {
             return new Sk.builtin.int_(Math.ceil(_x));
         }
         return new Sk.builtin.float_(Math.ceil(_x));
-    };
+    }
 
     function comb(n, k) {
         let n_js = Sk.misceval.asIndexOrThrow(n);
@@ -40,7 +40,9 @@ const $builtinmodule = function (name) {
             return new Sk.builtin.int_(1);
         }
         if (k_js > Number.MAX_SAFE_INTEGER) {
-            throw new Sk.builtin.OverflowError("min(n - k, k) must not exceed " + Number.MAX_SAFE_INTEGER);
+            throw new Sk.builtin.OverflowError(
+                "min(n - k, k) must not exceed " + Number.MAX_SAFE_INTEGER
+            );
         }
 
         const one = new Sk.builtin.int_(1);
@@ -52,7 +54,7 @@ const $builtinmodule = function (name) {
             tot = tot.nb$floor_divide(temp);
         }
         return tot;
-    };
+    }
 
     const get_sign = function (n) {
         //deals with signed zeros
@@ -78,7 +80,7 @@ const $builtinmodule = function (name) {
         const sign = sign_x * sign_y;
 
         return new Sk.builtin.float_(_x * sign);
-    };
+    }
 
     function fabs(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -89,7 +91,7 @@ const $builtinmodule = function (name) {
         _x = Math.abs(_x);
 
         return new Sk.builtin.float_(_x);
-    };
+    }
 
     const MAX_SAFE_INTEGER_FACTORIAL = 18; // 19! > Number.MAX_SAFE_INTEGER
     function factorial(x) {
@@ -118,7 +120,7 @@ const $builtinmodule = function (name) {
             }
             return new Sk.builtin.int_(r);
         }
-    };
+    }
 
     function floor(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -128,7 +130,7 @@ const $builtinmodule = function (name) {
         }
 
         return new Sk.builtin.float_(Math.floor(Sk.builtin.asnum$(x)));
-    };
+    }
 
     function fmod(x, y) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -152,7 +154,7 @@ const $builtinmodule = function (name) {
             }
         }
         return new Sk.builtin.float_(r);
-    };
+    }
 
     function frexp(x) {
         //  algorithm taken from https://locutus.io/c/math/frexp/
@@ -183,13 +185,15 @@ const $builtinmodule = function (name) {
         res[0] = new Sk.builtin.float_(res[0]);
         res[1] = new Sk.builtin.int_(res[1]);
         return new Sk.builtin.tuple(res);
-    };
+    }
 
     function fsum(iter) {
         // algorithm from https://code.activestate.com/recipes/393090/
         // as well as https://github.com/brython-dev/brython/blob/master/www/src/libs/js
         if (!Sk.builtin.checkIterable(iter)) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(iter) + "' object is not iterable");
+            throw new Sk.builtin.TypeError(
+                "'" + Sk.abstr.typeName(iter) + "' object is not iterable"
+            );
         }
 
         let partials = [];
@@ -225,7 +229,7 @@ const $builtinmodule = function (name) {
         }, 0);
 
         return new Sk.builtin.float_(sum);
-    };
+    }
 
     function _gcd_internal(_a, _b) {
         function _gcd(a, b) {
@@ -258,7 +262,7 @@ const $builtinmodule = function (name) {
         }
 
         return res;
-    };
+    }
 
     function gcd(a, b) {
         // non ints not allowed in python 3.7.x
@@ -279,14 +283,17 @@ const $builtinmodule = function (name) {
             // really we should do:
             // return  JSBI.lessThanOrEqual(res, JSBI.BigInt(Number.MAX_SAFE_INTEGER)) ? new Sk.builtin.int_(Number(res)) : new Sk.builtin.int_(res);
         }
-    };
+    }
 
     function isclose(args, kwargs) {
         Sk.abstr.checkArgsLen("isclose", args, 2, 2);
-        const rel_abs_vals = Sk.abstr.copyKeywordsToNamedArgs("isclose", ["rel_tol", "abs_tol"], [], kwargs, [
-            new Sk.builtin.float_(1e-9),
-            new Sk.builtin.float_(0.0),
-        ]);
+        const rel_abs_vals = Sk.abstr.copyKeywordsToNamedArgs(
+            "isclose",
+            ["rel_tol", "abs_tol"],
+            [],
+            kwargs,
+            [new Sk.builtin.float_(1e-9), new Sk.builtin.float_(0.0)]
+        );
 
         const a = args[0];
         const b = args[1];
@@ -315,9 +322,10 @@ const $builtinmodule = function (name) {
             return Sk.builtin.bool.false$;
         }
         const diff = Math.abs(_b - _a);
-        const res = diff <= Math.abs(_rel_tol * _b) || diff <= Math.abs(_rel_tol * _a) || diff <= _abs_tol;
+        const res =
+            diff <= Math.abs(_rel_tol * _b) || diff <= Math.abs(_rel_tol * _a) || diff <= _abs_tol;
         return new Sk.builtin.bool(res);
-    };
+    }
 
     function isfinite(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -330,7 +338,7 @@ const $builtinmodule = function (name) {
         } else {
             return Sk.builtin.bool.false$;
         }
-    };
+    }
 
     function isinf(x) {
         /* Return True if x is infinite or nan, and False otherwise. */
@@ -344,7 +352,7 @@ const $builtinmodule = function (name) {
         } else {
             return Sk.builtin.bool.true$;
         }
-    };
+    }
 
     function isnan(x) {
         // Return True if x is a NaN (not a number), and False otherwise.
@@ -356,7 +364,7 @@ const $builtinmodule = function (name) {
         } else {
             return Sk.builtin.bool.false$;
         }
-    };
+    }
 
     function bigint_isqrt(n_js) {
         // Algorithm taken from:
@@ -398,11 +406,11 @@ const $builtinmodule = function (name) {
         if (n_js == 0) {
             return new Sk.builtin.int_(0);
         }
-        if (typeof(n_js) === "number") {
+        if (typeof n_js === "number") {
             return new Sk.builtin.int_(Math.floor(Math.sqrt(n_js)));
         }
         return bigint_isqrt(n_js);
-    };
+    }
 
     function lcm(...args) {
         function abs(n) {
@@ -418,7 +426,9 @@ const $builtinmodule = function (name) {
         const nargs = args.length;
 
         // lcm() without arguments returns 1
-        if (nargs === 0) {return new Sk.builtin.int_(1);}
+        if (nargs === 0) {
+            return new Sk.builtin.int_(1);
+        }
 
         // Test & convert all arguments
         let i;
@@ -436,7 +446,9 @@ const $builtinmodule = function (name) {
             arg = args[i];
 
             // If any of the arguments is zero, then the returned value is 0
-            if (arg === 0) {return new Sk.builtin.int_(0);}
+            if (arg === 0) {
+                return new Sk.builtin.int_(0);
+            }
 
             if (typeof result === "number" && typeof arg === "number") {
                 let tmp = (result / _gcd_internal(result, arg)) * arg;
@@ -451,15 +463,12 @@ const $builtinmodule = function (name) {
             // allow fall through - if result gets too big we'll need to redo the calculation with BigInts
             if (typeof result !== "number") {
                 arg = JSBI.BigInt(arg);
-                result = JSBI.multiply(
-                    JSBI.divide(result, _gcd_internal(result, arg)),
-                    arg
-                );
+                result = JSBI.multiply(JSBI.divide(result, _gcd_internal(result, arg)), arg);
             }
         }
 
         return abs(result);
-    };
+    }
 
     function ldexp(x, i) {
         // return x * (2**i)
@@ -480,7 +489,7 @@ const $builtinmodule = function (name) {
             throw new Sk.builtin.OverflowError("math range error");
         }
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function modf(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -489,9 +498,15 @@ const $builtinmodule = function (name) {
         if (!isFinite(_x)) {
             //special cases
             if (_x == Infinity) {
-                return new Sk.builtin.tuple([new Sk.builtin.float_(0.0), new Sk.builtin.float_(_x)]);
+                return new Sk.builtin.tuple([
+                    new Sk.builtin.float_(0.0),
+                    new Sk.builtin.float_(_x),
+                ]);
             } else if (_x == -Infinity) {
-                return new Sk.builtin.tuple([new Sk.builtin.float_(-0.0), new Sk.builtin.float_(_x)]);
+                return new Sk.builtin.tuple([
+                    new Sk.builtin.float_(-0.0),
+                    new Sk.builtin.float_(_x),
+                ]);
             } else if (isNaN(_x)) {
                 return new Sk.builtin.tuple([new Sk.builtin.float_(_x), new Sk.builtin.float_(_x)]);
             }
@@ -502,7 +517,7 @@ const $builtinmodule = function (name) {
         const d = sign * (_x - Math.floor(_x)); //decimal part
 
         return new Sk.builtin.tuple([new Sk.builtin.float_(d), new Sk.builtin.float_(i)]);
-    };
+    }
 
     function perm(n, k) {
         if (k === undefined || Sk.builtin.checkNone(k)) {
@@ -533,11 +548,13 @@ const $builtinmodule = function (name) {
             tot = tot.nb$multiply(n);
         }
         return tot;
-    };
+    }
 
     function prod(args, kwargs) {
         Sk.abstr.checkArgsLen("prod", args, 1, 1);
-        args = Sk.abstr.copyKeywordsToNamedArgs("prod", [null, "start"], args, kwargs, [new Sk.builtin.int_(1)]);
+        args = Sk.abstr.copyKeywordsToNamedArgs("prod", [null, "start"], args, kwargs, [
+            new Sk.builtin.int_(1),
+        ]);
 
         const it = Sk.abstr.iter(args[0]);
         let tot = args[1];
@@ -597,7 +614,7 @@ const $builtinmodule = function (name) {
             },
             () => tot
         );
-    };
+    }
 
     function remainder(x, y) {
         // as per cpython algorithm see cpython for details
@@ -649,7 +666,7 @@ const $builtinmodule = function (name) {
             throw new Sk.builtin.AssertionError();
         }
         return new Sk.builtin.float_(_x);
-    };
+    }
 
     function trunc(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -657,7 +674,7 @@ const $builtinmodule = function (name) {
             return x; //deals with large ints being passed
         }
         return new Sk.builtin.int_(Sk.builtin.asnum$(x) | 0);
-    };
+    }
 
     // Power and logarithmic functions
     function exp(x) {
@@ -675,7 +692,7 @@ const $builtinmodule = function (name) {
         }
 
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function expm1(x) {
         // as per python docs this implements an algorithm for evaluating exp(x) - 1
@@ -695,7 +712,7 @@ const $builtinmodule = function (name) {
             const res = Math.exp(_x) - 1.0;
             return new Sk.builtin.float_(res);
         }
-    };
+    }
 
     function log(x, base) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -726,7 +743,7 @@ const $builtinmodule = function (name) {
             res = (digits * Math.log(10) + Math.log(decimal)) / Math.log(_base);
         }
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function log1p(x) {
         // as per python docs this is an algorithm for evaluating log 1+x (base e)
@@ -752,7 +769,7 @@ const $builtinmodule = function (name) {
             const res = Math.log(1 + _x);
             return new Sk.builtin.float_(res);
         }
-    };
+    }
 
     function log2(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -773,7 +790,7 @@ const $builtinmodule = function (name) {
             res = digits * Math.log2(10) + Math.log2(decimal);
         }
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function log10(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -793,7 +810,7 @@ const $builtinmodule = function (name) {
             res = digits + Math.log10(decimal);
         }
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function pow(x, y) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -825,7 +842,7 @@ const $builtinmodule = function (name) {
             throw new Sk.builtin.OverflowError("math range error");
         }
         return new Sk.builtin.float_(res);
-    };
+    }
 
     function sqrt(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -834,7 +851,7 @@ const $builtinmodule = function (name) {
             throw new Sk.builtin.ValueError("math domain error");
         }
         return new Sk.builtin.float_(Math.sqrt(_x));
-    };
+    }
 
     // Trigonometric functions and Hyperbolic
 
@@ -842,48 +859,48 @@ const $builtinmodule = function (name) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.asin(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function acos(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.acos(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function atan(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.atan(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function atan2(y, x) {
         Sk.builtin.pyCheckType("y", "number", Sk.builtin.checkNumber(y));
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
 
         return new Sk.builtin.float_(Math.atan2(Sk.builtin.asnum$(y), Sk.builtin.asnum$(x)));
-    };
+    }
 
     function sin(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.sin(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function cos(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.cos(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function tan(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         return new Sk.builtin.float_(Math.tan(Sk.builtin.asnum$(rad)));
-    };
+    }
 
     function dist(x) {
         throw new Sk.builtin.NotImplementedError("math.dist() is not yet implemented in Skulpt");
-    };
+    }
 
     function hypot(x, y) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -892,7 +909,7 @@ const $builtinmodule = function (name) {
         x = Sk.builtin.asnum$(x);
         y = Sk.builtin.asnum$(y);
         return new Sk.builtin.float_(Math.sqrt(x * x + y * y));
-    };
+    }
 
     function asinh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -902,7 +919,7 @@ const $builtinmodule = function (name) {
         const L = x + Math.sqrt(x * x + 1);
 
         return new Sk.builtin.float_(Math.log(L));
-    };
+    }
 
     function acosh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -912,7 +929,7 @@ const $builtinmodule = function (name) {
         const L = x + Math.sqrt(x * x - 1);
 
         return new Sk.builtin.float_(Math.log(L));
-    };
+    }
 
     function atanh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -922,7 +939,7 @@ const $builtinmodule = function (name) {
         const L = (1 + x) / (1 - x);
 
         return new Sk.builtin.float_(Math.log(L) / 2);
-    };
+    }
 
     function sinh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -935,7 +952,7 @@ const $builtinmodule = function (name) {
         const result = (p - n) / 2;
 
         return new Sk.builtin.float_(result);
-    };
+    }
 
     function cosh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -948,7 +965,7 @@ const $builtinmodule = function (name) {
         const result = (p + n) / 2;
 
         return new Sk.builtin.float_(result);
-    };
+    }
 
     function tanh(x) {
         Sk.builtin.pyCheckType("x", "number", Sk.builtin.checkNumber(x));
@@ -965,7 +982,7 @@ const $builtinmodule = function (name) {
         const result = (p - n) / 2 / ((p + n) / 2);
 
         return new Sk.builtin.float_(result);
-    };
+    }
 
     // Angular Conversion
     function radians(deg) {
@@ -973,85 +990,85 @@ const $builtinmodule = function (name) {
 
         const ret = (Math.PI / 180.0) * Sk.builtin.asnum$(deg);
         return new Sk.builtin.float_(ret);
-    };
+    }
 
     function degrees(rad) {
         Sk.builtin.pyCheckType("rad", "number", Sk.builtin.checkNumber(rad));
 
         const ret = (180.0 / Math.PI) * Sk.builtin.asnum$(rad);
         return new Sk.builtin.float_(ret);
-    };
+    }
 
     // Special Functions
     function erf(x) {
         throw new Sk.builtin.NotImplementedError("math.erf() is not yet implemented in Skulpt");
-    };
+    }
 
     function erfc(x) {
         throw new Sk.builtin.NotImplementedError("math.erfc() is not yet implemented in Skulpt");
-    };
+    }
 
     function gamma(x) {
         throw new Sk.builtin.NotImplementedError("math.gamma() is not yet implemented in Skulpt");
-    };
+    }
 
     function lgamma(x) {
         throw new Sk.builtin.NotImplementedError("math.lgamma() is not yet implemented in Skulpt");
-    };
+    }
 
     Sk.abstr.setUpModuleMethods("math", math, {
         acos: {
             $meth: acos,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the arc cosine (measured in radians) of x.",
         },
 
         acosh: {
             $meth: acosh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the inverse hyperbolic cosine of x.",
         },
 
         asin: {
             $meth: asin,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the arc sine (measured in radians) of x.",
         },
 
         asinh: {
             $meth: asinh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the inverse hyperbolic sine of x.",
         },
 
         atan: {
             $meth: atan,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the arc tangent (measured in radians) of x.",
         },
 
         atan2: {
             $meth: atan2,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, y, x, /)",
             $doc: "Return the arc tangent (measured in radians) of y/x.\n\nUnlike atan(y/x), the signs of both x and y are considered.",
         },
 
         atanh: {
             $meth: atanh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the inverse hyperbolic tangent of x.",
         },
 
         ceil: {
             $meth: ceil,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the ceiling of x as an Integral.\n\nThis is the smallest integer >= x.",
         },
@@ -1063,150 +1080,147 @@ const $builtinmodule = function (name) {
         },
         copysign: {
             $meth: copysign,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
-            $doc:
-                "Return a float with the magnitude (absolute value) of x but the sign of y.\n\nOn platforms that support signed zeros, copysign(1.0, -0.0)\nreturns -1.0.\n",
+            $doc: "Return a float with the magnitude (absolute value) of x but the sign of y.\n\nOn platforms that support signed zeros, copysign(1.0, -0.0)\nreturns -1.0.\n",
         },
 
         cos: {
             $meth: cos,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the cosine of x (measured in radians).",
         },
 
         cosh: {
             $meth: cosh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the hyperbolic cosine of x.",
         },
 
         degrees: {
             $meth: degrees,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Convert angle x from radians to degrees.",
         },
 
         erf: {
             $meth: erf,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Error function at x.",
         },
 
         erfc: {
             $meth: erfc,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Complementary error function at x.",
         },
 
         exp: {
             $meth: exp,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return e raised to the power of x.",
         },
 
         expm1: {
             $meth: expm1,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return exp(x)-1.\n\nThis function avoids the loss of precision involved in the direct evaluation of exp(x)-1 for small x.",
         },
 
         fabs: {
             $meth: fabs,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the absolute value of the float x.",
         },
 
         factorial: {
             $meth: factorial,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Find x!.\n\nRaise a ValueError if x is negative or non-integral.",
         },
 
         floor: {
             $meth: floor,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the floor of x as an Integral.\n\nThis is the largest integer <= x.",
         },
 
         fmod: {
             $meth: fmod,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
-            $doc: "Return fmod(x, y), according to platform C.\n\nx % y may differ."
+            $doc: "Return fmod(x, y), according to platform C.\n\nx % y may differ.",
         },
 
         frexp: {
             $meth: frexp,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
-            $doc:
-                "Return the mantissa and exponent of x, as pair (m, e).\n\nm is a float and e is an int, such that x = m * 2.**e.\nIf x is 0, m and e are both 0.  Else 0.5 <= abs(m) < 1.0.",
+            $doc: "Return the mantissa and exponent of x, as pair (m, e).\n\nm is a float and e is an int, such that x = m * 2.**e.\nIf x is 0, m and e are both 0.  Else 0.5 <= abs(m) < 1.0.",
         },
 
         fsum: {
             $meth: fsum,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, seq, /)",
             $doc: "Return an accurate floating point sum of values in the iterable seq.\n\nAssumes IEEE-754 floating point arithmetic.",
         },
 
         gamma: {
             $meth: gamma,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Gamma function at x.",
         },
 
         gcd: {
             $meth: gcd,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
             $doc: "greatest common divisor of x and y",
         },
 
         hypot: {
             $meth: hypot,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
             $doc: "Return the Euclidean distance, sqrt(x*x + y*y).",
         },
 
         isclose: {
             $meth: isclose,
-            $flags: {FastCall: true},
+            $flags: { FastCall: true },
             $textsig: "($module, /, a, b, *, rel_tol=1e-09, abs_tol=0.0)",
-            $doc:
-                'Determine whether two floating point numbers are close in value.\n\n  rel_tol\n    maximum difference for being considered "close", relative to the\n    magnitude of the input values\n  abs_tol\n    maximum difference for being considered "close", regardless of the\n    magnitude of the input values\n\nReturn True if a is close in value to b, and False otherwise.\n\nFor the values to be considered close, the difference between them\nmust be smaller than at least one of the tolerances.\n\n-inf, inf and NaN behave similarly to the IEEE 754 Standard.  That\nis, NaN is not close to anything, even itself.  inf and -inf are\nonly close to themselves.',
+            $doc: 'Determine whether two floating point numbers are close in value.\n\n  rel_tol\n    maximum difference for being considered "close", relative to the\n    magnitude of the input values\n  abs_tol\n    maximum difference for being considered "close", regardless of the\n    magnitude of the input values\n\nReturn True if a is close in value to b, and False otherwise.\n\nFor the values to be considered close, the difference between them\nmust be smaller than at least one of the tolerances.\n\n-inf, inf and NaN behave similarly to the IEEE 754 Standard.  That\nis, NaN is not close to anything, even itself.  inf and -inf are\nonly close to themselves.',
         },
 
         isfinite: {
             $meth: isfinite,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return True if x is neither an infinity nor a NaN, and False otherwise.",
         },
 
         isinf: {
             $meth: isinf,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return True if x is a positive or negative infinity, and False otherwise.",
         },
 
         isnan: {
             $meth: isnan,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return True if x is a NaN (not a number), and False otherwise.",
         },
@@ -1224,125 +1238,123 @@ const $builtinmodule = function (name) {
         },
         ldexp: {
             $meth: ldexp,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, i, /)",
             $doc: "Return x * (2**i).\n\nThis is essentially the inverse of frexp().",
         },
 
         lgamma: {
             $meth: lgamma,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Natural logarithm of absolute value of Gamma function at x.",
         },
 
         log: {
             $meth: log,
-            $flags: {MinArgs: 1, MaxArgs: 2},
+            $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: null,
-            $doc:
-                "log(x, [base=e])\nReturn the logarithm of x to the given base.\n\nIf the base not specified, returns the natural logarithm (base e) of x.",
+            $doc: "log(x, [base=e])\nReturn the logarithm of x to the given base.\n\nIf the base not specified, returns the natural logarithm (base e) of x.",
         },
 
         log10: {
             $meth: log10,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the base 10 logarithm of x.",
         },
 
         log1p: {
             $meth: log1p,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the natural logarithm of 1+x (base e).\n\nThe result is computed in a way which is accurate for x near zero.",
         },
 
         log2: {
             $meth: log2,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the base 2 logarithm of x.",
         },
 
         modf: {
             $meth: modf,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
-            $doc: "Return the fractional and integer parts of x.\n\nBoth results carry the sign of x and are floats."
+            $doc: "Return the fractional and integer parts of x.\n\nBoth results carry the sign of x and are floats.",
         },
         perm: {
             $meth: perm,
             $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: "($module, n, k=None, /)",
-            $doc: "'Number of ways to choose k items from n items without repetition and with order.\n\nEvaluates to n! / (n - k)! when k <= n and evaluates\nto zero when k > n.\n\nIf k is not specified or is None, then k defaults to n\nand the function returns n!.\n\nRaises TypeError if either of the arguments are not integers.\nRaises ValueError if either of the arguments are negative.'"
+            $doc: "'Number of ways to choose k items from n items without repetition and with order.\n\nEvaluates to n! / (n - k)! when k <= n and evaluates\nto zero when k > n.\n\nIf k is not specified or is None, then k defaults to n\nand the function returns n!.\n\nRaises TypeError if either of the arguments are not integers.\nRaises ValueError if either of the arguments are negative.'",
         },
         prod: {
             $meth: prod,
             $flags: { FastCall: true },
             $textsig: "($module, iterable, /, *, start=1)",
-            $doc: "Calculate the product of all the elements in the input iterable. The default start value for the product is 1.\n\nWhen the iterable is empty, return the start value. This function is intended specifically for use with numeric values and may reject non-numeric types."
+            $doc: "Calculate the product of all the elements in the input iterable. The default start value for the product is 1.\n\nWhen the iterable is empty, return the start value. This function is intended specifically for use with numeric values and may reject non-numeric types.",
         },
         pow: {
             $meth: pow,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
             $doc: "Return x**y (x to the power of y).",
         },
 
         radians: {
             $meth: radians,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Convert angle x from degrees to radians.",
         },
 
         remainder: {
             $meth: remainder,
-            $flags: {MinArgs: 2, MaxArgs: 2},
+            $flags: { MinArgs: 2, MaxArgs: 2 },
             $textsig: "($module, x, y, /)",
-            $doc:
-                "Difference between x and the closest integer multiple of y.\n\nReturn x - n*y where n*y is the closest integer multiple of y.\nIn the case where x is exactly halfway between two multiples of\ny, the nearest even value of n is used. The result is always exact.",
+            $doc: "Difference between x and the closest integer multiple of y.\n\nReturn x - n*y where n*y is the closest integer multiple of y.\nIn the case where x is exactly halfway between two multiples of\ny, the nearest even value of n is used. The result is always exact.",
         },
 
         sin: {
             $meth: sin,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the sine of x (measured in radians).",
         },
 
         sinh: {
             $meth: sinh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the hyperbolic sine of x.",
         },
 
         sqrt: {
             $meth: sqrt,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the square root of x.",
         },
 
         tan: {
             $meth: tan,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the tangent of x (measured in radians).",
         },
 
         tanh: {
             $meth: tanh,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Return the hyperbolic tangent of x.",
         },
 
         trunc: {
             $meth: trunc,
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($module, x, /)",
             $doc: "Truncates the Real x to the nearest Integral toward 0.\n\nUses the __trunc__ magic method.",
         },

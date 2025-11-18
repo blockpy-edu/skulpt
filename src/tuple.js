@@ -8,18 +8,20 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
         if (L === undefined) {
             L = [];
         } else if (!Array.isArray(L)) {
-            L = Sk.misceval.arrayFromIterable(L); 
+            L = Sk.misceval.arrayFromIterable(L);
             // internal calls to constructor can't suspend - avoid using this
         }
-        Sk.asserts.assert(this instanceof Sk.builtin.tuple, "bad call to tuple, use 'new' with an Array of python objects");
+        Sk.asserts.assert(
+            this instanceof Sk.builtin.tuple,
+            "bad call to tuple, use 'new' with an Array of python objects"
+        );
         this.v = L;
         this.in$repr = false;
     },
-    slots: /**@lends {Sk.builtin.tuple.prototype}*/{
+    slots: /**@lends {Sk.builtin.tuple.prototype}*/ {
         tp$getattr: Sk.generic.getAttr,
         tp$as_sequence_or_mapping: true,
-        tp$doc:
-            "Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",
+        tp$doc: "Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",
         $r() {
             if (this.in$repr) {
                 return new Sk.builtin.str("(...)");
@@ -34,8 +36,8 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             return new Sk.builtin.str("(" + ret + ")");
         },
         /**
-         * @param {Array} args 
-         * @param {Array=} kwargs 
+         * @param {Array} args
+         * @param {Array=} kwargs
          * @ignore
          */
         tp$new(args, kwargs) {
@@ -52,7 +54,10 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             if (arg.constructor === Sk.builtin.tuple) {
                 return arg;
             }
-            return Sk.misceval.chain(Sk.misceval.arrayFromIterable(arg, true), (L) => new Sk.builtin.tuple(L));
+            return Sk.misceval.chain(
+                Sk.misceval.arrayFromIterable(arg, true),
+                (L) => new Sk.builtin.tuple(L)
+            );
         },
         tp$hash() {
             // the numbers and order are taken from Cpython
@@ -97,7 +102,9 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
                 });
                 return new Sk.builtin.tuple(ret);
             }
-            throw new Sk.builtin.TypeError("tuple indices must be integers or slices, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError(
+                "tuple indices must be integers or slices, not " + Sk.abstr.typeName(index)
+            );
         },
         sq$length() {
             return this.v.length;
@@ -117,12 +124,18 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
         },
         sq$concat(other) {
             if (!(other instanceof Sk.builtin.tuple)) {
-                throw new Sk.builtin.TypeError("can only concatenate tuple (not '" + Sk.abstr.typeName(other) + "') to tuple");
+                throw new Sk.builtin.TypeError(
+                    "can only concatenate tuple (not '" + Sk.abstr.typeName(other) + "') to tuple"
+                );
             }
             return new Sk.builtin.tuple(this.v.concat(other.v));
         },
         sq$contains(ob) {
-            for (let it = this.tp$iter(), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+            for (
+                let it = this.tp$iter(), i = it.tp$iternext();
+                i !== undefined;
+                i = it.tp$iternext()
+            ) {
                 if (i === ob || Sk.misceval.richCompareBool(i, ob, "Eq")) {
                     return true;
                 }
@@ -130,7 +143,7 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             return false;
         },
     },
-    proto: /**@lends {Sk.builtin.tuple.prototype}*/{
+    proto: /**@lends {Sk.builtin.tuple.prototype}*/ {
         $subtype_new(args, kwargs) {
             const instance = new this.constructor();
             // pass the args but ignore the kwargs for subtyping - these might be handled by the subtypes init method
@@ -142,20 +155,25 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
             return this.v.slice(0);
         },
     },
-    methods: /**@lends {Sk.builtin.tuple.prototype}*/{
+    methods: /**@lends {Sk.builtin.tuple.prototype}*/ {
         __getnewargs__: {
             $meth() {
                 return new Sk.builtin.tuple(this.v.slice(0));
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: null,
         },
-        index: /**@lends {Sk.builtin.type.prototype}*/{
+        index: /**@lends {Sk.builtin.type.prototype}*/ {
             $meth(item, start, end) {
-                if ((start !== undefined && !Sk.misceval.isIndex(start)) || (end !== undefined && !Sk.misceval.isIndex(end))) {
+                if (
+                    (start !== undefined && !Sk.misceval.isIndex(start)) ||
+                    (end !== undefined && !Sk.misceval.isIndex(end))
+                ) {
                     // unusually can't have None here so check this first...
-                    throw new Sk.builtin.TypeError("slice indices must be integers or have an __index__ method");
+                    throw new Sk.builtin.TypeError(
+                        "slice indices must be integers or have an __index__ method"
+                    );
                 }
                 ({ start, end } = Sk.builtin.slice.startEnd$wrt(this, start, end));
                 const obj = this.v;
@@ -166,7 +184,7 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
                 }
                 throw new Sk.builtin.ValueError("tuple.index(x): x not in tuple");
             },
-            $flags: {MinArgs: 1, MaxArgs: 3},
+            $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: "($self, value, start=0, stop=sys.maxsize, /)",
             $doc: "Return first index of value.\n\nRaises ValueError if the value is not present.",
         },
@@ -182,7 +200,7 @@ Sk.builtin.tuple = Sk.abstr.buildNativeClass("tuple", {
                 }
                 return new Sk.builtin.int_(count);
             },
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($self, value, /)",
             $doc: "Return number of occurrences of value.",
         },

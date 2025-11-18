@@ -34,12 +34,18 @@ Sk.builtin.enumerate = Sk.abstr.buildIteratorClass("enumerate", {
         return new Sk.builtin.tuple([idx, next]);
     },
     slots: {
-        tp$doc:
-            "Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",
+        tp$doc: "Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",
         tp$new: function (args, kwargs) {
-            args = Sk.abstr.copyKeywordsToNamedArgs("enumerate", ["iterable", "start"], args, kwargs);
+            args = Sk.abstr.copyKeywordsToNamedArgs(
+                "enumerate",
+                ["iterable", "start"],
+                args,
+                kwargs
+            );
             if (args[0] === undefined) {
-                throw new Sk.builtin.TypeError("__new__() missing 1 required positional argument: 'iterable'");
+                throw new Sk.builtin.TypeError(
+                    "__new__() missing 1 required positional argument: 'iterable'"
+                );
             }
             const iterable = Sk.abstr.iter(args[0]);
             let start = args[1];
@@ -83,14 +89,22 @@ Sk.builtin.filter_ = Sk.abstr.buildIteratorClass("filter", {
         return item;
     },
     slots: {
-        tp$doc:
-            "Return an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",
+        tp$doc: "Return an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",
         tp$new: function (args, kwargs) {
-            args = Sk.abstr.copyKeywordsToNamedArgs("filter", ["predicate", "iterable"], args, kwargs);
+            args = Sk.abstr.copyKeywordsToNamedArgs(
+                "filter",
+                ["predicate", "iterable"],
+                args,
+                kwargs
+            );
             if (args[0] === undefined) {
-                throw new Sk.builtin.TypeError("__new__() missing 2 required positional arguments: 'predicate' and 'iterable'");
+                throw new Sk.builtin.TypeError(
+                    "__new__() missing 2 required positional arguments: 'predicate' and 'iterable'"
+                );
             } else if (args[1] === undefined) {
-                throw new Sk.builtin.TypeError("__new__() missing 1 required positional argument: 'iterable'");
+                throw new Sk.builtin.TypeError(
+                    "__new__() missing 1 required positional argument: 'iterable'"
+                );
             }
             const func = Sk.builtin.checkNone(args[0]) ? null : args[0];
             const iterable = Sk.abstr.iter(args[1]);
@@ -162,8 +176,13 @@ Sk.builtin.reversed = Sk.abstr.buildIteratorClass("reversed", {
             const special = Sk.abstr.lookupSpecial(seq, Sk.builtin.str.$reversed);
             if (special !== undefined) {
                 return Sk.misceval.callsimArray(special, [seq]);
-            } else if (!Sk.builtin.checkSequence(seq) || Sk.abstr.lookupSpecial(seq, Sk.builtin.str.$len) === undefined) {
-                throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(seq) + "' object is not a sequence");
+            } else if (
+                !Sk.builtin.checkSequence(seq) ||
+                Sk.abstr.lookupSpecial(seq, Sk.builtin.str.$len) === undefined
+            ) {
+                throw new Sk.builtin.TypeError(
+                    "'" + Sk.abstr.typeName(seq) + "' object is not a sequence"
+                );
             }
             if (this === Sk.builtin.reversed.prototype) {
                 return new Sk.builtin.reversed(seq);
@@ -179,7 +198,7 @@ Sk.builtin.reversed = Sk.abstr.buildIteratorClass("reversed", {
             $meth: function __length_hint__(self) {
                 return self.idx >= 0 ? new Sk.builtin.int_(self.idx) : new Sk.builtin.int_(0);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
         },
     },
 });
@@ -209,8 +228,7 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
         return new Sk.builtin.tuple(tup);
     },
     slots: {
-        tp$doc:
-            "zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",
+        tp$doc: "zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",
         tp$new: function (args, kwargs) {
             if (this === Sk.builtin.zip_.prototype) {
                 Sk.abstr.checkNoKwargs("zip", kwargs);
@@ -221,7 +239,9 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
                     iters.push(Sk.abstr.iter(args[i]));
                 } catch (e) {
                     if (e instanceof Sk.builtin.TypeError) {
-                        throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");
+                        throw new Sk.builtin.TypeError(
+                            "zip argument #" + (i + 1) + " must support iteration"
+                        );
                     } else {
                         throw e;
                     }
@@ -264,8 +284,7 @@ Sk.builtin.map_ = Sk.abstr.buildIteratorClass("map", {
         return Sk.misceval.callsimArray(this.func, args);
     },
     slots: {
-        tp$doc:
-            "map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",
+        tp$doc: "map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",
         tp$new: function (args, kwargs) {
             if (this === Sk.builtin.map_.prototype) {
                 Sk.abstr.checkNoKwargs("map", kwargs);

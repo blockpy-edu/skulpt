@@ -52,8 +52,11 @@ var $builtinmodule = function (name) {
         gattr: objectGetAttr,
     } = Sk.abstr;
 
-    const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
-
+    const {
+        getSetDict: genericGetSetDict,
+        getAttr: genericGetAttr,
+        setAttr: genericSetAttr,
+    } = Sk.generic;
 
     const STRING_IMAGE = new pyStr("Image");
     const STRING_PIL = new pyStr("PIL");
@@ -64,7 +67,7 @@ var $builtinmodule = function (name) {
     const DEFAULT_MODE = "RGBA";
 
     if (!Sk.PIL) {
-        Sk.PIL = {assets: {}};
+        Sk.PIL = { assets: {} };
     }
 
     /**
@@ -117,7 +120,7 @@ var $builtinmodule = function (name) {
         return canvas;
     }
 
-    function loadImage(src, resolve, reject, cleanup=null) {
+    function loadImage(src, resolve, reject, cleanup = null) {
         const img = new Image();
         img.onload = function () {
             const canvas = imageToCanvas(img);
@@ -132,7 +135,9 @@ var $builtinmodule = function (name) {
             if (cleanup) {
                 try {
                     cleanup();
-                } catch(e) {console.error("Error during cleanup:", e);}
+                } catch (e) {
+                    console.error("Error during cleanup:", e);
+                }
             }
             console.error(e);
             // throw new Sk.builtin.ValueError("Failed to load image");
@@ -176,7 +181,7 @@ var $builtinmodule = function (name) {
                 Sk.misceval.callsimOrSuspendArray(src.read, [src]),
                 (bytes) => {
                     const uint8array = bytes.v;
-                    const blob = new Blob([uint8array], {type: "image/png"});
+                    const blob = new Blob([uint8array], { type: "image/png" });
                     const url = URL.createObjectURL(blob);
                     return Sk.misceval.promiseToSuspension(
                         new Promise(function (resolve, reject) {
@@ -200,7 +205,7 @@ var $builtinmodule = function (name) {
                 Sk.misceval.callsimArray(src.seek, [src, new Sk.builtin.int_(0)]);
                 const bytes = Sk.misceval.callsimOrSuspendArray(src.read, [src]);
                 const uint8array = bytes.v;
-                const blob = new Blob([uint8array], {type: "image/png"});
+                const blob = new Blob([uint8array], { type: "image/png" });
                 const url = URL.createObjectURL(blob);
                 var img = new Image();
                 img.onload = function () {
@@ -229,24 +234,29 @@ var $builtinmodule = function (name) {
         };
         susp.data = {
             type: "Sk.promise",
-            promise: imagePromise.then(function (value) {
-                console.log("REACHED", value);
-                const canvas = imageToCanvas(value);
-                pilImage = newPilImage(canvas);
-                return pilImage;
-            }, function (err) {
-                console.log("Error during promise evaluation", err, susp);
-                // pilImage = newPilImage(document.createElement("canvas"));
-                throw err;
-            })
+            promise: imagePromise.then(
+                function (value) {
+                    console.log("REACHED", value);
+                    const canvas = imageToCanvas(value);
+                    pilImage = newPilImage(canvas);
+                    return pilImage;
+                },
+                function (err) {
+                    console.log("Error during promise evaluation", err, susp);
+                    // pilImage = newPilImage(document.createElement("canvas"));
+                    throw err;
+                }
+            ),
         };
 
         return susp;
     };
 
     PillowImage.prototype.size = function () {
-        return new Sk.builtin.tuple([new Sk.builtin.int_(this.width),
-                                     new Sk.builtin.int_(this.height)]);
+        return new Sk.builtin.tuple([
+            new Sk.builtin.int_(this.width),
+            new Sk.builtin.int_(this.height),
+        ]);
     };
 
     PillowImage.prototype.getpixel = function (xy) {
@@ -256,10 +266,10 @@ var $builtinmodule = function (name) {
         const y = values[1];
         const index = (y * this.width + x) * 4;
         const data = this.imageData.data;
-        const pixels= [
+        const pixels = [
             new Sk.builtin.int_(data[index]),
             new Sk.builtin.int_(data[index + 1]),
-            new Sk.builtin.int_(data[index + 2])
+            new Sk.builtin.int_(data[index + 2]),
         ];
         if (this.mode === "L") {
             return pixels[0];
@@ -278,12 +288,12 @@ var $builtinmodule = function (name) {
         const y = values[1];
         const index = (y * this.width + x) * 4;
         const data = this.imageData.data;
-        const r = data[index] = color.v[0].v;
-        const g = data[index + 1] = color.v[1].v;
-        const b = data[index + 2] = color.v[2].v;
-        const a = data[index + 3] = color.v.length > 3 ? color.v[3].v : 255; // Default to full opacity
+        const r = (data[index] = color.v[0].v);
+        const g = (data[index + 1] = color.v[1].v);
+        const b = (data[index + 2] = color.v[2].v);
+        const a = (data[index + 3] = color.v.length > 3 ? color.v[3].v : 255); // Default to full opacity
         //this.context.putImageData(this.imageData, 0, 0);
-        this.context.fillStyle = "rgba(" + [r, g, b, a/255].join() + ")";
+        this.context.fillStyle = "rgba(" + [r, g, b, a / 255].join() + ")";
         this.context.fillRect(x, y, 1, 1);
         return Sk.builtin.none.none$;
     };
@@ -322,20 +332,20 @@ var $builtinmodule = function (name) {
             for (let i = 0; i < data.length; i += 4) {
                 const avg = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
                 newData[i] = newData[i + 1] = newData[i + 2] = avg;
-                newData[i + 3] = data[i + 3];  // Keep the alpha channel
+                newData[i + 3] = data[i + 3]; // Keep the alpha channel
             }
         } else if (mode === "RGB") {
             // RGB mode (remove the alpha channel)
             for (let i = 0; i < data.length; i += 4) {
-                newData[i] = data[i];         // Red
+                newData[i] = data[i]; // Red
                 newData[i + 1] = data[i + 1]; // Green
                 newData[i + 2] = data[i + 2]; // Blue
-                newData[i + 3] = 255;         // No alpha in RGB, full opacity
+                newData[i + 3] = 255; // No alpha in RGB, full opacity
             }
         } else if (mode === "RGBA") {
             // RGBA mode (ensure alpha channel exists, default to 255 if missing)
             for (let i = 0; i < data.length; i += 4) {
-                newData[i] = data[i];         // Red
+                newData[i] = data[i]; // Red
                 newData[i + 1] = data[i + 1]; // Green
                 newData[i + 2] = data[i + 2]; // Blue
                 newData[i + 3] = data[i + 3] !== undefined ? data[i + 3] : 255; // Use alpha, default to opaque
@@ -344,9 +354,9 @@ var $builtinmodule = function (name) {
             // 1-bit binary image (black and white, threshold at 128)
             for (let i = 0; i < data.length; i += 4) {
                 const avg = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2]; // Grayscale value
-                const value = avg > 128 ? 255 : 0;  // Threshold at 128
+                const value = avg > 128 ? 255 : 0; // Threshold at 128
                 newData[i] = newData[i + 1] = newData[i + 2] = value; // Black or White
-                newData[i + 3] = 255;  // Full opacity
+                newData[i + 3] = 255; // Full opacity
             }
         } else if (mode === "CMYK") {
             // CMYK mode
@@ -377,7 +387,7 @@ var $builtinmodule = function (name) {
         return newImage;
     };
 
-    PillowImage.prototype.load = function() {
+    PillowImage.prototype.load = function () {
         return pyCall(mod.PixelAccess, [this]);
     };
 
@@ -386,11 +396,7 @@ var $builtinmodule = function (name) {
             this.context.filter = "blur(5px)";
         } else if (filter_type.v === "SHARPEN") {
             // Canvas doesn't natively support sharpen, requires custom convolution
-            const sharpenKernel = [
-                0, -1, 0,
-                -1, 5, -1,
-                0, -1, 0
-            ];
+            const sharpenKernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
             applyKernel(this.canvas, this.context, sharpenKernel);
         }
         this.context.drawImage(this.canvas, 0, 0);
@@ -407,12 +413,22 @@ var $builtinmodule = function (name) {
     };
 
     PillowImage.prototype.crop = function (box) {
-        const [left, top, right, bottom] = box.v.map(b => b.v);
+        const [left, top, right, bottom] = box.v.map((b) => b.v);
         const newCanvas = document.createElement("canvas");
         newCanvas.width = right - left;
         newCanvas.height = bottom - top;
         const newContext = newCanvas.getContext("2d");
-        newContext.drawImage(this.canvas, left, top, newCanvas.width, newCanvas.height, 0, 0, newCanvas.width, newCanvas.height);
+        newContext.drawImage(
+            this.canvas,
+            left,
+            top,
+            newCanvas.width,
+            newCanvas.height,
+            0,
+            0,
+            newCanvas.width,
+            newCanvas.height
+        );
         return newPilImage(newCanvas);
     };
 
@@ -429,7 +445,7 @@ var $builtinmodule = function (name) {
     PillowImage.prototype.rotate = function (angle, expand) {
         angle = angle.v;
         expand = expand ? Sk.ffi.remapToJs(expand) : false;
-        const radians = angle * Math.PI / 180;
+        const radians = (angle * Math.PI) / 180;
 
         const newCanvas = document.createElement("canvas");
         const context = newCanvas.getContext("2d");
@@ -474,7 +490,7 @@ var $builtinmodule = function (name) {
     };
 
     PillowImage.prototype.paste = function (im, box, mask) {
-        const [x, y] = box.v.map(b => b.v);
+        const [x, y] = box.v.map((b) => b.v);
         this.context.drawImage(im.v.canvas, x, y);
         if (mask) {
             // Optionally implement masking here
@@ -483,7 +499,7 @@ var $builtinmodule = function (name) {
     };
 
     PillowImage.prototype.thumbnail = function (size) {
-        const [targetWidth, targetHeight] = size.v.map(s => s.v);
+        const [targetWidth, targetHeight] = size.v.map((s) => s.v);
         const aspectRatio = this.width / this.height;
         let newWidth, newHeight;
 
@@ -495,7 +511,9 @@ var $builtinmodule = function (name) {
             newWidth = targetHeight * aspectRatio;
         }
 
-        return this.resize(new Sk.builtin.tuple([new Sk.builtin.int_(newWidth), new Sk.builtin.int_(newHeight)]));
+        return this.resize(
+            new Sk.builtin.tuple([new Sk.builtin.int_(newWidth), new Sk.builtin.int_(newHeight)])
+        );
     };
 
     PillowImage.prototype.resize = function (size, resample) {
@@ -526,7 +544,7 @@ var $builtinmodule = function (name) {
             newPilImage(rCanvas),
             newPilImage(gCanvas),
             newPilImage(bCanvas),
-            newPilImage(aCanvas)
+            newPilImage(aCanvas),
         ]);
     };
 
@@ -558,7 +576,7 @@ var $builtinmodule = function (name) {
         const newImageData = newContext.createImageData(newCanvas.width, newCanvas.height);
 
         for (let i = 0; i < newImageData.data.length; i += 4) {
-            newImageData.data[i] = bands.v[0].v.imageData.data[i];       // Red or equivalent
+            newImageData.data[i] = bands.v[0].v.imageData.data[i]; // Red or equivalent
             newImageData.data[i + 1] = bands.v[1].v.imageData.data[i + 1]; // Green or equivalent
             newImageData.data[i + 2] = bands.v[2].v.imageData.data[i + 2]; // Blue or equivalent
             newImageData.data[i + 3] = bands.v[3] ? bands.v[3].v.imageData.data[i + 3] : 255; // Alpha if available
@@ -573,7 +591,7 @@ var $builtinmodule = function (name) {
         const data = this.imageData.data;
 
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = Math.min(255, data[i] * brightnessFactor);     // Red
+            data[i] = Math.min(255, data[i] * brightnessFactor); // Red
             data[i + 1] = Math.min(255, data[i + 1] * brightnessFactor); // Green
             data[i + 2] = Math.min(255, data[i + 2] * brightnessFactor); // Blue
         }
@@ -585,7 +603,7 @@ var $builtinmodule = function (name) {
     PillowImage.prototype.point = function (lut) {
         const data = this.imageData.data;
         for (let i = 0; i < data.length; i += 4) {
-            data[i] = lut.v[0].v[data[i]];         // Red
+            data[i] = lut.v[0].v[data[i]]; // Red
             data[i + 1] = lut.v[1].v[data[i + 1]]; // Green
             data[i + 2] = lut.v[2].v[data[i + 2]]; // Blue
         }
@@ -633,12 +651,12 @@ var $builtinmodule = function (name) {
             hist[Math.floor(avg)]++;
         }
 
-        const converted = hist.map(v => new Sk.builtin.int_(v));
+        const converted = hist.map((v) => new Sk.builtin.int_(v));
         return new Sk.builtin.list(converted);
     };
 
     PillowImage.prototype.paste_with_alpha = function (im, box, alphaMask) {
-        const [x, y] = box.v.map(b => b.v);
+        const [x, y] = box.v.map((b) => b.v);
 
         // Draw image with alpha mask
         this.context.globalCompositeOperation = "destination-in";
@@ -653,7 +671,7 @@ var $builtinmodule = function (name) {
 
     PillowImage.prototype.transform = function (size, method) {
         const newCanvas = document.createElement("canvas");
-        const [newWidth, newHeight] = size.v.map(s => s.v);
+        const [newWidth, newHeight] = size.v.map((s) => s.v);
         newCanvas.width = newWidth;
         newCanvas.height = newHeight;
         const newContext = newCanvas.getContext("2d");
@@ -671,12 +689,16 @@ var $builtinmodule = function (name) {
 
     PillowImage.prototype.getbbox = function () {
         const data = this.imageData.data;
-        let left = this.width, top = this.height, right = 0, bottom = 0;
+        let left = this.width,
+            top = this.height,
+            right = 0,
+            bottom = 0;
 
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const index = (y * this.width + x) * 4;
-                if (data[index + 3] !== 0) { // Not transparent
+                if (data[index + 3] !== 0) {
+                    // Not transparent
                     left = Math.min(left, x);
                     top = Math.min(top, y);
                     right = Math.max(right, x);
@@ -689,11 +711,16 @@ var $builtinmodule = function (name) {
             return Sk.builtin.none.none$;
         }
 
-        return new Sk.builtin.tuple([new Sk.builtin.int_(left), new Sk.builtin.int_(top), new Sk.builtin.int_(right), new Sk.builtin.int_(bottom)]);
+        return new Sk.builtin.tuple([
+            new Sk.builtin.int_(left),
+            new Sk.builtin.int_(top),
+            new Sk.builtin.int_(right),
+            new Sk.builtin.int_(bottom),
+        ]);
     };
 
     // Register functions at module level
-    var mod = {__name__: MOD_NAME};
+    var mod = { __name__: MOD_NAME };
 
     const new$ = function (mode, size, color) {
         const canvas = document.createElement("canvas");
@@ -846,14 +873,16 @@ var $builtinmodule = function (name) {
 
             $loc.show = new Sk.builtin.func(function (self) {
                 if (Sk.console === undefined) {
-                    throw new Sk.builtin.NameError("Can not resolve drawing area. Sk.console is undefined!");
+                    throw new Sk.builtin.NameError(
+                        "Can not resolve drawing area. Sk.console is undefined!"
+                    );
                 }
 
                 console.log(this, self);
 
                 var consoleData = {
                     image: self.v.canvas,
-                    file_or_url: "TEST GOES HERE"
+                    file_or_url: "TEST GOES HERE",
                 };
 
                 Sk.console.printPILImage(consoleData);
@@ -870,16 +899,16 @@ var $builtinmodule = function (name) {
 
     mod.new_$rw$ = new Sk.builtin.func(new$);
 
-    const PixelAccessClass = function($gbl, $loc) {
-        $loc.__init__ = new Sk.builtin.func(function(self, image) {
+    const PixelAccessClass = function ($gbl, $loc) {
+        $loc.__init__ = new Sk.builtin.func(function (self, image) {
             self.v = image;
         });
 
-        $loc.__getitem__ = new Sk.builtin.func(function(self, index) {
+        $loc.__getitem__ = new Sk.builtin.func(function (self, index) {
             return self.v.getpixel(index.v[0], index.v[1]);
         });
 
-        $loc.__setitem__ = new Sk.builtin.func(function(self, index, value) {
+        $loc.__setitem__ = new Sk.builtin.func(function (self, index, value) {
             return self.v.putpixel(index.v[0], index.v[1], value);
         });
     };

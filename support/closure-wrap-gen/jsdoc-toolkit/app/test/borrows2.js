@@ -5,10 +5,10 @@
 	@borrows Bar#zop as this.my_zop
 */
 function Foo() {
-	/** this is a zip. */
-	this.zip = function() {}
-	
-	this.my_zop = new Bar().zop;
+    /** this is a zip. */
+    this.zip = function () {};
+
+    this.my_zop = new Bar().zop;
 }
 
 /**
@@ -16,8 +16,8 @@ function Foo() {
 	@borrows Foo#zip as this.my_zip
 */
 function Bar() {
-	/** this is a zop. */
-	this.zop = function() {}
-	
-	this.my_zip = new Foo().zip;
+    /** this is a zop. */
+    this.zop = function () {};
+
+    this.my_zip = new Foo().zip;
 }

@@ -42,19 +42,17 @@ Parser.prototype.setup = function (start) {
     start = start || this.grammar.start;
     //print("START:"+start);
 
-    newnode =
-        {
-            type: start,
-            value: null,
-            context: null,
-            children: []
-        };
-    stackentry =
-        {
-            dfa: this.grammar.dfas[start],
-            state: 0,
-            node: newnode
-        };
+    newnode = {
+        type: start,
+        value: null,
+        context: null,
+        children: [],
+    };
+    stackentry = {
+        dfa: this.grammar.dfas[start],
+        state: 0,
+        node: newnode,
+    };
     this.stack = [stackentry];
     this.used_names = {};
     Sk._setupTokenRegexes();
@@ -75,7 +73,6 @@ Parser.prototype.addcomment = function (value, start, end, line) {
     this.comments[start] = value;
 };
 
-
 // Add a token; return true if we're done
 Parser.prototype.addtoken = function (type, value, context) {
     var errline;
@@ -94,8 +91,7 @@ Parser.prototype.addtoken = function (type, value, context) {
     var ilabel = this.classify(type, value, context);
     //print("ilabel:"+ilabel);
 
-    OUTERWHILE:
-    while (true) {
+    OUTERWHILE: while (true) {
         tp = this.stack[this.stack.length - 1];
         states = tp.dfa[0];
         first = tp.dfa[1];
@@ -116,9 +112,11 @@ Parser.prototype.addtoken = function (type, value, context) {
                 state = newstate;
                 //print("before:"+JSON.stringify(states[state]) + ":state:"+state+":"+JSON.stringify(states[state]));
                 /* jshint ignore:start */
-                while (states[state].length === 1
-                    && states[state][0][0] === 0
-                    && states[state][0][1] === state) {
+                while (
+                    states[state].length === 1 &&
+                    states[state][0][0] === 0 &&
+                    states[state][0][1] === state
+                ) {
                     // states[state] == [(0, state)])
                     this.pop();
                     //print("in after pop:"+JSON.stringify(states[state]) + ":state:"+state+":"+JSON.stringify(states[state]));
@@ -154,11 +152,19 @@ Parser.prototype.addtoken = function (type, value, context) {
             //print("WAA");
             this.pop();
             if (this.stack.length === 0) {
-                throw new Sk.builtin.SyntaxError("too much input", this.filename, ...flatten_context(context));
+                throw new Sk.builtin.SyntaxError(
+                    "too much input",
+                    this.filename,
+                    ...flatten_context(context)
+                );
             }
         } else {
             // no transition
-            throw new Sk.builtin.SyntaxError("bad input", this.filename, ...flatten_context(context));
+            throw new Sk.builtin.SyntaxError(
+                "bad input",
+                this.filename,
+                ...flatten_context(context)
+            );
         }
     }
 };
@@ -175,7 +181,11 @@ Parser.prototype.classify = function (type, value, context) {
         ilabel = this.grammar.keywords.hasOwnProperty(value) && this.grammar.keywords[value];
 
         /* Check for handling print as a builtin function */
-        if (value === "print" && (this.p_flags & Parser.CO_FUTURE_PRINT_FUNCTION || Sk.__future__.print_function === true)) {
+        if (
+            value === "print" &&
+            (this.p_flags & Parser.CO_FUTURE_PRINT_FUNCTION ||
+                Sk.__future__.print_function === true)
+        ) {
             ilabel = false; // ilabel determines if the value is a keyword
         }
 
@@ -197,7 +207,11 @@ Parser.prototype.classify = function (type, value, context) {
             }
         }
 
-        throw new Sk.builtin.SyntaxError("bad token " + descr, this.filename, ...flatten_context(context));
+        throw new Sk.builtin.SyntaxError(
+            "bad token " + descr,
+            this.filename,
+            ...flatten_context(context)
+        );
     }
     return ilabel;
 };
@@ -215,7 +229,7 @@ Parser.prototype.shift = function (type, value, newstate, context) {
         col_offset: context[0][1],
         end_lineno: context[1][0],
         end_col_offset: context[1][1],
-        children: null
+        children: null,
     };
     if (newnode) {
         node.children.push(newnode);
@@ -223,7 +237,7 @@ Parser.prototype.shift = function (type, value, newstate, context) {
     this.stack[this.stack.length - 1] = {
         dfa: dfa,
         state: newstate,
-        node: node
+        node: node,
     };
 };
 
@@ -238,17 +252,17 @@ Parser.prototype.push = function (type, newdfa, newstate, context) {
         col_offset: context[0][1],
         end_lineno: context[1][0],
         end_col_offset: context[1][1],
-        children: []
+        children: [],
     };
     this.stack[this.stack.length - 1] = {
         dfa: dfa,
         state: newstate,
-        node: node
+        node: node,
     };
     this.stack.push({
         dfa: newdfa,
         state: 0,
-        node: newnode
+        node: newnode,
     });
 };
 
@@ -299,7 +313,6 @@ function makeParser(filename, style) {
 }
 
 Sk.parse = function parse(filename, input) {
-
     var T_COMMENT = Sk.token.tokens.T_COMMENT;
     var T_NL = Sk.token.tokens.T_NL;
     var T_OP = Sk.token.tokens.T_OP;
@@ -330,52 +343,78 @@ Sk.parse = function parse(filename, input) {
         };
     }
 
-    Sk._tokenize(readline(input), "utf-8", function (tokenInfo) {
-        var s_lineno = tokenInfo.start[0];
-        var s_column = tokenInfo.start[1];
-        var type = null;
-        var prefix, lineno, column;
+    Sk._tokenize(
+        readline(input),
+        "utf-8",
+        function (tokenInfo) {
+            var s_lineno = tokenInfo.start[0];
+            var s_column = tokenInfo.start[1];
+            var type = null;
+            var prefix, lineno, column;
 
-        /* I don't know
+            /* I don't know
          if (s_lineno !== lineno && s_column !== column)
          {
          // todo; update prefix and line/col
          }
          */
 
-        if (tokenInfo.type === T_COMMENT || tokenInfo.type === T_NL || tokenInfo.type === T_ENCODING) {
-            prefix += tokenInfo.value;
-            lineno = tokenInfo.end[0];
-            column = tokenInfo.end[1];
-            if (tokenInfo.string[tokenInfo.string.length - 1] === "\n") {
-                lineno += 1;
-                column = 0;
-            }
+            if (
+                tokenInfo.type === T_COMMENT ||
+                tokenInfo.type === T_NL ||
+                tokenInfo.type === T_ENCODING
+            ) {
+                prefix += tokenInfo.value;
+                lineno = tokenInfo.end[0];
+                column = tokenInfo.end[1];
+                if (tokenInfo.string[tokenInfo.string.length - 1] === "\n") {
+                    lineno += 1;
+                    column = 0;
+                }
 
-            if (tokenInfo.type === T_COMMENT) {
-                parser.addcomment(tokenInfo.string, tokenInfo.start, tokenInfo.end, tokenInfo.line);
-            }
-        } else {
-            if (tokenInfo.type === T_OP) {
-                type = Sk.OpMap[tokenInfo.string];
-            }
+                if (tokenInfo.type === T_COMMENT) {
+                    parser.addcomment(
+                        tokenInfo.string,
+                        tokenInfo.start,
+                        tokenInfo.end,
+                        tokenInfo.line
+                    );
+                }
+            } else {
+                if (tokenInfo.type === T_OP) {
+                    type = Sk.OpMap[tokenInfo.string];
+                }
 
-            parser.addtoken(type || tokenInfo.type, tokenInfo.string, [tokenInfo.start, tokenInfo.end, tokenInfo.line]);
+                parser.addtoken(type || tokenInfo.type, tokenInfo.string, [
+                    tokenInfo.start,
+                    tokenInfo.end,
+                    tokenInfo.line,
+                ]);
 
-            if (tokenInfo.type === T_ENDMARKER) {
-                endmarker_seen = true;
+                if (tokenInfo.type === T_ENDMARKER) {
+                    endmarker_seen = true;
+                }
             }
-        }
-    }, filename);
+        },
+        filename
+    );
 
     if (!endmarker_seen) {
-        throw new Sk.builtin.SyntaxError("incomplete input", this.filename, "", 0, 0, totalLines, 0);
+        throw new Sk.builtin.SyntaxError(
+            "incomplete input",
+            this.filename,
+            "",
+            0,
+            0,
+            totalLines,
+            0
+        );
     }
 
     /**
      * Small adjustments here in order to return th flags and the cst
      */
-    var result = {"cst": parser.rootnode, "flags": parser.p_flags, "comments": parser.comments};
+    var result = { cst: parser.rootnode, flags: parser.p_flags, comments: parser.comments };
     return result;
 };
 
@@ -388,7 +427,8 @@ Sk.parseTreeDump = function parseTreeDump(n, indent) {
     indent = indent || "";
     ret = "";
     ret += indent;
-    if (n.type >= 256) { // non-term
+    if (n.type >= 256) {
+        // non-term
         ret += Sk.ParseTables.number2symbol[n.type] + "\n";
         for (i = 0; i < n.children.length; ++i) {
             ret += Sk.parseTreeDump(n.children[i], indent + "  ");
@@ -398,7 +438,6 @@ Sk.parseTreeDump = function parseTreeDump(n, indent) {
     }
     return ret;
 };
-
 
 Sk.exportSymbol("Sk.Parser", Parser);
 Sk.exportSymbol("Sk.parse", Sk.parse);

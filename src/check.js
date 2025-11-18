@@ -113,7 +113,7 @@ Sk.exportSymbol("Sk.builtin.checkSequence", Sk.builtin.checkSequence);
  * class with `__iter__` defined or ``__getitem__``  This tests for all of those cases
  *
  * Note in most cases it will be more pragmatic to simply call {@link Sk.abstr.iter} which will
- * throw the appropriate error if the pyObject is not iterable. 
+ * throw the appropriate error if the pyObject is not iterable.
  *
  * @param arg {Object}   A Python object
  * @returns {boolean} true if the object is iterable
@@ -147,7 +147,12 @@ Sk.builtin.checkCallable = function (obj) {
  * @param {*} arg
  */
 Sk.builtin.checkNumber = function (arg) {
-    return typeof arg === "number" || arg instanceof Sk.builtin.int_ || arg instanceof Sk.builtin.float_ || arg instanceof Sk.builtin.lng;
+    return (
+        typeof arg === "number" ||
+        arg instanceof Sk.builtin.int_ ||
+        arg instanceof Sk.builtin.float_ ||
+        arg instanceof Sk.builtin.lng
+    );
 };
 Sk.exportSymbol("Sk.builtin.checkNumber", Sk.builtin.checkNumber);
 
@@ -193,12 +198,11 @@ Sk.exportSymbol("Sk.builtin.checkString", Sk.builtin.checkString);
 /**
  * @description
  * Is the arg an instance of {@link Sk.builtin.bytes}
- * @param {*} arg 
+ * @param {*} arg
  */
 Sk.builtin.checkBytes = function (arg) {
     return arg instanceof Sk.builtin.bytes;
 };
-
 
 /**
  * Is the arg an instance of {@link Sk.builtin.type}
@@ -252,6 +256,8 @@ Sk.builtin.checkMapping = function (arg) {
     return (
         arg instanceof Sk.builtin.dict ||
         arg instanceof Sk.builtin.mappingproxy ||
-        (arg != null && arg.mp$subscript !== undefined && Sk.abstr.lookupSpecial(arg, Sk.builtin.str.$keys) !== undefined)
+        (arg != null &&
+            arg.mp$subscript !== undefined &&
+            Sk.abstr.lookupSpecial(arg, Sk.builtin.str.$keys) !== undefined)
     );
 };

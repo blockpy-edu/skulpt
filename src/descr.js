@@ -9,10 +9,13 @@
 function buildDescriptor(type_name, repr_name, descr_options) {
     const descr = Sk.abstr.buildNativeClass(type_name, {
         constructor: descr_options.constructor,
-        slots: Object.assign({
-            tp$getattr: Sk.generic.getAttr,
-            $r: descriptorRepr,
-        }, descr_options.slots),
+        slots: Object.assign(
+            {
+                tp$getattr: Sk.generic.getAttr,
+                $r: descriptorRepr,
+            },
+            descr_options.slots
+        ),
         getsets: Object.assign(descr_options.getsets || {}, descriptorGetsets),
         proto: /**@lends {descr_object.prototype}*/ Object.assign(descr_options.proto || {}, {
             d$repr_name: repr_name || type_name,
@@ -30,12 +33,12 @@ function descriptorCheck(obj) {
     } else if (!obj.ob$type.$isSubType(this.d$type)) {
         throw new Sk.builtin.TypeError(
             "descriptor '" +
-            this.d$name +
-            "' requires a '" +
-            this.d$type.prototype.tp$name +
-            "' object but received a '" +
-            Sk.abstr.typeName(obj) +
-            "' object"
+                this.d$name +
+                "' requires a '" +
+                this.d$type.prototype.tp$name +
+                "' object but received a '" +
+                Sk.abstr.typeName(obj) +
+                "' object"
         );
     }
     return;
@@ -45,18 +48,26 @@ function descriptorSetCheck(obj) {
     if (!obj.ob$type.$isSubType(this.d$type)) {
         throw new Sk.builtin.TypeError(
             "descriptor '" +
-            this.d$name +
-            "' requires a '" +
-            this.d$type.prototype.tp$name +
-            "' object but received a '" +
-            Sk.abstr.typeName(obj) +
-            "' object"
+                this.d$name +
+                "' requires a '" +
+                this.d$type.prototype.tp$name +
+                "' object but received a '" +
+                Sk.abstr.typeName(obj) +
+                "' object"
         );
     }
 }
 
 function descriptorRepr() {
-    return new Sk.builtin.str("<" + this.d$repr_name + " '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' objects>");
+    return new Sk.builtin.str(
+        "<" +
+            this.d$repr_name +
+            " '" +
+            this.d$name +
+            "' of '" +
+            this.d$type.prototype.tp$name +
+            "' objects>"
+    );
 }
 
 const descriptorGetsets = {
@@ -80,7 +91,9 @@ const descriptorGetsets = {
 const descrTextSig = {
     __text_signature__: {
         $get() {
-            return this.d$def.$textsig ? new Sk.builtin.str(this.d$def.$textsig) : Sk.builtin.none.none$;
+            return this.d$def.$textsig
+                ? new Sk.builtin.str(this.d$def.$textsig)
+                : Sk.builtin.none.none$;
         },
     },
 };
@@ -110,7 +123,11 @@ Sk.builtin.getset_descriptor = buildDescriptor("getset_descriptor", undefined, {
             }
 
             throw new Sk.builtin.AttributeError(
-                "getset_descriptor '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' objects is not readable"
+                "getset_descriptor '" +
+                    this.d$name +
+                    "' of '" +
+                    this.d$type.prototype.tp$name +
+                    "' objects is not readable"
             );
         },
         tp$descr_set(obj, value) {
@@ -119,7 +136,13 @@ Sk.builtin.getset_descriptor = buildDescriptor("getset_descriptor", undefined, {
             if (this.$set !== undefined) {
                 return this.$set.call(obj, value);
             }
-            throw new Sk.builtin.AttributeError("attribute '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' objects is readonly");
+            throw new Sk.builtin.AttributeError(
+                "attribute '" +
+                    this.d$name +
+                    "' of '" +
+                    this.d$type.prototype.tp$name +
+                    "' objects is readonly"
+            );
         },
     },
 });
@@ -150,7 +173,7 @@ Sk.builtin.method_descriptor = buildDescriptor("method_descriptor", "method", {
         } else if (flags.MinArgs !== undefined) {
             this.tp$call = this.$methodCallMinArgs;
         } else {
-        // for legacy methods that haven't defined flags yet
+            // for legacy methods that haven't defined flags yet
             this.func_code = method_def.$meth;
             this.tp$call = this.$defaultCall;
             this.$memoiseFlags = Sk.builtin.func.prototype.$memoiseFlags;
@@ -197,7 +220,13 @@ Sk.builtin.method_descriptor = buildDescriptor("method_descriptor", "method", {
         $methodCallNamedArgs(args, kwargs) {
             const self = args.shift();
             this.m$checkself(self);
-            args = Sk.abstr.copyKeywordsToNamedArgs(this.d$name, this.$flags.NamedArgs, args, kwargs, this.$flags.Defaults);
+            args = Sk.abstr.copyKeywordsToNamedArgs(
+                this.d$name,
+                this.$flags.NamedArgs,
+                args,
+                kwargs,
+                this.$flags.Defaults
+            );
             return this.$meth.call(self, ...args);
         },
         $methodCallMinArgs(args, kwargs) {
@@ -214,7 +243,11 @@ Sk.builtin.method_descriptor = buildDescriptor("method_descriptor", "method", {
         m$checkself(self) {
             if (self === undefined) {
                 throw new Sk.builtin.TypeError(
-                    "descriptor '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' object needs an argument"
+                    "descriptor '" +
+                        this.d$name +
+                        "' of '" +
+                        this.d$type.prototype.tp$name +
+                        "' object needs an argument"
                 );
             }
             this.d$check(self);
@@ -249,19 +282,23 @@ Sk.builtin.wrapper_descriptor = buildDescriptor("wrapper_descriptor", "slot wrap
             // make sure the first argument is acceptable as self
             if (args.length < 1) {
                 throw new Sk.builtin.TypeError(
-                    "descriptor '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' object needs an argument"
+                    "descriptor '" +
+                        this.d$name +
+                        "' of '" +
+                        this.d$type.prototype.tp$name +
+                        "' object needs an argument"
                 );
             }
             const self = args.shift();
             if (!self.ob$type.$isSubType(this.d$type)) {
                 throw new Sk.builtin.TypeError(
                     "descriptor '" +
-            this.d$name +
-            "' requires a '" +
-            this.d$type.prototype.tp$name +
-            "' object but received a '" +
-            Sk.abstr.typeName(self) +
-            "'"
+                        this.d$name +
+                        "' requires a '" +
+                        this.d$type.prototype.tp$name +
+                        "' object but received a '" +
+                        Sk.abstr.typeName(self) +
+                        "'"
                 );
             }
             return this.raw$call(self, args, kwargs);
@@ -302,7 +339,13 @@ Sk.builtin.method_wrapper = buildDescriptor("method_wrapper", undefined, {
             return op === "Eq" ? eq : !eq;
         },
         $r() {
-            return new Sk.builtin.str("<method-wrapper '" + this.d$name + "' of " + Sk.abstr.typeName(this.m$self) + " object>");
+            return new Sk.builtin.str(
+                "<method-wrapper '" +
+                    this.d$name +
+                    "' of " +
+                    Sk.abstr.typeName(this.m$self) +
+                    " object>"
+            );
         },
     },
     getsets: {
@@ -337,7 +380,11 @@ Sk.builtin.classmethod_descriptor = buildDescriptor("classmethod_descriptor", "m
         tp$call(args, kwargs) {
             if (args.length < 1) {
                 throw new Sk.builtin.TypeError(
-                    "descriptor '" + this.d$name + "' of '" + this.d$type.prototype.tp$name + "' object needs an argument"
+                    "descriptor '" +
+                        this.d$name +
+                        "' of '" +
+                        this.d$type.prototype.tp$name +
+                        "' object needs an argument"
                 );
             }
             const self = args.shift();
@@ -350,31 +397,35 @@ Sk.builtin.classmethod_descriptor = buildDescriptor("classmethod_descriptor", "m
                     type = type || obj.ob$type;
                 } else {
                     throw new Sk.builtin.TypeError(
-                        "descriptor '" + this.d$name + "' for type '" + this.d$type.prototype.tp$name + "' needs an object or a type"
+                        "descriptor '" +
+                            this.d$name +
+                            "' for type '" +
+                            this.d$type.prototype.tp$name +
+                            "' needs an object or a type"
                     );
                 }
             }
             if (type.ob$type !== Sk.builtin.type) {
                 throw new Sk.builtin.TypeError(
                     "descriptor '" +
-            this.d$name +
-            "' for type '" +
-            this.d$type.prototype.tp$name +
-            "' needs a type not a '" +
-            Sk.abstr.typeName(type) +
-            "' as arg 2"
+                        this.d$name +
+                        "' for type '" +
+                        this.d$type.prototype.tp$name +
+                        "' needs a type not a '" +
+                        Sk.abstr.typeName(type) +
+                        "' as arg 2"
                 );
             }
 
             if (!type.$isSubType(this.d$type)) {
                 throw new Sk.builtin.TypeError(
                     "descriptor '" +
-            this.d$name +
-            "' requires a '" +
-            this.d$type.prototype.tp$name +
-            "' object but received a '" +
-            Sk.abstr.typeName(type) +
-            "' object"
+                        this.d$name +
+                        "' requires a '" +
+                        this.d$type.prototype.tp$name +
+                        "' object but received a '" +
+                        Sk.abstr.typeName(type) +
+                        "' object"
                 );
             }
             return new Sk.builtin.sk_method(this.d$def, type);
@@ -382,7 +433,6 @@ Sk.builtin.classmethod_descriptor = buildDescriptor("classmethod_descriptor", "m
     },
     getsets: descrTextSig,
 });
-
 
 [
     Sk.builtin.method_descriptor,

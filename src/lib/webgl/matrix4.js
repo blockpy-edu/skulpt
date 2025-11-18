@@ -17,16 +17,16 @@ var $builtinmodule = function (name) {
     var normalize = function (dst, a) {
         var n = 0.0;
         var aLength = a.length;
-        for (var i = 0; i < aLength; ++i) {
+        for (let i = 0; i < aLength; ++i) {
             n += a[i] * a[i];
         }
         n = Math.sqrt(n);
         if (n > 0.00001) {
-            for (var i = 0; i < aLength; ++i) {
+            for (let i = 0; i < aLength; ++i) {
                 dst[i] = a[i] / n;
             }
         } else {
-            for (var i = 0; i < aLength; ++i) {
+            for (let i = 0; i < aLength; ++i) {
                 dst[i] = 0;
             }
         }
@@ -49,7 +49,7 @@ var $builtinmodule = function (name) {
     };
 
     var dot = function (a, b) {
-        return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     };
 
     mod.lookAt = new Sk.builtin.func(function (view, eye, target, up) {
@@ -83,7 +83,7 @@ var $builtinmodule = function (name) {
     });
 
     mod.perspective = new Sk.builtin.func(function (proj, angle, aspect, near, far) {
-        var f = Math.tan(Math.PI * 0.5 - 0.5 * (angle * Math.PI / 180));
+        var f = Math.tan(Math.PI * 0.5 - 0.5 * ((angle * Math.PI) / 180));
         var rangeInv = 1.0 / (near - far);
 
         var dst = proj.v;
@@ -114,8 +114,8 @@ var $builtinmodule = function (name) {
     // builds, not appending
     mod.rotationY = new Sk.builtin.func(function (target, angle) {
         var dst = target.v;
-        var c = Math.cos(angle * Math.PI / 180);
-        var s = Math.sin(angle * Math.PI / 180);
+        var c = Math.cos((angle * Math.PI) / 180);
+        var s = Math.sin((angle * Math.PI) / 180);
 
         dst[0] = c;
         dst[1] = 0;
@@ -258,14 +258,14 @@ var $builtinmodule = function (name) {
         var tmp_22 = m00 * m11;
         var tmp_23 = m10 * m01;
 
-        var t0 = (tmp_0 * m11 + tmp_3 * m21 + tmp_4 * m31) -
-            (tmp_1 * m11 + tmp_2 * m21 + tmp_5 * m31);
-        var t1 = (tmp_1 * m01 + tmp_6 * m21 + tmp_9 * m31) -
-            (tmp_0 * m01 + tmp_7 * m21 + tmp_8 * m31);
-        var t2 = (tmp_2 * m01 + tmp_7 * m11 + tmp_10 * m31) -
-            (tmp_3 * m01 + tmp_6 * m11 + tmp_11 * m31);
-        var t3 = (tmp_5 * m01 + tmp_8 * m11 + tmp_11 * m21) -
-            (tmp_4 * m01 + tmp_9 * m11 + tmp_10 * m21);
+        var t0 =
+            tmp_0 * m11 + tmp_3 * m21 + tmp_4 * m31 - (tmp_1 * m11 + tmp_2 * m21 + tmp_5 * m31);
+        var t1 =
+            tmp_1 * m01 + tmp_6 * m21 + tmp_9 * m31 - (tmp_0 * m01 + tmp_7 * m21 + tmp_8 * m31);
+        var t2 =
+            tmp_2 * m01 + tmp_7 * m11 + tmp_10 * m31 - (tmp_3 * m01 + tmp_6 * m11 + tmp_11 * m31);
+        var t3 =
+            tmp_5 * m01 + tmp_8 * m11 + tmp_11 * m21 - (tmp_4 * m01 + tmp_9 * m11 + tmp_10 * m21);
 
         var d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
 
@@ -273,30 +273,66 @@ var $builtinmodule = function (name) {
         dst[1] = d * t1;
         dst[2] = d * t2;
         dst[3] = d * t3;
-        dst[4] = d * ((tmp_1 * m10 + tmp_2 * m20 + tmp_5 * m30) -
-            (tmp_0 * m10 + tmp_3 * m20 + tmp_4 * m30));
-        dst[5] = d * ((tmp_0 * m00 + tmp_7 * m20 + tmp_8 * m30) -
-            (tmp_1 * m00 + tmp_6 * m20 + tmp_9 * m30));
-        dst[6] = d * ((tmp_3 * m00 + tmp_6 * m10 + tmp_11 * m30) -
-            (tmp_2 * m00 + tmp_7 * m10 + tmp_10 * m30));
-        dst[7] = d * ((tmp_4 * m00 + tmp_9 * m10 + tmp_10 * m20) -
-            (tmp_5 * m00 + tmp_8 * m10 + tmp_11 * m20));
-        dst[8] = d * ((tmp_12 * m13 + tmp_15 * m23 + tmp_16 * m33) -
-            (tmp_13 * m13 + tmp_14 * m23 + tmp_17 * m33));
-        dst[9] = d * ((tmp_13 * m03 + tmp_18 * m23 + tmp_21 * m33) -
-            (tmp_12 * m03 + tmp_19 * m23 + tmp_20 * m33));
-        dst[10] = d * ((tmp_14 * m03 + tmp_19 * m13 + tmp_22 * m33) -
-            (tmp_15 * m03 + tmp_18 * m13 + tmp_23 * m33));
-        dst[11] = d * ((tmp_17 * m03 + tmp_20 * m13 + tmp_23 * m23) -
-            (tmp_16 * m03 + tmp_21 * m13 + tmp_22 * m23));
-        dst[12] = d * ((tmp_14 * m22 + tmp_17 * m32 + tmp_13 * m12) -
-            (tmp_16 * m32 + tmp_12 * m12 + tmp_15 * m22));
-        dst[13] = d * ((tmp_20 * m32 + tmp_12 * m02 + tmp_19 * m22) -
-            (tmp_18 * m22 + tmp_21 * m32 + tmp_13 * m02));
-        dst[14] = d * ((tmp_18 * m12 + tmp_23 * m32 + tmp_15 * m02) -
-            (tmp_22 * m32 + tmp_14 * m02 + tmp_19 * m12));
-        dst[15] = d * ((tmp_22 * m22 + tmp_16 * m02 + tmp_21 * m12) -
-            (tmp_20 * m12 + tmp_23 * m22 + tmp_17 * m02));
+        dst[4] =
+            d *
+            (tmp_1 * m10 + tmp_2 * m20 + tmp_5 * m30 - (tmp_0 * m10 + tmp_3 * m20 + tmp_4 * m30));
+        dst[5] =
+            d *
+            (tmp_0 * m00 + tmp_7 * m20 + tmp_8 * m30 - (tmp_1 * m00 + tmp_6 * m20 + tmp_9 * m30));
+        dst[6] =
+            d *
+            (tmp_3 * m00 + tmp_6 * m10 + tmp_11 * m30 - (tmp_2 * m00 + tmp_7 * m10 + tmp_10 * m30));
+        dst[7] =
+            d *
+            (tmp_4 * m00 + tmp_9 * m10 + tmp_10 * m20 - (tmp_5 * m00 + tmp_8 * m10 + tmp_11 * m20));
+        dst[8] =
+            d *
+            (tmp_12 * m13 +
+                tmp_15 * m23 +
+                tmp_16 * m33 -
+                (tmp_13 * m13 + tmp_14 * m23 + tmp_17 * m33));
+        dst[9] =
+            d *
+            (tmp_13 * m03 +
+                tmp_18 * m23 +
+                tmp_21 * m33 -
+                (tmp_12 * m03 + tmp_19 * m23 + tmp_20 * m33));
+        dst[10] =
+            d *
+            (tmp_14 * m03 +
+                tmp_19 * m13 +
+                tmp_22 * m33 -
+                (tmp_15 * m03 + tmp_18 * m13 + tmp_23 * m33));
+        dst[11] =
+            d *
+            (tmp_17 * m03 +
+                tmp_20 * m13 +
+                tmp_23 * m23 -
+                (tmp_16 * m03 + tmp_21 * m13 + tmp_22 * m23));
+        dst[12] =
+            d *
+            (tmp_14 * m22 +
+                tmp_17 * m32 +
+                tmp_13 * m12 -
+                (tmp_16 * m32 + tmp_12 * m12 + tmp_15 * m22));
+        dst[13] =
+            d *
+            (tmp_20 * m32 +
+                tmp_12 * m02 +
+                tmp_19 * m22 -
+                (tmp_18 * m22 + tmp_21 * m32 + tmp_13 * m02));
+        dst[14] =
+            d *
+            (tmp_18 * m12 +
+                tmp_23 * m32 +
+                tmp_15 * m02 -
+                (tmp_22 * m32 + tmp_14 * m02 + tmp_19 * m12));
+        dst[15] =
+            d *
+            (tmp_22 * m22 +
+                tmp_16 * m02 +
+                tmp_21 * m12 -
+                (tmp_20 * m12 + tmp_23 * m22 + tmp_17 * m02));
         return target;
     });
 

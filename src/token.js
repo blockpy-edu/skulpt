@@ -76,7 +76,7 @@ var tokens = {
     //taken from tokenize.py
     T_COMMENT: 57,
     T_NL: 58,
-    T_ENCODING: 59
+    T_ENCODING: 59,
 };
 // #--end constants--
 
@@ -137,7 +137,11 @@ var tok_name = {};
     }
 })();
 
-__all__.concat(Object.keys(tok_name).map(function (k) { return tok_name[k]; }));
+__all__.concat(
+    Object.keys(tok_name).map(function (k) {
+        return tok_name[k];
+    })
+);
 
 function ISTERMINAL(x) {
     return x < tokens.T_NT_OFFSET;

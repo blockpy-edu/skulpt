@@ -13,15 +13,22 @@ Sk.builtin.filter_ = Sk.abstr.buildIteratorClass("filter", {
         // iterate over iterable until we pass the predicate
         // this.chcek$filter either returns the item or undefined
         const ret = Sk.misceval.iterFor(this.$iterable, (i) =>
-            Sk.misceval.chain(this.check$filter(i), (i) => (i ? new Sk.misceval.Break(i) : undefined))
+            Sk.misceval.chain(this.check$filter(i), (i) =>
+                i ? new Sk.misceval.Break(i) : undefined
+            )
         );
         return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
     },
     slots: {
-        tp$doc:
-            "Return an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",
+        tp$doc: "Return an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",
         tp$new(args, kwargs) {
-            let [func, iterable] = Sk.abstr.copyKeywordsToNamedArgs("filter", ["predicate", "iterable"], args, kwargs, []);
+            let [func, iterable] = Sk.abstr.copyKeywordsToNamedArgs(
+                "filter",
+                ["predicate", "iterable"],
+                args,
+                kwargs,
+                []
+            );
             func = Sk.builtin.checkNone(func) ? null : func;
             iterable = Sk.abstr.iter(iterable);
             // in theory you could subclass

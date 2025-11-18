@@ -23,7 +23,7 @@
  * @function
  * @fires Kitchen#event:cakeEaten
  */
- 
+
 /**
  * @name Bakery
  * @constructor
@@ -42,13 +42,10 @@
  * @constructor
  * @borrows Bakery#event:donutOrdered as this.event:cakeOrdered
  */
-function CakeShop() {
-}
+function CakeShop() {}
 
 /** @event */
-CakeShop.prototype.icingReady = function(isPink) {
-}
+CakeShop.prototype.icingReady = function (isPink) {};
 
 /** @event */
-function amHungry(/**Boolean*/enoughToEatAHorse) {
-}
+function amHungry(/**Boolean*/ enoughToEatAHorse) {}

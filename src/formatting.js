@@ -2,7 +2,8 @@
 // for numbers and strings
 // https://docs.python.org/3.7/library/string.html#formatspec
 
-const FORMAT_SPEC_REGEX = /^(?:(.)?([<\>\=\^]))?([\+\-\s])?(#)?(0)?(\d+)?(,|_)?(?:\.(\d+))?([bcdeEfFgGnosxX%])?$/;
+const FORMAT_SPEC_REGEX =
+    /^(?:(.)?([<\>\=\^]))?([\+\-\s])?(#)?(0)?(\d+)?(,|_)?(?:\.(\d+))?([bcdeEfFgGnosxX%])?$/;
 const FMT = {
     FILL_CHAR: 1,
     FILL_ALIGN: 2,
@@ -12,14 +13,14 @@ const FMT = {
     FIELD_WIDTH: 6,
     COMMA: 7,
     PRECISION: 8,
-    CONVERSION_TYPE: 9
+    CONVERSION_TYPE: 9,
 };
 
 Sk.formatting = {};
 
 let handleWidth = function (m, r, prefix, isNumber) {
     // print(prefix);
-    Sk.asserts.assert(typeof (r) === "string");
+    Sk.asserts.assert(typeof r === "string");
 
     if (m[FMT.FIELD_WIDTH]) {
         let fieldWidth = parseInt(m[FMT.FIELD_WIDTH], 10);
@@ -36,7 +37,9 @@ let handleWidth = function (m, r, prefix, isNumber) {
         switch (fillAlign) {
             case "=":
                 if (m[FMT.CONVERSION_TYPE] === "s") {
-                    throw new Sk.builtin.ValueError("'=' alignment not allowed in string format specifier");
+                    throw new Sk.builtin.ValueError(
+                        "'=' alignment not allowed in string format specifier"
+                    );
                 }
                 return prefix + fill + r;
             case ">":
@@ -52,9 +55,7 @@ let handleWidth = function (m, r, prefix, isNumber) {
 };
 
 let signForNeg = function (m, neg) {
-    return neg ? "-" :
-        (m[FMT.SIGN] === "+") ? "+" :
-        (m[FMT.SIGN] === " ") ? " " : "";
+    return neg ? "-" : m[FMT.SIGN] === "+" ? "+" : m[FMT.SIGN] === " " ? " " : "";
 };
 
 const thousandSep = /\B(?=(\d{3})+(?!\d))/g;
@@ -98,7 +99,7 @@ let handleInteger = function (m, n, base) {
         if (sep === "," && base !== 10) {
             throw new Sk.builtin.ValueError(`Cannot specify ',' with '${conversionType}'`);
         }
-        parts[0] = parts[0].replace(base === 10 ? thousandSep : otherBaseSep , sep);
+        parts[0] = parts[0].replace(base === 10 ? thousandSep : otherBaseSep, sep);
         r = parts.join(".");
     }
 
@@ -107,7 +108,8 @@ let handleInteger = function (m, n, base) {
 
 // Common implementation of __format__ for Python number objects
 let formatNumber = function (num, formatSpec, isFractional) {
-    if (!formatSpec) { // empty or undefined
+    if (!formatSpec) {
+        // empty or undefined
         return num.str$(10, true);
     }
     let m = formatSpec.match(FORMAT_SPEC_REGEX);
@@ -117,12 +119,18 @@ let formatNumber = function (num, formatSpec, isFractional) {
 
     let conversionType = m[FMT.CONVERSION_TYPE];
     if (!conversionType) {
-        conversionType = (isFractional ? "g" : "d");
+        conversionType = isFractional ? "g" : "d";
     }
 
     let validConversions = isFractional ? "fFeEgG%" : "bcdoxXnfFeEgG%";
     if (validConversions.indexOf(conversionType) == -1) {
-        throw new Sk.builtin.ValueError("Unknown format code '" + m[FMT.CONVERSION_TYPE] + "' for object of type '" + Sk.abstr.typeName(num) + "'");
+        throw new Sk.builtin.ValueError(
+            "Unknown format code '" +
+                m[FMT.CONVERSION_TYPE] +
+                "' for object of type '" +
+                Sk.abstr.typeName(num) +
+                "'"
+        );
     }
 
     switch (conversionType) {
@@ -138,10 +146,14 @@ let formatNumber = function (num, formatSpec, isFractional) {
             return handleInteger(m, num, 2);
         case "c": {
             if (m[FMT.SIGN]) {
-                throw new Sk.builtin.ValueError("Sign not allowed with integer format specifier 'c'");
+                throw new Sk.builtin.ValueError(
+                    "Sign not allowed with integer format specifier 'c'"
+                );
             }
             if (m[FMT.ALT_FORM]) {
-                throw new Sk.builtin.ValueError("Alternate form not allowed with integer format specifier 'c'");
+                throw new Sk.builtin.ValueError(
+                    "Alternate form not allowed with integer format specifier 'c'"
+                );
             }
             if (m[FMT.COMMA]) {
                 throw new Sk.builtin.ValueError("Cannot specify ',' with 'c'");
@@ -150,7 +162,7 @@ let formatNumber = function (num, formatSpec, isFractional) {
                 throw new Sk.builtin.ValueError("Cannot specify ',' with 'c'");
             }
             return handleWidth(m, String.fromCodePoint(Sk.builtin.asnum$(num)), "", true);
-        };
+        }
 
         case "f":
         case "F":
@@ -159,7 +171,9 @@ let formatNumber = function (num, formatSpec, isFractional) {
         case "g":
         case "G": {
             if (m[FMT.ALT_FORM]) {
-                throw new Sk.builtin.ValueError("Alternate form (#) not allowed in float format specifier");
+                throw new Sk.builtin.ValueError(
+                    "Alternate form (#) not allowed in float format specifier"
+                );
             }
             let convValue = Sk.builtin.asnum$(num);
             if (typeof convValue === "string") {
@@ -179,9 +193,11 @@ let formatNumber = function (num, formatSpec, isFractional) {
                 convValue = -convValue;
                 neg = true;
             }
-            let convName = ["toExponential", "toFixed", "toPrecision"]["efg".indexOf(conversionType.toLowerCase())];
+            let convName = ["toExponential", "toFixed", "toPrecision"][
+                "efg".indexOf(conversionType.toLowerCase())
+            ];
             let precision = m[FMT.PRECISION] ? parseInt(m[FMT.PRECISION], 10) : 6;
-            let result = (convValue)[convName](precision);
+            let result = convValue[convName](precision);
             if ("EFG".indexOf(conversionType) !== -1) {
                 result = result.toUpperCase();
             }
@@ -197,7 +213,7 @@ let formatNumber = function (num, formatSpec, isFractional) {
                     result += ".0";
                 }
             }
-            if (conversionType.toLowerCase()==="e") {
+            if (conversionType.toLowerCase() === "e") {
                 result = result.replace(/^([-+]?[0-9]*\.?[0-9]+[eE][-+]?)([0-9])?$/, "$10$2");
             }
             if (m[FMT.COMMA]) {
@@ -207,11 +223,13 @@ let formatNumber = function (num, formatSpec, isFractional) {
             }
 
             return handleWidth(m, result, signForNeg(m, neg), true);
-        };
+        }
 
         case "%": {
             if (m[FMT.ALT_FORM]) {
-                throw new Sk.builtin.ValueError("Alternate form (#) not allowed with format specifier '%'");
+                throw new Sk.builtin.ValueError(
+                    "Alternate form (#) not allowed with format specifier '%'"
+                );
             }
             let convValue = Sk.builtin.asnum$(num);
             if (typeof convValue === "string") {
@@ -234,28 +252,35 @@ let formatNumber = function (num, formatSpec, isFractional) {
             let precision = m[FMT.PRECISION] ? parseInt(m[FMT.PRECISION], 10) : 6;
             let result = (convValue * 100.0).toFixed(precision) + "%";
             return handleWidth(m, result, signForNeg(m, neg), true);
-        };
+        }
 
         default:
             throw new Sk.builtin.ValueError("Unknown format code '" + m[FMT.CONVERSION_TYPE] + "'");
     }
 };
 
-Sk.formatting.mkNumber__format__ = (isFractional) => function (format_spec) {
-    if (!Sk.builtin.checkString(format_spec)) {
-        throw new Sk.builtin.TypeError("format() argument 2 must be str, not " + Sk.abstr.typeName(format_spec));
-    }
-    return new Sk.builtin.str(formatNumber(this, format_spec.$jsstr(), isFractional));
-};
+Sk.formatting.mkNumber__format__ = (isFractional) =>
+    function (format_spec) {
+        if (!Sk.builtin.checkString(format_spec)) {
+            throw new Sk.builtin.TypeError(
+                "format() argument 2 must be str, not " + Sk.abstr.typeName(format_spec)
+            );
+        }
+        return new Sk.builtin.str(formatNumber(this, format_spec.$jsstr(), isFractional));
+    };
 
 function formatString(format_spec) {
     if (!Sk.builtin.checkString(format_spec)) {
-        throw new Sk.builtin.TypeError("format() argument 2 must be str, not " + Sk.abstr.typeName(format_spec));
+        throw new Sk.builtin.TypeError(
+            "format() argument 2 must be str, not " + Sk.abstr.typeName(format_spec)
+        );
     }
 
     let m = format_spec.$jsstr().match(FORMAT_SPEC_REGEX);
     if (m[FMT.CONVERSION_TYPE] && m[FMT.CONVERSION_TYPE] !== "s") {
-        throw new Sk.builtin.ValueError("Unknown format code '" + m[FMT.CONVERSION_TYPE] + "' for object of type 'str'");
+        throw new Sk.builtin.ValueError(
+            "Unknown format code '" + m[FMT.CONVERSION_TYPE] + "' for object of type 'str'"
+        );
     }
 
     if (m[FMT.SIGN]) {
@@ -263,7 +288,9 @@ function formatString(format_spec) {
     }
 
     if (m[FMT.ALT_FORM]) {
-        throw new Sk.builtin.ValueError("Alternate form (#) not allowed with string format specifier");
+        throw new Sk.builtin.ValueError(
+            "Alternate form (#) not allowed with string format specifier"
+        );
     }
 
     if (m[FMT.COMMA]) {
@@ -277,14 +304,15 @@ function formatString(format_spec) {
     }
 
     return new Sk.builtin.str(handleWidth(m, value, "", false));
-};
+}
 
 // str.format() implementation
 function format(args, kwargs) {
     // following PEP 3101
     kwargs = kwargs || [];
     const arg_dict = {};
-    const regex = /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!([rs]))?(?:\:([^}]*))?}/g;
+    const regex =
+        /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!([rs]))?(?:\:([^}]*))?}/g;
     // ex: {o.name!r:*^+#030,.9b}
     // Field 1, Field_name, o.name
     // Field 2, arg_name, o
@@ -306,7 +334,18 @@ function format(args, kwargs) {
     }
 
     let index = 0;
-    function replFunc (substring, field_name, arg_name, attr_name, attribute_name, element_index, conversion, format_spec, offset, str_whole) {
+    function replFunc(
+        substring,
+        field_name,
+        arg_name,
+        attr_name,
+        attribute_name,
+        element_index,
+        conversion,
+        format_spec,
+        offset,
+        str_whole
+    ) {
         let value;
 
         if (element_index !== undefined && element_index !== "") {
@@ -314,13 +353,20 @@ function format(args, kwargs) {
             if (container.constructor === Array) {
                 value = container[element_index];
             } else if (/^\d+$/.test(element_index)) {
-                value = Sk.abstr.objectGetItem(container, new Sk.builtin.int_(parseInt(element_index, 10)), false);
+                value = Sk.abstr.objectGetItem(
+                    container,
+                    new Sk.builtin.int_(parseInt(element_index, 10)),
+                    false
+                );
             } else {
                 value = Sk.abstr.objectGetItem(container, new Sk.builtin.str(element_index), false);
             }
             index++;
         } else if (attribute_name !== undefined && attribute_name !== "") {
-            value = Sk.abstr.gattr(arg_dict[arg_name || index++], new Sk.builtin.str(attribute_name));
+            value = Sk.abstr.gattr(
+                arg_dict[arg_name || index++],
+                new Sk.builtin.str(attribute_name)
+            );
         } else if (arg_name !== undefined && arg_name !== "") {
             value = arg_dict[arg_name];
         } else if (field_name === undefined || field_name === "") {
@@ -346,11 +392,11 @@ function format(args, kwargs) {
         // TODO "!a" I guess?
 
         return Sk.abstr.objectFormat(value, new Sk.builtin.str(format_spec)).$jsstr();
-    };
+    }
 
     const ret = this.v.replace(regex, replFunc);
     return new Sk.builtin.str(ret);
-};
+}
 
 Sk.formatting.format = format;
 Sk.formatting.formatString = formatString;

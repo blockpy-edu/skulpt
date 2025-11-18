@@ -46,7 +46,6 @@ var $builtinmodule = function (name) {
     // Abnormal termination
     mod.SIGABRT = new Sk.builtin.int_(22);
 
-
     /**
      * Hold the execution of skulpt until an external signal has been
      * triggered.
@@ -76,7 +75,7 @@ var $builtinmodule = function (name) {
                     // if signal has not been configured, just resume immediatelly
                     resolve();
                 }
-            })
+            }),
         };
         return susp;
     });

@@ -1,8 +1,6 @@
-
 /**
  * @param {Page[]} pages
  * @param {number} [id] Specifies the id, if applicable.
  * @param {string} [title = This is untitled.] Specifies the title.
  */
-function Document(pages, id, title){
-}
+function Document(pages, id, title) {}

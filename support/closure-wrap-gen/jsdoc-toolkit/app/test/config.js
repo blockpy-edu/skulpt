@@ -6,9 +6,7 @@
  * @config [id=1] Optional id number to use.
  * @param connection
  */
-function Contact(person, connection) {
-
-}
+function Contact(person, connection) {}
 
 /**
  * @constructor
@@ -17,6 +15,4 @@ function Contact(person, connection) {
  * @config {string} Mother The maternal person.
  * @config {string[]} Children And the rest.
  */
-function Family(/**Object*/persons) {
-
-}
+function Family(/**Object*/ persons) {}

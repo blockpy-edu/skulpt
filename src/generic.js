@@ -92,7 +92,13 @@ Sk.generic.setAttr = function __setattr__(pyName, value, canSuspend) {
                     return dict.mp$ass_subscript(pyName);
                 } catch (e) {
                     if (e instanceof Sk.builtin.KeyError) {
-                        throw new Sk.builtin.AttributeError("'" + Sk.abstr.typeName(this) + "' object has no attribute '" + pyName.$jsstr() + "'");
+                        throw new Sk.builtin.AttributeError(
+                            "'" +
+                                Sk.abstr.typeName(this) +
+                                "' object has no attribute '" +
+                                pyName.$jsstr() +
+                                "'"
+                        );
                     }
                     throw e;
                 }
@@ -108,10 +114,11 @@ Sk.generic.setAttr = function __setattr__(pyName, value, canSuspend) {
             }
         }
     }
-    throw new Sk.builtin.AttributeError(this.sk$attrError() + " has no attribute '" + pyName.$jsstr() + "'");
+    throw new Sk.builtin.AttributeError(
+        this.sk$attrError() + " has no attribute '" + pyName.$jsstr() + "'"
+    );
 };
 Sk.exportSymbol("Sk.generic.setAttr", Sk.generic.setAttr);
-
 
 /**
  * @method
@@ -123,7 +130,7 @@ Sk.exportSymbol("Sk.generic.setAttr", Sk.generic.setAttr);
  *
  * @see {Sk.builtin.type.prototype.tp$new}
  *
- * @param {typeObject} builtin 
+ * @param {typeObject} builtin
  */
 Sk.generic.new = function (builtin) {
     const genericNew = function __new__(args, kwargs) {
@@ -167,13 +174,26 @@ Sk.generic.newMethodDef = {
 
         if (subtype.sk$type === undefined) {
             this_name = native_type_proto.tp$name;
-            throw new Sk.builtin.TypeError(this_name + "__new__(X): X is not a type object (" + Sk.abstr.typeName(subtype) + ")");
+            throw new Sk.builtin.TypeError(
+                this_name +
+                    "__new__(X): X is not a type object (" +
+                    Sk.abstr.typeName(subtype) +
+                    ")"
+            );
         }
 
         if (!subtype.$isSubType(this)) {
             this_name = native_type_proto.tp$name;
             subs_name = subtype.prototype.tp$name;
-            throw new Sk.builtin.TypeError(this_name + ".__new__(" + subs_name + "): " + subs_name + " is not a subtype of " + this_name);
+            throw new Sk.builtin.TypeError(
+                this_name +
+                    ".__new__(" +
+                    subs_name +
+                    "): " +
+                    subs_name +
+                    " is not a subtype of " +
+                    this_name
+            );
         }
         /* from CPython: Check that the use doesn't do something silly and unsafe like
        object.__new__(dict).  To do this, we check that the
@@ -186,11 +206,18 @@ Sk.generic.newMethodDef = {
             this_name = native_type_proto.tp$name;
             subs_name = subtype.prototype.tp$name;
             const suitable = static_proto.tp$name;
-            throw new Sk.builtin.TypeError(this_name + ".__new__(" + subs_name + ") is not safe, use " + suitable + ".__new__()");
+            throw new Sk.builtin.TypeError(
+                this_name +
+                    ".__new__(" +
+                    subs_name +
+                    ") is not safe, use " +
+                    suitable +
+                    ".__new__()"
+            );
         }
         return native_type_proto.tp$new.call(subtype.prototype, args, kwargs);
     },
-    $flags: {FastCall: true},
+    $flags: { FastCall: true },
     $textsig: "($type, *args, **kwargs)",
     $name: "__new__",
 };
@@ -249,7 +276,7 @@ Sk.generic.iterLengthHintWithArrayMethodDef = {
     $meth: function __length_hint__() {
         return new Sk.builtin.int_(this.$seq.length - this.$index);
     },
-    $flags: {NoArgs: true},
+    $flags: { NoArgs: true },
 };
 
 /**
@@ -262,9 +289,8 @@ Sk.generic.iterReverseLengthHintMethodDef = {
     $meth: function __length_hint__() {
         return new Sk.builtin.int_(this.$index);
     },
-    $flags: {NoArgs: true},
+    $flags: { NoArgs: true },
 };
-
 
 /**
  * @description
@@ -280,7 +306,9 @@ Sk.generic.getSetDict = {
         } else if (value instanceof Sk.builtin.dict) {
             this.$d = value;
         } else {
-            throw new Sk.builtin.TypeError("__dict__ must be set to a dictionary, not a '" + Sk.abstr.typeName(value) + "'");
+            throw new Sk.builtin.TypeError(
+                "__dict__ must be set to a dictionary, not a '" + Sk.abstr.typeName(value) + "'"
+            );
         }
     },
     $doc: "dictionary for instance variables (if defined)",
@@ -344,7 +372,6 @@ Sk.generic.seqCompare = function (other, op) {
     // or, compare the differing element using the proper operator
     return Sk.misceval.richCompareBool(v[i], w[i], op);
 };
-
 
 Sk.generic.classGetItem = {
     __class_getitem__: {

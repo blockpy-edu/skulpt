@@ -2,14 +2,12 @@
 @constructor
 */
 function Layout(p) {
-	this.init = function(p) {
-	}
-	
-	this.getId = function() {
-	}
-	
-	/** @type Page */
-	this.orientation = "landscape";
+    this.init = function (p) {};
+
+    this.getId = function () {};
+
+    /** @type Page */
+    this.orientation = "landscape";
 }
 
 /**
@@ -17,8 +15,7 @@ function Layout(p) {
 @augments Layout
 */
 function Page() {
-	this.reset = function(b) {
-	}
+    this.reset = function (b) {};
 }
 
 /**
@@ -26,6 +23,5 @@ function Page() {
 @constructor
 */
 function ThreeColumnPage() {
-	this.init = function(resetCode) {
-	}
+    this.init = function (resetCode) {};
 }

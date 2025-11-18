@@ -29,7 +29,7 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
         }
         this.v = v;
     },
-    slots: /** @lends {Sk.builtin.int_.prototype}*/{
+    slots: /** @lends {Sk.builtin.int_.prototype}*/ {
         tp$as_number: true,
         tp$doc: "int(x=0) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",
         $r() {
@@ -160,7 +160,10 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             } else if (Sk.builtin.checkNone(mod)) {
                 mod = undefined;
             }
-            if (!(other instanceof Sk.builtin.int_) || (mod !== undefined && !(mod instanceof Sk.builtin.int_))) {
+            if (
+                !(other instanceof Sk.builtin.int_) ||
+                (mod !== undefined && !(mod instanceof Sk.builtin.int_))
+            ) {
                 return Sk.builtin.NotImplemented.NotImplemented$;
             }
             const wNeg = other.nb$isnegative();
@@ -199,7 +202,7 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             return new Sk.builtin.lng(this.v);
         },
     },
-    getsets: /** @lends {Sk.builtin.int_.prototype}*/{
+    getsets: /** @lends {Sk.builtin.int_.prototype}*/ {
         real: {
             $get: cloneSelf,
             $doc: "the real part of a complex number",
@@ -211,10 +214,10 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             $doc: "the imaginary part of a complex number",
         },
     },
-    methods: /** @lends {Sk.builtin.int_.prototype}*/{
+    methods: /** @lends {Sk.builtin.int_.prototype}*/ {
         conjugate: {
             $meth: cloneSelf,
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Returns self, the complex conjugate of any int.",
         },
@@ -227,7 +230,7 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
                 v = typeof v === "number" ? Math.abs(v) : BigIntAbs(v);
                 return new Sk.builtin.int_(v.toString(2).length);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: "Number of bits necessary to represent self in binary.\n\n>>> bin(37)\n'0b100101'\n>>> (37).bit_length()\n6",
         },
@@ -235,25 +238,25 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             $meth() {
                 throw new Sk.builtin.NotImplementedError("Not yet implemented in Skulpt");
             },
-            $flags: {FastCall: true},
+            $flags: { FastCall: true },
             $textsig: "($self, /, length, byteorder, *, signed=False)",
             $doc: "Return an array of bytes representing an integer.\n\n  length\n    Length of bytes object to use.  An OverflowError is raised if the\n    integer is not representable with the given number of bytes.\n  byteorder\n    The byte order used to represent the integer.  If byteorder is 'big',\n    the most significant byte is at the beginning of the byte array.  If\n    byteorder is 'little', the most significant byte is at the end of the\n    byte array.  To request the native byte order of the host system, use\n    `sys.byteorder' as the byte order value.\n  signed\n    Determines whether two's complement is used to represent the integer.\n    If signed is False and a negative integer is given, an OverflowError\n    is raised.",
         },
         __trunc__: {
             $meth: cloneSelf,
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Truncating an Integral returns itself.",
         },
         __floor__: {
             $meth: cloneSelf,
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Flooring an Integral returns itself.",
         },
         __ceil__: {
             $meth: cloneSelf,
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Ceiling of an Integral returns itself.",
         },
@@ -261,7 +264,7 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             $meth(ndigits) {
                 return this.round$(ndigits);
             },
-            $flags: {MinArgs: 0, MaxArgs: 1},
+            $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: null,
             $doc: "Rounding an Integral returns itself.\nRounding with an ndigits argument also returns an integer.",
         },
@@ -269,18 +272,18 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             $meth() {
                 return new Sk.builtin.tuple([new Sk.builtin.int_(this.v)]);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: Sk.builtin.none.none$,
         },
         __format__: {
             $meth: Sk.formatting.mkNumber__format__(false),
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($self, format_spec, /)",
             $doc: Sk.builtin.none.none$,
         },
     },
-    proto: /** @lends {Sk.builtin.int_.prototype}*/{
+    proto: /** @lends {Sk.builtin.int_.prototype}*/ {
         str$(base, sign) {
             let tmp;
             if (base === undefined || base === 10) {
@@ -318,7 +321,11 @@ Sk.builtin.int_ = Sk.abstr.buildNativeClass("int", {
             const num10 = v / multiplier;
             const rounded = Math.round(num10);
             const bankRound =
-                (num10 > 0 ? num10 : -num10) % 1 === 0.5 ? (0 === rounded % 2 ? rounded : rounded - 1) : rounded;
+                (num10 > 0 ? num10 : -num10) % 1 === 0.5
+                    ? 0 === rounded % 2
+                        ? rounded
+                        : rounded - 1
+                    : rounded;
             const result = bankRound * multiplier;
             return new Sk.builtin.int_(result);
         },
@@ -349,7 +356,7 @@ function numberSlot(number_func, bigint_func) {
      * @this {Sk.builtin.int_}
      *
      * @param {Sk.builtin.int_|Sk.builtin.object} other
-    * @return {Sk.builtin.int_|Sk.builtin.NotImplemented}
+     * @return {Sk.builtin.int_|Sk.builtin.NotImplemented}
      */
     return function (other) {
         if (!(other instanceof Sk.builtin.int_)) {
@@ -461,8 +468,10 @@ function trueDivide(other) {
     const absBigDiff = JSBI.BigInt(diff < 0 ? -diff : diff);
 
     if (
-        (diff >= 0 && JSBI.greaterThanOrEqual(v, JSBI.multiply(JSBI.exponentiate(BIG_2, absBigDiff), w))) ||
-        (diff < 0 && JSBI.greaterThanOrEqual(JSBI.multiply(v, JSBI.exponentiate(BIG_2, absBigDiff)), w))
+        (diff >= 0 &&
+            JSBI.greaterThanOrEqual(v, JSBI.multiply(JSBI.exponentiate(BIG_2, absBigDiff), w))) ||
+        (diff < 0 &&
+            JSBI.greaterThanOrEqual(JSBI.multiply(v, JSBI.exponentiate(BIG_2, absBigDiff)), w))
     ) {
         diff += 1;
     }
@@ -474,7 +483,10 @@ function trueDivide(other) {
     const r = JSBI.remainder(v, w);
 
     const doubleR = JSBI.multiply(BIG_2, r);
-    if (JSBI.greaterThan(doubleR, w) || (JSBI.equal(doubleR, w) && JSBI.equal(JSBI.remainder(q, BIG_2), BIG_1))) {
+    if (
+        JSBI.greaterThan(doubleR, w) ||
+        (JSBI.equal(doubleR, w) && JSBI.equal(JSBI.remainder(q, BIG_2), BIG_1))
+    ) {
         q = JSBI.add(q, BIG_1);
     }
     q = JSBI.toNumber(q);
@@ -540,7 +552,12 @@ function numberBitSlot(number_func, bigint_func) {
         }
         let v = this.v;
         let w = other.v;
-        if (typeof v === "number" && typeof w === "number" && Math.abs(v) < 2 ** 31 && Math.abs(w) < 2 ** 31) {
+        if (
+            typeof v === "number" &&
+            typeof w === "number" &&
+            Math.abs(v) < 2 ** 31 &&
+            Math.abs(w) < 2 ** 31
+        ) {
             return new Sk.builtin.int_(number_func(v, w));
         }
         v = bigUp(v);
@@ -646,21 +663,27 @@ Sk.str2number = function (s, base) {
             s = s.substring(2);
             base = 16;
         } else if (base < 34) {
-            throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+            throw new Sk.builtin.ValueError(
+                "invalid literal for int() with base " + base + ": '" + origs + "'"
+            );
         }
     } else if (s.substring(0, 2).toLowerCase() === "0b") {
         if (base === 2 || base === 0) {
             s = s.substring(2);
             base = 2;
         } else if (base < 12) {
-            throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+            throw new Sk.builtin.ValueError(
+                "invalid literal for int() with base " + base + ": '" + origs + "'"
+            );
         }
     } else if (s.substring(0, 2).toLowerCase() === "0o") {
         if (base === 8 || base === 0) {
             s = s.substring(2);
             base = 8;
         } else if (base < 25) {
-            throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+            throw new Sk.builtin.ValueError(
+                "invalid literal for int() with base " + base + ": '" + origs + "'"
+            );
         }
     } else if (s.charAt(0) === "0") {
         if (s === "0") {
@@ -677,7 +700,9 @@ Sk.str2number = function (s, base) {
 
     if (s.indexOf("_") !== -1) {
         if (s.indexOf("__") !== -1) {
-            throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+            throw new Sk.builtin.ValueError(
+                "invalid literal for int() with base " + base + ": '" + origs + "'"
+            );
         }
 
         if (base !== 10) {
@@ -690,7 +715,9 @@ Sk.str2number = function (s, base) {
     }
 
     if (s.length === 0) {
-        throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+        throw new Sk.builtin.ValueError(
+            "invalid literal for int() with base " + base + ": '" + origs + "'"
+        );
     }
 
     // check all characters are valid
@@ -709,7 +736,9 @@ Sk.str2number = function (s, base) {
         }
 
         if (val >= base) {
-            throw new Sk.builtin.ValueError("invalid literal for int() with base " + base + ": '" + origs + "'");
+            throw new Sk.builtin.ValueError(
+                "invalid literal for int() with base " + base + ": '" + origs + "'"
+            );
         }
     }
 
@@ -726,9 +755,9 @@ Sk.str2number = function (s, base) {
 Sk.builtin.int_.py2$methods = {};
 
 /**
- * 
- * @param {string} s 
- * @param {number=} base 
+ *
+ * @param {string} s
+ * @param {number=} base
  */
 Sk.longFromStr = function (s, base) {
     if (Sk.__future__.python3) {
@@ -739,7 +768,6 @@ Sk.longFromStr = function (s, base) {
     }
 };
 Sk.exportSymbol("Sk.longFromStr", Sk.longFromStr);
-
 
 function numberOrStringWithinThreshold(v) {
     return v <= Number.MAX_SAFE_INTEGER && v >= -Number.MAX_SAFE_INTEGER;
@@ -761,7 +789,6 @@ function bigUp(v) {
     }
     return v;
 }
-
 
 function getInt(x, base) {
     let func, res;
@@ -790,14 +817,19 @@ function getInt(x, base) {
         // check return type of magic methods
         if (!Sk.builtin.checkInt(res)) {
             throw new Sk.builtin.TypeError(
-                Sk.builtin.str.$trunc.$jsstr() + " returned non-Integral (type " + Sk.abstr.typeName(x) + ")"
+                Sk.builtin.str.$trunc.$jsstr() +
+                    " returned non-Integral (type " +
+                    Sk.abstr.typeName(x) +
+                    ")"
             );
         }
         return new Sk.builtin.int_(res.v);
     }
 
     throw new Sk.builtin.TypeError(
-        "int() argument must be a string, a bytes-like object or a number, not '" + Sk.abstr.typeName(x) + "'"
+        "int() argument must be a string, a bytes-like object or a number, not '" +
+            Sk.abstr.typeName(x) +
+            "'"
     );
 }
 
@@ -841,32 +873,32 @@ function fromStrToBigWithBase(s, base) {
 }
 
 const shiftconsts = [
-    0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
-    1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824,
-    2147483648, 4294967296, 8589934592, 17179869184, 34359738368, 68719476736, 137438953472, 274877906944,
-    549755813888, 1099511627776, 2199023255552, 4398046511104, 8796093022208, 17592186044416, 35184372088832,
-    70368744177664, 140737488355328, 281474976710656, 562949953421312, 1125899906842624, 2251799813685248,
-    4503599627370496, 9007199254740992,
+    0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072,
+    262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728,
+    268435456, 536870912, 1073741824, 2147483648, 4294967296, 8589934592, 17179869184, 34359738368,
+    68719476736, 137438953472, 274877906944, 549755813888, 1099511627776, 2199023255552,
+    4398046511104, 8796093022208, 17592186044416, 35184372088832, 70368744177664, 140737488355328,
+    281474976710656, 562949953421312, 1125899906842624, 2251799813685248, 4503599627370496,
+    9007199254740992,
 ];
-
 
 /**
  * @constructor
  *
  * @description
- * This is only for backward compatibility with py2. 
+ * This is only for backward compatibility with py2.
  * We take the approach of using a trivial subclass with int and overriding a few methods
  *
- * @param {number|string|JSBI} x 
+ * @param {number|string|JSBI} x
  * @extends {Sk.builtin.int_}
  * @ignore
  */
 Sk.builtin.lng = Sk.abstr.buildNativeClass("long", {
     base: Sk.builtin.int_, // not technically correct but makes backward compatibility easy
-    constructor: function lng (x) {
+    constructor: function lng(x) {
         Sk.builtin.int_.call(this, x);
     },
-    slots: /** @lends {Sk.builtin.lng.prototype} */{
+    slots: /** @lends {Sk.builtin.lng.prototype} */ {
         $r() {
             return new Sk.builtin.str(this.v.toString() + "L");
         },

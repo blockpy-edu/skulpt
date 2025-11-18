@@ -10,9 +10,7 @@
  * @return {undefined} Cannot instantiate a Sk.builtin.numtype object
  */
 Sk.builtin.numtype = function () {
-
     throw new Sk.builtin.ExternalError("Cannot instantiate abstract Sk.builtin.numtype class");
-
 };
 
 Sk.abstr.setUpInheritance("NumericType", Sk.builtin.numtype, Sk.builtin.object);
@@ -27,14 +25,12 @@ Sk.builtin.numtype.sk$abstract = true;
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__abs__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$abs === undefined) {
         throw new Sk.builtin.NotImplementedError("__abs__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__abs__", arguments.length, 0, 0, false, true);
     return self.nb$abs();
-
 });
 
 /**
@@ -45,14 +41,12 @@ Sk.builtin.numtype.prototype["__abs__"] = new Sk.builtin.func(function (self) {
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__neg__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$negative === undefined) {
         throw new Sk.builtin.NotImplementedError("__neg__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__neg__", arguments.length, 0, 0, false, true);
     return self.nb$negative();
-
 });
 
 /**
@@ -63,14 +57,12 @@ Sk.builtin.numtype.prototype["__neg__"] = new Sk.builtin.func(function (self) {
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__pos__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$positive === undefined) {
         throw new Sk.builtin.NotImplementedError("__pos__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__pos__", arguments.length, 0, 0, false, true);
     return self.nb$positive();
-
 });
 
 /**
@@ -81,14 +73,12 @@ Sk.builtin.numtype.prototype["__pos__"] = new Sk.builtin.func(function (self) {
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__int__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$int_ === undefined) {
         throw new Sk.builtin.NotImplementedError("__int__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__int__", arguments.length, 0, 0, false, true);
     return self.nb$int_();
-
 });
 
 /**
@@ -99,14 +89,12 @@ Sk.builtin.numtype.prototype["__int__"] = new Sk.builtin.func(function (self) {
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__long__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$lng === undefined) {
         throw new Sk.builtin.NotImplementedError("__long__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__long__", arguments.length, 0, 0, false, true);
     return self.nb$lng();
-
 });
 
 /**
@@ -117,14 +105,12 @@ Sk.builtin.numtype.prototype["__long__"] = new Sk.builtin.func(function (self) {
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__float__"] = new Sk.builtin.func(function (self) {
-
     if (self.nb$float_ === undefined) {
         throw new Sk.builtin.NotImplementedError("__float__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__float__", arguments.length, 0, 0, false, true);
     return self.nb$float_();
-
 });
 
 /**
@@ -135,14 +121,12 @@ Sk.builtin.numtype.prototype["__float__"] = new Sk.builtin.func(function (self) 
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__add__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$add === undefined) {
         throw new Sk.builtin.NotImplementedError("__add__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__add__", arguments.length, 1, 1, false, true);
     return self.nb$add(other);
-
 });
 
 /**
@@ -153,14 +137,12 @@ Sk.builtin.numtype.prototype["__add__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__radd__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_add === undefined) {
         throw new Sk.builtin.NotImplementedError("__radd__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__radd__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_add(other);
-
 });
 
 /**
@@ -171,14 +153,12 @@ Sk.builtin.numtype.prototype["__radd__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__sub__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$subtract === undefined) {
         throw new Sk.builtin.NotImplementedError("__sub__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__sub__", arguments.length, 1, 1, false, true);
     return self.nb$subtract(other);
-
 });
 
 /**
@@ -189,14 +169,12 @@ Sk.builtin.numtype.prototype["__sub__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rsub__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_subtract === undefined) {
         throw new Sk.builtin.NotImplementedError("__rsub__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rsub__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_subtract(other);
-
 });
 
 /**
@@ -207,14 +185,12 @@ Sk.builtin.numtype.prototype["__rsub__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__mul__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$multiply === undefined) {
         throw new Sk.builtin.NotImplementedError("__mul__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__mul__", arguments.length, 1, 1, false, true);
     return self.nb$multiply(other);
-
 });
 
 /**
@@ -225,14 +201,12 @@ Sk.builtin.numtype.prototype["__mul__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rmul__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_multiply === undefined) {
         throw new Sk.builtin.NotImplementedError("__rmul__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rmul__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_multiply(other);
-
 });
 
 /**
@@ -243,14 +217,12 @@ Sk.builtin.numtype.prototype["__rmul__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__div__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$divide === undefined) {
         throw new Sk.builtin.NotImplementedError("__div__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__div__", arguments.length, 1, 1, false, true);
     return self.nb$divide(other);
-
 });
 
 /**
@@ -261,14 +233,12 @@ Sk.builtin.numtype.prototype["__div__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rdiv__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_divide === undefined) {
         throw new Sk.builtin.NotImplementedError("__rdiv__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rdiv__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_divide(other);
-
 });
 
 /**
@@ -279,14 +249,12 @@ Sk.builtin.numtype.prototype["__rdiv__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__floordiv__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$floor_divide === undefined) {
         throw new Sk.builtin.NotImplementedError("__floordiv__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__floordiv__", arguments.length, 1, 1, false, true);
     return self.nb$floor_divide(other);
-
 });
 
 /**
@@ -297,14 +265,12 @@ Sk.builtin.numtype.prototype["__floordiv__"] = new Sk.builtin.func(function (sel
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rfloordiv__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_floor_divide === undefined) {
         throw new Sk.builtin.NotImplementedError("__rfloordiv__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rfloordiv__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_floor_divide(other);
-
 });
 
 /**
@@ -315,14 +281,12 @@ Sk.builtin.numtype.prototype["__rfloordiv__"] = new Sk.builtin.func(function (se
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__mod__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$remainder === undefined) {
         throw new Sk.builtin.NotImplementedError("__mod__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__mod__", arguments.length, 1, 1, false, true);
     return self.nb$remainder(other);
-
 });
 
 /**
@@ -333,14 +297,12 @@ Sk.builtin.numtype.prototype["__mod__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rmod__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_remainder === undefined) {
         throw new Sk.builtin.NotImplementedError("__rmod__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rmod__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_remainder(other);
-
 });
 
 /**
@@ -351,14 +313,12 @@ Sk.builtin.numtype.prototype["__rmod__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__divmod__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$divmod === undefined) {
         throw new Sk.builtin.NotImplementedError("__divmod__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__divmod__", arguments.length, 1, 1, false, true);
     return self.nb$divmod(other);
-
 });
 
 /**
@@ -369,14 +329,12 @@ Sk.builtin.numtype.prototype["__divmod__"] = new Sk.builtin.func(function (self,
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rdivmod__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_divmod === undefined) {
         throw new Sk.builtin.NotImplementedError("__rdivmod__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rdivmod__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_divmod(other);
-
 });
 
 /**
@@ -387,14 +345,12 @@ Sk.builtin.numtype.prototype["__rdivmod__"] = new Sk.builtin.func(function (self
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__pow__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$power === undefined) {
         throw new Sk.builtin.NotImplementedError("__pow__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__pow__", arguments.length, 1, 1, false, true);
     return self.nb$power(other);
-
 });
 
 /**
@@ -405,14 +361,12 @@ Sk.builtin.numtype.prototype["__pow__"] = new Sk.builtin.func(function (self, ot
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__rpow__"] = new Sk.builtin.func(function (self, other) {
-
     if (self.nb$reflected_power === undefined) {
         throw new Sk.builtin.NotImplementedError("__rpow__ is not yet implemented");
     }
 
     Sk.builtin.pyCheckArgsLen("__rpow__", arguments.length, 1, 1, false, true);
     return self.nb$reflected_power(other);
-
 });
 
 /**
@@ -423,9 +377,7 @@ Sk.builtin.numtype.prototype["__rpow__"] = new Sk.builtin.func(function (self, o
  * @memberOf Sk.builtin.numtype.prototype
  */
 Sk.builtin.numtype.prototype["__coerce__"] = new Sk.builtin.func(function (self, other) {
-
     throw new Sk.builtin.NotImplementedError("__coerce__ is not yet implemented");
-
 });
 
 /**
@@ -485,7 +437,6 @@ Sk.builtin.numtype.prototype.nb$inplace_subtract = function (other) {
 Sk.builtin.numtype.prototype.nb$multiply = function (other) {
     return Sk.builtin.NotImplemented.NotImplemented$;
 };
-
 
 Sk.builtin.numtype.prototype.nb$reflected_multiply = function (other) {
     return Sk.builtin.NotImplemented.NotImplemented$;

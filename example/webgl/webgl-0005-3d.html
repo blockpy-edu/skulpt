@@ -1,22 +1,26 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>WebGL 3D</title>
+    <head>
+        <meta charset="utf-8" />
+        <title>WebGL 3D</title>
 
-    <style type="text/css">
-      body { background-color: grey;}
-      canvas { background-color: white;}
-    </style>
+        <style type="text/css">
+            body {
+                background-color: grey;
+            }
+            canvas {
+                background-color: white;
+            }
+        </style>
 
-    <script src="../../dist/skulpt.js" type="text/javascript"></script>
-    <script src="../../dist/builtin.js" type="text/javascript"></script>
-</head>
+        <script src="../../dist/skulpt.js" type="text/javascript"></script>
+        <script src="../../dist/builtin.js" type="text/javascript"></script>
+    </head>
 
-<body>
-<h1>WebGL 3D</h1>
-<form>
-<textarea id="code" name="code" cols="120" rows="40">
+    <body>
+        <h1>WebGL 3D</h1>
+        <form>
+            <textarea id="code" name="code" cols="120" rows="40">
 import webgl
 from math import sin
 
@@ -107,40 +111,40 @@ def draw(gl, elapsed):
 setup()
 
 gl.setDrawFunc(draw);
-</textarea>
-<button onclick="runit()" type="button">Run</button>
-</form>
-<canvas id="my-canvas" height="300" width="400">
-  Your browser does not support the HTML5 canvas element.
-</canvas>
-<pre id="my-output" ></pre>
-    <script>
-      function outputHandler(text) {
-        var output = document.getElementById("my-output");
-        output.innerHTML = output.innerHTML + text.replace(/</g, '&lt;');
-      }
+</textarea
+            >
+            <button onclick="runit()" type="button">Run</button>
+        </form>
+        <canvas id="my-canvas" height="300" width="400">
+            Your browser does not support the HTML5 canvas element.
+        </canvas>
+        <pre id="my-output"></pre>
+        <script>
+            function outputHandler(text) {
+                var output = document.getElementById("my-output");
+                output.innerHTML = output.innerHTML + text.replace(/</g, "&lt;");
+            }
 
-      function builtinRead(x) {
-        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
-          throw "File not found: '" + x + "'";
-        }
-        return Sk.builtinFiles["files"][x];
-      }
+            function builtinRead(x) {
+                if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+                    throw "File not found: '" + x + "'";
+                }
+                return Sk.builtinFiles["files"][x];
+            }
 
-      function runit() {
-        var prog = document.getElementById("code").value;
-        // Clear the output
-        document.getElementById("my-output").innerHTML = '';
-        Sk.canvas = "my-canvas";
-        Sk.pre = "my-output";
-        Sk.configure({"output":outputHandler, "read":builtinRead});
-        try {
-           eval(Sk.importMainWithBody("<stdin>", false, prog));
-        }
-        catch(e) {
-          alert(e);
-        }
-      }
-    </script>
-  </body>
+            function runit() {
+                var prog = document.getElementById("code").value;
+                // Clear the output
+                document.getElementById("my-output").innerHTML = "";
+                Sk.canvas = "my-canvas";
+                Sk.pre = "my-output";
+                Sk.configure({ output: outputHandler, read: builtinRead });
+                try {
+                    eval(Sk.importMainWithBody("<stdin>", false, prog));
+                } catch (e) {
+                    alert(e);
+                }
+            }
+        </script>
+    </body>
 </html>

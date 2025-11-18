@@ -116,16 +116,22 @@ function tp$new(args, kwargs) {
     // first check that we only have 3 args and they're of the correct type
     // argument dict must be of type dict
     if (dict.tp$name !== "dict") {
-        throw new Sk.builtin.TypeError("type() argument 3 must be dict, not " + Sk.abstr.typeName(dict));
+        throw new Sk.builtin.TypeError(
+            "type() argument 3 must be dict, not " + Sk.abstr.typeName(dict)
+        );
     }
     // checks if name must be string
     if (!Sk.builtin.checkString($name)) {
-        throw new Sk.builtin.TypeError("type() argument 1 must be str, not " + Sk.abstr.typeName($name));
+        throw new Sk.builtin.TypeError(
+            "type() argument 1 must be str, not " + Sk.abstr.typeName($name)
+        );
     }
     $name = $name.$jsstr();
     // argument bases must be of type tuple
     if (bases.tp$name !== "tuple") {
-        throw new Sk.builtin.TypeError("type() argument 2 must be tuple, not " + Sk.abstr.typeName(bases));
+        throw new Sk.builtin.TypeError(
+            "type() argument 2 must be tuple, not " + Sk.abstr.typeName(bases)
+        );
     }
     bases = bases.sk$asarray();
 
@@ -133,7 +139,7 @@ function tp$new(args, kwargs) {
      * @type {!typeObject}
      */
     const klass = function () {
-    // klass is essentially a function that gives its instances a dict
+        // klass is essentially a function that gives its instances a dict
         // if we support slots then we might need to have two versions of this
         this.$d = new Sk.builtin.dict();
     };
@@ -148,7 +154,10 @@ function tp$new(args, kwargs) {
     // set __dict__ if not already on the prototype
     /**@todo __slots__ */
     if (klass.$typeLookup(Sk.builtin.str.$dict) === undefined) {
-        klass.prototype.__dict__ = new Sk.builtin.getset_descriptor(klass, subtype_dict_getset_description);
+        klass.prototype.__dict__ = new Sk.builtin.getset_descriptor(
+            klass,
+            subtype_dict_getset_description
+        );
     }
 
     // copy properties from dict into klass.prototype
@@ -161,7 +170,9 @@ function tp$new(args, kwargs) {
     if (klass.prototype.hasOwnProperty("__qualname__")) {
         const qualname = klass.prototype.__qualname__;
         if (!Sk.builtin.checkString(qualname)) {
-            throw new Sk.builtin.TypeError("type __qualname__ must be a str, not '" + Sk.abstr.typeName(qualname) + "'");
+            throw new Sk.builtin.TypeError(
+                "type __qualname__ must be a str, not '" + Sk.abstr.typeName(qualname) + "'"
+            );
         }
         klass.prototype.ht$qualname = qualname;
     }
@@ -256,9 +267,13 @@ function tp$getattr(pyName, canSuspend) {
 function tp$setattr(pyName, value, canSuspend) {
     if (!this.sk$klass) {
         if (value !== undefined) {
-            throw new Sk.builtin.TypeError("can't set attributes of built-in/extension type '" + this.prototype.tp$name + "'");
+            throw new Sk.builtin.TypeError(
+                "can't set attributes of built-in/extension type '" + this.prototype.tp$name + "'"
+            );
         } else {
-            throw new Sk.builtin.TypeError("can't delete attributes on type object '" + this.prototype.tp$name + "'");
+            throw new Sk.builtin.TypeError(
+                "can't delete attributes on type object '" + this.prototype.tp$name + "'"
+            );
         }
     }
     // meta types must follow single inheritance - we could change this and do
@@ -277,7 +292,13 @@ function tp$setattr(pyName, value, canSuspend) {
     if (value === undefined) {
         const proto = this.prototype;
         if (!proto.hasOwnProperty(jsName)) {
-            throw new Sk.builtin.AttributeError("type object '" + this.prototype.tp$name + "' has no attribute '" + pyName.$jsstr() + "'");
+            throw new Sk.builtin.AttributeError(
+                "type object '" +
+                    this.prototype.tp$name +
+                    "' has no attribute '" +
+                    pyName.$jsstr() +
+                    "'"
+            );
         } else {
             delete proto[jsName];
             // delete the slot_func
@@ -327,7 +348,11 @@ function $typeLookup(pyName) {
 }
 
 function $isSubType(other) {
-    return this === other || this.prototype instanceof other || (!this.prototype.sk$prototypical && this.prototype.tp$mro.includes(other));
+    return (
+        this === other ||
+        this.prototype instanceof other ||
+        (!this.prototype.sk$prototypical && this.prototype.tp$mro.includes(other))
+    );
 }
 
 function setUpKlass($name, klass, bases, meta) {
@@ -344,13 +369,16 @@ function setUpKlass($name, klass, bases, meta) {
         tp$bases: { value: bases, writable: true },
         tp$mro: { value: null, writable: true },
         ht$type: { value: true, writable: true },
-        ht$name: { value: pyName, writable: true},
-        ht$qualname: { value: pyName, writable: true},
+        ht$name: { value: pyName, writable: true },
+        ht$qualname: { value: pyName, writable: true },
     });
     klass_proto.tp$mro = klass.$buildMRO();
 
     Object.defineProperties(klass, {
-        $typeLookup: { value: klass_proto.sk$prototypical ? fastLookup : slowLookup, writable: true },
+        $typeLookup: {
+            value: klass_proto.sk$prototypical ? fastLookup : slowLookup,
+            writable: true,
+        },
         sk$klass: { value: true, writable: true },
     });
 }
@@ -374,7 +402,9 @@ function best_base_(bases) {
         if (!Sk.builtin.checkClass(base_i)) {
             throw new Sk.builtin.TypeError("bases must be 'type' objects");
         } else if (base_i.sk$unacceptableBase) {
-            throw new Sk.builtin.TypeError("type '" + base_i.prototype.tp$name + "' is not an acceptable base type");
+            throw new Sk.builtin.TypeError(
+                "type '" + base_i.prototype.tp$name + "' is not an acceptable base type"
+            );
         }
         candidate = solid_base(base_i); // basically the builtin I think
         if (winner === undefined) {
@@ -396,7 +426,7 @@ function $mroMerge(seqs) {
     this.prototype.sk$prototypical = true; // assume true to start with
     let seq, i, j;
     const res = [];
-    for (; ;) {
+    for (;;) {
         for (i = 0; i < seqs.length; ++i) {
             seq = seqs[i];
             if (seq.length !== 0) {
@@ -415,7 +445,7 @@ function $mroMerge(seqs) {
                 const cand = seq[0];
                 //print("CAND", Sk.builtin.repr(cand).v);
 
-                /* eslint-disable */
+                 
                 OUTER: for (j = 0; j < seqs.length; ++j) {
                     const sseq = seqs[j];
                     for (let k = 1; k < sseq.length; ++k) {
@@ -424,7 +454,7 @@ function $mroMerge(seqs) {
                         }
                     }
                 }
-                /* eslint-enable */
+                 
 
                 // cand is not in any sequences' tail -> constraint-free
                 if (j === seqs.length) {
@@ -608,7 +638,11 @@ Sk.builtin.type.prototype.tp$getsets = {
             check_special_type_attr(this, value, Sk.builtin.str.$name);
             if (!Sk.builtin.checkString(value)) {
                 throw new Sk.builtin.TypeError(
-                    "can only assign string to " + this.prototype.tp$name + ".__name__, not '" + Sk.abstr.typeName(value) + "'"
+                    "can only assign string to " +
+                        this.prototype.tp$name +
+                        ".__name__, not '" +
+                        Sk.abstr.typeName(value) +
+                        "'"
                 );
             }
             this.prototype.ht$name = value;
@@ -624,11 +658,15 @@ Sk.builtin.type.prototype.tp$getsets = {
             check_special_type_attr(this, value, Sk.builtin.str.$name);
             if (!Sk.builtin.checkString(value)) {
                 throw new Sk.builtin.TypeError(
-                    "can only assign string to " + this.prototype.tp$name + ".__qualname__, not '" + Sk.abstr.typeName(value) + "'"
+                    "can only assign string to " +
+                        this.prototype.tp$name +
+                        ".__qualname__, not '" +
+                        Sk.abstr.typeName(value) +
+                        "'"
                 );
             }
             this.prototype.ht$qualname = value;
-        }
+        },
     },
     __module__: {
         $get() {
@@ -638,7 +676,9 @@ Sk.builtin.type.prototype.tp$getsets = {
                 return mod;
             }
             if (typeproto.tp$name.includes(".")) {
-                return new Sk.builtin.str(typeproto.tp$name.slice(0, typeproto.tp$name.lastIndexOf(".")));
+                return new Sk.builtin.str(
+                    typeproto.tp$name.slice(0, typeproto.tp$name.lastIndexOf("."))
+                );
             }
             return new Sk.builtin.str("builtins");
         },
@@ -655,7 +695,7 @@ Sk.builtin.type.prototype.tp$methods = /**@lends {Sk.builtin.type.prototype}*/ {
         $meth() {
             return new Sk.builtin.list(this.$buildMRO());
         },
-        $flags: {NoArgs: true},
+        $flags: { NoArgs: true },
     },
     __dir__: {
         $meth: function __dir__() {
@@ -689,7 +729,7 @@ Sk.builtin.type.prototype.tp$methods = /**@lends {Sk.builtin.type.prototype}*/ {
             }
             return new Sk.builtin.list(dir);
         },
-        $flags: {NoArgs: true},
+        $flags: { NoArgs: true },
         $doc: "Specialized __dir__ implementation for types.",
     },
 };
@@ -732,9 +772,13 @@ function get_dict_descr_of_builtn_base(type) {
 
 function check_special_type_attr(type, value, pyName) {
     if (type.sk$klass === undefined) {
-        throw new Sk.builtin.TypeError("can't set " + type.prototype.tp$name + "." + pyName.$jsstr());
+        throw new Sk.builtin.TypeError(
+            "can't set " + type.prototype.tp$name + "." + pyName.$jsstr()
+        );
     }
     if (value === undefined) {
-        throw new Sk.builtin.TypeError("can't delete " + type.prototype.tp$name + "." + pyName.$jsstr());
+        throw new Sk.builtin.TypeError(
+            "can't delete " + type.prototype.tp$name + "." + pyName.$jsstr()
+        );
     }
 }

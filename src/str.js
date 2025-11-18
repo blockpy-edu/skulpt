@@ -16,8 +16,8 @@ function setInterned(x, pyStr) {
  */
 Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
     constructor: function str(x) {
-    // new Sk.builtin.str is an internal function called with a JS value x
-    // occasionally called with a python object and returns tp$str() or $r();
+        // new Sk.builtin.str is an internal function called with a JS value x
+        // occasionally called with a python object and returns tp$str() or $r();
         Sk.asserts.assert(this instanceof Sk.builtin.str, "bad call to str - use 'new'");
         let ret;
         if (typeof x === "string") {
@@ -27,12 +27,16 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         } else if (x === null) {
             ret = "None";
         } else if (x.tp$str !== undefined) {
-        // then we're a python object - all objects inherit from object which has tp$str
+            // then we're a python object - all objects inherit from object which has tp$str
             return x.tp$str();
         } else if (typeof x === "number") {
-            ret = Number.isFinite(x) ? String(x) : String(x).replace("Infinity", "inf").replace("NaN", "nan");
+            ret = Number.isFinite(x)
+                ? String(x)
+                : String(x).replace("Infinity", "inf").replace("NaN", "nan");
         } else {
-            throw new Sk.builtin.TypeError("could not convert object of type '" + Sk.abstr.typeName(x) + "' to str");
+            throw new Sk.builtin.TypeError(
+                "could not convert object of type '" + Sk.abstr.typeName(x) + "' to str"
+            );
         }
 
         const interned = getInterned(ret);
@@ -51,8 +55,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
     slots: /**@lends {Sk.builtin.str.prototype} */ {
         tp$getattr: Sk.generic.getAttr,
         tp$as_sequence_or_mapping: true,
-        tp$doc:
-            "str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",
+        tp$doc: "str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",
         tp$new(args, kwargs) {
             kwargs = kwargs || [];
             if (this !== Sk.builtin.str.prototype) {
@@ -61,16 +64,27 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             if (args.length <= 1 && !kwargs.length) {
                 return new Sk.builtin.str(args[0]);
             } else if (!Sk.__future__.python3) {
-                throw new Sk.builtin.TypeError("str takes at most one argument (" + (args.length + kwargs.length) + " given)");
+                throw new Sk.builtin.TypeError(
+                    "str takes at most one argument (" + (args.length + kwargs.length) + " given)"
+                );
             } else {
-                const [x, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs("str", ["object", "encoding", "errors"], args, kwargs);
+                const [x, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "str",
+                    ["object", "encoding", "errors"],
+                    args,
+                    kwargs
+                );
                 if (x === undefined || (encoding === undefined && errors === undefined)) {
                     return new Sk.builtin.str(x);
                 }
                 // check the types of encoding and errors
                 Sk.builtin.bytes.check$encodeArgs("str", encoding, errors);
                 if (!Sk.builtin.checkBytes(x)) {
-                    throw new Sk.builtin.TypeError("decoding to str: need a bytes-like object, " + Sk.abstr.typeName(x) + " found");
+                    throw new Sk.builtin.TypeError(
+                        "decoding to str: need a bytes-like object, " +
+                            Sk.abstr.typeName(x) +
+                            " found"
+                    );
                 }
                 return Sk.builtin.bytes.$decode.call(x, encoding, errors);
             }
@@ -169,7 +183,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     throw new Sk.builtin.IndexError("string index out of range");
                 }
                 if (this.codepoints) {
-                    return new Sk.builtin.str(this.v.substring(this.codepoints[index], this.codepoints[index + 1]));
+                    return new Sk.builtin.str(
+                        this.v.substring(this.codepoints[index], this.codepoints[index + 1])
+                    );
                 } else {
                     return new Sk.builtin.str(this.v.charAt(index));
                 }
@@ -187,20 +203,26 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 }
                 return new Sk.builtin.str(ret);
             }
-            throw new Sk.builtin.TypeError("string indices must be integers, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError(
+                "string indices must be integers, not " + Sk.abstr.typeName(index)
+            );
         },
         sq$length() {
             return this.$hasAstralCodePoints() ? this.codepoints.length : this.v.length;
         },
         sq$concat(other) {
             if (!(other instanceof Sk.builtin.str)) {
-                throw new Sk.builtin.TypeError("cannot concatenate 'str' and '" + Sk.abstr.typeName(other) + "' objects");
+                throw new Sk.builtin.TypeError(
+                    "cannot concatenate 'str' and '" + Sk.abstr.typeName(other) + "' objects"
+                );
             }
             return new Sk.builtin.str(this.v + other.v);
         },
         sq$repeat(n) {
             if (!Sk.misceval.isIndex(n)) {
-                throw new Sk.builtin.TypeError("can't multiply sequence by non-int of type '" + Sk.abstr.typeName(n) + "'");
+                throw new Sk.builtin.TypeError(
+                    "can't multiply sequence by non-int of type '" + Sk.abstr.typeName(n) + "'"
+                );
             }
             n = Sk.misceval.asIndexSized(n, Sk.builtin.OverflowError);
             if (n * this.v.length > Number.MAX_SAFE_INTEGER) {
@@ -214,7 +236,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         },
         sq$contains(ob) {
             if (!(ob instanceof Sk.builtin.str)) {
-                throw new Sk.builtin.TypeError("'in <string>' requires string as left operand not " + Sk.abstr.typeName(ob));
+                throw new Sk.builtin.TypeError(
+                    "'in <string>' requires string as left operand not " + Sk.abstr.typeName(ob)
+                );
             }
             return this.v.indexOf(ob.v) !== -1;
         },
@@ -230,7 +254,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             // we call str new method with all the args and kwargs
             const str_instance = Sk.builtin.str.prototype.tp$new(args, kwargs);
             instance.$mangled = str_instance.$mangled;
-            instance.$savedKeyHash = str_instance.$savedKeyHash ;
+            instance.$savedKeyHash = str_instance.$savedKeyHash;
             instance.v = str_instance.v;
             return instance;
         },
@@ -270,7 +294,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             if (this.$hasAstralCodePoints()) {
                 const codepoints = this.codepoints;
                 for (let i = 0; i < codepoints.length; i++) {
-                    ret.push(new Sk.builtin.str(this.v.substring(codepoints[i], codepoints[i + 1])));
+                    ret.push(
+                        new Sk.builtin.str(this.v.substring(codepoints[i], codepoints[i + 1]))
+                    );
                 }
             } else {
                 for (let i = 0; i < this.v.length; i++) {
@@ -285,7 +311,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             if (tgt instanceof Sk.builtin.str) {
                 return tgt.v;
             }
-            throw new Sk.builtin.TypeError("a str instance is required not '" + Sk.abstr.typeName(tgt) + "'");
+            throw new Sk.builtin.TypeError(
+                "a str instance is required not '" + Sk.abstr.typeName(tgt) + "'"
+            );
         },
         $isIdentifier() {
             return Sk.token.isIdentifier(this.v);
@@ -294,20 +322,26 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
     methods: /**@lends {Sk.builtin.str.prototype} */ {
         encode: {
             $meth: function encode(encoding, errors) {
-                ({ encoding, errors } = Sk.builtin.bytes.check$encodeArgs("encode", encoding, errors));
+                ({ encoding, errors } = Sk.builtin.bytes.check$encodeArgs(
+                    "encode",
+                    encoding,
+                    errors
+                ));
                 const pyBytes = Sk.builtin.bytes.str$encode(this, encoding, errors);
                 return Sk.__future__.python3 ? pyBytes : new Sk.builtin.str(pyBytes.$jsstr());
             },
             $flags: { NamedArgs: ["encoding", "errors"] },
             $textsig: "($self, /, encoding='utf-8', errors='strict')",
-            $doc:
-                "Encode the string using the codec registered for encoding.\n\n  encoding\n    The encoding in which to encode the string.\n  errors\n    The error handling scheme to use for encoding errors.\n    The default is 'strict' meaning that encoding errors raise a\n    UnicodeEncodeError.  Other possible values are 'ignore', 'replace' and\n    'xmlcharrefreplace' as well as any other name registered with\n    codecs.register_error that can handle UnicodeEncodeErrors.",
+            $doc: "Encode the string using the codec registered for encoding.\n\n  encoding\n    The encoding in which to encode the string.\n  errors\n    The error handling scheme to use for encoding errors.\n    The default is 'strict' meaning that encoding errors raise a\n    UnicodeEncodeError.  Other possible values are 'ignore', 'replace' and\n    'xmlcharrefreplace' as well as any other name registered with\n    codecs.register_error that can handle UnicodeEncodeErrors.",
         },
         replace: {
             $meth(oldS, newS, count) {
                 oldS = this.get$tgt(oldS);
                 newS = this.get$tgt(newS);
-                count = count === undefined ? -1 : Sk.misceval.asIndexSized(count, Sk.builtin.OverflowError);
+                count =
+                    count === undefined
+                        ? -1
+                        : Sk.misceval.asIndexSized(count, Sk.builtin.OverflowError);
                 const patt = new RegExp(re_escape_(oldS), "g");
                 if (count < 0) {
                     return new Sk.builtin.str(this.v.replace(patt, newS));
@@ -318,8 +352,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 2, MaxArgs: 3 },
             $textsig: "($self, old, new, count=-1, /)",
-            $doc:
-                "Return a copy with all occurrences of substring old replaced by new.\n\n  count\n    Maximum number of occurrences to replace.\n    -1 (the default value) means replace all occurrences.\n\nIf the optional argument count is given, only the first count occurrences are\nreplaced.",
+            $doc: "Return a copy with all occurrences of substring old replaced by new.\n\n  count\n    Maximum number of occurrences to replace.\n    -1 (the default value) means replace all occurrences.\n\nIf the optional argument count is given, only the first count occurrences are\nreplaced.",
         },
         split: {
             $meth: function split(sep, maxsplit) {
@@ -333,8 +366,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
             $textsig: "($self, /, sep=None, maxsplit=-1)",
-            $doc:
-                "Return a list of the words in the string, using sep as the delimiter string.\n\n  sep\n    The delimiter according which to split the string.\n    None (the default value) means split according to any whitespace,\n    and discard empty strings from the result.\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.",
+            $doc: "Return a list of the words in the string, using sep as the delimiter string.\n\n  sep\n    The delimiter according which to split the string.\n    None (the default value) means split according to any whitespace,\n    and discard empty strings from the result.\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.",
         },
         rsplit: {
             $meth: function rsplit(sep, maxsplit) {
@@ -355,8 +387,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
             $textsig: "($self, /, sep=None, maxsplit=-1)",
-            $doc:
-                "Return a list of the words in the string, using sep as the delimiter string.\n\n  sep\n    The delimiter according which to split the string.\n    None (the default value) means split according to any whitespace,\n    and discard empty strings from the result.\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.\n\nSplits are done starting at the end of the string and working to the front.",
+            $doc: "Return a list of the words in the string, using sep as the delimiter string.\n\n  sep\n    The delimiter according which to split the string.\n    None (the default value) means split according to any whitespace,\n    and discard empty strings from the result.\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.\n\nSplits are done starting at the end of the string and working to the front.",
         },
         join: {
             $meth(seq) {
@@ -365,7 +396,11 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                     Sk.misceval.iterFor(Sk.abstr.iter(seq), (i) => {
                         if (!(i instanceof Sk.builtin.str)) {
                             throw new Sk.builtin.TypeError(
-                                "sequence item " + arrOfStrs.length + ": expected str, " + Sk.abstr.typeName(i) + " found"
+                                "sequence item " +
+                                    arrOfStrs.length +
+                                    ": expected str, " +
+                                    Sk.abstr.typeName(i) +
+                                    " found"
                             );
                         }
                         arrOfStrs.push(i.v);
@@ -375,17 +410,17 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { OneArg: true },
             $textsig: "($self, iterable, /)",
-            $doc:
-                "Concatenate any number of strings.\n\nThe string whose method is called is inserted in between each given string.\nThe result is returned as a new string.\n\nExample: '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'",
+            $doc: "Concatenate any number of strings.\n\nThe string whose method is called is inserted in between each given string.\nThe result is returned as a new string.\n\nExample: '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'",
         },
         capitalize: {
             $meth: function capitalize() {
-                return new Sk.builtin.str(this.v.charAt(0).toUpperCase() + this.v.slice(1).toLowerCase());
+                return new Sk.builtin.str(
+                    this.v.charAt(0).toUpperCase() + this.v.slice(1).toLowerCase()
+                );
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return a capitalized version of the string.\n\nMore specifically, make the first character have upper case and the rest lower\ncase.",
+            $doc: "Return a capitalized version of the string.\n\nMore specifically, make the first character have upper case and the rest lower\ncase.",
         },
         // casefold: {
         //     $meth: methods.casefold,
@@ -395,13 +430,15 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
         // },
         title: {
             $meth: function title() {
-                const ret = this.v.replace(/[a-z][a-z]*/gi, (str) => str[0].toUpperCase() + str.substr(1).toLowerCase());
+                const ret = this.v.replace(
+                    /[a-z][a-z]*/gi,
+                    (str) => str[0].toUpperCase() + str.substr(1).toLowerCase()
+                );
                 return new Sk.builtin.str(ret);
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return a version of the string where each word is titlecased.\n\nMore specifically, words start with uppercased characters and all remaining\ncased characters have lower case.",
+            $doc: "Return a version of the string where each word is titlecased.\n\nMore specifically, words start with uppercased characters and all remaining\ncased characters have lower case.",
         },
         center: {
             $meth: mkJust(false, true),
@@ -428,24 +465,27 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of substring sub in\nstring S[start:end].  Optional arguments start and end are\ninterpreted as in slice notation.",
+            $doc: "S.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of substring sub in\nstring S[start:end].  Optional arguments start and end are\ninterpreted as in slice notation.",
         },
         expandtabs: {
             $meth: function expandtabs(tabsize) {
                 if (Sk.builtin.checkInt(tabsize)) {
                     tabsize = Sk.builtin.asnum$(tabsize);
                 } else {
-                    throw new Sk.builtin.TypeError("an integer is required, got type" + Sk.abstr.typeName(tabsize));
+                    throw new Sk.builtin.TypeError(
+                        "an integer is required, got type" + Sk.abstr.typeName(tabsize)
+                    );
                 }
                 const spaces = new Array(tabsize + 1).join(" ");
-                const expanded = this.v.replace(/([^\r\n\t]*)\t/g, (a, b) => b + spaces.slice(b.length % tabsize));
+                const expanded = this.v.replace(
+                    /([^\r\n\t]*)\t/g,
+                    (a, b) => b + spaces.slice(b.length % tabsize)
+                );
                 return new Sk.builtin.str(expanded);
             },
             $flags: { NamedArgs: ["tabsize"], Defaults: [8] },
             $textsig: "($self, /, tabsize=8)",
-            $doc:
-                "Return a copy where all tab characters are expanded using spaces.\n\nIf tabsize is not given, a tab size of 8 characters is assumed.",
+            $doc: "Return a copy where all tab characters are expanded using spaces.\n\nIf tabsize is not given, a tab size of 8 characters is assumed.",
         },
         find: {
             $meth: function find(tgt, start, end) {
@@ -453,15 +493,13 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
+            $doc: "S.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
         },
         partition: {
             $meth: mkPartition(false),
             $flags: { OneArg: true },
             $textsig: "($self, sep, /)",
-            $doc:
-                "Partition the string into three parts using the given separator.\n\nThis will search for the separator in the string.  If the separator is found,\nreturns a 3-tuple containing the part before the separator, the separator\nitself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing the original string\nand two empty strings.",
+            $doc: "Partition the string into three parts using the given separator.\n\nThis will search for the separator in the string.  If the separator is found,\nreturns a 3-tuple containing the part before the separator, the separator\nitself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing the original string\nand two empty strings.",
         },
         index: {
             $meth: function index(tgt, start, end) {
@@ -474,8 +512,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found, \nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.",
+            $doc: "S.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in S where substring sub is found, \nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.",
         },
         ljust: {
             $meth: mkJust(false, false),
@@ -495,8 +532,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             $meth: mkStrip(/^\s+/g, (regex) => "^[" + regex + "]+"),
             $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: "($self, chars=None, /)",
-            $doc:
-                "Return a copy of the string with leading whitespace removed.\n\nIf chars is given and not None, remove characters in chars instead.",
+            $doc: "Return a copy of the string with leading whitespace removed.\n\nIf chars is given and not None, remove characters in chars instead.",
         },
         rfind: {
             $meth(tgt, start, end) {
@@ -504,8 +540,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
+            $doc: "S.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
         },
         rindex: {
             $meth: function rindex(tgt, start, end) {
@@ -518,8 +553,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.",
+            $doc: "S.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in S where substring sub is found,\nsuch that sub is contained within S[start:end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the substring is not found.",
         },
         rjust: {
             $meth: mkJust(true, false),
@@ -531,15 +565,13 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             $meth: mkStrip(/\s+$/g, (regex) => "[" + regex + "]+$"),
             $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: "($self, chars=None, /)",
-            $doc:
-                "Return a copy of the string with trailing whitespace removed.\n\nIf chars is given and not None, remove characters in chars instead.",
+            $doc: "Return a copy of the string with trailing whitespace removed.\n\nIf chars is given and not None, remove characters in chars instead.",
         },
         rpartition: {
             $meth: mkPartition(true),
             $flags: { OneArg: true },
             $textsig: "($self, sep, /)",
-            $doc:
-                "Partition the string into three parts using the given separator.\n\nThis will search for the separator in the string, starting at the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty strings\nand the original string.",
+            $doc: "Partition the string into three parts using the given separator.\n\nThis will search for the separator in the string, starting at the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty strings\nand the original string.",
         },
         splitlines: {
             $meth: function splitlines(keepends) {
@@ -583,15 +615,13 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NamedArgs: ["keepends"], Defaults: [false] },
             $textsig: "($self, /, keepends=False)",
-            $doc:
-                "Return a list of the lines in the string, breaking at line boundaries.\n\nLine breaks are not included in the resulting list unless keepends is given and\ntrue.",
+            $doc: "Return a list of the lines in the string, breaking at line boundaries.\n\nLine breaks are not included in the resulting list unless keepends is given and\ntrue.",
         },
         strip: {
             $meth: mkStrip(/^\s+|\s+$/g, (regex) => "^[" + regex + "]+|[" + regex + "]+$"),
             $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: "($self, chars=None, /)",
-            $doc:
-                "Return a copy of the string with leading and trailing whitespace remove.\n\nIf chars is given and not None, remove characters in chars instead.",
+            $doc: "Return a copy of the string with leading and trailing whitespace remove.\n\nIf chars is given and not None, remove characters in chars instead.",
         },
         swapcase: {
             $meth() {
@@ -624,15 +654,16 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             $meth: mkStartsEndswith("startswith", (substr, i) => substr.indexOf(i) === 0),
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if S starts with the specified prefix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nprefix can also be a tuple of strings to try.",
+            $doc: "S.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if S starts with the specified prefix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nprefix can also be a tuple of strings to try.",
         },
         endswith: {
-            $meth: mkStartsEndswith("endswith", (substr, i) => substr.indexOf(i, substr.length - i.length) !== -1),
+            $meth: mkStartsEndswith(
+                "endswith",
+                (substr, i) => substr.indexOf(i, substr.length - i.length) !== -1
+            ),
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "S.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if S ends with the specified suffix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nsuffix can also be a tuple of strings to try.",
+            $doc: "S.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if S ends with the specified suffix, False otherwise.\nWith optional start, test S beginning at that position.\nWith optional end, stop comparing S at that position.\nsuffix can also be a tuple of strings to try.",
         },
         isascii: {
             $meth() {
@@ -640,26 +671,27 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if all characters in the string are ASCII, False otherwise.\n\nASCII characters have code points in the range U+0000-U+007F.\nEmpty string is ASCII too.",
+            $doc: "Return True if all characters in the string are ASCII, False otherwise.\n\nASCII characters have code points in the range U+0000-U+007F.\nEmpty string is ASCII too.",
         },
         islower: {
             $meth: function islower() {
-                return new Sk.builtin.bool(this.v.length && /[a-z]/.test(this.v) && !/[A-Z]/.test(this.v));
+                return new Sk.builtin.bool(
+                    this.v.length && /[a-z]/.test(this.v) && !/[A-Z]/.test(this.v)
+                );
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is a lowercase string, False otherwise.\n\nA string is lowercase if all cased characters in the string are lowercase and\nthere is at least one cased character in the string.",
+            $doc: "Return True if the string is a lowercase string, False otherwise.\n\nA string is lowercase if all cased characters in the string are lowercase and\nthere is at least one cased character in the string.",
         },
         isupper: {
             $meth: function islower() {
-                return new Sk.builtin.bool(this.v.length && !/[a-z]/.test(this.v) && /[A-Z]/.test(this.v));
+                return new Sk.builtin.bool(
+                    this.v.length && !/[a-z]/.test(this.v) && /[A-Z]/.test(this.v)
+                );
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is an uppercase string, False otherwise.\n\nA string is uppercase if all cased characters in the string are uppercase and\nthere is at least one cased character in the string.",
+            $doc: "Return True if the string is an uppercase string, False otherwise.\n\nA string is uppercase if all cased characters in the string are uppercase and\nthere is at least one cased character in the string.",
         },
         istitle: {
             $meth: function istitle() {
@@ -690,8 +722,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is a title-cased string, False otherwise.\n\nIn a title-cased string, upper- and title-case characters may only\nfollow uncased characters and lowercase characters only cased ones.",
+            $doc: "Return True if the string is a title-cased string, False otherwise.\n\nIn a title-cased string, upper- and title-case characters may only\nfollow uncased characters and lowercase characters only cased ones.",
         },
         isspace: {
             $meth: function isspace() {
@@ -699,8 +730,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is a whitespace string, False otherwise.\n\nA string is whitespace if all characters in the string are whitespace and there\nis at least one character in the string.",
+            $doc: "Return True if the string is a whitespace string, False otherwise.\n\nA string is whitespace if all characters in the string are whitespace and there\nis at least one character in the string.",
         },
         // isdecimal: {
         //     $meth: methods.isdecimal,
@@ -715,8 +745,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is a digit string, False otherwise.\n\nA string is a digit string if all characters in the string are digits and there\nis at least one character in the string.",
+            $doc: "Return True if the string is a digit string, False otherwise.\n\nA string is a digit string if all characters in the string are digits and there\nis at least one character in the string.",
         },
         isnumeric: {
             $meth: function isnumeric() {
@@ -724,8 +753,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is a numeric string, False otherwise.\n\nA string is numeric if all characters in the string are numeric and there is at\nleast one character in the string.",
+            $doc: "Return True if the string is a numeric string, False otherwise.\n\nA string is numeric if all characters in the string are numeric and there is at\nleast one character in the string.",
         },
         isalpha: {
             $meth: function isalpha() {
@@ -733,8 +761,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is an alphabetic string, False otherwise.\n\nA string is alphabetic if all characters in the string are alphabetic and there\nis at least one character in the string.",
+            $doc: "Return True if the string is an alphabetic string, False otherwise.\n\nA string is alphabetic if all characters in the string are alphabetic and there\nis at least one character in the string.",
         },
         isalnum: {
             $meth: function isalnum() {
@@ -742,8 +769,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return True if the string is an alpha-numeric string, False otherwise.\n\nA string is alpha-numeric if all characters in the string are alpha-numeric and\nthere is at least one character in the string.",
+            $doc: "Return True if the string is an alpha-numeric string, False otherwise.\n\nA string is alpha-numeric if all characters in the string are alpha-numeric and\nthere is at least one character in the string.",
         },
         isidentifier: {
             $meth: function isidentifier() {
@@ -751,8 +777,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                'Return True if the string is a valid Python identifier, False otherwise.\n\nUse keyword.iskeyword() to test for reserved identifiers such as "def" and\n"class".',
+            $doc: 'Return True if the string is a valid Python identifier, False otherwise.\n\nUse keyword.iskeyword() to test for reserved identifiers such as "def" and\n"class".',
         },
         // isprintable: {
         //     $meth: methods.isprintable,
@@ -783,8 +808,7 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
             $meth: Sk.formatting.format,
             $flags: { FastCall: true },
             $textsig: null,
-            $doc:
-                "S.format(*args, **kwargs) -> str\n\nReturn a formatted version of S, using substitutions from args and kwargs.\nThe substitutions are identified by braces ('{' and '}').",
+            $doc: "S.format(*args, **kwargs) -> str\n\nReturn a formatted version of S, using substitutions from args and kwargs.\nThe substitutions are identified by braces ('{' and '}').",
         },
         // format_map: {
         //     $meth: methods.format_map,
@@ -840,7 +864,7 @@ function re_escape_(s) {
 // methods
 var special_chars = /([.*+?=|\\\/()\[\]\{\}^$])/g;
 var leading_whitespace = /^[\s\xa0]+/;
-    
+
 function splitPoints(self, sep, maxsplit) {
     sep = Sk.builtin.checkNone(sep) ? null : self.get$tgt(sep);
     if (sep !== null && !sep.length) {
@@ -907,12 +931,20 @@ function mkPartition(isReversed) {
         if (isReversed) {
             pos = jsstr.lastIndexOf(sepStr);
             if (pos < 0) {
-                return new Sk.builtin.tuple([new Sk.builtin.str(""), new Sk.builtin.str(""), new Sk.builtin.str(jsstr)]);
+                return new Sk.builtin.tuple([
+                    new Sk.builtin.str(""),
+                    new Sk.builtin.str(""),
+                    new Sk.builtin.str(jsstr),
+                ]);
             }
         } else {
             pos = jsstr.indexOf(sepStr);
             if (pos < 0) {
-                return new Sk.builtin.tuple([new Sk.builtin.str(jsstr), new Sk.builtin.str(""), new Sk.builtin.str("")]);
+                return new Sk.builtin.tuple([
+                    new Sk.builtin.str(jsstr),
+                    new Sk.builtin.str(""),
+                    new Sk.builtin.str(""),
+                ]);
             }
         }
 
@@ -1003,7 +1035,9 @@ function mkFind(isReversed) {
 function mkStartsEndswith(funcname, is_match) {
     return function (tgt, start, end) {
         if (!(tgt instanceof Sk.builtin.str) && !(tgt instanceof Sk.builtin.tuple)) {
-            throw new Sk.builtin.TypeError(funcname + " first arg must be str or a tuple of str, not " + Sk.abstr.typeName(tgt));
+            throw new Sk.builtin.TypeError(
+                funcname + " first arg must be str or a tuple of str, not " + Sk.abstr.typeName(tgt)
+            );
         }
 
         ({ start, end } = indices(this, start, end));
@@ -1015,9 +1049,18 @@ function mkStartsEndswith(funcname, is_match) {
         const substr = this.v.slice(start, end);
 
         if (tgt instanceof Sk.builtin.tuple) {
-            for (let it = Sk.abstr.iter(tgt), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+            for (
+                let it = Sk.abstr.iter(tgt), i = it.tp$iternext();
+                i !== undefined;
+                i = it.tp$iternext()
+            ) {
                 if (!(i instanceof Sk.builtin.str)) {
-                    throw new Sk.builtin.TypeError("tuple for " + funcname + " must only contain str, not " + Sk.abstr.typeName(i));
+                    throw new Sk.builtin.TypeError(
+                        "tuple for " +
+                            funcname +
+                            " must only contain str, not " +
+                            Sk.abstr.typeName(i)
+                    );
                 }
                 if (is_match(substr, i.v)) {
                     return Sk.builtin.bool.true$;
@@ -1060,16 +1103,28 @@ function strBytesRemainder(rhs) {
     const strBytesConstructor = this.sk$builtinBase;
     // distinguish between bytes and str
 
-    if (rhs.constructor !== Sk.builtin.tuple && !(rhs instanceof Sk.builtin.dict || rhs instanceof Sk.builtin.mappingproxy)) {
+    if (
+        rhs.constructor !== Sk.builtin.tuple &&
+        !(rhs instanceof Sk.builtin.dict || rhs instanceof Sk.builtin.mappingproxy)
+    ) {
         rhs = new Sk.builtin.tuple([rhs]);
     }
     // general approach is to use a regex that matches the format above, and
     // do an re.sub with a function as replacement to make the subs.
 
     //           1 2222222222222222   33333333   444444444   5555555555555  66666  777777777777777777
-    regex = /%(\([a-zA-Z0-9]+\))?([#0 +\-]+)?(\*|[0-9]+)?(\.(\*|[0-9]+))?[hlL]?([diouxXeEfFgGcrsb%])/g;
+    regex =
+        /%(\([a-zA-Z0-9]+\))?([#0 +\-]+)?(\*|[0-9]+)?(\.(\*|[0-9]+))?[hlL]?([diouxXeEfFgGcrsb%])/g;
     index = 0;
-    replFunc = function (substring, mappingKey, conversionFlags, fieldWidth, precision, precbody, conversionType) {
+    replFunc = function (
+        substring,
+        mappingKey,
+        conversionFlags,
+        fieldWidth,
+        precision,
+        precbody,
+        conversionType
+    ) {
         var result;
         var convName;
         var convValue;
@@ -1226,13 +1281,20 @@ function strBytesRemainder(rhs) {
             // new case where only one argument is provided
             value = rhs;
         } else {
-            throw new Sk.builtin.AttributeError(rhs.tp$name + " instance has no attribute 'mp$subscript'");
+            throw new Sk.builtin.AttributeError(
+                rhs.tp$name + " instance has no attribute 'mp$subscript'"
+            );
         }
         base = 10;
         if (conversionType === "d" || conversionType === "i") {
             let tmpData = formatNumber(value, base);
-            if (tmpData[1] === undefined){
-                throw new Sk.builtin.TypeError("%"+ conversionType+" format: a number is required, not "+ Sk.abstr.typeName(value));
+            if (tmpData[1] === undefined) {
+                throw new Sk.builtin.TypeError(
+                    "%" +
+                        conversionType +
+                        " format: a number is required, not " +
+                        Sk.abstr.typeName(value)
+                );
             }
             let r = tmpData[1];
             tmpData[1] = r.indexOf(".") !== -1 ? parseInt(r, 10).toString() : r;
@@ -1264,7 +1326,9 @@ function strBytesRemainder(rhs) {
             if (isNaN(convValue)) {
                 return "nan";
             }
-            convName = ["toExponential", "toFixed", "toPrecision"]["efg".indexOf(conversionType.toLowerCase())];
+            convName = ["toExponential", "toFixed", "toPrecision"][
+                "efg".indexOf(conversionType.toLowerCase())
+            ];
             if (precision === undefined || precision === "") {
                 if (conversionType === "e" || conversionType === "E") {
                     precision = 6;
@@ -1290,7 +1354,8 @@ function strBytesRemainder(rhs) {
                     result = val.toExponential();
                 }
                 if (result.charAt(result.length - 2) == "-") {
-                    result = result.slice(0, result.length - 1) + "0" + result.charAt(result.length - 1);
+                    result =
+                        result.slice(0, result.length - 1) + "0" + result.charAt(result.length - 1);
                 }
             }
             if ("EFG".indexOf(conversionType) !== -1) {
@@ -1332,8 +1397,15 @@ function strBytesRemainder(rhs) {
                 throw new Sk.builtin.ValueError("unsupported format character 'b'");
             }
             let func;
-            if (!(value instanceof Sk.builtin.bytes) && (func = Sk.abstr.lookupSpecial(value, Sk.builtin.str.$bytes)) === undefined) {
-                throw new Sk.builtin.TypeError("%b requires a bytes-like object, or an object that implements __bytes__, not '" + Sk.abstr.typeName(value) + "'");
+            if (
+                !(value instanceof Sk.builtin.bytes) &&
+                (func = Sk.abstr.lookupSpecial(value, Sk.builtin.str.$bytes)) === undefined
+            ) {
+                throw new Sk.builtin.TypeError(
+                    "%b requires a bytes-like object, or an object that implements __bytes__, not '" +
+                        Sk.abstr.typeName(value) +
+                        "'"
+                );
             }
             if (func !== undefined) {
                 value = new Sk.builtin.bytes(value);
@@ -1356,7 +1428,7 @@ function strBytesRemainder(rhs) {
         throw new Sk.builtin.TypeError("not all arguments converted during string formatting");
     }
     return new strBytesConstructor(ret);
-};
+}
 
 /**
  * @constructor

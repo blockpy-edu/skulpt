@@ -1,6 +1,6 @@
 var $builtinmodule = function (name) {
     var mod = {};
-    var inBrowser = (typeof window != "undefined") && (typeof window.navigator != "undefined");
+    var inBrowser = typeof window != "undefined" && typeof window.navigator != "undefined";
 
     mod.python_implementation = new Sk.builtin.func(function () {
         Sk.builtin.pyCheckArgsLen("python_implementation", arguments.length, 0, 0);
@@ -63,8 +63,7 @@ var $builtinmodule = function (name) {
 
     mod.architecture = new Sk.builtin.func(function () {
         Sk.builtin.pyCheckArgsLen("architecture", arguments.length, 0, 0);
-        return new Sk.builtin.tuple([new Sk.builtin.str("64bit"),
-                                     new Sk.builtin.str("")]);
+        return new Sk.builtin.tuple([new Sk.builtin.str("64bit"), new Sk.builtin.str("")]);
     });
 
     mod.processor = new Sk.builtin.func(function () {

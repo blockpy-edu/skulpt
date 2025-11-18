@@ -1,9 +1,6 @@
 /** @constructor */
-function Word() {
-}
+function Word() {}
 
-Word.prototype.reverse = function() {
-}
+Word.prototype.reverse = function () {};
 
-Word.prototype.reverse.utf8 = function() {
-}
+Word.prototype.reverse.utf8 = function () {};

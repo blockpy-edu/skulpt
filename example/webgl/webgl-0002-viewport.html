@@ -1,21 +1,25 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>WebGL Viewport</title>
+    <head>
+        <meta charset="utf-8" />
+        <title>WebGL Viewport</title>
 
-    <style type="text/css">
-      body { background-color: grey;}
-      canvas { background-color: white;}
-    </style>
-    <script src="../../dist/skulpt.js" type="text/javascript"></script>
-    <script src="../../dist/builtin.js" type="text/javascript"></script>
-  </head>
-  <body>
-    <h1>WebGL Viewport</h1>
+        <style type="text/css">
+            body {
+                background-color: grey;
+            }
+            canvas {
+                background-color: white;
+            }
+        </style>
+        <script src="../../dist/skulpt.js" type="text/javascript"></script>
+        <script src="../../dist/builtin.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <h1>WebGL Viewport</h1>
 
-    <form>
-      <textarea id="code" name="code" rows="40" cols="120">
+        <form>
+            <textarea id="code" name="code" rows="40" cols="120">
 import webgl
 
 gl = webgl.Context("my-canvas")
@@ -52,40 +56,40 @@ gl.enableVertexAttribArray(vertexPositionAttribute)
 gl.bindBuffer(gl.ARRAY_BUFFER, trianglesVerticeBuffer)
 gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, False, 0, 0)
 gl.drawArrays(gl.TRIANGLES, 0, 6)
-      </textarea>
-      <button type="button" onclick="runit()">Run</button>
-    </form>
-    <canvas id="my-canvas" height="300" width="400">
-      Your browser does not support the HTML5 canvas element.
-    </canvas>
-    <pre id="my-output" ></pre>
-    <script>
-      function outputHandler(text) {
-        var output = document.getElementById("my-output");
-        output.innerHTML = output.innerHTML + text.replace(/</g, '&lt;');
-      }
+      </textarea
+            >
+            <button type="button" onclick="runit()">Run</button>
+        </form>
+        <canvas id="my-canvas" height="300" width="400">
+            Your browser does not support the HTML5 canvas element.
+        </canvas>
+        <pre id="my-output"></pre>
+        <script>
+            function outputHandler(text) {
+                var output = document.getElementById("my-output");
+                output.innerHTML = output.innerHTML + text.replace(/</g, "&lt;");
+            }
 
-      function builtinRead(x) {
-        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
-          throw "File not found: '" + x + "'";
-        }
-        return Sk.builtinFiles["files"][x];
-      }
+            function builtinRead(x) {
+                if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+                    throw "File not found: '" + x + "'";
+                }
+                return Sk.builtinFiles["files"][x];
+            }
 
-      function runit() {
-        var prog = document.getElementById("code").value;
-        // Clear the output
-        document.getElementById("my-output").innerHTML = '';
-        Sk.canvas = "my-canvas";
-        Sk.pre = "my-output";
-        Sk.configure({"output":outputHandler, "read":builtinRead});
-        try {
-           eval(Sk.importMainWithBody("<stdin>", false, prog));
-        }
-        catch(e) {
-          alert(e);
-        }
-      }
-    </script>
-  </body>
+            function runit() {
+                var prog = document.getElementById("code").value;
+                // Clear the output
+                document.getElementById("my-output").innerHTML = "";
+                Sk.canvas = "my-canvas";
+                Sk.pre = "my-output";
+                Sk.configure({ output: outputHandler, read: builtinRead });
+                try {
+                    eval(Sk.importMainWithBody("<stdin>", false, prog));
+                } catch (e) {
+                    alert(e);
+                }
+            }
+        </script>
+    </body>
 </html>

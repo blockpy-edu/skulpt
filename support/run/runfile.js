@@ -3,8 +3,9 @@ const path = require("path");
 const program = require("commander");
 const chalk = require("chalk");
 const reqskulpt = require("./require-skulpt").requireSkulpt;
+global.XMLHttpRequest = require("xhr2");
 
-function run (python3, opt, filename) {
+function run(python3, opt, filename) {
     // Import Skulpt
     var skulpt = reqskulpt(opt);
     if (skulpt === null) {
@@ -33,46 +34,57 @@ function run (python3, opt, filename) {
             let submittedPromise = new Promise((resolve) => {
                 resolveText = resolve;
             });
-            setTimeout(()=>{resolveText(new Sk.builtin.str("quit"));}, 2000);
+            setTimeout(() => {
+                resolveText(new Sk.builtin.str("quit"));
+            }, 2000);
             return submittedPromise;
             /*return process.stdin.on("data", function (data) {
                 return data;
             });*/
         },
-        read: (fname) => { return fs.readFileSync(fname, "utf8"); },
-        output: (args) => { process.stdout.write(args); },
-        __future__: pyver
+        read: (fname) => {
+            return fs.readFileSync(fname, "utf8");
+        },
+        output: (args) => {
+            process.stdout.write(args);
+        },
+        __future__: pyver,
     });
 
-    Sk.misceval.asyncToPromise(function() {
-        starttime = Date.now();
-        return Sk.importMain(path.basename(filename, ".py"), true, true);
-    }).then(function () {
-        endtime = Date.now();
-        console.log("-----");
-        elapsed = (endtime - starttime) / 1000;
-        console.log("Run time: " + elapsed.toString() + "s");
-    }, function(e) {
-        console.error(e);
-        if (e.message) {
-            console.log(e.message + "\n");
-            console.log(e.stack);
-        } else if (e.nativeError) {
-            console.log(e.nativeError.message + "\n");
-            console.log(e.nativeError.stack);
-        } else {
-            console.log(e.toString());
-            console.log(e.stack);
-        }
-    });
+    Sk.misceval
+        .asyncToPromise(function () {
+            starttime = Date.now();
+            return Sk.importMain(path.basename(filename, ".py"), true, true);
+        })
+        .then(
+            function () {
+                endtime = Date.now();
+                console.log("-----");
+                elapsed = (endtime - starttime) / 1000;
+                console.log("Run time: " + elapsed.toString() + "s");
+            },
+            function (e) {
+                console.error(e);
+                if (e.message) {
+                    console.log(e.message + "\n");
+                    console.log(e.stack);
+                } else if (e.nativeError) {
+                    console.log(e.nativeError.message + "\n");
+                    console.log(e.nativeError.stack);
+                } else {
+                    console.log(e.toString());
+                    console.log(e.stack);
+                }
+            }
+        );
 }
 
-program
-    .option("-o, --opt", "use optimized skulpt")
-    .parse(process.argv);
+program.option("-o, --opt", "use optimized skulpt").parse(process.argv);
 
 if (program.args.length != 2) {
-    console.log(chalk.red("error: must specify python version (py2/py3) and python program to run"));
+    console.log(
+        chalk.red("error: must specify python version (py2/py3) and python program to run")
+    );
     process.exit(1);
 }
 
@@ -82,7 +94,11 @@ if (program.args[0] == "py2") {
 } else if (program.args[0] == "py3") {
     py3 = true;
 } else {
-    console.log(chalk.red("error: must specify python version ('py2' or 'py3'), not '" + program.args[0] + "'"));
+    console.log(
+        chalk.red(
+            "error: must specify python version ('py2' or 'py3'), not '" + program.args[0] + "'"
+        )
+    );
     process.exit(1);
 }
 

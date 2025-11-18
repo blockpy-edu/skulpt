@@ -7,22 +7,29 @@
  * @license <a href="http://en.wikipedia.org/wiki/MIT_License">X11/MIT License</a>
  *          (See the accompanying README file for full details.)
  */
- 
+
 /**
 	Yet another unit testing tool for JavaScript.
 	@author Michael Mathews <a href="mailto:micmath@gmail.com">micmath@gmail.com</a>
 	@param {object} testCases Properties are testcase names, values are functions to execute as tests.
 */
 function testrun(testCases) {
-	var ran = 0;
-	for (t in testCases) {
-		var result = testCases[t]();
-		ran++;
-	}
-	
-	return testrun.reportOut+"-------------------------------\n"+((testrun.fails>0)? ":( Failed "+testrun.fails+"/" : ":) Passed all ")+testrun.count+" test"+((testrun.count == 1)? "":"s")+".\n";
-}
+    var ran = 0;
+    for (t in testCases) {
+        var result = testCases[t]();
+        ran++;
+    }
 
+    return (
+        testrun.reportOut +
+        "-------------------------------\n" +
+        (testrun.fails > 0 ? ":( Failed " + testrun.fails + "/" : ":) Passed all ") +
+        testrun.count +
+        " test" +
+        (testrun.count == 1 ? "" : "s") +
+        ".\n"
+    );
+}
 
 testrun.count = 0;
 testrun.current = null;
@@ -31,9 +38,9 @@ testrun.fails = 0;
 testrun.reportOut = "";
 
 /** @private */
-testrun.report = function(text) {
-	testrun.reportOut += text+"\n";
-}
+testrun.report = function (text) {
+    testrun.reportOut += text + "\n";
+};
 
 /**
 	Check if test evaluates to true.
@@ -41,28 +48,25 @@ testrun.report = function(text) {
 	@param {string} message Optional. To be displayed in the report.
 	@return {boolean} True if the string test evaluates to true.
 */
-ok = function(test, message) {
-	testrun.count++;
-	
-	var result;
-	try {
-		result = eval(test);
-		
-		if (result) {
-			testrun.passes++;
-			testrun.report("    OK "+testrun.count+" - "+((message != null)? message : ""));
-		}
-		else {
-			testrun.fails++;
-			testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
-		}
-	}
-	catch(e) {
-		testrun.fails++
-		testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
+ok = function (test, message) {
+    testrun.count++;
 
-	}
-}
+    var result;
+    try {
+        result = eval(test);
+
+        if (result) {
+            testrun.passes++;
+            testrun.report("    OK " + testrun.count + " - " + (message != null ? message : ""));
+        } else {
+            testrun.fails++;
+            testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+        }
+    } catch (e) {
+        testrun.fails++;
+        testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+    }
+};
 
 /**
 	Check if test is same as expected.
@@ -71,30 +75,29 @@ ok = function(test, message) {
 	@param {string} message Optional. To be displayed in the report. 
 	@return {boolean} True if (test == expected). Note that the comparison is not a strict equality check.
 */
-is = function(test, expected, message) {
-	testrun.count++;
-	
-	var result;
-	try {
-		result = eval(test);
-		
-		if (result == expected) {
-			testrun.passes++
-			testrun.report("    OK "+testrun.count+" - "+((message != null)? message : ""));
-		}
-		else {
-			testrun.fails++
-			testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
-			testrun.report("expected: "+expected);
-			testrun.report("     got: "+result);
-		}
-	}
-	catch(e) {
-		testrun.fails++
-		testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
-		testrun.report("expected: "+expected);
-		testrun.report("     got: "+result);}
-}
+is = function (test, expected, message) {
+    testrun.count++;
+
+    var result;
+    try {
+        result = eval(test);
+
+        if (result == expected) {
+            testrun.passes++;
+            testrun.report("    OK " + testrun.count + " - " + (message != null ? message : ""));
+        } else {
+            testrun.fails++;
+            testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+            testrun.report("expected: " + expected);
+            testrun.report("     got: " + result);
+        }
+    } catch (e) {
+        testrun.fails++;
+        testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+        testrun.report("expected: " + expected);
+        testrun.report("     got: " + result);
+    }
+};
 
 /**
 	Check if test matches pattern.
@@ -103,27 +106,25 @@ is = function(test, expected, message) {
 	@param {string} message Optional. To be displayed in the report.
 	@return {boolean} True if test matches pattern.
 */
-like = function(test, pattern, message) {
-	testrun.count++;
+like = function (test, pattern, message) {
+    testrun.count++;
 
-	var result;
-	try {
-		result = eval(test);
-		var rgx = new RegExp(pattern);
-		
-		if (rgx.test(result)) {
-			testrun.passes++
-			testrun.report("    OK "+testrun.count+" - "+((message != null)? message : ""));
-		}
-		else {
-			testrun.fails++
-			testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
-			testrun.report("       this: "+result);
-			testrun.report("is not like: "+pattern);
-		}
-	}
-	catch(e) {
-		testrun.fails++
-		testrun.report("NOT OK "+testrun.count+" - "+((message != null)? message : ""));
-	}
-}
+    var result;
+    try {
+        result = eval(test);
+        var rgx = new RegExp(pattern);
+
+        if (rgx.test(result)) {
+            testrun.passes++;
+            testrun.report("    OK " + testrun.count + " - " + (message != null ? message : ""));
+        } else {
+            testrun.fails++;
+            testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+            testrun.report("       this: " + result);
+            testrun.report("is not like: " + pattern);
+        }
+    } catch (e) {
+        testrun.fails++;
+        testrun.report("NOT OK " + testrun.count + " - " + (message != null ? message : ""));
+    }
+};

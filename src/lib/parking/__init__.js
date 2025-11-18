@@ -1,9 +1,13 @@
 var $builtinmodule = function (name) {
     var WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     var FULL_DAYS = {
-        "mon": "Monday", "tue": "Tuesday", "wed": "Wednesday",
-        "thu": "Thursday", "fri": "Friday", "sat": "Saturday",
-        "sun": "Sunday"
+        mon: "Monday",
+        tue: "Tuesday",
+        wed: "Wednesday",
+        thu: "Thursday",
+        fri: "Friday",
+        sat: "Saturday",
+        sun: "Sunday",
     };
 
     var convert_day = function (day) {
@@ -30,19 +34,33 @@ var $builtinmodule = function (name) {
             self.meridian.v = self.meridian.v.toLowerCase();
         });
         $loc.__str__ = new Sk.builtin.func(function (self) {
-            return Sk.ffi.remapToPy("<" + (self.hour.v || 12) + ":" +
-                (self.minute.v < 10 ? "0" + self.minute.v : self.minute.v) +
-                self.meridian.v + ">");
+            return Sk.ffi.remapToPy(
+                "<" +
+                    (self.hour.v || 12) +
+                    ":" +
+                    (self.minute.v < 10 ? "0" + self.minute.v : self.minute.v) +
+                    self.meridian.v +
+                    ">"
+            );
         });
         $loc.__repr__ = new Sk.builtin.func(function (self) {
-            return Sk.ffi.remapToPy("<" + (self.hour.v || 12) + ":" +
-                (self.minute.v < 10 ? "0" + self.minute.v : self.minute.v) +
-                self.meridian.v + ">");
+            return Sk.ffi.remapToPy(
+                "<" +
+                    (self.hour.v || 12) +
+                    ":" +
+                    (self.minute.v < 10 ? "0" + self.minute.v : self.minute.v) +
+                    self.meridian.v +
+                    ">"
+            );
         });
         var comparison = function (operation, self, other) {
             if (Sk.builtin.isinstance(other, mod.Time).v) {
-                if (operation(convert_time(self.hour.v % 12, self.minute.v, self.meridian.v),
-                              convert_time(other.hour.v % 12, other.minute.v, other.meridian.v))) {
+                if (
+                    operation(
+                        convert_time(self.hour.v % 12, self.minute.v, self.meridian.v),
+                        convert_time(other.hour.v % 12, other.minute.v, other.meridian.v)
+                    )
+                ) {
                     return Sk.ffi.remapToPy(true);
                 } else {
                     return Sk.ffi.remapToPy(false);
@@ -53,9 +71,13 @@ var $builtinmodule = function (name) {
         };
         $loc.__eq__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l == r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l == r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__ne__ = new Sk.builtin.func(function (self, other) {
@@ -63,37 +85,57 @@ var $builtinmodule = function (name) {
             if (!Sk.builtin.isinstance(other, mod.Time).v) {
                 return Sk.builtin.bool.true$;
             }
-            return comparison(function (l, r) {
-                return l != r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l != r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__lt__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l < r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l < r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__gt__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l > r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l > r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__le__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l <= r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l <= r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__ge__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l >= r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l >= r;
+                },
+                self,
+                other
+            );
         });
     };
 
@@ -123,9 +165,13 @@ var $builtinmodule = function (name) {
         };
         $loc.__eq__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l == r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l == r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__ne__ = new Sk.builtin.func(function (self, other) {
@@ -133,37 +179,57 @@ var $builtinmodule = function (name) {
             if (!Sk.builtin.isinstance(other, mod.Day).v) {
                 return Sk.builtin.bool.true$;
             }
-            return comparison(function (l, r) {
-                return l != r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l != r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__lt__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l < r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l < r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__gt__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l > r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l > r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__le__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l <= r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l <= r;
+                },
+                self,
+                other
+            );
         });
 
         $loc.__ge__ = new Sk.builtin.func(function (self, other) {
             Sk.builtin.pyCheckArgs("__init__", arguments, 2, 2);
-            return comparison(function (l, r) {
-                return l >= r;
-            }, self, other);
+            return comparison(
+                function (l, r) {
+                    return l >= r;
+                },
+                self,
+                other
+            );
         });
     };
 
@@ -176,7 +242,7 @@ var $builtinmodule = function (name) {
     mod._meridian = undefined;
 
     mod.today = new Sk.builtin.func(function () {
-        var t = ((new Date).getDay() + 6) % 7; // would be -1, but % is broken for negatives in JS
+        var t = (new Date().getDay() + 6) % 7; // would be -1, but % is broken for negatives in JS
         t = Sk.today || mod._today || Sk.ffi.remapToPy(WEEKDAYS[t]);
         return Sk.misceval.callsim(mod.Day, t);
     });

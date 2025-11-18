@@ -1,13 +1,10 @@
 /** @constructor */
-function Article() {
-}
+function Article() {}
 
 Article.prototype = {
-	/** instance get title */
-	getTitle: function(){
-	}
-}
+    /** instance get title */
+    getTitle: function () {},
+};
 
 /** static get title */
-Article.getTitle = function(){
-}
+Article.getTitle = function () {};

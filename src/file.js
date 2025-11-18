@@ -38,7 +38,8 @@ Sk.builtin.file = function (name, mode, buffering, encoding, errors, newline, cl
     } else if (this.name === "/dev/stderr") {
         this.fileno = STDERR_FILENO;
     } else {
-        if (Sk.inBrowser) {  // todo:  Maybe provide a replaceable function for non-import files
+        if (Sk.inBrowser) {
+            // todo:  Maybe provide a replaceable function for non-import files
             this.fileno = 10;
             this.data$ = Sk.inBrowser(this.name);
         } else {
@@ -67,11 +68,11 @@ function splitLines(text, newline, inBrowser) {
     let lineList = text.split(newline);
     // TODO: Find the reason why we needed this. It was part of CSV?
     if (inBrowser && lineList.length) {
-        if (lineList[lineList.length-1] === "") {
+        if (lineList[lineList.length - 1] === "") {
             lineList = lineList.slice(0, -1);
         }
     }
-    for (let i=0; i < lineList.length-1; i+= 1) {
+    for (let i = 0; i < lineList.length - 1; i += 1) {
         lineList[i] = lineList[i] + newline;
     }
     return lineList;
@@ -81,13 +82,15 @@ Sk.abstr.setUpInheritance("file", Sk.builtin.file, Sk.builtin.object);
 Sk.abstr.setUpBuiltinMro(Sk.builtin.file);
 
 Sk.builtin.file.prototype["$r"] = function () {
-    return new Sk.builtin.str("<" +
-        (this.closed ? "closed" : "open") +
-        "file '" +
-        this.name +
-        "', mode '" +
-        Sk.ffi.remapToJs(this.mode) +
-        "'>");
+    return new Sk.builtin.str(
+        "<" +
+            (this.closed ? "closed" : "open") +
+            "file '" +
+            this.name +
+            "', mode '" +
+            Sk.ffi.remapToJs(this.mode) +
+            "'>"
+    );
 };
 
 Sk.builtin.file.prototype.tp$iter = function () {
@@ -95,21 +98,20 @@ Sk.builtin.file.prototype.tp$iter = function () {
     var that = this;
     //var currentLine = this.currentLine;
 
-    var ret =
-        {
-            tp$iter: function () {
-                return ret;
-            },
-            $obj: this,
-            $index: this.currentLine,
-            $lines: allLines,
-            tp$iternext: function () {
-                if (that.currentLine >= ret.$lines.length) {
-                    return undefined;
-                }
-                return new Sk.builtin.str(ret.$lines[that.currentLine++]);
+    var ret = {
+        tp$iter: function () {
+            return ret;
+        },
+        $obj: this,
+        $index: this.currentLine,
+        $lines: allLines,
+        tp$iternext: function () {
+            if (that.currentLine >= ret.$lines.length) {
+                return undefined;
             }
-        };
+            return new Sk.builtin.str(ret.$lines[that.currentLine++]);
+        },
+    };
     return ret;
 };
 
@@ -123,15 +125,12 @@ Sk.builtin.file.prototype["__exit__"] = new Sk.builtin.func(function __exit__(se
     return Sk.misceval.callsimArray(Sk.builtin.file.prototype["close"], [self]);
 });
 
-
-
 Sk.builtin.file.prototype["close"] = new Sk.builtin.func(function close(self) {
     self.closed = true;
     return Sk.builtin.none.none$;
 });
 
-Sk.builtin.file.prototype["flush"] = new Sk.builtin.func(function flush(self) {
-});
+Sk.builtin.file.prototype["flush"] = new Sk.builtin.func(function flush(self) {});
 
 Sk.builtin.file.prototype["fileno"] = new Sk.builtin.func(function fileno(self) {
     return this.fileno;
@@ -193,7 +192,7 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
 
             susp.data = {
                 type: "Sk.promise",
-                promise: x
+                promise: x,
             };
 
             return susp;
@@ -217,7 +216,9 @@ Sk.builtin.file.prototype["readline"] = new Sk.builtin.func(function readline(se
 
 Sk.builtin.file.prototype["readlines"] = new Sk.builtin.func(function readlines(self, sizehint) {
     if (self.fileno === 0) {
-        return new Sk.builtin.NotImplementedError("readlines isn't implemented because the web doesn't support Ctrl+D");
+        return new Sk.builtin.NotImplementedError(
+            "readlines isn't implemented because the web doesn't support Ctrl+D"
+        );
     }
 
     var i;
@@ -279,6 +280,5 @@ Sk.builtin.file.prototype["write"] = new Sk.builtin.func(function write(self, st
 
     return Sk.builtin.none.none$;
 });
-
 
 Sk.exportSymbol("Sk.builtin.file", Sk.builtin.file);

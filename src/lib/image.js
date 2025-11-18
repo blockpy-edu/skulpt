@@ -10,7 +10,7 @@ $builtinmodule = function (name) {
     var screen;
     var pixel;
     var eImage;
-    var mod = {__name__: new Sk.builtin.str("image")};
+    var mod = { __name__: new Sk.builtin.str("image") };
     var updateCanvasAndSuspend;
     var initializeImage;
     var checkPixelRange;
@@ -32,7 +32,6 @@ $builtinmodule = function (name) {
             self.ctx.drawImage(self.image, 0, 0);
             self.imagedata = self.ctx.getImageData(0, 0, self.width, self.height);
         };
-
 
         $loc.__init__ = new Sk.builtin.func(function (self, imageId) {
             var susp;
@@ -66,12 +65,10 @@ $builtinmodule = function (name) {
                         };
                         // look for mapping from imagename to url and possible an image proxy server
                         newImg.src = remapImageIdToURL(imageId);
-                    }
-                    )
+                    }),
                 };
                 return susp;
             }
-
         });
 
         remapImageIdToURL = function (imageId) {
@@ -81,15 +78,17 @@ $builtinmodule = function (name) {
             // if image proxy server is configured construct url for proxy
             // return the final URL
 
-            var proxy = typeof (Sk.imageProxy) === "function"
-                ? Sk.imageProxy : function (str) {
-                    url = document.createElement("a");
-                    url.href = ret;
-                    if (window.location.host !== url.host) {
-                        return Sk.imageProxy + "/" + str;
-                    }
-                    return str;
-                };
+            var proxy =
+                typeof Sk.imageProxy === "function"
+                    ? Sk.imageProxy
+                    : function (str) {
+                          url = document.createElement("a");
+                          url.href = ret;
+                          if (window.location.host !== url.host) {
+                              return Sk.imageProxy + "/" + str;
+                          }
+                          return str;
+                      };
 
             var url;
             var ret;
@@ -121,16 +120,18 @@ $builtinmodule = function (name) {
         $loc.set_delay = new Sk.builtin.func(setdelay);
         $loc.setDelay = new Sk.builtin.func(setdelay);
 
-
         //get a one-dimensional array of pixel objects - Zhu
         var getpixels = function (self) {
-            var arr = [];//initial array
+            var arr = []; //initial array
             var i;
             Sk.builtin.pyCheckArgsLen("getpixels", arguments.length, 1, 1);
 
             for (i = 0; i < self.image.height * self.image.width; i++) {
-                arr[i] = Sk.misceval.callsimArray(self.getPixel, [self,
-                                                                  i % self.image.width, Math.floor(i / self.image.width)]);
+                arr[i] = Sk.misceval.callsimArray(self.getPixel, [
+                    self,
+                    i % self.image.width,
+                    Math.floor(i / self.image.width),
+                ]);
             }
             return new Sk.builtin.tuple(arr);
         };
@@ -140,7 +141,7 @@ $builtinmodule = function (name) {
         $loc.getPixels = new Sk.builtin.func(getpixels);
 
         $loc.getData = new Sk.builtin.func(function (self) {
-            var arr = [];//initial array
+            var arr = []; //initial array
             var i;
             var x;
             var y;
@@ -154,11 +155,15 @@ $builtinmodule = function (name) {
                 x = i % self.image.width;
                 y = Math.floor(i / self.image.width);
                 checkPixelRange(self, x, y);
-                index = (y * 4) * self.width + (x * 4);
+                index = y * 4 * self.width + x * 4;
                 red = self.imagedata.data[index];
                 green = self.imagedata.data[index + 1];
                 blue = self.imagedata.data[index + 2];
-                arr[i] = new Sk.builtin.tuple([new Sk.builtin.int_(red), new Sk.builtin.int_(green), new Sk.builtin.int_(blue)]);
+                arr[i] = new Sk.builtin.tuple([
+                    new Sk.builtin.int_(red),
+                    new Sk.builtin.int_(green),
+                    new Sk.builtin.int_(blue),
+                ]);
             }
 
             return new Sk.builtin.list(arr);
@@ -173,7 +178,7 @@ $builtinmodule = function (name) {
             x = Sk.builtin.asnum$(x);
             y = Sk.builtin.asnum$(y);
             checkPixelRange(self, x, y);
-            index = (y * 4) * self.width + (x * 4);
+            index = y * 4 * self.width + x * 4;
             red = self.imagedata.data[index];
             green = self.imagedata.data[index + 1];
             blue = self.imagedata.data[index + 2];
@@ -184,7 +189,6 @@ $builtinmodule = function (name) {
         $loc.get_pixel = new Sk.builtin.func(getpixel);
         $loc.getPixel = new Sk.builtin.func(getpixel);
 
-
         updateCanvasAndSuspend = function (self, x, y) {
             var susp = new Sk.misceval.Suspension();
             susp.resume = function () {
@@ -194,19 +198,37 @@ $builtinmodule = function (name) {
                 type: "Sk.promise",
                 promise: new Promise(function (resolve, reject) {
                     self.updateCount++;
-                    if ((self.updateCount % self.updateInterval) === 0) {
+                    if (self.updateCount % self.updateInterval === 0) {
                         if (self.lastx + self.updateInterval >= self.width) {
-                            self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      0, self.lasty, self.width, 2);
+                            self.lastCtx.putImageData(
+                                self.imagedata,
+                                self.lastUlx,
+                                self.lastUly,
+                                0,
+                                self.lasty,
+                                self.width,
+                                2
+                            );
                         } else if (self.lasty + self.updateInterval >= self.height) {
-                            self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      self.lastx, 0, 2, self.height);
+                            self.lastCtx.putImageData(
+                                self.imagedata,
+                                self.lastUlx,
+                                self.lastUly,
+                                self.lastx,
+                                0,
+                                2,
+                                self.height
+                            );
                         } else {
-                            self.lastCtx.putImageData(self.imagedata, self.lastUlx, self.lastUly,
-                                                      Math.min(x, self.lastx),
-                                                      Math.min(y, self.lasty),
-                                                      Math.max(Math.abs(x - self.lastx), 1),
-                                                      Math.max(Math.abs(y - self.lasty), 1));
+                            self.lastCtx.putImageData(
+                                self.imagedata,
+                                self.lastUlx,
+                                self.lastUly,
+                                Math.min(x, self.lastx),
+                                Math.min(y, self.lasty),
+                                Math.max(Math.abs(x - self.lastx), 1),
+                                Math.max(Math.abs(y - self.lasty), 1)
+                            );
                         }
                         self.lastx = x;
                         self.lasty = y;
@@ -218,7 +240,7 @@ $builtinmodule = function (name) {
                     } else {
                         resolve();
                     }
-                })
+                }),
             };
             return susp;
         };
@@ -229,10 +251,16 @@ $builtinmodule = function (name) {
             x = Sk.builtin.asnum$(x);
             y = Sk.builtin.asnum$(y);
             checkPixelRange(self, x, y);
-            index = (y * 4) * self.width + (x * 4);
-            self.imagedata.data[index] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pix.getRed, [pix]));
-            self.imagedata.data[index + 1] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pix.getGreen, [pix]));
-            self.imagedata.data[index + 2] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pix.getBlue, [pix]));
+            index = y * 4 * self.width + x * 4;
+            self.imagedata.data[index] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pix.getRed, [pix])
+            );
+            self.imagedata.data[index + 1] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pix.getGreen, [pix])
+            );
+            self.imagedata.data[index + 2] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pix.getBlue, [pix])
+            );
             self.imagedata.data[index + 3] = 255;
             return updateCanvasAndSuspend(self, x, y);
         };
@@ -240,7 +268,6 @@ $builtinmodule = function (name) {
         // alias the function with pep8 compliant snake_case and legacy camelCase
         $loc.set_pixel = new Sk.builtin.func(setpixel);
         $loc.setPixel = new Sk.builtin.func(setpixel);
-
 
         // update the image with the pixel at the given count - Zhu
         var setpixelat = function (self, count, pixel) {
@@ -252,10 +279,16 @@ $builtinmodule = function (name) {
             x = count % self.image.width;
             y = Math.floor(count / self.image.width);
             checkPixelRange(self, x, y);
-            index = (y * 4) * self.width + (x * 4);
-            self.imagedata.data[index] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getRed, [pixel]));
-            self.imagedata.data[index + 1] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getGreen, [pixel]));
-            self.imagedata.data[index + 2] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getBlue, [pixel]));
+            index = y * 4 * self.width + x * 4;
+            self.imagedata.data[index] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getRed, [pixel])
+            );
+            self.imagedata.data[index + 1] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getGreen, [pixel])
+            );
+            self.imagedata.data[index + 2] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getBlue, [pixel])
+            );
             self.imagedata.data[index + 3] = 255;
             return updateCanvasAndSuspend(self, x, y);
         };
@@ -263,7 +296,6 @@ $builtinmodule = function (name) {
         // alias the function with pep8 compliant snake_case and legacy camelCase
         $loc.set_pixel_at = new Sk.builtin.func(setpixelat);
         $loc.setPixelAt = new Sk.builtin.func(setpixelat);
-
 
         // new updatePixel that uses the saved x and y location in the pixel - Barb Ericson
         var updatepixel = function (self, pixel) {
@@ -274,10 +306,16 @@ $builtinmodule = function (name) {
             x = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getX, [pixel]));
             y = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getY, [pixel]));
             checkPixelRange(self, x, y);
-            index = (y * 4) * self.width + (x * 4);
-            self.imagedata.data[index] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getRed, [pixel]));
-            self.imagedata.data[index + 1] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getGreen, [pixel]));
-            self.imagedata.data[index + 2] = Sk.builtin.asnum$(Sk.misceval.callsimArray(pixel.getBlue, [pixel]));
+            index = y * 4 * self.width + x * 4;
+            self.imagedata.data[index] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getRed, [pixel])
+            );
+            self.imagedata.data[index + 1] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getGreen, [pixel])
+            );
+            self.imagedata.data[index + 2] = Sk.builtin.asnum$(
+                Sk.misceval.callsimArray(pixel.getBlue, [pixel])
+            );
             self.imagedata.data[index + 3] = 255;
             return updateCanvasAndSuspend(self, x, y);
         };
@@ -285,7 +323,6 @@ $builtinmodule = function (name) {
         // alias the function with pep8 compliant snake_case and legacy camelCase
         $loc.update_pixel = new Sk.builtin.func(updatepixel);
         $loc.updatePixel = new Sk.builtin.func(updatepixel);
-
 
         var getheight = function (self) {
             Sk.builtin.pyCheckArgsLen("getheight", arguments.length, 1, 1);
@@ -295,7 +332,6 @@ $builtinmodule = function (name) {
         // alias the function with pep8 compliant snake_case and legacy camelCase
         $loc.get_height = new Sk.builtin.func(getheight);
         $loc.getHeight = new Sk.builtin.func(getheight);
-
 
         var getwidth = function (self, titlestring) {
             Sk.builtin.pyCheckArgsLen("getwidth", arguments.length, 1, 1);
@@ -320,7 +356,9 @@ $builtinmodule = function (name) {
         $loc.__setattr__ = new Sk.builtin.func(function (self, key, value) {
             key = Sk.ffi.remapToJs(key);
             if (key === "height" || key === "width") {
-                throw new Sk.builtin.Exception("Cannot change height or width they can only be set on creation");
+                throw new Sk.builtin.Exception(
+                    "Cannot change height or width they can only be set on creation"
+                );
             } else {
                 throw new Sk.builtin.Exception("Unknown attribute: " + key);
             }
@@ -349,7 +387,7 @@ $builtinmodule = function (name) {
                     }
                     self.lastUlx = ulx;
                     self.lastUly = uly;
-                    self.lastCtx = ctx;  // save a reference to the context of the window the image was last drawn in
+                    self.lastCtx = ctx; // save a reference to the context of the window the image was last drawn in
                     //ctx.putImageData(self.imagedata,0,0,0,0,self.imagedata.width,self.imagedata.height);
                     ctx.putImageData(self.imagedata, ulx, uly);
 
@@ -358,14 +396,12 @@ $builtinmodule = function (name) {
                     } else {
                         window.setTimeout(resolve, 200);
                     }
-                })
+                }),
             };
             return susp;
-
         });
 
         // toList
-
     };
 
     mod.Image = Sk.misceval.buildClass(mod, image, "Image", []);
@@ -381,13 +417,11 @@ $builtinmodule = function (name) {
             self.canvas.width = self.width;
             self.imagedata = self.ctx.getImageData(0, 0, self.width, self.height);
         });
-
     };
 
     mod.EmptyImage = Sk.misceval.buildClass(mod, eImage, "EmptyImage", [mod.Image]);
 
     // create a ListImage object
-
 
     pixel = function ($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, r, g, b, x, y) {
@@ -482,14 +516,12 @@ $builtinmodule = function (name) {
             }
         });
 
-
         $loc.__setattr__ = new Sk.builtin.func(function (self, key, value) {
             key = Sk.ffi.remapToJs(key);
             if (key === "red" || key === "green" || key === "blue") {
                 self[key] = Sk.builtin.asnum$(value);
             }
         });
-
 
         var setx = function (self, x) {
             Sk.builtin.pyCheckArgsLen("setx", arguments.length, 2, 2);
@@ -525,18 +557,14 @@ $builtinmodule = function (name) {
         });
 
         //getColorTuple
-        $loc.getColorTuple = new Sk.builtin.func(function (self, x, y) {
-
-        });
+        $loc.getColorTuple = new Sk.builtin.func(function (self, x, y) {});
 
         //setRange -- change from 0..255 to 0.0 .. 1.0
         $loc.setRange = new Sk.builtin.func(function (self, mx) {
             self.max = Sk.builtin.asnum$(mx);
         });
-
     };
     mod.Pixel = Sk.misceval.buildClass(mod, pixel, "Pixel", []);
-
 
     screen = function ($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, width, height) {
@@ -582,7 +610,6 @@ $builtinmodule = function (name) {
                 document.getElementById(canvas_id).onclick = null;
                 delete ImageMod.canvasLib[canvas_id];
             };
-
         });
         //getMouse
     };

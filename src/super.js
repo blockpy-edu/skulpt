@@ -6,7 +6,7 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
     constructor: function super_(a_type, other_self) {
         // internally we never use this method
         Sk.asserts.assert(this instanceof Sk.builtin.super_, "bad call to super, use 'new'");
-        // internal calls can use this method but it 
+        // internal calls can use this method but it
         this.type = a_type;
         this.obj = other_self;
         if (a_type !== undefined) {
@@ -45,9 +45,17 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
         },
         $r() {
             if (this.obj) {
-                return new Sk.builtin.str("<super: <class '" + this.type.prototype.tp$name + "'>, <" + Sk.abstr.typeName(this.obj) + " object>>");
+                return new Sk.builtin.str(
+                    "<super: <class '" +
+                        this.type.prototype.tp$name +
+                        "'>, <" +
+                        Sk.abstr.typeName(this.obj) +
+                        " object>>"
+                );
             }
-            return new Sk.builtin.str("<super: <class '" + this.type.prototype.tp$name + "'>, NULL>");
+            return new Sk.builtin.str(
+                "<super: <class '" + this.type.prototype.tp$name + "'>, NULL>"
+            );
         },
         tp$getattr(pyName, canSuspend) {
             let starttype = this.obj_type;
@@ -154,13 +162,19 @@ Sk.builtin.super_ = Sk.abstr.buildNativeClass("super", {
             } else {
                 /* Try the slow way */
                 const class_attr = obj.tp$getattr(Sk.builtin.str.$class);
-                if (class_attr !== undefined && class_attr !== obj.ob$type && Sk.builtin.checkClass(class_attr)) {
+                if (
+                    class_attr !== undefined &&
+                    class_attr !== obj.ob$type &&
+                    Sk.builtin.checkClass(class_attr)
+                ) {
                     if (class_attr.$isSubType(type)) {
                         return class_attr;
                     }
                 }
             }
-            throw new Sk.builtin.TypeError("super(type, obj): obj must be an instance or subtype of type");
+            throw new Sk.builtin.TypeError(
+                "super(type, obj): obj must be an instance or subtype of type"
+            );
         },
     },
 });

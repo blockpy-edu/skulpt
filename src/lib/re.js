@@ -1,5 +1,5 @@
 var $builtinmodule = function (name) {
-    var mod = {__name__: new Sk.builtin.str("re")};
+    var mod = { __name__: new Sk.builtin.str("re") };
 
     var validGroups, convert, getFlags, _split, _findall, matchobj, _search, _match, regexobj;
 
@@ -29,8 +29,9 @@ var $builtinmodule = function (name) {
         if (match) {
             for (i = 0; i < match.length; i++) {
                 if (validGroups.indexOf(match[i]) == -1) {
-                    throw new Sk.builtin.ValueError("Disallowed group in pattern: '"
-                        + match[i] + "'");
+                    throw new Sk.builtin.ValueError(
+                        "Disallowed group in pattern: '" + match[i] + "'"
+                    );
                 }
             }
         }
@@ -111,7 +112,7 @@ var $builtinmodule = function (name) {
             }
             index = regex.lastIndex;
             splits += 1;
-            if (maxsplit && (splits >= maxsplit)) {
+            if (maxsplit && splits >= maxsplit) {
                 break;
             }
         }
@@ -192,7 +193,6 @@ var $builtinmodule = function (name) {
 
     mod.findall = new Sk.builtin.func(_findall);
 
-
     matchobj = function ($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, thematch, pattern, string) {
             self.thematch = thematch;
@@ -218,7 +218,6 @@ var $builtinmodule = function (name) {
             }
             return self.thematch.v[grpnum];
         });
-
     };
 
     mod.MatchObject = Sk.misceval.buildClass(mod, matchobj, "MatchObject", []);
@@ -248,7 +247,6 @@ var $builtinmodule = function (name) {
         }
         return retval;
     };
-
 
     // Internal search, shared between search function and RegexObject.search method
     _search = function (pattern, string, flags) {
@@ -348,7 +346,6 @@ var $builtinmodule = function (name) {
                 end = str.length;
             }
             return Sk.ffi.remapToPy(str.substring(start, end));
-
         };
 
         _re_search = function (self, string, pos, endpos) {
@@ -408,7 +405,6 @@ var $builtinmodule = function (name) {
         _re_findall.$defaults = [new Sk.builtin.int_(0), Sk.builtin.none.none$];
 
         $loc.findall = new Sk.builtin.func(_re_findall);
-
     };
 
     mod.RegexObject = Sk.misceval.buildClass(mod, regexobj, "RegexObject", []);

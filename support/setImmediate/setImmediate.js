@@ -20,11 +20,11 @@
     // returns a function that requires no arguments.
     function partiallyApplied(handler, timeout) {
         var args = [].slice.call(arguments, 1);
-        return function() {
+        return function () {
             if (typeof handler === "function") {
                 handler.apply(undefined, args);
             } else {
-                (new Function("" + handler))();
+                new Function("" + handler)();
             }
         };
     }
@@ -55,7 +55,7 @@
     }
 
     function installNextTickImplementation() {
-        setImmediate = function() {
+        setImmediate = function () {
             var handle = addFromSetImmediateArguments(arguments);
             process.nextTick(partiallyApplied(runIfPresent, handle));
             return handle;
@@ -68,7 +68,7 @@
         if (global.postMessage && !global.importScripts) {
             var postMessageIsAsynchronous = true;
             var oldOnMessage = global.onmessage;
-            global.onmessage = function() {
+            global.onmessage = function () {
                 postMessageIsAsynchronous = false;
             };
             global.postMessage("", "*");
@@ -83,10 +83,12 @@
         // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
 
         var messagePrefix = "setImmediate$" + Math.random() + "$";
-        var onGlobalMessage = function(event) {
-            if (event.source === global &&
+        var onGlobalMessage = function (event) {
+            if (
+                event.source === global &&
                 typeof event.data === "string" &&
-                event.data.indexOf(messagePrefix) === 0) {
+                event.data.indexOf(messagePrefix) === 0
+            ) {
                 runIfPresent(+event.data.slice(messagePrefix.length));
             }
         };
@@ -97,7 +99,7 @@
             global.attachEvent("onmessage", onGlobalMessage);
         }
 
-        setImmediate = function() {
+        setImmediate = function () {
             var handle = addFromSetImmediateArguments(arguments);
             global.postMessage(messagePrefix + handle, "*");
             return handle;
@@ -106,12 +108,12 @@
 
     function installMessageChannelImplementation() {
         var channel = new MessageChannel();
-        channel.port1.onmessage = function(event) {
+        channel.port1.onmessage = function (event) {
             var handle = event.data;
             runIfPresent(handle);
         };
 
-        setImmediate = function() {
+        setImmediate = function () {
             var handle = addFromSetImmediateArguments(arguments);
             channel.port2.postMessage(handle);
             return handle;
@@ -120,7 +122,7 @@
 
     function installReadyStateChangeImplementation() {
         var html = doc.documentElement;
-        setImmediate = function() {
+        setImmediate = function () {
             var handle = addFromSetImmediateArguments(arguments);
             // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
             // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
@@ -137,7 +139,7 @@
     }
 
     function installSetTimeoutImplementation() {
-        setImmediate = function() {
+        setImmediate = function () {
             var handle = addFromSetImmediateArguments(arguments);
             setTimeout(partiallyApplied(runIfPresent, handle), 0);
             return handle;
@@ -152,19 +154,15 @@
     if ({}.toString.call(global.process) === "[object process]") {
         // For Node.js before 0.9
         installNextTickImplementation();
-
     } else if (canUsePostMessage()) {
         // For non-IE10 modern browsers
         installPostMessageImplementation();
-
     } else if (global.MessageChannel) {
         // For web workers, where supported
         installMessageChannelImplementation();
-
     } else if (doc && "onreadystatechange" in doc.createElement("script")) {
         // For IE 6–8
         installReadyStateChangeImplementation();
-
     } else {
         // For older browsers
         installSetTimeoutImplementation();
@@ -172,4 +170,4 @@
 
     attachTo.setImmediate = setImmediate;
     attachTo.clearImmediate = clearImmediate;
-}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+})(typeof self === "undefined" ? (typeof global === "undefined" ? this : global) : self);

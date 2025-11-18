@@ -25,8 +25,7 @@ Sk.builtin.bool = Sk.abstr.buildNativeClass("bool", {
     },
     base: Sk.builtin.int_,
     slots: {
-        tp$doc:
-            "bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",
+        tp$doc: "bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",
         tp$new(args, kwargs) {
             Sk.abstr.checkNoKwargs("bool", kwargs);
             Sk.abstr.checkArgsLen("bool", args, 0, 1);
@@ -64,13 +63,13 @@ Sk.builtin.bool = Sk.abstr.buildNativeClass("bool", {
             $meth() {
                 return this.$r();
             },
-            $flags: {OneArg: true},
-        }
+            $flags: { OneArg: true },
+        },
     },
     proto: {
         str$False: new Sk.builtin.str("False"),
         str$True: new Sk.builtin.str("True"),
-    }
+    },
 });
 Sk.exportSymbol("Sk.builtin.bool", Sk.builtin.bool);
 
@@ -79,15 +78,19 @@ Sk.exportSymbol("Sk.builtin.bool", Sk.builtin.bool);
  * @type {Sk.builtin.bool}
  * @member {Sk.builtin.bool}
  */
-Sk.builtin.bool.true$ = /** @type {Sk.builtin.bool} */ (Object.create(Sk.builtin.bool.prototype, {
-    v: {value: 1, enumerable: true},
-}));
+Sk.builtin.bool.true$ = /** @type {Sk.builtin.bool} */ (
+    Object.create(Sk.builtin.bool.prototype, {
+        v: { value: 1, enumerable: true },
+    })
+);
 
 /**
  * Python bool False constant.
  * @type {Sk.builtin.bool}
  * @member {Sk.builtin.bool}
  */
-Sk.builtin.bool.false$ = /** @type {Sk.builtin.bool} */ (Object.create(Sk.builtin.bool.prototype, {
-    v: {value: 0, enumerable: true},
-}));
+Sk.builtin.bool.false$ = /** @type {Sk.builtin.bool} */ (
+    Object.create(Sk.builtin.bool.prototype, {
+        v: { value: 0, enumerable: true },
+    })
+);

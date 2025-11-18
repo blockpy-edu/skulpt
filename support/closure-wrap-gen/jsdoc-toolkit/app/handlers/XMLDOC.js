@@ -4,9 +4,7 @@
  * @author Brett Fattori (bfattori@fry.com)
  * @version $Revision: 498 $
  */
-XMLDOC = {
-	
-};
+XMLDOC = {};
 
 /** The current version string of this application. */
 XMLDOC.VERSION = "1.0";
@@ -17,10 +15,6 @@ IO.includeDir("handlers/XMLDOC/");
 /**
  * @type Symbol[]
  */
-XMLDOC.handle = function(srcFile, src) {
-	
-};
+XMLDOC.handle = function (srcFile, src) {};
 
-XMLDOC.publish = function(symbolgroup) {
-	
-}
+XMLDOC.publish = function (symbolgroup) {};

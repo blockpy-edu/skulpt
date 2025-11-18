@@ -91,8 +91,10 @@ MersenneTwister.prototype.init_genrand = function (s) {
     this.mt[0] = s >>> 0;
     for (this.mti = 1; this.mti < this.N; this.mti++) {
         s = this.mt[this.mti - 1] ^ (this.mt[this.mti - 1] >>> 30);
-        this.mt[this.mti] = (((((s & 0xffff0000) >>> 16) * 1812433253) << 16) + (s & 0x0000ffff) * 1812433253)
-            + this.mti;
+        this.mt[this.mti] =
+            ((((s & 0xffff0000) >>> 16) * 1812433253) << 16) +
+            (s & 0x0000ffff) * 1812433253 +
+            this.mti;
         /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
         /* In the previous versions, MSBs of the seed affect   */
         /* only MSBs of the array mt[].                        */
@@ -111,11 +113,14 @@ MersenneTwister.prototype.init_by_array = function (init_key, key_length) {
     this.init_genrand(19650218);
     i = 1;
     j = 0;
-    k = (this.N > key_length ? this.N : key_length);
+    k = this.N > key_length ? this.N : key_length;
     for (; k; k--) {
         var s = this.mt[i - 1] ^ (this.mt[i - 1] >>> 30);
-        this.mt[i] = (this.mt[i] ^ (((((s & 0xffff0000) >>> 16) * 1664525) << 16) + ((s & 0x0000ffff) * 1664525)))
-            + init_key[j] + j;
+        this.mt[i] =
+            (this.mt[i] ^
+                (((((s & 0xffff0000) >>> 16) * 1664525) << 16) + (s & 0x0000ffff) * 1664525)) +
+            init_key[j] +
+            j;
         /* non linear */
         this.mt[i] >>>= 0;
         /* for WORDSIZE > 32 machines */
@@ -130,9 +135,12 @@ MersenneTwister.prototype.init_by_array = function (init_key, key_length) {
         }
     }
     for (k = this.N - 1; k; k--) {
-        var s = this.mt[i - 1] ^ (this.mt[i - 1] >>> 30);
-        this.mt[i] = (this.mt[i] ^ (((((s & 0xffff0000) >>> 16) * 1566083941) << 16) + (s & 0x0000ffff) * 1566083941))
-            - i;
+        let s = this.mt[i - 1] ^ (this.mt[i - 1] >>> 30);
+        this.mt[i] =
+            (this.mt[i] ^
+                (((((s & 0xffff0000) >>> 16) * 1566083941) << 16) +
+                    (s & 0x0000ffff) * 1566083941)) -
+            i;
         /* non linear */
         this.mt[i] >>>= 0;
         /* for WORDSIZE > 32 machines */
@@ -153,10 +161,12 @@ MersenneTwister.prototype.genrand_int32 = function () {
     var mag01 = new Array(0x0, this.MATRIX_A);
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-    if (this.mti >= this.N) { /* generate N words at one time */
+    if (this.mti >= this.N) {
+        /* generate N words at one time */
         var kk;
 
-        if (this.mti == this.N + 1) { /* if init_genrand() has not been called, */
+        if (this.mti == this.N + 1) {
+            /* if init_genrand() has not been called, */
             this.init_genrand(5489);
         }
         /* a default initial seed is used */
@@ -178,17 +188,17 @@ MersenneTwister.prototype.genrand_int32 = function () {
     y = this.mt[this.mti++];
 
     /* Tempering */
-    y ^= (y >>> 11);
+    y ^= y >>> 11;
     y ^= (y << 7) & 0x9d2c5680;
     y ^= (y << 15) & 0xefc60000;
-    y ^= (y >>> 18);
+    y ^= y >>> 18;
 
     return y >>> 0;
 };
 
 /* generates a random number on [0,0x7fffffff]-interval */
 MersenneTwister.prototype.genrand_int31 = function () {
-    return (this.genrand_int32() >>> 1);
+    return this.genrand_int32() >>> 1;
 };
 
 /* generates a random number on [0,1]-real-interval */
@@ -211,15 +221,14 @@ MersenneTwister.prototype.genrand_real3 = function () {
 
 /* generates a random number on [0,1) with 53-bit resolution*/
 MersenneTwister.prototype.genrand_res53 = function () {
-    var a = this.genrand_int32() >>> 5, b = this.genrand_int32() >>> 6;
+    var a = this.genrand_int32() >>> 5,
+        b = this.genrand_int32() >>> 6;
     return (a * 67108864.0 + b) * (1.0 / 9007199254740992.0);
 };
 
 /* These real versions are due to Isaku Wada, 2002/01/09 added */
 
-
 var $builtinmodule = function (name) {
-
     var mod = {};
 
     var myGenerator = new MersenneTwister();
@@ -255,44 +264,32 @@ var $builtinmodule = function (name) {
         if (!Sk.builtin.checkInt(start)) {
             throw new Sk.builtin.ValueError("non-integer first argument for randrange()");
         }
-        ;
-
         if (stop === undefined) {
             // Random in [0, start)
             ret = toInt(myGenerator.genrand_res53() * start);
             return new Sk.builtin.int_(ret);
         }
-        ;
-
         if (!Sk.builtin.checkInt(stop)) {
             throw new Sk.builtin.ValueError("non-integer stop for randrange()");
         }
-        ;
-
         if (step === undefined) {
             step = 1;
         }
-        ;
-
         width = stop - start;
 
-        if ((step == 1) && (width > 0)) {
+        if (step == 1 && width > 0) {
             // Random in [start, stop), must use toInt on product for correct results with negative ranges
             ret = start + toInt(myGenerator.genrand_res53() * width);
             return new Sk.builtin.int_(ret);
         }
-        ;
-
         if (step == 1) {
-            throw new Sk.builtin.ValueError("empty range for randrange() (" + start + ", " + stop + ", " + width + ")");
+            throw new Sk.builtin.ValueError(
+                "empty range for randrange() (" + start + ", " + stop + ", " + width + ")"
+            );
         }
-        ;
-
         if (!Sk.builtin.checkInt(step)) {
             throw new Sk.builtin.ValueError("non-integer step for randrange()");
         }
-        ;
-
         if (step > 0) {
             n = toInt((width + step - 1) / step);
         } else if (step < 0) {
@@ -300,15 +297,11 @@ var $builtinmodule = function (name) {
         } else {
             throw new Sk.builtin.ValueError("zero step for randrange()");
         }
-        ;
-
         if (n <= 0) {
             throw new Sk.builtin.ValueError("empty range for randrange()");
         }
-        ;
-
         // Random in range(start, stop, step)
-        ret = start + (step * toInt(myGenerator.genrand_res53() * n));
+        ret = start + step * toInt(myGenerator.genrand_res53() * n);
         return new Sk.builtin.int_(ret);
     };
 
@@ -353,7 +346,7 @@ var $builtinmodule = function (name) {
             low = high;
             high = swap;
         }
-        if ((mode === undefined) || (mode === Sk.builtin.none.none$)) {
+        if (mode === undefined || mode === Sk.builtin.none.none$) {
             mode = (high - low) / 2.0;
         } else {
             Sk.builtin.pyCheckType("mode", "number", Sk.builtin.checkNumber(mode));
@@ -458,21 +451,19 @@ var $builtinmodule = function (name) {
             }
         } else if (x.sq$length !== undefined) {
             if (x.mp$ass_subscript !== undefined) {
-                for (var i = x.sq$length() - 1; i > 0; i -= 1) {
-                    var r = new Sk.builtin.int_(toInt(myGenerator.genrand_res53() * (i + 1)));
+                for (let i = x.sq$length() - 1; i > 0; i -= 1) {
+                    let r = new Sk.builtin.int_(toInt(myGenerator.genrand_res53() * (i + 1)));
                     i = new Sk.builtin.int_(i);
-                    var tmp = x.mp$subscript(r);
+                    let tmp = x.mp$subscript(r);
                     x.mp$ass_subscript(r, x.mp$subscript(i));
                     x.mp$ass_subscript(i, tmp);
-                };
+                }
             } else {
                 throw new Sk.builtin.TypeError("object is immutable");
-            };
+            }
         } else {
             throw new Sk.builtin.TypeError("object has no length");
         }
-        ;
-
         return Sk.builtin.none.none$;
     });
 
@@ -498,9 +489,7 @@ var $builtinmodule = function (name) {
         // implemented here.
         reservoir = [];
         iter = Sk.abstr.iter(population);
-        for (i = 0, elem = iter.tp$iternext();
-            elem !== undefined;
-            i++, elem = iter.tp$iternext()) {
+        for (i = 0, elem = iter.tp$iternext(); elem !== undefined; i++, elem = iter.tp$iternext()) {
             j = Math.floor(myGenerator.genrand_res53() * (i + 1));
             if (i < k) {
                 // Fill the reservoir

@@ -1,10 +1,10 @@
 Sk.jsplotlib = Sk.jsplotlib || {
-    PICTURES: {}
+    PICTURES: {},
 };
 
 // Skulpt translation
 var $builtinmodule = function (name) {
-    let mod = {__name__: "matplotlib.pyplot"};
+    let mod = { __name__: "matplotlib.pyplot" };
 
     const STRING_COLOR = new Sk.builtin.str("color");
     const STRING_COLORS = new Sk.builtin.str("colors");
@@ -29,8 +29,7 @@ var $builtinmodule = function (name) {
     const STRING_TICK_LABEL = new Sk.builtin.str("tick_label");
     const STRING_ROTATION = new Sk.builtin.str("rotation");
 
-    const DEFAULT_PLOT_PADDING = .5;
-
+    const DEFAULT_PLOT_PADDING = 0.5;
 
     if (Sk.console === undefined) {
         throw new Sk.builtin.NameError("Can not resolve drawing area. Sk.console is undefined!");
@@ -47,25 +46,25 @@ var $builtinmodule = function (name) {
             type: type,
             data: data,
             style: style,
-            label: label
+            label: label,
         };
     }
 
     function makeChart() {
-        let margin = {top: 20, right: 30, bottom: 50, left: 40};
+        let margin = { top: 20, right: 30, bottom: 50, left: 40 };
         let chartIdNumber = chartCounter++;
         return {
             plots: [],
             labels: {
                 title: "",
                 "x-axis": "",
-                "y-axis": ""
+                "y-axis": "",
             },
             extents: {
                 xMin: null,
                 xMax: null,
                 yMin: null,
-                yMax: null
+                yMax: null,
             },
             ticks: {
                 x: {},
@@ -73,14 +72,14 @@ var $builtinmodule = function (name) {
                 xRotate: "horizontal",
                 yRotate: "horizontal",
                 xEstimate: new Set(),
-                yEstimate: new Set()
+                yEstimate: new Set(),
             },
             margin: margin,
             width: getConsole().getWidth() - margin.left - margin.right,
             height: getConsole().getHeight() - margin.top - margin.bottom,
             idNumber: chartIdNumber,
             id: "chart" + chartIdNumber,
-            colorCycle: 0
+            colorCycle: 0,
         };
     }
 
@@ -89,14 +88,20 @@ var $builtinmodule = function (name) {
             padding = 0;
         }
         if (chart.extents[attr + "Min"] === null) {
-            chart.extents[attr + "Min"] = d3.min(array)-padding;
+            chart.extents[attr + "Min"] = d3.min(array) - padding;
         } else {
-            chart.extents[attr + "Min"] = Math.min(d3.min(array)-padding, chart.extents[attr + "Min"]);
+            chart.extents[attr + "Min"] = Math.min(
+                d3.min(array) - padding,
+                chart.extents[attr + "Min"]
+            );
         }
         if (chart.extents[attr + "Max"] === null) {
-            chart.extents[attr + "Max"] = d3.max(array)+padding;
+            chart.extents[attr + "Max"] = d3.max(array) + padding;
         } else {
-            chart.extents[attr + "Max"] = Math.max(d3.max(array)+padding, chart.extents[attr + "Max"]);
+            chart.extents[attr + "Max"] = Math.max(
+                d3.max(array) + padding,
+                chart.extents[attr + "Max"]
+            );
         }
     }
 
@@ -124,13 +129,25 @@ var $builtinmodule = function (name) {
         if (styleString) {
             let ftmTuple = Sk.jsplotlib._process_plot_format(styleString);
             format["linestyle"] = getKeywordParameter(kwargs, STRING_LINESTYLE, ftmTuple.linestyle);
-            format["marker"] = getKeywordParameter(kwargs, STRING_MARKER, Sk.jsplotlib.parse_marker(ftmTuple.marker));
-            format["color"] = getKeywordParameter(kwargs, STRING_COLOR, Sk.jsplotlib.color_to_hex(ftmTuple.color));
+            format["marker"] = getKeywordParameter(
+                kwargs,
+                STRING_MARKER,
+                Sk.jsplotlib.parse_marker(ftmTuple.marker)
+            );
+            format["color"] = getKeywordParameter(
+                kwargs,
+                STRING_COLOR,
+                Sk.jsplotlib.color_to_hex(ftmTuple.color)
+            );
         } else {
             let cycle = Sk.jsplotlib.rc["axes.color_cycle"];
             format["linestyle"] = getKeywordParameter(kwargs, STRING_LINESTYLE, defaultLinestyle);
             format["marker"] = getKeywordParameter(kwargs, STRING_MARKER, defaultMarker);
-            format["color"] = getKeywordParameter(kwargs, STRING_COLOR, Sk.jsplotlib.color_to_hex(cycle[chart.colorCycle % cycle.length]));
+            format["color"] = getKeywordParameter(
+                kwargs,
+                STRING_COLOR,
+                Sk.jsplotlib.color_to_hex(cycle[chart.colorCycle % cycle.length])
+            );
             chart.colorCycle += 1;
         }
         return format;
@@ -143,18 +160,23 @@ var $builtinmodule = function (name) {
     function chompPlotArgs(args, data) {
         if (data !== null) {
             if (args.length >= 2) {
-                throw new Sk.builtin.ValueError("Must provide at least 2 arguments when plotting with 'data' keyword");
+                throw new Sk.builtin.ValueError(
+                    "Must provide at least 2 arguments when plotting with 'data' keyword"
+                );
             }
             let xAttr = args[0];
             let yAttr = args[1];
-            let xs = [], ys = [];
+            let xs = [],
+                ys = [];
             const values = Sk.misceval.arrayFromIterable(data);
             for (let i = 0; i < values.length; i++) {
                 if (values[i].sq$contains(xAttr)) {
                     xs.push(values[i].mp$subscript(xAttr));
                     ys.push(values[i].mp$subscript(yAttr));
                 } else {
-                    throw new Sk.builtin.ValueError(`Item at index ${i} is missing expected attribute.`);
+                    throw new Sk.builtin.ValueError(
+                        `Item at index ${i} is missing expected attribute.`
+                    );
                 }
             }
             return [xs, ys, args[2]];
@@ -162,7 +184,9 @@ var $builtinmodule = function (name) {
             // x, y, style
             if (args.length >= 3) {
                 if (Sk.builtin.checkString(args[2])) {
-                    return [[args[0], args[1], args[2]].map(Sk.ffi.remapToJs)].concat(chompPlotArgs(args.slice(3), data));
+                    return [[args[0], args[1], args[2]].map(Sk.ffi.remapToJs)].concat(
+                        chompPlotArgs(args.slice(3), data)
+                    );
                 }
             }
             if (args.length >= 2) {
@@ -198,8 +222,8 @@ var $builtinmodule = function (name) {
     }
 
     function updateTickEstimates(chart, xValues, yValues) {
-        xValues.forEach(value => chart.ticks.xEstimate.add(value));
-        yValues.forEach(value => chart.ticks.yEstimate.add(value));
+        xValues.forEach((value) => chart.ticks.xEstimate.add(value));
+        yValues.forEach((value) => chart.ticks.yEstimate.add(value));
     }
 
     // Main plotting function
@@ -212,9 +236,11 @@ var $builtinmodule = function (name) {
         let label = getKeywordParameter(kwargs, STRING_LABEL, null);
         let chart = getChart();
         let plotData = chompPlotArgs(args, data);
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
-            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map(value => {return {x: value[0], y: value[1]};});
+            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map((value) => {
+                return { x: value[0], y: value[1] };
+            });
             let style = parseFormat(plotDatum[2], chart, kwargs, "-", "");
             let plot = makePlot("line", zippedData, style, label);
             chart.plots.push(plot);
@@ -225,7 +251,6 @@ var $builtinmodule = function (name) {
     };
     plot_f.co_kwargs = true;
     mod.plot = new Sk.builtin.func(plot_f);
-
 
     let hist_f = function (kwa) {
         // Parse arguments
@@ -243,7 +268,7 @@ var $builtinmodule = function (name) {
 
         let label = getKeywordParameter(kwargs, STRING_LABEL, null);
         let chart = getChart();
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
             let style = parseFormat(null, chart, kwargs, "", "");
             let plot = makePlot("hist", plotDatum, style, label);
@@ -251,8 +276,11 @@ var $builtinmodule = function (name) {
             plot.align = getKeywordParameter(kwargs, STRING_ALIGN, "mid");
             let estimatedBins = plotDatum;
             if (Array.isArray(plot.bins)) {
-                let max = d3.max(plot.bins), min = d3.min(plot.bins);
-                plot.data = plotDatum = plot.data.map((value) => Math.max(Math.min(value, max), min));
+                let max = d3.max(plot.bins),
+                    min = d3.min(plot.bins);
+                plot.data = plotDatum = plot.data.map((value) =>
+                    Math.max(Math.min(value, max), min)
+                );
                 estimatedBins = plot.bins;
             }
             chart.plots.push(plot);
@@ -279,8 +307,10 @@ var $builtinmodule = function (name) {
         // Special dot_limit parameter to prevent crashing from too many dots in browser
         let dotLimit = getKeywordParameter(kwargs, STRING_DOT_LIMIT, 256);
         if (plotData[0] && plotData[0].length > dotLimit) {
-            let xSampled = [], ySampled = [];
-            let LENGTH = plotData[0].length, RATE = LENGTH / dotLimit;
+            let xSampled = [],
+                ySampled = [];
+            let LENGTH = plotData[0].length,
+                RATE = LENGTH / dotLimit;
             for (let i = 0; i < dotLimit; i += 1) {
                 let index = Math.floor((i + Math.random()) * RATE);
                 xSampled.push(plotData[0][index]);
@@ -290,12 +320,13 @@ var $builtinmodule = function (name) {
             plotData[1] = ySampled;
         }
 
-
         let chart = getChart();
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
             let style = parseFormat(plotDatum[2], chart, kwargs, " ", "o");
-            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map(value => {return {x: value[0], y: value[1]};});
+            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map((value) => {
+                return { x: value[0], y: value[1] };
+            });
             let plot = makePlot("scatter", zippedData, style, label);
             plot.sizes = getKeywordParameter(kwargs, STRING_S, null);
             plot.colors = getKeywordParameter(kwargs, STRING_C, null);
@@ -323,24 +354,27 @@ var $builtinmodule = function (name) {
         let plotData = chompPlotArgs(args, data);
 
         let chart = getChart();
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
-            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map(value => {return {x: value[0], y: value[1]};});
+            let zippedData = d3.zip(plotDatum[0], plotDatum[1]).map((value) => {
+                return { x: value[0], y: value[1] };
+            });
             let style = parseFormat(null, chart, kwargs, "", "");
             let plot = makePlot("bar", zippedData, style, label);
             plot.width = getKeywordParameter(kwargs, STRING_WIDTH, 0.8);
             plot.align = getKeywordParameter(kwargs, STRING_ALIGN, "center");
-            for (let x=0; x<Math.min(tickLabels.length, plotDatum[0].length); x+=1) {
+            for (let x = 0; x < Math.min(tickLabels.length, plotDatum[0].length); x += 1) {
                 chart.ticks.x[plotDatum[0][x]] = tickLabels[x];
             }
             chart.plots.push(plot);
-            let lowestX = d3.min(plotDatum[0])-(plot.align === "center" ? 1 : 0), lowestY = d3.max(plotDatum[0])+1;
+            let lowestX = d3.min(plotDatum[0]) - (plot.align === "center" ? 1 : 0),
+                lowestY = d3.max(plotDatum[0]) + 1;
             updateExtent(chart, "x", plotDatum[0].concat([lowestX, lowestY])); // Account for width
             updateExtent(chart, "y", plotDatum[1]);
             updateTickEstimates(chart, plotDatum[0].concat([lowestX, lowestY]), plotDatum[1]);
         }
         // Ensure that the axis line is always the middle!
-        updateExtent(chart, "y", [-.1]);
+        updateExtent(chart, "y", [-0.1]);
     };
     bar_f.co_kwargs = true;
     mod.bar = new Sk.builtin.func(bar_f);
@@ -355,29 +389,29 @@ var $builtinmodule = function (name) {
         let label = getKeywordParameter(kwargs, STRING_LABEL, null);
         let chart = getChart();
         let dataSorted = plotData.sort(d3.ascending);
-        let q1 = d3.quantile(dataSorted, .25);
-        let median = d3.quantile(dataSorted, .5);
-        let q3 = d3.quantile(dataSorted, .75);
+        let q1 = d3.quantile(dataSorted, 0.25);
+        let median = d3.quantile(dataSorted, 0.5);
+        let q3 = d3.quantile(dataSorted, 0.75);
         let interQuantileRange = q3 - q1;
         let min = d3.min(plotData);
         let max = d3.max(plotData);
-        let data = {x: chart.plots.length+1, y: [min, q1, median, q3, max]};
+        let data = { x: chart.plots.length + 1, y: [min, q1, median, q3, max] };
         let style = parseFormat(null, chart, kwargs, "", "");
         let plot = makePlot("boxplot", data, style, label);
         chart.plots.push(plot);
         console.log(plot);
-        updateExtent(chart, "x", [data.x-1, data.x, data.x+1]); // Account for width
+        updateExtent(chart, "x", [data.x - 1, data.x, data.x + 1]); // Account for width
         updateExtent(chart, "y", data.y);
-        updateExtent(chart, "y", [-.1]);
-        updateTickEstimates(chart, [data.x-1, data.x+1], data.y);
+        updateExtent(chart, "y", [-0.1]);
+        updateTickEstimates(chart, [data.x - 1, data.x + 1], data.y);
     };
     boxplot_f.co_kwargs = true;
     mod.boxplot = new Sk.builtin.func(boxplot_f);
 
     function getLinesData(args) {
         args = args.slice(0, 3).map(Sk.ffi.remapToJs);
-        let length = d3.max(args.filter(Array.isArray).map(a => a.length)) || 1;
-        args = args.map(a => Array.isArray(a) ? a : Array(length).fill(a));
+        let length = d3.max(args.filter(Array.isArray).map((a) => a.length)) || 1;
+        args = args.map((a) => (Array.isArray(a) ? a : Array(length).fill(a)));
         return d3.zip(args[0], args[1], args[2]);
     }
 
@@ -396,16 +430,25 @@ var $builtinmodule = function (name) {
 
         let chart = getChart();
         let style = parseFormat(null, chart, kwargs, "", "");
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
-            let zippedData = {x1: plotDatum[1], x2: plotDatum[2], y1: plotDatum[0], y2: plotDatum[0]};
+            let zippedData = {
+                x1: plotDatum[1],
+                x2: plotDatum[2],
+                y1: plotDatum[0],
+                y2: plotDatum[0],
+            };
             let plot = makePlot("one_line", zippedData, style, label);
             plot.color = Array.isArray(colors) ? colors[i] : plot.color;
             plot.linestyle = linestyles === null ? plot.linestyle : linestyles;
             chart.plots.push(plot);
             updateExtent(chart, "x", [zippedData.x1, zippedData.x2]); // Account for width
             updateExtent(chart, "y", [zippedData.y1, zippedData.y2]);
-            updateTickEstimates(chart, [zippedData.x1, zippedData.x2], [zippedData.y1, zippedData.y2]);
+            updateTickEstimates(
+                chart,
+                [zippedData.x1, zippedData.x2],
+                [zippedData.y1, zippedData.y2]
+            );
         }
     };
     hlines_f.co_kwargs = true;
@@ -426,27 +469,39 @@ var $builtinmodule = function (name) {
 
         let chart = getChart();
         let style = parseFormat(null, chart, kwargs, "", "");
-        for (let i=0; i<plotData.length; i+= 1) {
+        for (let i = 0; i < plotData.length; i += 1) {
             let plotDatum = plotData[i];
-            let zippedData = {x1: plotDatum[0], x2: plotDatum[0], y1: plotDatum[1], y2: plotDatum[2]};
+            let zippedData = {
+                x1: plotDatum[0],
+                x2: plotDatum[0],
+                y1: plotDatum[1],
+                y2: plotDatum[2],
+            };
             let plot = makePlot("one_line", zippedData, style, label);
             plot.color = Array.isArray(colors) ? colors[i] : plot.color;
             plot.linestyle = linestyles === null ? plot.linestyle : linestyles;
             chart.plots.push(plot);
             updateExtent(chart, "x", [zippedData.x1, zippedData.x2]); // Account for width
             updateExtent(chart, "y", [zippedData.y1, zippedData.y2]);
-            updateTickEstimates(chart, [zippedData.x1, zippedData.x2], [zippedData.y1, zippedData.y2]);
+            updateTickEstimates(
+                chart,
+                [zippedData.x1, zippedData.x2],
+                [zippedData.y1, zippedData.y2]
+            );
         }
     };
     vlines_f.co_kwargs = true;
     mod.vlines = new Sk.builtin.func(vlines_f);
 
     function getRotation(chart, dimension) {
-        let amount = chart.ticks[dimension+"Rotate"];
+        let amount = chart.ticks[dimension + "Rotate"];
         switch (amount) {
-            case "horizontal": return "rotate(0)";
-            case "vertical": return "rotate(275)";
-            default: return "rotate("+(-amount)+")";
+            case "horizontal":
+                return "rotate(0)";
+            case "vertical":
+                return "rotate(275)";
+            default:
+                return "rotate(" + -amount + ")";
         }
     }
 
@@ -458,77 +513,84 @@ var $builtinmodule = function (name) {
         chart.svg.attr("height", height);
         chart.svg.attr("chartCount", chart.idNumber);
 
-        let translation = "translate(" + (chart.margin.left + yAxisBuffer) + "," + chart.margin.top + ")";
-        chart.canvas = chart.svg.append("g")
-            .attr("transform", translation);
+        let translation =
+            "translate(" + (chart.margin.left + yAxisBuffer) + "," + chart.margin.top + ")";
+        chart.canvas = chart.svg.append("g").attr("transform", translation);
         // X-axis
-        chart.canvas.append("g")
+        chart.canvas
+            .append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + chart.height + ")")
             .call(chart.xAxis);
         // Y-axis
-        chart.canvas.append("g")
-            .attr("class", "y axis")
-            .call(chart.yAxis);
+        chart.canvas.append("g").attr("class", "y axis").call(chart.yAxis);
         // X-axis ticks
-        let xticks = chart.canvas.select(".x.axis")
-            .selectAll("text")
-            .style("font-size", "12px");
+        let xticks = chart.canvas.select(".x.axis").selectAll("text").style("font-size", "12px");
         if (chart.ticks.xRotate !== "horizontal") {
             xticks.style("text-anchor", "end").attr("transform", getRotation(chart, "x"));
         }
         // Y-axis ticks
-        let yticks = chart.canvas.select(".y.axis")
-            .selectAll("text")
-            .style("font-size", "12px");
-            //.style("text-anchor", "start")
+        let yticks = chart.canvas.select(".y.axis").selectAll("text").style("font-size", "12px");
+        //.style("text-anchor", "start")
         if (chart.ticks.yRotate !== "horizontal") {
             yticks.attr("transform", getRotation(chart, "y"));
         }
 
-        translation = "translate(" + ((chart.width - yAxisBuffer) / 2) + " ," + (chart.height + chart.margin.bottom - 14) + ")";
+        translation =
+            "translate(" +
+            (chart.width - yAxisBuffer) / 2 +
+            " ," +
+            (chart.height + chart.margin.bottom - 14) +
+            ")";
         // X-axis label
-        chart.canvas.append("text")      // text label for the x axis
+        chart.canvas
+            .append("text") // text label for the x axis
             .attr("transform", translation)
             .attr("class", "x-axis-label")
             .style("font-size", "14px")
             .text(chart.labels["x-axis"])
             .style("text-anchor", "middle");
         // Y-axis label
-        chart.canvas.append("text")
+        chart.canvas
+            .append("text")
             .attr("transform", "rotate(-90)")
             .attr("class", "y-axis-label")
             .attr("y", 0 - chart.margin.left - yAxisBuffer)
-            .attr("x", 0 - (chart.height / 2))
+            .attr("x", 0 - chart.height / 2)
             .attr("dy", "1em")
             .text(chart.labels["y-axis"])
             .style("font-size", "14px")
             .style("text-anchor", "middle");
         // Title text
-        chart.canvas.append("text")
-            .attr("x", ((chart.width - yAxisBuffer) / 2))
-            .attr("y", 0 - (chart.margin.top / 2))
+        chart.canvas
+            .append("text")
+            .attr("x", (chart.width - yAxisBuffer) / 2)
+            .attr("y", 0 - chart.margin.top / 2)
             .attr("class", "title-text")
             .text(chart.labels["title"])
             .attr("text-anchor", "middle")
             .style("font-size", "14px")
             .style("text-decoration", "underline");
         // Hidden watermark
-        chart.canvas.append("text")
+        chart.canvas
+            .append("text")
             .attr("x", 0)
             .attr("y", 0)
             .text("BlockPy")
             .style("stroke", "#FDFDFD")
             .style("font-size", "8px");
         // Additional CSS
-        chart.svg.insert("defs", ":first-child")
+        chart.svg
+            .insert("defs", ":first-child")
             .append("style")
             .attr("type", "text/css")
-            .text("svg { background-color: white; }\n" +
-                ".axis path,.axis line { fill: none; stroke: black; shape-rendering: crispEdges;}\n" +
-                ".line { fill: none; stroke-width: 1px;}\n" +
-                ".circle { r: 3; shape-rendering: crispEdges; }\n" +
-                ".bar { shape-rendering: crispEdges;}\n");
+            .text(
+                "svg { background-color: white; }\n" +
+                    ".axis path,.axis line { fill: none; stroke: black; shape-rendering: crispEdges;}\n" +
+                    ".line { fill: none; stroke-width: 1px;}\n" +
+                    ".circle { r: 3; shape-rendering: crispEdges; }\n" +
+                    ".bar { shape-rendering: crispEdges;}\n"
+            );
         return chart;
     }
 
@@ -545,7 +607,7 @@ var $builtinmodule = function (name) {
         // Adjust bin sizes to capture last group properly
         if (Array.isArray(plot.bins)) {
             domain[1] += 1;
-            plot.bins[plot.bins.length-1] += 1;
+            plot.bins[plot.bins.length - 1] += 1;
         }
         let histogram = d3.histogram().domain(domain);
         if (plot.bins) {
@@ -560,7 +622,7 @@ var $builtinmodule = function (name) {
     }
 
     function finalizeHistogram(chart) {
-        if (!chart.plots.some(plot => plot.type === "hist")) {
+        if (!chart.plots.some((plot) => plot.type === "hist")) {
             return false;
         }
         let yMax = 0;
@@ -570,7 +632,10 @@ var $builtinmodule = function (name) {
                 continue;
             }
             let histogram = makeHistogram(plot);
-            yMax = Math.max(yMax, d3.max(histogram, (d) => d.length));
+            yMax = Math.max(
+                yMax,
+                d3.max(histogram, (d) => d.length)
+            );
         }
         chart.extents.yMax = Math.max(yMax, chart.extents.yMax);
         return true;
@@ -579,12 +644,12 @@ var $builtinmodule = function (name) {
     function setupXScale(chart, yAxisBuffer) {
         // Calculate an appropriate offset based on the width of the numbers on the axis
         // Set up x-scaling
-        chart.xScale = d3.scaleLinear()
+        chart.xScale = d3
+            .scaleLinear()
             .domain([chart.extents.xMin, chart.extents.xMax])
             .range([0, chart.width - yAxisBuffer]);
         // Set up x-axis
-        chart.xAxis = d3.axisBottom()
-            .scale(chart.xScale);
+        chart.xAxis = d3.axisBottom().scale(chart.xScale);
         // Choose a smaller number of ticks if few discrete points
         if (chart.ticks.xEstimate.size < 10) {
             console.log(chart.ticks.xEstimate.size);
@@ -599,11 +664,11 @@ var $builtinmodule = function (name) {
     }
 
     function setupYScale(chart) {
-        chart.yScale = d3.scaleLinear()
+        chart.yScale = d3
+            .scaleLinear()
             .domain([chart.extents.yMin, chart.extents.yMax])
             .range([chart.height, 0]);
-        chart.yAxis = d3.axisLeft()
-            .scale(chart.yScale);
+        chart.yAxis = d3.axisLeft().scale(chart.yScale);
         // Choose a smaller number of ticks if few discrete points
         if (chart.ticks.yEstimate.size < 10) {
             chart.yAxis.ticks(chart.ticks.yEstimate.size);
@@ -617,9 +682,12 @@ var $builtinmodule = function (name) {
     }
 
     function finalizeChart(chart, saveFigureFn) {
-        let doctype = "<?xml version=\"1.0\" standalone=\"no\"?>" + "<" + "!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+        let doctype =
+            '<?xml version="1.0" standalone="no"?>' +
+            "<" +
+            '!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
         let xml = new XMLSerializer().serializeToString(chart.svg.node());
-        let blob = new Blob([doctype + xml], {type: "image/svg+xml"});
+        let blob = new Blob([doctype + xml], { type: "image/svg+xml" });
         let url = window.URL.createObjectURL(blob);
         //var data = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));
         let anchor = document.createElement("a");
@@ -647,7 +715,6 @@ var $builtinmodule = function (name) {
             anchor.setAttribute("href", canvasUrl);
             anchor.setAttribute("download", filename);
 
-
             if (saveFigureFn !== undefined) {
                 saveFigureFn(canvas);
             }
@@ -674,14 +741,20 @@ var $builtinmodule = function (name) {
         }
 
         // Establish x/y scalers and axes
-        let yAxisBuffer = 5 * Math.max(getDigits(chart.extents.xMin), getDigits(chart.extents.xMax),
-                                       getDigits(chart.extents.yMin), getDigits(chart.extents.yMin));
+        let yAxisBuffer =
+            5 *
+            Math.max(
+                getDigits(chart.extents.xMin),
+                getDigits(chart.extents.xMax),
+                getDigits(chart.extents.yMin),
+                getDigits(chart.extents.yMin)
+            );
         setupXScale(chart, yAxisBuffer);
         finalizeHistogram(chart);
         setupYScale(chart);
 
-        chart.mapX = d => chart.xScale(d.x);
-        chart.mapY = d => chart.yScale(d.y);
+        chart.mapX = (d) => chart.xScale(d.x);
+        chart.mapY = (d) => chart.yScale(d.y);
         chart.mapLine = d3.line().x(chart.mapX).y(chart.mapY);
 
         if (outputTarget === undefined) {
@@ -696,7 +769,8 @@ var $builtinmodule = function (name) {
             let plot = chart.plots[i];
             switch (plot.type) {
                 case "line":
-                    chart.canvas.append("path")
+                    chart.canvas
+                        .append("path")
                         .style("fill", "none")
                         .style("stroke", plot.style.color)
                         .style("stroke-width", plot.style["linewidth"])
@@ -706,17 +780,19 @@ var $builtinmodule = function (name) {
                         .attr("d", chart.mapLine(plot.data));
                     break;
                 case "one_line":
-                    chart.canvas.append("line")
+                    chart.canvas
+                        .append("line")
                         .style("stroke", plot.style.color)
                         .style("stroke-width", plot.style["linewidth"])
                         .style("fill-opacity", plot.style["alpha"])
                         .attr("x1", chart.xScale(plot.data.x1))
                         .attr("x2", chart.xScale(plot.data.x2))
-                        .attr("y1", chart.yScale(plot.data.y1) )
-                        .attr("y2", chart.yScale(plot.data.y2) );
+                        .attr("y1", chart.yScale(plot.data.y1))
+                        .attr("y2", chart.yScale(plot.data.y2));
                     break;
                 case "scatter":
-                    chart.canvas.append("g")
+                    chart.canvas
+                        .append("g")
                         .attr("class", "series")
                         .selectAll(".point")
                         .data(plot.data)
@@ -748,7 +824,8 @@ var $builtinmodule = function (name) {
                     break;
                 case "hist":
                     let histogram = makeHistogram(plot);
-                    chart.canvas.selectAll(".bar")
+                    chart.canvas
+                        .selectAll(".bar")
                         .data(histogram)
                         // Enter
                         .enter()
@@ -769,7 +846,8 @@ var $builtinmodule = function (name) {
                         });
                     break;
                 case "bar":
-                    chart.canvas.selectAll(".bar")
+                    chart.canvas
+                        .selectAll(".bar")
                         .data(plot.data)
                         // Enter
                         .enter()
@@ -778,11 +856,11 @@ var $builtinmodule = function (name) {
                         .style("fill", plot["style"]["color"])
                         .style("stroke", "black")
                         .attr("x", function (d) {
-                            let increment = (plot.align === "center" ? plot.width/2 : 0);
-                            return chart.xScale(d.x-increment);
+                            let increment = plot.align === "center" ? plot.width / 2 : 0;
+                            return chart.xScale(d.x - increment);
                         })
                         .attr("width", function (d) {
-                            return chart.xScale(d.x+plot.width) - chart.xScale(d.x);
+                            return chart.xScale(d.x + plot.width) - chart.xScale(d.x);
                         })
                         .attr("y", chart.mapY)
                         .attr("height", function (d) {
@@ -790,34 +868,38 @@ var $builtinmodule = function (name) {
                         });
                     break;
                 case "boxplot":
-                    const WIDTH = .6;
-                    chart.canvas.append("line")
+                    const WIDTH = 0.6;
+                    chart.canvas
+                        .append("line")
                         .attr("x1", chart.xScale(plot.data.x))
                         .attr("x2", chart.xScale(plot.data.x))
-                        .attr("y1", chart.yScale(plot.data.y[0]) )
-                        .attr("y2", chart.yScale(plot.data.y[1]) )
+                        .attr("y1", chart.yScale(plot.data.y[0]))
+                        .attr("y2", chart.yScale(plot.data.y[1]))
                         .attr("stroke", "black");
-                    chart.canvas.append("line")
+                    chart.canvas
+                        .append("line")
                         .attr("x1", chart.xScale(plot.data.x))
                         .attr("x2", chart.xScale(plot.data.x))
-                        .attr("y1", chart.yScale(plot.data.y[3]) )
-                        .attr("y2", chart.yScale(plot.data.y[4]) )
+                        .attr("y1", chart.yScale(plot.data.y[3]))
+                        .attr("y2", chart.yScale(plot.data.y[4]))
                         .attr("stroke", "black");
-                    chart.canvas.append("rect")
-                        .attr("x", chart.xScale(plot.data.x-WIDTH/2))
-                        .attr("y", chart.yScale(plot.data.y[3]) )
-                        .attr("height", (chart.yScale(plot.data.y[1])-chart.yScale(plot.data.y[3])))
-                        .attr("width", chart.xScale(WIDTH) )
+                    chart.canvas
+                        .append("rect")
+                        .attr("x", chart.xScale(plot.data.x - WIDTH / 2))
+                        .attr("y", chart.yScale(plot.data.y[3]))
+                        .attr("height", chart.yScale(plot.data.y[1]) - chart.yScale(plot.data.y[3]))
+                        .attr("width", chart.xScale(WIDTH))
                         .attr("stroke", "black")
                         .style("fill", "none");
-                    chart.canvas.selectAll(".boxplot")
+                    chart.canvas
+                        .selectAll(".boxplot")
                         .data([plot.data.y[0], plot.data.y[2], plot.data.y[4]])
                         .enter()
                         .append("line")
-                        .attr("x1", chart.xScale(plot.data.x-WIDTH/2))
-                        .attr("x2", chart.xScale(plot.data.x+WIDTH/2))
-                        .attr("y1", chart.yScale )
-                        .attr("y2", chart.yScale )
+                        .attr("x1", chart.xScale(plot.data.x - WIDTH / 2))
+                        .attr("x2", chart.xScale(plot.data.x + WIDTH / 2))
+                        .attr("y1", chart.yScale)
+                        .attr("y2", chart.yScale)
                         .attr("class", "boxplot")
                         .attr("stroke", "black");
                     break;
@@ -833,8 +915,9 @@ var $builtinmodule = function (name) {
         Sk.builtin.pyCheckArgs("title", arguments, 1, 1);
 
         if (!Sk.builtin.checkString(s)) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(s) +
-                "' is not supported for title; should be a string.");
+            throw new Sk.builtin.TypeError(
+                "'" + Sk.abstr.typeName(s) + "' is not supported for title; should be a string."
+            );
         }
 
         getChart().labels["title"] = Sk.ffi.remapToJs(s);
@@ -845,8 +928,9 @@ var $builtinmodule = function (name) {
         Sk.builtin.pyCheckArgs("xlabel", arguments, 1, 1);
 
         if (!Sk.builtin.checkString(s)) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(s) +
-                "' is not supported for xlabel; should be a string.");
+            throw new Sk.builtin.TypeError(
+                "'" + Sk.abstr.typeName(s) + "' is not supported for xlabel; should be a string."
+            );
         }
         getChart().labels["x-axis"] = Sk.ffi.remapToJs(s);
     };
@@ -856,8 +940,9 @@ var $builtinmodule = function (name) {
         Sk.builtin.pyCheckArgs("ylabel", arguments, 1, 1);
 
         if (!Sk.builtin.checkString(s)) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(s) +
-                "' is not supported for ylabel; should be a string.");
+            throw new Sk.builtin.TypeError(
+                "'" + Sk.abstr.typeName(s) + "' is not supported for ylabel; should be a string."
+            );
         }
         getChart().labels["y-axis"] = Sk.ffi.remapToJs(s);
     };
@@ -873,12 +958,12 @@ var $builtinmodule = function (name) {
         let chart = getChart();
         if (args.length === 1) {
             chart.ticks.x = {};
-            for (let i=0; i<args[0].length;i+= 1) {
+            for (let i = 0; i < args[0].length; i += 1) {
                 chart.ticks.x[i] = i;
             }
         } else if (args.length === 2) {
             chart.ticks.x = {};
-            for (let i=0; i<args[0].length;i+= 1) {
+            for (let i = 0; i < args[0].length; i += 1) {
                 chart.ticks.x[i] = args[2][i];
             }
         }
@@ -895,11 +980,10 @@ var $builtinmodule = function (name) {
 
     // Create a unique identifier for the chart
 
-
     const savefig_f = function (self, imageData, kwargs) {
-        console.log("SAVING FIG",self, imageData, kwargs);
+        console.log("SAVING FIG", self, imageData, kwargs);
         if (imageData.tp$name === "BytesIO") {
-
+            // TODO: Support this parameter better
         }
         const chart = getChart();
         let chartIdNumber = chart.chartIdNumber;
@@ -940,26 +1024,138 @@ var $builtinmodule = function (name) {
     };
     mod.close = new Sk.builtin.func(close_f);
 
-    const UNSUPPORTED = ["semilogx", "semilogy", "specgram", "stackplot", "stem", "step", "streamplot",
-                         "tricontour", "tricontourf", "tripcolor", "triplot", "xcorr", "barbs",
-                         "cla", "grid", "table", "text", "annotate", "ticklabel_format", "locator_params",
-                         "tick_params", "margins", "autoscale", "autumn", "cool", "copper", "flag", "gray",
-                         "hot", "hsv", "jet", "pink", "prism", "spring", "summer", "winter", "spectral",
-                         "loglog", "magnitude_spectrum", "pcolor", "pcolormesh", "phase_spectrum",
-                         "pie", "plot_date", "psd", "quiver", "quiverkey", "findobj", "switch_backend",
-                         "isinteractive", "ioff", "ion", "pause", "rc", "rc_context", "rcdefaults",
-                         "gci", "sci", "xkcd", "figure", "gcf", "get_fignums", "get_figlabels",
-                         "get_current_fig_manager", "connect", "disconnect",
-                         "ginput", "waitforbuttonpress", "figtext", "suptitle", "figimage", "figlegend",
-                         "hold", "ishold", "over", "delaxes", "sca", "gca", "subplot", "subplots",
-                         "subplot2grid", "twinx", "twiny", "subplots_adjust", "subplot_tool",
-                         "tight_layout", "box", "xlim", "ylim", "xscale", "yscale", "yticks",
-                         "minorticks_on", "minorticks_off", "rgrids", "thetagrids", "plotting", "get_plot_commands",
-                         "colors", "colormaps", "_setup_pyplot_info_docstrings", "colorbar", "clim", "set_cmap",
-                         "imread", "imsave", "matshow", "polar", "plotfile", "_autogen_docstring", "acorr",
-                         "arrow", "axhline", "axhspan", "axvline", "axvspan",, "broken_barh", "cohere",
-                         "clabel", "contour", "contourf", "csd", "errorbar", "eventplot", "fill", "fill_between",
-                         "fill_betweenx", "hexbin", "hist2d", "axis"];
+    const UNSUPPORTED = [
+        "semilogx",
+        "semilogy",
+        "specgram",
+        "stackplot",
+        "stem",
+        "step",
+        "streamplot",
+        "tricontour",
+        "tricontourf",
+        "tripcolor",
+        "triplot",
+        "xcorr",
+        "barbs",
+        "cla",
+        "grid",
+        "table",
+        "text",
+        "annotate",
+        "ticklabel_format",
+        "locator_params",
+        "tick_params",
+        "margins",
+        "autoscale",
+        "autumn",
+        "cool",
+        "copper",
+        "flag",
+        "gray",
+        "hot",
+        "hsv",
+        "jet",
+        "pink",
+        "prism",
+        "spring",
+        "summer",
+        "winter",
+        "spectral",
+        "loglog",
+        "magnitude_spectrum",
+        "pcolor",
+        "pcolormesh",
+        "phase_spectrum",
+        "pie",
+        "plot_date",
+        "psd",
+        "quiver",
+        "quiverkey",
+        "findobj",
+        "switch_backend",
+        "isinteractive",
+        "ioff",
+        "ion",
+        "pause",
+        "rc",
+        "rc_context",
+        "rcdefaults",
+        "gci",
+        "sci",
+        "xkcd",
+        "figure",
+        "gcf",
+        "get_fignums",
+        "get_figlabels",
+        "get_current_fig_manager",
+        "connect",
+        "disconnect",
+        "ginput",
+        "waitforbuttonpress",
+        "figtext",
+        "suptitle",
+        "figimage",
+        "figlegend",
+        "hold",
+        "ishold",
+        "over",
+        "delaxes",
+        "sca",
+        "gca",
+        "subplot",
+        "subplots",
+        "subplot2grid",
+        "twinx",
+        "twiny",
+        "subplots_adjust",
+        "subplot_tool",
+        "tight_layout",
+        "box",
+        "xlim",
+        "ylim",
+        "xscale",
+        "yscale",
+        "yticks",
+        "minorticks_on",
+        "minorticks_off",
+        "rgrids",
+        "thetagrids",
+        "plotting",
+        "get_plot_commands",
+        "colors",
+        "colormaps",
+        "_setup_pyplot_info_docstrings",
+        "colorbar",
+        "clim",
+        "set_cmap",
+        "imread",
+        "imsave",
+        "matshow",
+        "polar",
+        "plotfile",
+        "_autogen_docstring",
+        "acorr",
+        "arrow",
+        "axhline",
+        "axhspan",
+        "axvline",
+        "axvspan",
+        "broken_barh",
+        "cohere",
+        "clabel",
+        "contour",
+        "contourf",
+        "csd",
+        "errorbar",
+        "eventplot",
+        "fill",
+        "fill_between",
+        "fill_betweenx",
+        "hexbin",
+        "hist2d",
+        "axis",
+    ];
 
     for (let i = 0; i < UNSUPPORTED.length; i += 1) {
         mod[UNSUPPORTED[i]] = new Sk.builtin.func(function () {
@@ -971,7 +1167,6 @@ var $builtinmodule = function (name) {
         return Sk.builtin.none.none$;
     };
     mod.legend = new Sk.builtin.func(legend_f);
-
 
     return mod;
 };
@@ -1003,7 +1198,7 @@ Sk.jsplotlib.rc = {
     "axes.labelweigth": "normal",
     "axes.labelcolor": "black",
     "axes.axisbelow": false,
-    "axes.color_cycle": ["b", "g", "r", "c", "m", "y", "k"]
+    "axes.color_cycle": ["b", "g", "r", "c", "m", "y", "k"],
 };
 
 Sk.jsplotlib._line_counter = 0;
@@ -1014,7 +1209,7 @@ Sk.jsplotlib.lineStyles = {
     "--": "_draw_dashed",
     "-.": "_draw_dash_dot",
     ":": "_draw_dotted",
-    "None": "_draw_nothing",
+    None: "_draw_nothing",
     " ": "_draw_nothing",
     "": "_draw_nothing",
 };
@@ -1022,27 +1217,27 @@ Sk.jsplotlib.lineStyles = {
 Sk.jsplotlib.lineMarkers = {
     ".": "point",
     ",": "pixel",
-    "o": "circle",
-    "v": "triangle_down",
+    o: "circle",
+    v: "triangle_down",
     "^": "triangle_up",
     "<": "triangle_left",
     ">": "triangle_right",
-    "1": "tri_down",
-    "2": "tri_up",
-    "3": "tri_left",
-    "4": "tri_right",
-    "8": "octagon",
-    "s": "square",
-    "p": "pentagon",
+    1: "tri_down",
+    2: "tri_up",
+    3: "tri_left",
+    4: "tri_right",
+    8: "octagon",
+    s: "square",
+    p: "pentagon",
     "*": "star",
-    "h": "hexagon1",
-    "H": "hexagon2",
+    h: "hexagon1",
+    H: "hexagon2",
     "+": "plus",
-    "x": "x",
-    "D": "diamond",
-    "d": "thin_diamond",
+    x: "x",
+    D: "diamond",
+    d: "thin_diamond",
     "|": "vline",
-    "_": "hline",
+    _: "hline",
     //TICKLEFT: 'tickleft',
     //TICKRIGHT: 'tickright',
     //TICKUP: 'tickup',
@@ -1051,173 +1246,173 @@ Sk.jsplotlib.lineMarkers = {
     //CARETRIGHT: 'caretright',
     //CARETUP: 'caretup',
     //CARETDOWN: 'caretdown',
-    "None": "nothing",
+    None: "nothing",
     //Sk.builtin.none.none$: 'nothing',
     " ": "nothing",
-    "": "nothing"
+    "": "nothing",
 };
 
 /**
  Color short keys
  **/
 Sk.jsplotlib.colors = {
-    "b": "blue",
-    "g": "green",
-    "r": "red",
-    "c": "cyan",
-    "m": "magenta",
-    "y": "yellow",
-    "k": "black",
-    "w": "white"
+    b: "blue",
+    g: "green",
+    r: "red",
+    c: "cyan",
+    m: "magenta",
+    y: "yellow",
+    k: "black",
+    w: "white",
 };
 
 /**
  Mapping of all possible CSS colors, that are supported by matplotlib
  **/
 Sk.jsplotlib.cnames = {
-    "aliceblue": "#F0F8FF",
-    "antiquewhite": "#FAEBD7",
-    "aqua": "#00FFFF",
-    "aquamarine": "#7FFFD4",
-    "azure": "#F0FFFF",
-    "beige": "#F5F5DC",
-    "bisque": "#FFE4C4",
-    "black": "#000000",
-    "blanchedalmond": "#FFEBCD",
-    "blue": "#0000FF",
-    "blueviolet": "#8A2BE2",
-    "brown": "#A52A2A",
-    "burlywood": "#DEB887",
-    "cadetblue": "#5F9EA0",
-    "chartreuse": "#7FFF00",
-    "chocolate": "#D2691E",
-    "coral": "#FF7F50",
-    "cornflowerblue": "#6495ED",
-    "cornsilk": "#FFF8DC",
-    "crimson": "#DC143C",
-    "cyan": "#00FFFF",
-    "darkblue": "#00008B",
-    "darkcyan": "#008B8B",
-    "darkgoldenrod": "#B8860B",
-    "darkgray": "#A9A9A9",
-    "darkgreen": "#006400",
-    "darkkhaki": "#BDB76B",
-    "darkmagenta": "#8B008B",
-    "darkolivegreen": "#556B2F",
-    "darkorange": "#FF8C00",
-    "darkorchid": "#9932CC",
-    "darkred": "#8B0000",
-    "darksage": "#598556",
-    "darksalmon": "#E9967A",
-    "darkseagreen": "#8FBC8F",
-    "darkslateblue": "#483D8B",
-    "darkslategray": "#2F4F4F",
-    "darkturquoise": "#00CED1",
-    "darkviolet": "#9400D3",
-    "deeppink": "#FF1493",
-    "deepskyblue": "#00BFFF",
-    "dimgray": "#696969",
-    "dodgerblue": "#1E90FF",
-    "firebrick": "#B22222",
-    "floralwhite": "#FFFAF0",
-    "forestgreen": "#228B22",
-    "fuchsia": "#FF00FF",
-    "gainsboro": "#DCDCDC",
-    "ghostwhite": "#F8F8FF",
-    "gold": "#FFD700",
-    "goldenrod": "#DAA520",
-    "gray": "#808080",
-    "green": "#008000",
-    "greenyellow": "#ADFF2F",
-    "honeydew": "#F0FFF0",
-    "hotpink": "#FF69B4",
-    "indianred": "#CD5C5C",
-    "indigo": "#4B0082",
-    "ivory": "#FFFFF0",
-    "khaki": "#F0E68C",
-    "lavender": "#E6E6FA",
-    "lavenderblush": "#FFF0F5",
-    "lawngreen": "#7CFC00",
-    "lemonchiffon": "#FFFACD",
-    "lightblue": "#ADD8E6",
-    "lightcoral": "#F08080",
-    "lightcyan": "#E0FFFF",
-    "lightgoldenrodyellow": "#FAFAD2",
-    "lightgreen": "#90EE90",
-    "lightgray": "#D3D3D3",
-    "lightpink": "#FFB6C1",
-    "lightsage": "#BCECAC",
-    "lightsalmon": "#FFA07A",
-    "lightseagreen": "#20B2AA",
-    "lightskyblue": "#87CEFA",
-    "lightslategray": "#778899",
-    "lightsteelblue": "#B0C4DE",
-    "lightyellow": "#FFFFE0",
-    "lime": "#00FF00",
-    "limegreen": "#32CD32",
-    "linen": "#FAF0E6",
-    "magenta": "#FF00FF",
-    "maroon": "#800000",
-    "mediumaquamarine": "#66CDAA",
-    "mediumblue": "#0000CD",
-    "mediumorchid": "#BA55D3",
-    "mediumpurple": "#9370DB",
-    "mediumseagreen": "#3CB371",
-    "mediumslateblue": "#7B68EE",
-    "mediumspringgreen": "#00FA9A",
-    "mediumturquoise": "#48D1CC",
-    "mediumvioletred": "#C71585",
-    "midnightblue": "#191970",
-    "mintcream": "#F5FFFA",
-    "mistyrose": "#FFE4E1",
-    "moccasin": "#FFE4B5",
-    "navajowhite": "#FFDEAD",
-    "navy": "#000080",
-    "oldlace": "#FDF5E6",
-    "olive": "#808000",
-    "olivedrab": "#6B8E23",
-    "orange": "#FFA500",
-    "orangered": "#FF4500",
-    "orchid": "#DA70D6",
-    "palegoldenrod": "#EEE8AA",
-    "palegreen": "#98FB98",
-    "paleturquoise": "#AFEEEE",
-    "palevioletred": "#DB7093",
-    "papayawhip": "#FFEFD5",
-    "peachpuff": "#FFDAB9",
-    "peru": "#CD853F",
-    "pink": "#FFC0CB",
-    "plum": "#DDA0DD",
-    "powderblue": "#B0E0E6",
-    "purple": "#800080",
-    "red": "#FF0000",
-    "rosybrown": "#BC8F8F",
-    "royalblue": "#4169E1",
-    "saddlebrown": "#8B4513",
-    "salmon": "#FA8072",
-    "sage": "#87AE73",
-    "sandybrown": "#FAA460",
-    "seagreen": "#2E8B57",
-    "seashell": "#FFF5EE",
-    "sienna": "#A0522D",
-    "silver": "#C0C0C0",
-    "skyblue": "#87CEEB",
-    "slateblue": "#6A5ACD",
-    "slategray": "#708090",
-    "snow": "#FFFAFA",
-    "springgreen": "#00FF7F",
-    "steelblue": "#4682B4",
-    "tan": "#D2B48C",
-    "teal": "#008080",
-    "thistle": "#D8BFD8",
-    "tomato": "#FF6347",
-    "turquoise": "#40E0D0",
-    "violet": "#EE82EE",
-    "wheat": "#F5DEB3",
-    "white": "#FFFFFF",
-    "whitesmoke": "#F5F5F5",
-    "yellow": "#FFFF00",
-    "yellowgreen": "#9ACD32"
+    aliceblue: "#F0F8FF",
+    antiquewhite: "#FAEBD7",
+    aqua: "#00FFFF",
+    aquamarine: "#7FFFD4",
+    azure: "#F0FFFF",
+    beige: "#F5F5DC",
+    bisque: "#FFE4C4",
+    black: "#000000",
+    blanchedalmond: "#FFEBCD",
+    blue: "#0000FF",
+    blueviolet: "#8A2BE2",
+    brown: "#A52A2A",
+    burlywood: "#DEB887",
+    cadetblue: "#5F9EA0",
+    chartreuse: "#7FFF00",
+    chocolate: "#D2691E",
+    coral: "#FF7F50",
+    cornflowerblue: "#6495ED",
+    cornsilk: "#FFF8DC",
+    crimson: "#DC143C",
+    cyan: "#00FFFF",
+    darkblue: "#00008B",
+    darkcyan: "#008B8B",
+    darkgoldenrod: "#B8860B",
+    darkgray: "#A9A9A9",
+    darkgreen: "#006400",
+    darkkhaki: "#BDB76B",
+    darkmagenta: "#8B008B",
+    darkolivegreen: "#556B2F",
+    darkorange: "#FF8C00",
+    darkorchid: "#9932CC",
+    darkred: "#8B0000",
+    darksage: "#598556",
+    darksalmon: "#E9967A",
+    darkseagreen: "#8FBC8F",
+    darkslateblue: "#483D8B",
+    darkslategray: "#2F4F4F",
+    darkturquoise: "#00CED1",
+    darkviolet: "#9400D3",
+    deeppink: "#FF1493",
+    deepskyblue: "#00BFFF",
+    dimgray: "#696969",
+    dodgerblue: "#1E90FF",
+    firebrick: "#B22222",
+    floralwhite: "#FFFAF0",
+    forestgreen: "#228B22",
+    fuchsia: "#FF00FF",
+    gainsboro: "#DCDCDC",
+    ghostwhite: "#F8F8FF",
+    gold: "#FFD700",
+    goldenrod: "#DAA520",
+    gray: "#808080",
+    green: "#008000",
+    greenyellow: "#ADFF2F",
+    honeydew: "#F0FFF0",
+    hotpink: "#FF69B4",
+    indianred: "#CD5C5C",
+    indigo: "#4B0082",
+    ivory: "#FFFFF0",
+    khaki: "#F0E68C",
+    lavender: "#E6E6FA",
+    lavenderblush: "#FFF0F5",
+    lawngreen: "#7CFC00",
+    lemonchiffon: "#FFFACD",
+    lightblue: "#ADD8E6",
+    lightcoral: "#F08080",
+    lightcyan: "#E0FFFF",
+    lightgoldenrodyellow: "#FAFAD2",
+    lightgreen: "#90EE90",
+    lightgray: "#D3D3D3",
+    lightpink: "#FFB6C1",
+    lightsage: "#BCECAC",
+    lightsalmon: "#FFA07A",
+    lightseagreen: "#20B2AA",
+    lightskyblue: "#87CEFA",
+    lightslategray: "#778899",
+    lightsteelblue: "#B0C4DE",
+    lightyellow: "#FFFFE0",
+    lime: "#00FF00",
+    limegreen: "#32CD32",
+    linen: "#FAF0E6",
+    magenta: "#FF00FF",
+    maroon: "#800000",
+    mediumaquamarine: "#66CDAA",
+    mediumblue: "#0000CD",
+    mediumorchid: "#BA55D3",
+    mediumpurple: "#9370DB",
+    mediumseagreen: "#3CB371",
+    mediumslateblue: "#7B68EE",
+    mediumspringgreen: "#00FA9A",
+    mediumturquoise: "#48D1CC",
+    mediumvioletred: "#C71585",
+    midnightblue: "#191970",
+    mintcream: "#F5FFFA",
+    mistyrose: "#FFE4E1",
+    moccasin: "#FFE4B5",
+    navajowhite: "#FFDEAD",
+    navy: "#000080",
+    oldlace: "#FDF5E6",
+    olive: "#808000",
+    olivedrab: "#6B8E23",
+    orange: "#FFA500",
+    orangered: "#FF4500",
+    orchid: "#DA70D6",
+    palegoldenrod: "#EEE8AA",
+    palegreen: "#98FB98",
+    paleturquoise: "#AFEEEE",
+    palevioletred: "#DB7093",
+    papayawhip: "#FFEFD5",
+    peachpuff: "#FFDAB9",
+    peru: "#CD853F",
+    pink: "#FFC0CB",
+    plum: "#DDA0DD",
+    powderblue: "#B0E0E6",
+    purple: "#800080",
+    red: "#FF0000",
+    rosybrown: "#BC8F8F",
+    royalblue: "#4169E1",
+    saddlebrown: "#8B4513",
+    salmon: "#FA8072",
+    sage: "#87AE73",
+    sandybrown: "#FAA460",
+    seagreen: "#2E8B57",
+    seashell: "#FFF5EE",
+    sienna: "#A0522D",
+    silver: "#C0C0C0",
+    skyblue: "#87CEEB",
+    slateblue: "#6A5ACD",
+    slategray: "#708090",
+    snow: "#FFFAFA",
+    springgreen: "#00FF7F",
+    steelblue: "#4682B4",
+    tan: "#D2B48C",
+    teal: "#008080",
+    thistle: "#D8BFD8",
+    tomato: "#FF6347",
+    turquoise: "#40E0D0",
+    violet: "#EE82EE",
+    wheat: "#F5DEB3",
+    white: "#FFFFFF",
+    whitesmoke: "#F5F5F5",
+    yellow: "#FFFF00",
+    yellowgreen: "#9ACD32",
 };
 
 Sk.jsplotlib.color_to_hex = function (color) {
@@ -1331,13 +1526,12 @@ Sk.jsplotlib._process_plot_format = function (fmt) {
         color = Sk.jsplotlib.to_rgb(fmt);
         if (color) {
             return {
-                "linestyle": linestyle,
-                "marker": marker,
-                "color": color
+                linestyle: linestyle,
+                marker: marker,
+                color: color,
             };
         }
-    } catch (e) {
-    }
+    } catch (e) {}
 
     // handle the multi char special cases and strip them for the string
     if (fmt.search(/--/) >= 0) {
@@ -1358,25 +1552,27 @@ Sk.jsplotlib._process_plot_format = function (fmt) {
         var c = fmt.charAt(i);
         if (Sk.jsplotlib.lineStyles[c]) {
             if (linestyle) {
-                throw new Sk.builtin.ValueError("Illegal format string \"" + fmt +
-                    "\"; two linestyle symbols");
+                throw new Sk.builtin.ValueError(
+                    'Illegal format string "' + fmt + '"; two linestyle symbols'
+                );
             }
             linestyle = c;
         } else if (Sk.jsplotlib.lineMarkers[c]) {
             if (marker) {
-                throw new Sk.builtin.ValueError("Illegal format string \"" + fmt +
-                    "\"; two marker symbols");
+                throw new Sk.builtin.ValueError(
+                    'Illegal format string "' + fmt + '"; two marker symbols'
+                );
             }
             marker = c;
         } else if (Sk.jsplotlib.colors[c]) {
             if (color) {
-                throw new Sk.builtin.ValueError("Illegal format string \"" + fmt +
-                    "\"; two color symbols");
+                throw new Sk.builtin.ValueError(
+                    'Illegal format string "' + fmt + '"; two color symbols'
+                );
             }
             color = c;
         } else {
-            throw new Sk.builtin.ValueError("Unrecognized character " + c +
-                " in format string");
+            throw new Sk.builtin.ValueError("Unrecognized character " + c + " in format string");
         }
     }
 
@@ -1392,9 +1588,9 @@ Sk.jsplotlib._process_plot_format = function (fmt) {
     }
 
     return {
-        "linestyle": linestyle,
-        "marker": marker,
-        "color": color
+        linestyle: linestyle,
+        marker: marker,
+        color: color,
     };
 };
 
@@ -1454,8 +1650,9 @@ Sk.jsplotlib.to_rgb = function (fmt) {
     // check if its a color tuple [r,g,b, [a]] with values from [0-1]
     if (Array.isArray(fmt)) {
         if (fmt.length > 4 || fmt.length < 3) {
-            throw new Sk.builtin.ValueError("sequence length is " + fmt.length +
-                "; must be 3 or 4");
+            throw new Sk.builtin.ValueError(
+                "sequence length is " + fmt.length + "; must be 3 or 4"
+            );
         }
 
         color = fmt.slice(0, 3);
@@ -1465,8 +1662,7 @@ Sk.jsplotlib.to_rgb = function (fmt) {
             var fl_rgb = parseFloat(fmt);
 
             if (fl_rgb < 0 || fl_rgb > 1) {
-                throw new Sk.builtin.ValueError(
-                    "number in rbg sequence outside 0-1 range");
+                throw new Sk.builtin.ValueError("number in rbg sequence outside 0-1 range");
             }
         }
     }
@@ -1503,7 +1699,7 @@ Sk.jsplotlib.hex2color = function (s) {
 
         return color.reverse();
     } else {
-        throw new Sk.builtin.ValueError("invalid hex color string \"" + s + "\"");
+        throw new Sk.builtin.ValueError('invalid hex color string "' + s + '"');
     }
 };
 

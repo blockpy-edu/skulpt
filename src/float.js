@@ -30,7 +30,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             Sk.asserts.fail("bad argument to float constructor");
         }
     },
-    slots: /**@lends {Sk.builtin.float_.prototype} */{
+    slots: /**@lends {Sk.builtin.float_.prototype} */ {
         tp$getattr: Sk.generic.getAttr,
         tp$as_number: true,
         tp$doc: "Convert a string or number to a floating point number, if possible.",
@@ -42,7 +42,9 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             } else if (Number.isInteger(v)) {
                 hash = this.nb$int().tp$hash();
             } else {
-                hash = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER - Number.MAX_SAFE_INTEGER / 2);
+                hash = Math.floor(
+                    Math.random() * Number.MAX_SAFE_INTEGER - Number.MAX_SAFE_INTEGER / 2
+                );
             }
             hashMap[this.v] = hash;
             return hash;
@@ -54,7 +56,9 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             if (kwargs && kwargs.length) {
                 throw new Sk.builtin.TypeError("float() takes no keyword arguments");
             } else if (args && args.length > 1) {
-                throw new Sk.builtin.TypeError("float expected at most 1 arguments, got " + args.length);
+                throw new Sk.builtin.TypeError(
+                    "float expected at most 1 arguments, got " + args.length
+                );
             }
             const arg = args[0];
             let x;
@@ -121,7 +125,9 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
         nb$reflected_remainder: numberSlot((v, w) => remainder(w, v)),
 
         nb$divmod: numberSlot((v, w) => new Sk.builtin.tuple([floordivide(v, w), remainder(v, w)])),
-        nb$reflected_divmod: numberSlot((v, w) => new Sk.builtin.tuple([floordivide(w, v), remainder(w, v)])),
+        nb$reflected_divmod: numberSlot(
+            (v, w) => new Sk.builtin.tuple([floordivide(w, v), remainder(w, v)])
+        ),
 
         nb$power: ternarySlot(power),
         nb$reflected_power: ternarySlot((v, w) => power(w, v)),
@@ -151,7 +157,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
         ob$lt: compareSlot((v, w) => v < w, JSBI.LT),
         ob$le: compareSlot((v, w) => v <= w, JSBI.LE),
     },
-    getsets:  /**@lends {Sk.builtin.float_.prototype} */{
+    getsets: /**@lends {Sk.builtin.float_.prototype} */ {
         real: {
             $get: cloneSelf,
             $doc: "the real part of a complex number",
@@ -163,10 +169,10 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $doc: "the imaginary part of a complex number",
         },
     },
-    methods:  /**@lends {Sk.builtin.float_.prototype} */{
+    methods: /**@lends {Sk.builtin.float_.prototype} */ {
         conjugate: {
             $meth: cloneSelf,
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: "Return self, the complex conjugate of any float.",
         },
@@ -174,7 +180,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $meth() {
                 return this.nb$int();
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: "Return the Integral closest to x between 0 and x.",
         },
@@ -182,7 +188,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $meth(ndigits) {
                 return this.round$(ndigits);
             },
-            $flags: {MinArgs: 0, MaxArgs: 1},
+            $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: "($self, ndigits=None, /)",
             $doc: "Return the Integral closest to x, rounding half toward even.\n\nWhen an argument is passed, work like built-in round(x, ndigits).",
         },
@@ -195,7 +201,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
                     throw new Sk.builtin.OverflowError("cannot convert Infinity to integer ratio");
                 }
                 let [float_part, exponent] = frexp(this.v);
-                for (let i=0; i<300 && float_part != Math.floor(float_part) ; i++) {
+                for (let i = 0; i < 300 && float_part != Math.floor(float_part); i++) {
                     float_part *= 2.0;
                     exponent--;
                 }
@@ -211,8 +217,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             },
             $flags: { NoArgs: true },
             $textsig: "($self, /)",
-            $doc:
-                "Return integer ratio.\n\nReturn a pair of integers, whose ratio is exactly equal to the original float\nand with a positive denominator.\n\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)",
+            $doc: "Return integer ratio.\n\nReturn a pair of integers, whose ratio is exactly equal to the original float\nand with a positive denominator.\n\nRaise OverflowError on infinities and a ValueError on NaNs.\n\n>>> (10.0).as_integer_ratio()\n(10, 1)\n>>> (0.0).as_integer_ratio()\n(0, 1)\n>>> (-.25).as_integer_ratio()\n(-1, 4)",
         },
         // hex: {
         //     $meth: methods.hex,
@@ -225,7 +230,7 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $meth() {
                 return new Sk.builtin.bool(Number.isInteger(this.v));
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: "Return True if the float is an integer.",
         },
@@ -233,13 +238,13 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $meth() {
                 return new Sk.builtin.tuple([this]);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: "($self, /)",
             $doc: Sk.builtin.none.none$,
         },
         __format__: {
             $meth: Sk.formatting.mkNumber__format__(true),
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $textsig: "($self, format_spec, /)",
             $doc: Sk.builtin.none.none$,
         },
@@ -296,7 +301,9 @@ function _str_to_float(str) {
         }
     }
     if (ret === undefined) {
-        throw new Sk.builtin.ValueError("could not convert string to float: " + Sk.misceval.objectRepr(new Sk.builtin.str(str)));
+        throw new Sk.builtin.ValueError(
+            "could not convert string to float: " + Sk.misceval.objectRepr(new Sk.builtin.str(str))
+        );
     }
     return new Sk.builtin.float_(ret);
 }
@@ -330,7 +337,6 @@ Sk.builtin.float_.PyFloat_Check = function (op) {
     }
     return false;
 };
-
 
 /**
  * Returns this instance's value as a string formatted using fixed-point notation.
@@ -384,7 +390,9 @@ function ternarySlot(f) {
     const binSlot = numberSlot(f);
     return function (other, z) {
         if (z !== undefined && !Sk.builtin.checkNone(z)) {
-            throw new Sk.builtin.TypeError("pow() 3rd argument not allowed unless all arguments are integers");
+            throw new Sk.builtin.TypeError(
+                "pow() 3rd argument not allowed unless all arguments are integers"
+            );
         }
         return binSlot.call(this, other);
     };
@@ -504,7 +512,7 @@ function power(v, w) {
  *
  * @param  {pyObject=} ndigits The number of digits after the decimal point to which to round.
  * @return {Sk.builtin.float_|Sk.builtin.int_} The rounded float.
- * 
+ *
  */
 Sk.builtin.float_.prototype.round$ = function (ndigits) {
     var result, multiplier, number, num10, rounded, bankRound, ndigs;
@@ -518,7 +526,12 @@ Sk.builtin.float_.prototype.round$ = function (ndigits) {
     if (Sk.__future__.bankers_rounding) {
         num10 = number * Math.pow(10, ndigs);
         rounded = Math.round(num10);
-        bankRound = (num10 > 0 ? num10 : -num10) % 1 === 0.5 ? (0 === rounded % 2 ? rounded : rounded - 1) : rounded;
+        bankRound =
+            (num10 > 0 ? num10 : -num10) % 1 === 0.5
+                ? 0 === rounded % 2
+                    ? rounded
+                    : rounded - 1
+                : rounded;
         result = bankRound / Math.pow(10, ndigs);
         if (ndigits === undefined) {
             return new Sk.builtin.int_(result);
@@ -618,7 +631,6 @@ Sk.builtin.float_.prototype.str$ = function (base, sign) {
 
     return tmp;
 };
-
 
 Sk.builtin.float_.py2$methods = {};
 

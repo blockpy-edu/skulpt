@@ -8,11 +8,11 @@ var Person = makeClass(
         	@constructs
         	@param {string} name The name of the person.
          */
-        initialize: function(name) {
+        initialize: function (name) {
             this.name = name;
         },
-        say: function(message) {
+        say: function (message) {
             return this.name + " says: " + message;
-        }
+        },
     }
 );

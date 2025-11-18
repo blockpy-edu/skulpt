@@ -113,7 +113,8 @@ function $builtinmodule(name) {
                     return new pyStr(this.tp$name + "(...)");
                 }
                 this.in$repr = true;
-                const ret = this.tp$name + "(" + this.items.map((x) => objectRepr(x)).join(", ") + ")";
+                const ret =
+                    this.tp$name + "(" + this.items.map((x) => objectRepr(x)).join(", ") + ")";
                 this.in$repr = false;
                 return ret;
             },
@@ -153,7 +154,9 @@ function $builtinmodule(name) {
                 if (this.oneattr) {
                     return this.attr.reduce((obj, attr) => getAttr(obj, attr), obj);
                 }
-                const ret = this.attrs.map((attrs) => attrs.reduce((obj, attr) => getAttr(obj, attr), obj));
+                const ret = this.attrs.map((attrs) =>
+                    attrs.reduce((obj, attr) => getAttr(obj, attr), obj)
+                );
                 return new pyTuple(ret);
             },
             tp$doc: "attrgetter(attr, ...) --> attrgetter object\n\nReturn a callable object that fetches the given attribute(s) from its operand.\nAfter f = attrgetter('name'), the call f(r) returns r.name.\nAfter g = attrgetter('name', 'date'), the call g(r) returns (r.name, r.date).\nAfter h = attrgetter('name.first', 'name.last'), the call h(r) returns\n(r.name.first, r.name.last).",
@@ -162,7 +165,8 @@ function $builtinmodule(name) {
                     return new pyStr(this.tp$name + "(...)");
                 }
                 this.in$repr = true;
-                const ret = this.tp$name + "(" + this.items.map((x) => objectRepr(x)).join(", ") + ")";
+                const ret =
+                    this.tp$name + "(" + this.items.map((x) => objectRepr(x)).join(", ") + ")";
                 this.in$repr = false;
                 return ret;
             },
@@ -235,7 +239,10 @@ function $builtinmodule(name) {
         not_: makeModuleMethod((a) => numberUnaryOp(a, "Not"), sameAs("not a")),
         truth: makeModuleMethod((a) => pyBool(a), "Return True if a is true, False otherwise."),
         is_: makeModuleMethod((a, b) => pyBool(richCompareBool(a, b, "Is")), sameAs("a is b")),
-        is_not: makeModuleMethod((a, b) => pyBool(richCompareBool(a, b, "IsNot")), sameAs("a is not b")),
+        is_not: makeModuleMethod(
+            (a, b) => pyBool(richCompareBool(a, b, "IsNot")),
+            sameAs("a is not b")
+        ),
         abs: makeModuleMethod((a) => pyAbs(a), sameAs("abs(a)")),
         add: makeModuleMethod((a, b) => numberBinOp(a, b, "Add"), sameAs("a + b")),
         and_: makeModuleMethod((a, b) => numberBinOp(a, b, "BitAnd"), sameAs("a & b")),
@@ -255,18 +262,27 @@ function $builtinmodule(name) {
         sub: makeModuleMethod((a, b) => numberBinOp(a, b, "Sub"), sameAs("a - b")),
         truediv: makeModuleMethod((a, b) => numberBinOp(a, b, "Div"), sameAs("a / b")),
         xor: makeModuleMethod((a, b) => numberBinOp(a, b, "BitXor"), sameAs("a ^ b")),
-        concat: makeModuleMethod((a, b) => sequenceConcat(a, b), sameAs("a + b, for a and b sequences")),
+        concat: makeModuleMethod(
+            (a, b) => sequenceConcat(a, b),
+            sameAs("a + b, for a and b sequences")
+        ),
         contains: makeModuleMethod(
             (a, b) => chainOrSuspend(sequenceContains(a, b), pyBool),
             sameAs("b in a (note reversed operands)")
         ),
-        countOf: makeModuleMethod((a, b) => sequenceGetCountOf(a, b), "Return thenumber of times b occurs in a."),
+        countOf: makeModuleMethod(
+            (a, b) => sequenceGetCountOf(a, b),
+            "Return thenumber of times b occurs in a."
+        ),
         delitem: makeModuleMethod(
             (a, b) => chainOrSuspend(objectDelItem(a, b, true), () => pyNone),
             sameAs("del a[b]")
         ),
         getitem: makeModuleMethod((a, b) => objectGetItem(a, b, true), sameAs("a[b]")),
-        indexOf: makeModuleMethod((a, b) => sequenceGetIndexOf(a, b), "Return the first index of b in a"),
+        indexOf: makeModuleMethod(
+            (a, b) => sequenceGetIndexOf(a, b),
+            "Return the first index of b in a"
+        ),
         setitem: makeModuleMethod(
             (a, b, c) => chainOrSuspend(objectSetItem(a, b, c, true), () => pyNone),
             sameAs("a[b] = c")
@@ -276,7 +292,9 @@ function $builtinmodule(name) {
                 if (d === undefined) {
                     d = new pyInt(0);
                 } else if (!checkInt(d)) {
-                    throw new pyTypeError("'" + typeName(d) + "' object cannot be interpreted as an integer");
+                    throw new pyTypeError(
+                        "'" + typeName(d) + "' object cannot be interpreted as an integer"
+                    );
                 }
                 try {
                     return pyLen(obj);
@@ -302,7 +320,9 @@ function $builtinmodule(name) {
                     return d;
                 }
                 if (!checkInt(val)) {
-                    throw new pyTypeError("__length_hint__ must be an integer, not " + typeName(val));
+                    throw new pyTypeError(
+                        "__length_hint__ must be an integer, not " + typeName(val)
+                    );
                 } else if (val.nb$isnegative()) {
                     throw new ValueError("__length_hint__() should return >= 0");
                 }
@@ -314,8 +334,14 @@ function $builtinmodule(name) {
         },
         iadd: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "Add"), sameAs("a += b")),
         iand: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "BitAnd"), sameAs("a &= b")),
-        iconcat: makeModuleMethod((a, b) => sequenceInPlaceConcat(a, b), sameAs("a += b, for a and b sequences")),
-        ifloordiv: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "FloorDiv"), sameAs("a //= b")),
+        iconcat: makeModuleMethod(
+            (a, b) => sequenceInPlaceConcat(a, b),
+            sameAs("a += b, for a and b sequences")
+        ),
+        ifloordiv: makeModuleMethod(
+            (a, b) => numberInplaceBinOp(a, b, "FloorDiv"),
+            sameAs("a //= b")
+        ),
         ilshift: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "LShift"), sameAs("a <<= b")),
         imod: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "Mod"), sameAs("a %= b")),
         imul: makeModuleMethod((a, b) => numberInplaceBinOp(a, b, "Mult"), sameAs("a *= b")),

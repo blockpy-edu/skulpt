@@ -18,10 +18,14 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
             // see cypthon object_new for algorithm details we do two versions one for prototypical and one for not
             if (args.length || (kwargs && kwargs.length)) {
                 if (this.tp$new !== Sk.builtin.object.prototype.tp$new) {
-                    throw new Sk.builtin.TypeError("object.__new__() takes exactly one argument (the type to instantiate)");
+                    throw new Sk.builtin.TypeError(
+                        "object.__new__() takes exactly one argument (the type to instantiate)"
+                    );
                 }
                 if (this.tp$init === Sk.builtin.object.prototype.tp$init) {
-                    throw new Sk.builtin.TypeError(Sk.abstr.typeName(this) + "() takes no arguments");
+                    throw new Sk.builtin.TypeError(
+                        Sk.abstr.typeName(this) + "() takes no arguments"
+                    );
                 }
             }
             return new this.constructor();
@@ -30,10 +34,15 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
             // see cypthon object_init for algorithm details
             if (args.length || (kwargs && kwargs.length)) {
                 if (this.tp$init !== Sk.builtin.object.prototype.tp$init) {
-                    throw new Sk.builtin.TypeError("object.__init__() takes exactly one argument (the instance to initialize)");
+                    throw new Sk.builtin.TypeError(
+                        "object.__init__() takes exactly one argument (the instance to initialize)"
+                    );
                 }
                 if (this.tp$new === Sk.builtin.object.prototype.tp$new) {
-                    throw new Sk.builtin.TypeError(Sk.abstr.typeName(this) + ".__init__() takes exactly one argument (the instance to initialize)");
+                    throw new Sk.builtin.TypeError(
+                        Sk.abstr.typeName(this) +
+                            ".__init__() takes exactly one argument (the instance to initialize)"
+                    );
                 }
             }
         },
@@ -56,7 +65,9 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
             if (hash !== undefined) {
                 return hash;
             }
-            hash = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER - Number.MAX_SAFE_INTEGER / 2);
+            hash = Math.floor(
+                Math.random() * Number.MAX_SAFE_INTEGER - Number.MAX_SAFE_INTEGER / 2
+            );
             hashMap.set(this, hash);
             return hash;
         },
@@ -88,7 +99,11 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
                 if (value === undefined) {
                     throw new Sk.builtin.TypeError("can't delete __class__ attribute");
                 } else if (!Sk.builtin.checkClass(value)) {
-                    throw new Sk.builtin.TypeError("__class__ must be set to a class, not '" + Sk.abstr.typeName(value) + "' object");
+                    throw new Sk.builtin.TypeError(
+                        "__class__ must be set to a class, not '" +
+                            Sk.abstr.typeName(value) +
+                            "' object"
+                    );
                 }
                 const oldto = this.ob$type;
                 const newto = value;
@@ -97,10 +112,16 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
                     !(oldto.$isSubType(Sk.builtin.module) && newto.$isSubType(Sk.builtin.module)) &&
                     (oldto.sk$klass === undefined || newto.sk$klass === undefined)
                 ) {
-                    throw new Sk.builtin.TypeError(" __class__ assignment only supported for heap types or ModuleType subclasses");
+                    throw new Sk.builtin.TypeError(
+                        " __class__ assignment only supported for heap types or ModuleType subclasses"
+                    );
                 } else if (value.prototype.sk$builtinBase !== this.sk$builtinBase) {
                     throw new Sk.builtin.TypeError(
-                        "__class__ assignment: '" + Sk.abstr.typeName(this) + "' object layout differs from '" + value.prototype.tp$name + "'"
+                        "__class__ assignment: '" +
+                            Sk.abstr.typeName(this) +
+                            "' object layout differs from '" +
+                            value.prototype.tp$name +
+                            "'"
                     );
                 }
                 Object.setPrototypeOf(this, value.prototype);
@@ -123,31 +144,37 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
                     }
                 }
                 // here we use the type.__dir__ implementation
-                const type_dir = Sk.misceval.callsimArray(Sk.builtin.type.prototype.__dir__, [this.ob$type]);
+                const type_dir = Sk.misceval.callsimArray(Sk.builtin.type.prototype.__dir__, [
+                    this.ob$type,
+                ]);
                 // put the dict keys before the prototype keys
                 dir.push(...type_dir.v);
                 type_dir.v = dir;
                 return type_dir;
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $doc: "Default dir() implementation.",
         },
         __format__: {
             $meth(format_spec) {
                 if (!Sk.builtin.checkString(format_spec)) {
-                    throw new Sk.builtin.TypeError("__format__() argument must be str, not " + Sk.abstr.typeName(format_spec));
+                    throw new Sk.builtin.TypeError(
+                        "__format__() argument must be str, not " + Sk.abstr.typeName(format_spec)
+                    );
                 } else if (format_spec !== Sk.builtin.str.$empty) {
-                    throw new Sk.builtin.TypeError(`unsupported format string passed to ${Sk.abstr.typeName(this)}.__format__`);
+                    throw new Sk.builtin.TypeError(
+                        `unsupported format string passed to ${Sk.abstr.typeName(this)}.__format__`
+                    );
                 }
                 return this.tp$str();
             },
-            $flags: {OneArg: true},
+            $flags: { OneArg: true },
             $doc: "Default object formatter.",
         },
     },
     proto: /**@lends {Sk.builtin.object.prototype}*/ {
         valueOf: Object.prototype.valueOf,
-        toString: function() {
+        toString: function () {
             //console.log("Calling toString on", this);
             //debugger;
             return this.tp$str().v;
@@ -195,4 +222,3 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
     Sk.abstr.setUpInheritance("type", Sk.builtin.type, Sk.builtin.object);
     Sk.abstr.setUpBuiltinMro(Sk.builtin.type);
 })();
-

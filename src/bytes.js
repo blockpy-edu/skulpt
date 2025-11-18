@@ -13,7 +13,10 @@ const supportedEncodings = {
 var space_reg = /\s+/g;
 var underscore_hyphen_reg = /[_-]+/g;
 function normalizeEncoding(encoding) {
-    const normalized = encoding.replace(space_reg, "").replace(underscore_hyphen_reg, "_").toLowerCase();
+    const normalized = encoding
+        .replace(space_reg, "")
+        .replace(underscore_hyphen_reg, "_")
+        .toLowerCase();
     const supported = supportedEncodings[normalized];
     if (supported === undefined) {
         return encoding;
@@ -60,7 +63,9 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             for (let i = 0; i < len; i++) {
                 cc = source.charCodeAt(i);
                 if (cc > 0xff) {
-                    throw new Sk.builtin.UnicodeDecodeError("invalid string at index " + i + " (possibly contains a unicode character)");
+                    throw new Sk.builtin.UnicodeDecodeError(
+                        "invalid string at index " + i + " (possibly contains a unicode character)"
+                    );
                 }
                 uint8[i] = cc;
             }
@@ -68,13 +73,14 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
         } else if (typeof source === "number") {
             this.v = new Uint8Array(source);
         } else {
-            throw new TypeError(`bad internal argument to bytes constructor (got '${typeof source}': ${source})`);
+            throw new TypeError(
+                `bad internal argument to bytes constructor (got '${typeof source}': ${source})`
+            );
         }
     },
     slots: /**@lends {Sk.builtin.bytes.prototype} */ {
         tp$getattr: Sk.generic.getAttr,
-        tp$doc:
-            "bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",
+        tp$doc: "bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",
         tp$new(args, kwargs) {
             if (this !== Sk.builtin.bytes.prototype) {
                 return this.$subtype_new(args, kwargs);
@@ -84,7 +90,12 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             if (args.length <= 1 && +kwargs.length === 0) {
                 pySource = args[0];
             } else {
-                [pySource, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs("bytes", [null, "pySource", "errors"], args, kwargs);
+                [pySource, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "bytes",
+                    [null, "pySource", "errors"],
+                    args,
+                    kwargs
+                );
                 ({ encoding, errors } = checkGetEncodingErrors("bytes", encoding, errors));
                 if (!Sk.builtin.checkString(pySource)) {
                     throw new Sk.builtin.TypeError("encoding or errors without a string argument");
@@ -94,11 +105,18 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
 
             if (pySource === undefined) {
                 return new Sk.builtin.bytes();
-            } else if ((dunderBytes = Sk.abstr.lookupSpecial(pySource, Sk.builtin.str.$bytes)) !== undefined) {
+            } else if (
+                (dunderBytes = Sk.abstr.lookupSpecial(pySource, Sk.builtin.str.$bytes)) !==
+                undefined
+            ) {
                 const ret = Sk.misceval.callsimOrSuspendArray(dunderBytes, []);
                 return Sk.misceval.chain(ret, (bytesSource) => {
                     if (!Sk.builtin.checkBytes(bytesSource)) {
-                        throw new Sk.builtin.TypeError("__bytes__ returned non-bytes (type " + Sk.abstr.typeName(bytesSource) + ")");
+                        throw new Sk.builtin.TypeError(
+                            "__bytes__ returned non-bytes (type " +
+                                Sk.abstr.typeName(bytesSource) +
+                                ")"
+                        );
                     }
                     return bytesSource;
                 });
@@ -123,7 +141,9 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
                 });
                 return Sk.misceval.chain(r, () => new Sk.builtin.bytes(source));
             }
-            throw new Sk.builtin.TypeError("cannot convert '" + Sk.abstr.typeName(pySource) + "' object into bytes");
+            throw new Sk.builtin.TypeError(
+                "cannot convert '" + Sk.abstr.typeName(pySource) + "' object into bytes"
+            );
         },
         $r() {
             return bytesToString(this);
@@ -191,15 +211,18 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
                 });
                 return new Sk.builtin.bytes(new Uint8Array(ret));
             }
-            throw new Sk.builtin.TypeError("byte indices must be integers or slices, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError(
+                "byte indices must be integers or slices, not " + Sk.abstr.typeName(index)
+            );
         },
         sq$length() {
             return this.v.length;
         },
         sq$concat(other) {
-            if (!(other instanceof Sk.builtin.bytes) &&
-                !(other instanceof Sk.builtin.array)) {
-                throw new Sk.builtin.TypeError("can't concat " + Sk.abstr.typeName(other) + " to bytes");
+            if (!(other instanceof Sk.builtin.bytes) && !(other instanceof Sk.builtin.array)) {
+                throw new Sk.builtin.TypeError(
+                    "can't concat " + Sk.abstr.typeName(other) + " to bytes"
+                );
             }
             const ret = new Uint8Array(this.v.length + other.v.length);
             let i;
@@ -213,7 +236,9 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
         },
         sq$repeat(n) {
             if (!Sk.misceval.isIndex(n)) {
-                throw new Sk.builtin.TypeError("can't multiply sequence by non-int of type '" + Sk.abstr.typeName(n) + "'");
+                throw new Sk.builtin.TypeError(
+                    "can't multiply sequence by non-int of type '" + Sk.abstr.typeName(n) + "'"
+                );
             }
             n = Sk.misceval.asIndexSized(n, Sk.builtin.OverflowError);
             const len = n * this.v.length;
@@ -251,7 +276,10 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             if (tgt instanceof Sk.builtin.bytes) {
                 return tgt.v;
             }
-            tgt = Sk.misceval.asIndexOrThrow(tgt, "argument should be integer or bytes-like object, not {tp$name}");
+            tgt = Sk.misceval.asIndexOrThrow(
+                tgt,
+                "argument should be integer or bytes-like object, not {tp$name}"
+            );
             if (tgt < 0 || tgt > 0xff) {
                 throw new Sk.builtin.ValueError("bytes must be in range(0, 256)");
             }
@@ -261,7 +289,9 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             if (tgt instanceof Sk.builtin.bytes) {
                 return tgt.v;
             }
-            throw new Sk.builtin.TypeError("a bytes-like object is required, not '" + Sk.abstr.typeName(tgt) + "'");
+            throw new Sk.builtin.TypeError(
+                "a bytes-like object is required, not '" + Sk.abstr.typeName(tgt) + "'"
+            );
         },
         get$splitArgs: checkSepMaxSplit,
         find$left: mkFind(false),
@@ -296,7 +326,9 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
         },
         sk$asarray() {
             const ret = [];
-            this.v.forEach((x) => {ret.push(new Sk.builtin.int_(x));});
+            this.v.forEach((x) => {
+                ret.push(new Sk.builtin.int_(x));
+            });
             return ret;
         },
         valueOf() {
@@ -340,8 +372,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             $meth: mkJust("center", false, true),
             $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: null,
-            $doc:
-                "B.center(width[, fillchar]) -> copy of B\n\nReturn B centered in a string of length width.  Padding is\ndone using the specified fill character (default is a space).",
+            $doc: "B.center(width[, fillchar]) -> copy of B\n\nReturn B centered in a string of length width.  Padding is\ndone using the specified fill character (default is a space).",
         },
         count: {
             $meth(tgt, start, end) {
@@ -367,15 +398,13 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of subsection sub in\nbytes B[start:end].  Optional arguments start and end are interpreted\nas in slice notation.",
+            $doc: "B.count(sub[, start[, end]]) -> int\n\nReturn the number of non-overlapping occurrences of subsection sub in\nbytes B[start:end].  Optional arguments start and end are interpreted\nas in slice notation.",
         },
         decode: {
             $meth: bytesDecode,
             $flags: { NamedArgs: ["encoding", "errors"] },
             $textsig: "($self, /, encoding='utf-8', errors='strict')",
-            $doc:
-                "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors.",
+            $doc: "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors.",
         },
         endswith: {
             $meth: mkStartsEndsWith("endswith", (subarray, tgt) => {
@@ -384,12 +413,15 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             }),
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if B ends with the specified suffix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nsuffix can also be a tuple of bytes to try.",
+            $doc: "B.endswith(suffix[, start[, end]]) -> bool\n\nReturn True if B ends with the specified suffix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nsuffix can also be a tuple of bytes to try.",
         },
         expandtabs: {
             $meth(tabsize) {
-                tabsize = Sk.misceval.asIndexSized(tabsize, Sk.builtin.OverflowError, "an integer is required (got type {tp$nam})");
+                tabsize = Sk.misceval.asIndexSized(
+                    tabsize,
+                    Sk.builtin.OverflowError,
+                    "an integer is required (got type {tp$nam})"
+                );
                 const final = [];
                 let linepos = 0;
                 for (let i = 0; i < this.v.length; i++) {
@@ -410,8 +442,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NamedArgs: ["tabsize"], Defaults: [8] },
             $textsig: null,
-            $doc:
-                "B.expandtabs(tabsize=8) -> copy of B\n\nReturn a copy of B where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.",
+            $doc: "B.expandtabs(tabsize=8) -> copy of B\n\nReturn a copy of B where all tab characters are expanded using spaces.\nIf tabsize is not given, a tab size of 8 characters is assumed.",
         },
         find: {
             $meth: function find(tgt, start, end) {
@@ -419,8 +450,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
+            $doc: "B.find(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
         },
         hex: {
             $meth() {
@@ -445,22 +475,19 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the subsection is not found.",
+            $doc: "B.index(sub[, start[, end]]) -> int\n\nReturn the lowest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaises ValueError when the subsection is not found.",
         },
         isalnum: {
             $meth: mkIsAll((val) => isdigit(val) || islower(val) || isupper(val)),
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.isalnum() -> bool\n\nReturn True if all characters in B are alphanumeric\nand there is at least one character in B, False otherwise.",
+            $doc: "B.isalnum() -> bool\n\nReturn True if all characters in B are alphanumeric\nand there is at least one character in B, False otherwise.",
         },
         isalpha: {
             $meth: mkIsAll((val) => (val >= 65 && val <= 90) || (val >= 97 && val <= 122)),
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.isalpha() -> bool\n\nReturn True if all characters in B are alphabetic\nand there is at least one character in B, False otherwise.",
+            $doc: "B.isalpha() -> bool\n\nReturn True if all characters in B are alphabetic\nand there is at least one character in B, False otherwise.",
         },
         isascii: {
             $meth: mkIsAll((val) => val >= 0 && val <= 0x7f, true),
@@ -478,15 +505,13 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             $meth: makeIsUpperLower(islower, isupper),
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.islower() -> bool\n\nReturn True if all cased characters in B are lowercase and there is\nat least one cased character in B, False otherwise.",
+            $doc: "B.islower() -> bool\n\nReturn True if all cased characters in B are lowercase and there is\nat least one cased character in B, False otherwise.",
         },
         isspace: {
             $meth: mkIsAll(isspace),
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.isspace() -> bool\n\nReturn True if all characters in B are whitespace\nand there is at least one character in B, False otherwise.",
+            $doc: "B.isspace() -> bool\n\nReturn True if all characters in B are whitespace\nand there is at least one character in B, False otherwise.",
         },
         istitle: {
             $meth: function istitle() {
@@ -513,15 +538,13 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.istitle() -> bool\n\nReturn True if B is a titlecased string and there is at least one\ncharacter in B, i.e. uppercase characters may only follow uncased\ncharacters and lowercase characters only cased ones. Return False\notherwise.",
+            $doc: "B.istitle() -> bool\n\nReturn True if B is a titlecased string and there is at least one\ncharacter in B, i.e. uppercase characters may only follow uncased\ncharacters and lowercase characters only cased ones. Return False\notherwise.",
         },
         isupper: {
             $meth: makeIsUpperLower(isupper, islower),
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.isupper() -> bool\n\nReturn True if all cased characters in B are uppercase and there is\nat least one cased character in B, False otherwise.",
+            $doc: "B.isupper() -> bool\n\nReturn True if all cased characters in B are uppercase and there is\nat least one cased character in B, False otherwise.",
         },
         join: {
             $meth(iterable) {
@@ -531,7 +554,11 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
                     Sk.misceval.iterFor(Sk.abstr.iter(iterable), (item) => {
                         if (!(item instanceof Sk.builtin.bytes)) {
                             throw new Sk.builtin.TypeError(
-                                "sequence item " + i + ": expected a bytes-like object, " + Sk.abstr.typeName(item) + " found"
+                                "sequence item " +
+                                    i +
+                                    ": expected a bytes-like object, " +
+                                    Sk.abstr.typeName(item) +
+                                    " found"
                             );
                         }
                         i++;
@@ -545,15 +572,13 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { OneArg: true },
             $textsig: "($self, iterable_of_bytes, /)",
-            $doc:
-                "Concatenate any number of bytes objects.\n\nThe bytes whose method is called is inserted in between each pair.\n\nThe result is returned as a new bytes object.\n\nExample: b'.'.join([b'ab', b'pq', b'rs']) -> b'ab.pq.rs'.",
+            $doc: "Concatenate any number of bytes objects.\n\nThe bytes whose method is called is inserted in between each pair.\n\nThe result is returned as a new bytes object.\n\nExample: b'.'.join([b'ab', b'pq', b'rs']) -> b'ab.pq.rs'.",
         },
         ljust: {
             $meth: mkJust("ljust", false, false),
             $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: null,
-            $doc:
-                "B.ljust(width[, fillchar]) -> copy of B\n\nReturn B left justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).",
+            $doc: "B.ljust(width[, fillchar]) -> copy of B\n\nReturn B left justified in a string of length width. Padding is\ndone using the specified fill character (default is a space).",
         },
         lower: {
             $meth: mkCaseSwitch((val) => (isupper(val) ? val + 32 : val)),
@@ -571,14 +596,16 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             $meth: mkPartition(false),
             $flags: { OneArg: true },
             $textsig: "($self, sep, /)",
-            $doc:
-                "Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes. If the separator is found,\nreturns a 3-tuple containing the part before the separator, the separator\nitself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing the original bytes\nobject and two empty bytes objects.",
+            $doc: "Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes. If the separator is found,\nreturns a 3-tuple containing the part before the separator, the separator\nitself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing the original bytes\nobject and two empty bytes objects.",
         },
         replace: {
             $meth(oldB, newB, count) {
                 oldB = this.get$raw(oldB);
                 newB = this.get$raw(newB);
-                count = count === undefined ? -1 : Sk.misceval.asIndexSized(count, Sk.builtin.OverflowError);
+                count =
+                    count === undefined
+                        ? -1
+                        : Sk.misceval.asIndexSized(count, Sk.builtin.OverflowError);
                 count = count < 0 ? Infinity : count;
                 const final = [];
                 let found = 0,
@@ -602,8 +629,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 2, MaxArgs: 3 },
             $textsig: "($self, old, new, count=-1, /)",
-            $doc:
-                "Return a copy with all occurrences of substring old replaced by new.\n\n  count\n    Maximum number of occurrences to replace.\n    -1 (the default value) means replace all occurrences.\n\nIf the optional argument count is given, only the first count occurrences are\nreplaced.",
+            $doc: "Return a copy with all occurrences of substring old replaced by new.\n\n  count\n    Maximum number of occurrences to replace.\n    -1 (the default value) means replace all occurrences.\n\nIf the optional argument count is given, only the first count occurrences are\nreplaced.",
         },
         rfind: {
             $meth(tgt, start, end) {
@@ -611,8 +637,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
+            $doc: "B.rfind(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nReturn -1 on failure.",
         },
         rindex: {
             $meth: function rindex(tgt, start, end) {
@@ -625,22 +650,19 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaise ValueError when the subsection is not found.",
+            $doc: "B.rindex(sub[, start[, end]]) -> int\n\nReturn the highest index in B where subsection sub is found,\nsuch that sub is contained within B[start,end].  Optional\narguments start and end are interpreted as in slice notation.\n\nRaise ValueError when the subsection is not found.",
         },
         rjust: {
             $meth: mkJust("rjust", true, false),
             $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: null,
-            $doc:
-                "B.rjust(width[, fillchar]) -> copy of B\n\nReturn B right justified in a string of length width. Padding is\ndone using the specified fill character (default is a space)",
+            $doc: "B.rjust(width[, fillchar]) -> copy of B\n\nReturn B right justified in a string of length width. Padding is\ndone using the specified fill character (default is a space)",
         },
         rpartition: {
             $meth: mkPartition(true),
             $flags: { OneArg: true },
             $textsig: "($self, sep, /)",
-            $doc:
-                "Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes, starting at the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty bytes\nobjects and the original bytes object.",
+            $doc: "Partition the bytes into three parts using the given separator.\n\nThis will search for the separator sep in the bytes, starting at the end. If\nthe separator is found, returns a 3-tuple containing the part before the\nseparator, the separator itself, and the part after it.\n\nIf the separator is not found, returns a 3-tuple containing two empty bytes\nobjects and the original bytes object.",
         },
         rsplit: {
             $meth: function rSplit(sep, maxsplit) {
@@ -691,8 +713,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
             $textsig: "($self, /, sep=None, maxsplit=-1)",
-            $doc:
-                "Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.\n\nSplitting is done starting at the end of the bytes and working to the front.",
+            $doc: "Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.\n\nSplitting is done starting at the end of the bytes and working to the front.",
         },
         rstrip: {
             $meth: mkStrip(false, true),
@@ -749,8 +770,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NamedArgs: ["sep", "maxsplit"], Defaults: [Sk.builtin.none.none$, -1] },
             $textsig: "($self, /, sep=None, maxsplit=-1)",
-            $doc:
-                "Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.",
+            $doc: "Return a list of the sections in the bytes, using sep as the delimiter.\n\n  sep\n    The delimiter according which to split the bytes.\n    None (the default value) means split on ASCII whitespace characters\n    (space, tab, return, newline, formfeed, vertical tab).\n  maxsplit\n    Maximum number of splits to do.\n    -1 (the default value) means no limit.",
         },
         splitlines: {
             $meth(keepends) {
@@ -788,22 +808,23 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NamedArgs: ["keepends"], Defaults: [false] },
             $textsig: "($self, /, keepends=False)",
-            $doc:
-                "Return a list of the lines in the bytes, breaking at line boundaries.\n\nLine breaks are not included in the resulting list unless keepends is given and\ntrue.",
+            $doc: "Return a list of the lines in the bytes, breaking at line boundaries.\n\nLine breaks are not included in the resulting list unless keepends is given and\ntrue.",
         },
         startswith: {
-            $meth: mkStartsEndsWith("startswith", (subarray, tgt) => tgt.length <= subarray.length && tgt.every((val, i) => val === subarray[i])),
+            $meth: mkStartsEndsWith(
+                "startswith",
+                (subarray, tgt) =>
+                    tgt.length <= subarray.length && tgt.every((val, i) => val === subarray[i])
+            ),
             $flags: { MinArgs: 1, MaxArgs: 3 },
             $textsig: null,
-            $doc:
-                "B.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if B starts with the specified prefix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nprefix can also be a tuple of bytes to try.",
+            $doc: "B.startswith(prefix[, start[, end]]) -> bool\n\nReturn True if B starts with the specified prefix, False otherwise.\nWith optional start, test B beginning at that position.\nWith optional end, stop comparing B at that position.\nprefix can also be a tuple of bytes to try.",
         },
         strip: {
             $meth: mkStrip(true, true),
             $flags: { MinArgs: 0, MaxArgs: 1 },
             $textsig: "($self, bytes=None, /)",
-            $doc:
-                "Strip leading and trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading and trailing ASCII whitespace.",
+            $doc: "Strip leading and trailing bytes contained in the argument.\n\nIf the argument is omitted or None, strip leading and trailing ASCII whitespace.",
         },
         swapcase: {
             $meth: mkCaseSwitch((val) => (isupper(val) ? val + 32 : islower(val) ? val - 32 : val)),
@@ -833,8 +854,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { NoArgs: true },
             $textsig: null,
-            $doc:
-                "B.title() -> copy of B\n\nReturn a titlecased version of B, i.e. ASCII words start with uppercase\ncharacters, all remaining cased characters have lowercase.",
+            $doc: "B.title() -> copy of B\n\nReturn a titlecased version of B, i.e. ASCII words start with uppercase\ncharacters, all remaining cased characters have lowercase.",
         },
         // translate: {
         //     $meth() {
@@ -873,8 +893,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             },
             $flags: { OneArg: true },
             $textsig: null,
-            $doc:
-                "B.zfill(width) -> copy of B\n\nPad a numeric string B with zeros on the left, to fill a field\nof the specified width.  B is never truncated.",
+            $doc: "B.zfill(width) -> copy of B\n\nPad a numeric string B with zeros on the left, to fill a field\nof the specified width.  B is never truncated.",
         },
     },
     classmethods: {
@@ -882,8 +901,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             $meth: fromhex,
             $flags: { OneArg: true },
             $textsig: "($type, string, /)",
-            $doc:
-                "Create a bytes object from a string of hexadecimal numbers.\n\nSpaces between two numbers are accepted.\nExample: bytes.fromhex('B9 01EF') -> b'\\\\xb9\\\\x01\\\\xef'.",
+            $doc: "Create a bytes object from a string of hexadecimal numbers.\n\nSpaces between two numbers are accepted.\nExample: bytes.fromhex('B9 01EF') -> b'\\\\xb9\\\\x01\\\\xef'.",
         },
     },
 });
@@ -919,7 +937,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             for (let i = 0; i < len; i++) {
                 cc = source.charCodeAt(i);
                 if (cc > 0xff) {
-                    throw new Sk.builtin.UnicodeDecodeError("invalid string at index " + i + " (possibly contains a unicode character)");
+                    throw new Sk.builtin.UnicodeDecodeError(
+                        "invalid string at index " + i + " (possibly contains a unicode character)"
+                    );
                 }
                 uint8[i] = cc;
             }
@@ -927,14 +947,15 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
         } else if (typeof source === "number") {
             this.v = new Uint8Array(source);
         } else {
-            throw new TypeError(`bad internal argument to bytearray constructor (got '${typeof source}': ${source})`);
+            throw new TypeError(
+                `bad internal argument to bytearray constructor (got '${typeof source}': ${source})`
+            );
         }
     },
     slots: /**@lends {Sk.builtin.bytearray.prototype} */ {
         tp$getattr: Sk.generic.getAttr,
         tp$setattr: Sk.generic.setAttr,
-        tp$doc:
-            "bytearray([source[, encoding[, errors]]]) -> bytearray\n\nReturn a new array of bytes. The bytearray class is a mutable\nsequence of integers in the range 0 <= x < 256. It has most of\nthe usual methods of mutable sequences, described in Mutable\nSequence Types, as well as most methods that the bytes type has,\nsee Bytes and Byte Array Methods.",
+        tp$doc: "bytearray([source[, encoding[, errors]]]) -> bytearray\n\nReturn a new array of bytes. The bytearray class is a mutable\nsequence of integers in the range 0 <= x < 256. It has most of\nthe usual methods of mutable sequences, described in Mutable\nSequence Types, as well as most methods that the bytes type has,\nsee Bytes and Byte Array Methods.",
         tp$new(args, kwargs) {
             if (this !== Sk.builtin.bytearray.prototype) {
                 return this.$subtype_new(args, kwargs);
@@ -944,7 +965,12 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             if (args.length <= 1 && +kwargs.length === 0) {
                 pySource = args[0];
             } else {
-                [pySource, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs("bytearray", [null, "pySource", "errors"], args, kwargs);
+                [pySource, encoding, errors] = Sk.abstr.copyKeywordsToNamedArgs(
+                    "bytearray",
+                    [null, "pySource", "errors"],
+                    args,
+                    kwargs
+                );
                 ({ encoding, errors } = checkGetEncodingErrors("bytearray", encoding, errors));
                 if (!Sk.builtin.checkString(pySource)) {
                     throw new Sk.builtin.TypeError("encoding or errors without a string argument");
@@ -954,11 +980,18 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
 
             if (pySource === undefined) {
                 return new Sk.builtin.bytearray();
-            } else if ((dunderBytes = Sk.abstr.lookupSpecial(pySource, Sk.builtin.str.$bytes)) !== undefined) {
+            } else if (
+                (dunderBytes = Sk.abstr.lookupSpecial(pySource, Sk.builtin.str.$bytes)) !==
+                undefined
+            ) {
                 const ret = Sk.misceval.callsimOrSuspendArray(dunderBytes, []);
                 return Sk.misceval.chain(ret, (bytesSource) => {
                     if (!Sk.builtin.checkBytes(bytesSource)) {
-                        throw new Sk.builtin.TypeError("__bytes__ returned non-bytes (type " + Sk.abstr.typeName(bytesSource) + ")");
+                        throw new Sk.builtin.TypeError(
+                            "__bytes__ returned non-bytes (type " +
+                                Sk.abstr.typeName(bytesSource) +
+                                ")"
+                        );
                     }
                     return bytesToBytearray(bytesSource);
                 });
@@ -983,7 +1016,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
                 });
                 return Sk.misceval.chain(r, () => new Sk.builtin.bytearray(source));
             }
-            throw new Sk.builtin.TypeError("cannot convert '" + Sk.abstr.typeName(pySource) + "' object into bytes");
+            throw new Sk.builtin.TypeError(
+                "cannot convert '" + Sk.abstr.typeName(pySource) + "' object into bytes"
+            );
         },
         $r() {
             return bytesToString(this);
@@ -1052,7 +1087,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
                 });
                 return new Sk.builtin.bytearray(new Uint8Array(ret));
             }
-            throw new Sk.builtin.TypeError("byte indices must be integers or slices, not " + Sk.abstr.typeName(index));
+            throw new Sk.builtin.TypeError(
+                "byte indices must be integers or slices, not " + Sk.abstr.typeName(index)
+            );
         },
         mp$ass_subscript(index, value) {
             if (Sk.misceval.isIndex(index)) {
@@ -1065,7 +1102,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
                     this.ass$ext_slice(index, value);
                 }
             } else {
-                throw new Sk.builtin.TypeError("list indices must be integers or slices, not " + Sk.abstr.typeName(index));
+                throw new Sk.builtin.TypeError(
+                    "list indices must be integers or slices, not " + Sk.abstr.typeName(index)
+                );
             }
         },
         ass$index(index, value) {
@@ -1078,7 +1117,7 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
                 throw new Sk.builtin.TypeError("can only assign an iterable");
             }
 
-            const vals = Sk.misceval.arrayFromIterable(iterable).map(v => v.v);
+            const vals = Sk.misceval.arrayFromIterable(iterable).map((v) => v.v);
             const oldLength = this.v.length;
             let target = this.v;
             if (vals.length > oldLength) {
@@ -1099,7 +1138,12 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             }
             const vals = Sk.misceval.arrayFromIterable(iterable);
             if (indices.length !== vals.length) {
-                throw new Sk.builtin.ValueError("attempt to assign sequence of size " + vals.length + " to extended slice of size " + indices.length);
+                throw new Sk.builtin.ValueError(
+                    "attempt to assign sequence of size " +
+                        vals.length +
+                        " to extended slice of size " +
+                        indices.length
+                );
             }
             for (let i = 0; i < indices.length; i++) {
                 // Can't use this.v.splice(indices[i], 1, vals[i]) because it's a Uint8array
@@ -1110,9 +1154,10 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             return this.v.length;
         },
         sq$concat(other) {
-            if (!(other instanceof Sk.builtin.bytes) &&
-                !(other instanceof Sk.builtin.array)) {
-                throw new Sk.builtin.TypeError("can't concat " + Sk.abstr.typeName(other) + " to bytearray");
+            if (!(other instanceof Sk.builtin.bytes) && !(other instanceof Sk.builtin.array)) {
+                throw new Sk.builtin.TypeError(
+                    "can't concat " + Sk.abstr.typeName(other) + " to bytearray"
+                );
             }
             const ret = new Uint8Array(this.v.length + other.v.length);
             let i;
@@ -1144,7 +1189,10 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             if (tgt instanceof Sk.builtin.bytearray || tgt instanceof Sk.builtin.bytes) {
                 return tgt.v;
             }
-            tgt = Sk.misceval.asIndexOrThrow(tgt, "argument should be integer or bytes-like object, not {tp$name}");
+            tgt = Sk.misceval.asIndexOrThrow(
+                tgt,
+                "argument should be integer or bytes-like object, not {tp$name}"
+            );
             if (tgt < 0 || tgt > 0xff) {
                 throw new Sk.builtin.ValueError("bytes must be in range(0, 256)");
             }
@@ -1154,7 +1202,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             if (tgt instanceof Sk.builtin.bytearray || tgt instanceof Sk.builtin.bytes) {
                 return tgt.v;
             }
-            throw new Sk.builtin.TypeError("a bytes-like object is required, not '" + Sk.abstr.typeName(tgt) + "'");
+            throw new Sk.builtin.TypeError(
+                "a bytes-like object is required, not '" + Sk.abstr.typeName(tgt) + "'"
+            );
         },
         get$splitArgs: checkSepMaxSplit,
         find$left: mkFind(false),
@@ -1189,7 +1239,9 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
         },
         sk$asarray() {
             const ret = [];
-            this.v.forEach((x) => {ret.push(new Sk.builtin.int_(x));});
+            this.v.forEach((x) => {
+                ret.push(new Sk.builtin.int_(x));
+            });
             return ret;
         },
         valueOf() {
@@ -1240,7 +1292,7 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
         },
         clear() {
             this.v = new Uint8Array();
-        }
+        },
     },
     flags: {
         str$encode: strEncode,
@@ -1260,8 +1312,7 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             $meth: bytesDecode,
             $flags: { NamedArgs: ["encoding", "errors"] },
             $textsig: "($self, /, encoding='utf-8', errors='strict')",
-            $doc:
-                "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors.",
+            $doc: "Decode the bytes using the codec registered for encoding.\n\n  encoding\n    The encoding with which to decode the bytes.\n  errors\n    The error handling scheme to use for the handling of decoding errors.\n    The default is 'strict' meaning that decoding errors raise a\n    UnicodeDecodeError. Other possible values are 'ignore' and 'replace'\n    as well as any other name registered with codecs.register_error that\n    can handle UnicodeDecodeErrors.",
         },
         append: {
             $meth(value) {
@@ -1301,12 +1352,10 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             $meth: fromhex,
             $flags: { OneArg: true },
             $textsig: "($type, string, /)",
-            $doc:
-                "Create a bytes object from a string of hexadecimal numbers.\n\nSpaces between two numbers are accepted.\nExample: bytes.fromhex('B9 01EF') -> b'\\\\xb9\\\\x01\\\\xef'.",
+            $doc: "Create a bytes object from a string of hexadecimal numbers.\n\nSpaces between two numbers are accepted.\nExample: bytes.fromhex('B9 01EF') -> b'\\\\xb9\\\\x01\\\\xef'.",
         },
     },
 });
-
 
 function checkGetEncodingErrors(funcname, encoding, errors) {
     // check the types of encoding and errors
@@ -1314,7 +1363,11 @@ function checkGetEncodingErrors(funcname, encoding, errors) {
         encoding = "utf-8";
     } else if (!Sk.builtin.checkString(encoding)) {
         throw new Sk.builtin.TypeError(
-            funcname + "() argument " + ("bytesstr".includes(funcname) ? 2 : 1) + " must be str not " + Sk.abstr.typeName(encoding)
+            funcname +
+                "() argument " +
+                ("bytesstr".includes(funcname) ? 2 : 1) +
+                " must be str not " +
+                Sk.abstr.typeName(encoding)
         );
     } else {
         encoding = encoding.$jsstr();
@@ -1323,7 +1376,11 @@ function checkGetEncodingErrors(funcname, encoding, errors) {
         errors = "strict";
     } else if (!Sk.builtin.checkString(errors)) {
         throw new Sk.builtin.TypeError(
-            funcname + "() argument " + ("bytesstr".includes(funcname) ? 3 : 2) + " must be str not " + Sk.abstr.typeName(errors)
+            funcname +
+                "() argument " +
+                ("bytesstr".includes(funcname) ? 3 : 2) +
+                " must be str not " +
+                Sk.abstr.typeName(errors)
         );
     } else {
         errors = errors.$jsstr();
@@ -1335,7 +1392,9 @@ function strEncode(pyStr, encoding, errors) {
     const source = pyStr.$jsstr();
     encoding = normalizeEncoding(encoding);
     if (!(errors === "strict" || errors === "ignore" || errors === "replace")) {
-        throw new Sk.builtin.NotImplementedError("'" + errors + "' error handling not implemented in Skulpt");
+        throw new Sk.builtin.NotImplementedError(
+            "'" + errors + "' error handling not implemented in Skulpt"
+        );
     }
     let uint8;
     if (encoding === "ascii") {
@@ -1358,7 +1417,11 @@ function encodeAscii(source, errors) {
             if (errors === "strict") {
                 const hexval = makehexform(val);
                 throw new Sk.builtin.UnicodeEncodeError(
-                    "'ascii' codec can't encode character '" + hexval + "' in position " + i + ": ordinal not in range(128)"
+                    "'ascii' codec can't encode character '" +
+                        hexval +
+                        "' in position " +
+                        i +
+                        ": ordinal not in range(128)"
                 );
             } else if (errors === "replace") {
                 data.push(63); // "?"
@@ -1396,7 +1459,11 @@ function decodeAscii(source, errors) {
         if (val > 0x7f) {
             if (errors === "strict") {
                 throw new Sk.builtin.UnicodeDecodeError(
-                    "'ascii' codec can't decode byte 0x" + val.toString(16) + " in position " + i + ": ordinal not in range(128)"
+                    "'ascii' codec can't decode byte 0x" +
+                        val.toString(16) +
+                        " in position " +
+                        i +
+                        ": ordinal not in range(128)"
                 );
             } else if (errors === "replace") {
                 final += String.fromCharCode(65533);
@@ -1418,7 +1485,11 @@ function decodeUtf(source, errors) {
             return string;
         }
         throw new Sk.builtin.UnicodeDecodeError(
-            "'utf-8' codec can't decode byte 0x" + source[i].toString(16) + " in position " + i + ": invalid start byte"
+            "'utf-8' codec can't decode byte 0x" +
+                source[i].toString(16) +
+                " in position " +
+                i +
+                ": invalid start byte"
         );
     }
     return string.replace(/�/g, "");
@@ -1434,7 +1505,11 @@ function decodeLatin1(source, errors) {
             return string;
         }
         throw new Sk.builtin.UnicodeDecodeError(
-            "'latin1' codec can't decode byte 0x" + source[i].toString(16) + " in position " + i + ": invalid start byte"
+            "'latin1' codec can't decode byte 0x" +
+                source[i].toString(16) +
+                " in position " +
+                i +
+                ": invalid start byte"
         );
     }
 }
@@ -1444,7 +1519,9 @@ function bytesDecode(encoding, errors) {
     encoding = normalizeEncoding(encoding);
 
     if (!(errors === "strict" || errors === "ignore" || errors === "replace")) {
-        throw new Sk.builtin.NotImplementedError("'" + errors + "' error handling not implemented in Skulpt");
+        throw new Sk.builtin.NotImplementedError(
+            "'" + errors + "' error handling not implemented in Skulpt"
+        );
     }
 
     let jsstr;
@@ -1463,7 +1540,11 @@ function bytesDecode(encoding, errors) {
 function mkStartsEndsWith(funcname, is_match) {
     return function (prefix, start, end) {
         if (!(prefix instanceof Sk.builtin.bytes || prefix instanceof Sk.builtin.tuple)) {
-            throw new Sk.builtin.TypeError(funcname + " first arg must be bytes or a tuple of bytes, not " + Sk.abstr.typeName(prefix));
+            throw new Sk.builtin.TypeError(
+                funcname +
+                    " first arg must be bytes or a tuple of bytes, not " +
+                    Sk.abstr.typeName(prefix)
+            );
         }
         ({ start, end } = Sk.builtin.slice.startEnd$wrt(this, start, end));
         if (end < start) {
@@ -1472,7 +1553,11 @@ function mkStartsEndsWith(funcname, is_match) {
         const slice = this.v.subarray(start, end);
 
         if (prefix instanceof Sk.builtin.tuple) {
-            for (let iter = Sk.abstr.iter(prefix), item = iter.tp$iternext(); item !== undefined; item = iter.tp$iternext()) {
+            for (
+                let iter = Sk.abstr.iter(prefix), item = iter.tp$iternext();
+                item !== undefined;
+                item = iter.tp$iternext()
+            ) {
                 item = this.get$raw(item);
                 if (is_match(slice, item)) {
                     return Sk.builtin.bool.true$;
@@ -1562,7 +1647,11 @@ function mkJust(funcname, isRight, isCenter) {
         if (fillbyte === undefined) {
             fillbyte = 32;
         } else if (!(fillbyte instanceof Sk.builtin.bytes) || fillbyte.v.length != 1) {
-            throw new Sk.builtin.TypeError(funcname + "() argument 2 must be a byte string of length 1, not " + Sk.abstr.typeName(fillbyte));
+            throw new Sk.builtin.TypeError(
+                funcname +
+                    "() argument 2 must be a byte string of length 1, not " +
+                    Sk.abstr.typeName(fillbyte)
+            );
         } else {
             fillbyte = fillbyte.v[0];
         }
@@ -1621,7 +1710,9 @@ function mkIsAll(passTest, passesZero) {
         if (this.v.length === 0) {
             return passesZero ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
         }
-        return this.v.every((val) => passTest(val)) ? Sk.builtin.bool.true$ : Sk.builtin.bool.false$;
+        return this.v.every((val) => passTest(val))
+            ? Sk.builtin.bool.true$
+            : Sk.builtin.bool.false$;
     };
 }
 
@@ -1652,7 +1743,9 @@ function mkCaseSwitch(switchCase) {
 
 function fromhex(string) {
     if (!Sk.builtin.checkString(string)) {
-        throw new Sk.builtin.TypeError("fromhex() argument must be str, not " + Sk.abstr.typeName(string));
+        throw new Sk.builtin.TypeError(
+            "fromhex() argument must be str, not " + Sk.abstr.typeName(string)
+        );
     }
     string = string.$jsstr();
     const spaces = /\s+/g;
@@ -1663,7 +1756,9 @@ function fromhex(string) {
         for (let i = index; i < upto; i += 2) {
             let s = string.substr(i, 2);
             if (!ishex.test(s)) {
-                throw new Sk.builtin.ValueError("non-hexadecimal number found in fromhex() arg at position " + (i + 1));
+                throw new Sk.builtin.ValueError(
+                    "non-hexadecimal number found in fromhex() arg at position " + (i + 1)
+                );
             }
             final.push(parseInt(s, 16));
         }

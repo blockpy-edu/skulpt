@@ -26,8 +26,7 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
         return canSuspend ? ret : Sk.misceval.retryOptionalSuspensionOrThrow(ret);
     },
     slots: {
-        tp$doc:
-            "zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",
+        tp$doc: "zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",
         tp$new(args, kwargs) {
             if (this === Sk.builtin.zip_.prototype) {
                 Sk.abstr.checkNoKwargs("zip", kwargs);
@@ -38,7 +37,9 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
                     iters.push(Sk.abstr.iter(args[i]));
                 } catch (e) {
                     if (e instanceof Sk.builtin.TypeError) {
-                        throw new Sk.builtin.TypeError("zip argument #" + (i + 1) + " must support iteration");
+                        throw new Sk.builtin.TypeError(
+                            "zip argument #" + (i + 1) + " must support iteration"
+                        );
                     } else {
                         throw e;
                     }
@@ -55,4 +56,3 @@ Sk.builtin.zip_ = Sk.abstr.buildIteratorClass("zip", {
     },
 });
 Sk.exportSymbol("Sk.builtin.zip_", Sk.builtin.zip_);
-

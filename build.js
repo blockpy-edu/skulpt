@@ -15,18 +15,24 @@ const outfileDev = "skulpt.js";
 const outfileProd = "skulpt.min.js";
 const debuggerSrc = "debugger/debugger.js";
 const debuggerDst = "debugger.js";
-const externsNote = "// NOTE: esbuild has no direct 'externs' like Closure; use 'external' instead.\n";
+const externsNote =
+    "// NOTE: esbuild has no direct 'externs' like Closure; use 'external' instead.\n";
 
 // env parsing (support --mode=production like webpack)
 const args = process.argv.slice(2);
-const argMode = (args.find(a => a.startsWith("--mode=")) || "").split("=")[1];
+const argMode = (args.find((a) => a.startsWith("--mode=")) || "").split("=")[1];
 const mode = argMode || process.env.NODE_ENV || "development";
 const production = mode === "production";
-const target = process.env.ES_TARGET || (process.env.languageOut || "es2015"); // mimic languageOut a bit
+const target = process.env.ES_TARGET || process.env.languageOut || "es2015"; // mimic languageOut a bit
 
 // --- git checks ------------------------------------------------------
 function haveGit() {
-    try { execSync("git --version", { stdio: "ignore" }); return true; } catch { return false; }
+    try {
+        execSync("git --version", { stdio: "ignore" });
+        return true;
+    } catch {
+        return false;
+    }
 }
 if (!haveGit()) {
     console.log(chalk.red("WARNING: Cannot find git! Unsure if working directory is clean."));
@@ -41,7 +47,11 @@ try {
 }
 
 function git(cmd, fallback = "") {
-    try { return execSync(cmd, { encoding: "utf8" }).trim(); } catch { return fallback; }
+    try {
+        return execSync(cmd, { encoding: "utf8" }).trim();
+    } catch {
+        return fallback;
+    }
 }
 const GITVERSION = git("git describe --tags --always", "unknown");
 const GITHASH = git("git rev-parse --short HEAD", "unknown");
@@ -86,7 +96,9 @@ const gzipPlugin = {
     name: "gzip-min",
     setup(build) {
         build.onEnd((result) => {
-            if (result.errors.length) {return;}
+            if (result.errors.length) {
+                return;
+            }
             const outFile = path.join(outdir, production ? outfileProd : outfileDev);
             if (production && fs.existsSync(outFile)) {
                 const gz = gzipFile(outFile);
@@ -100,7 +112,9 @@ const gzipPlugin = {
 const eslintPlugin = {
     name: "eslint-run",
     setup(build) {
-        if (!production) {return;} // mimic your webpack rule (prod only)
+        if (!production) {
+            return;
+        } // mimic your webpack rule (prod only)
         build.onStart(() => {
             try {
                 // respect the same exclude pattern from your webpack (approx)
@@ -134,37 +148,36 @@ if (!fs.existsSync(assertAliasPath)) {
 // Style/exclude filters you had in webpack (not needed in esbuild for bundling).
 // If you need to exclude specific files from parsing, use 'external' or 'inject'.
 
-esbuild.build({
-    entryPoints: [entry],
-    outfile: path.join(outdir, outfile),
-    bundle: true,
-    sourcemap: true,
-    minify: production,              // replaces Closure + minimizer
-    target: target,                  // rough stand-in for languageOut
-    define: {
-        GITVERSION: JSON.stringify(GITVERSION),
-        GITHASH: JSON.stringify(GITHASH),
-        GITBRANCH: JSON.stringify(GITBRANCH),
-        BUILDDATE: JSON.stringify(BUILDDATE),
-    },
-    // Equivalent to webpack resolve.alias
-    alias: {
-        assert: assertAliasPath,
-    },
-    // If you previously relied on globals, uncomment:
-    // external: ["jsbi"], // <-- mirrors your commented webpack externals
-    plugins: [
-        eslintPlugin,
-        copyDebuggerPlugin,
-        gzipPlugin,
-    ],
-    // Nice-to-haves
-    logLevel: "info",
-}).then(() => {
-    // Optional: write a small note about externs
-    const notePath = path.join(outdir, "ESBUILD_NOTES.txt");
-    fs.writeFileSync(notePath, externsNote);
-}).catch((err) => {
-    console.error(err);
-    process.exit(1);
-});
+esbuild
+    .build({
+        entryPoints: [entry],
+        outfile: path.join(outdir, outfile),
+        bundle: true,
+        sourcemap: true,
+        minify: production, // replaces Closure + minimizer
+        target: target, // rough stand-in for languageOut
+        define: {
+            GITVERSION: JSON.stringify(GITVERSION),
+            GITHASH: JSON.stringify(GITHASH),
+            GITBRANCH: JSON.stringify(GITBRANCH),
+            BUILDDATE: JSON.stringify(BUILDDATE),
+        },
+        // Equivalent to webpack resolve.alias
+        alias: {
+            assert: assertAliasPath,
+        },
+        // If you previously relied on globals, uncomment:
+        // external: ["jsbi"], // <-- mirrors your commented webpack externals
+        plugins: [eslintPlugin, copyDebuggerPlugin, gzipPlugin],
+        // Nice-to-haves
+        logLevel: "info",
+    })
+    .then(() => {
+        // Optional: write a small note about externs
+        const notePath = path.join(outdir, "ESBUILD_NOTES.txt");
+        fs.writeFileSync(notePath, externsNote);
+    })
+    .catch((err) => {
+        console.error(err);
+        process.exit(1);
+    });

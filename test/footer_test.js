@@ -11,5 +11,5 @@ Skulpt = {
     _transform: transform,
     _compile: compile,
     _parseTables: SkulptParseTables,
-    consts$: {}
+    consts$: {},
 };

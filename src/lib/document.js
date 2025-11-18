@@ -1,6 +1,6 @@
 var $builtinmodule = function (name) {
     var elementClass;
-    var mod = {__name__: new Sk.builtin.str("document")};
+    var mod = { __name__: new Sk.builtin.str("document") };
 
     mod.getElementById = new Sk.builtin.func(function (id) {
         var result = document.getElementById(id.v);
@@ -17,7 +17,6 @@ var $builtinmodule = function (name) {
         }
     });
 
-
     mod.getElementsByTagName = new Sk.builtin.func(function (tag) {
         var r = document.getElementsByTagName(tag.v);
         var reslist = [];
@@ -33,7 +32,6 @@ var $builtinmodule = function (name) {
         for (var i = 0; i < r.length; i++) {
             reslist.push(Sk.misceval.callsimArray(mod.Element, [r[i]]));
         }
-        ;
         return new Sk.builtin.list(reslist);
     });
 
@@ -43,7 +41,23 @@ var $builtinmodule = function (name) {
         for (var i = 0; i < r.length; i++) {
             reslist.push(Sk.misceval.callsimArray(mod.Element, [r[i]]));
         }
-        ;
+        return new Sk.builtin.list(reslist);
+    });
+
+    mod.querySelector = new Sk.builtin.func(function (selector) {
+        var result = document.querySelector(selector.v);
+        if (result) {
+            return Sk.misceval.callsimArray(mod.Element, [result]);
+        }
+        return Sk.builtin.none.none$;
+    });
+
+    mod.querySelectorAll = new Sk.builtin.func(function (selector) {
+        var r = document.querySelectorAll(selector.v);
+        var reslist = [];
+        for (var i = 0; i < r.length; i++) {
+            reslist.push(Sk.misceval.callsimArray(mod.Element, [r[i]]));
+        }
         return new Sk.builtin.list(reslist);
     });
 
@@ -72,35 +86,49 @@ var $builtinmodule = function (name) {
             self.innerText = elem.innerText;
             if (elem.value !== undefined) {
                 self.value = elem.value;
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('value'), new Sk.builtin.str(self.value));
+                Sk.abstr.objectSetItem(
+                    self["$d"],
+                    new Sk.builtin.str("value"),
+                    new Sk.builtin.str(self.value)
+                );
             }
 
             if (elem.checked !== undefined) {
                 self.checked = elem.checked;
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('checked'), new Sk.builtin.str(self.checked));
+                Sk.abstr.objectSetItem(
+                    self["$d"],
+                    new Sk.builtin.str("checked"),
+                    new Sk.builtin.str(self.checked)
+                );
             }
 
-            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), new Sk.builtin.str(self.innerHTML));
-            Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), new Sk.builtin.str(self.innerText));
-
+            Sk.abstr.objectSetItem(
+                self["$d"],
+                new Sk.builtin.str("innerHTML"),
+                new Sk.builtin.str(self.innerHTML)
+            );
+            Sk.abstr.objectSetItem(
+                self["$d"],
+                new Sk.builtin.str("innerText"),
+                new Sk.builtin.str(self.innerText)
+            );
         });
 
         $loc.tp$getattr = Sk.generic.getAttr;
 
         $loc.__setattr__ = new Sk.builtin.func(function (self, key, value) {
             key = Sk.ffi.remapToJs(key);
-            if (key === 'innerHTML') {
+            if (key === "innerHTML") {
                 self.innerHTML = value;
                 self.v.innerHTML = value.v;
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerHTML'), value);
+                Sk.abstr.objectSetItem(self["$d"], new Sk.builtin.str("innerHTML"), value);
             }
-            if (key === 'innerText') {
+            if (key === "innerText") {
                 self.innerText = value;
                 self.v.innerText = value.v;
-                Sk.abstr.objectSetItem(self['$d'], new Sk.builtin.str('innerText'), value);
+                Sk.abstr.objectSetItem(self["$d"], new Sk.builtin.str("innerText"), value);
             }
         });
-
 
         $loc.appendChild = new Sk.builtin.func(function (self, ch) {
             self.v.appendChild(ch.v);
@@ -116,10 +144,8 @@ var $builtinmodule = function (name) {
             return new Sk.builtin.str(self.v.style[key.v]);
         });
 
-
         $loc.setCSS = new Sk.builtin.func(function (self, attr, value) {
             self.v.style[attr.v] = value.v;
-
         });
 
         $loc.getAttribute = new Sk.builtin.func(function (self, key) {
@@ -150,14 +176,11 @@ var $builtinmodule = function (name) {
         });
 
         $loc.__repr__ = new Sk.builtin.func(function (self) {
-            return new Sk.builtin.str('[DOM Element]');
+            return new Sk.builtin.str("[DOM Element]");
         });
-
-
     };
 
-    mod.Element = Sk.misceval.buildClass(mod, elementClass, 'Element', []);
+    mod.Element = Sk.misceval.buildClass(mod, elementClass, "Element", []);
 
     return mod;
-
 };

@@ -44,9 +44,6 @@ Sk.builtin.callable_iter_ = Sk.abstr.buildIteratorClass("callable_iterator", {
     flags: { sk$unacceptableBase: true },
 });
 
-
-
-
 /**
  * @constructor
  * @extends {Sk.builtin.object}
@@ -77,7 +74,7 @@ Sk.builtin.seq_iter_ = Sk.abstr.buildIteratorClass("iterator", {
     },
     methods: {
         __length_hint__: {
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $meth() {
                 if (this.$seq.sq$length) {
                     // sq$length will return Sk.miseval.asIndex
@@ -92,9 +89,5 @@ Sk.builtin.seq_iter_ = Sk.abstr.buildIteratorClass("iterator", {
     },
     flags: { sk$unacceptableBase: true },
 });
-
-
-
-
 
 Sk.exportSymbol("Sk.builtin.callable_iter_", Sk.builtin.callable_iter_);

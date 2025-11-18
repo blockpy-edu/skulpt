@@ -54,10 +54,17 @@ function $builtinmodule() {
         gattr: objectGetAttr,
     } = Sk.abstr;
 
-    const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
+    const {
+        getSetDict: genericGetSetDict,
+        getAttr: genericGetAttr,
+        setAttr: genericSetAttr,
+    } = Sk.generic;
 
     const escapeHtml = (unsafe, quote) => {
-        let newVersion = unsafe.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+        let newVersion = unsafe
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
         if (quote) {
             newVersion = newVersion.replaceAll('"', "&quot;").replaceAll("'", "&#x27;");
         }
@@ -65,7 +72,7 @@ function $builtinmodule() {
     };
     const escapeTextArea = document.createElement("textarea");
 
-    var escape = function(s, quote) {
+    var escape = function (s, quote) {
         Sk.builtin.pyCheckArgs("escape", arguments, 1, 2, false, false);
         /*const replacer = toJs(quote) ? allTagsToReplace : tagsToReplace;
         return toJs(s).replace(/[^<>]/g, function(tag) {

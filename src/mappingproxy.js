@@ -30,7 +30,10 @@
  */
 Sk.builtin.mappingproxy = Sk.abstr.buildNativeClass("mappingproxy", {
     constructor: function mappingproxy(d) {
-        Sk.asserts.assert(this instanceof Sk.builtin.mappingproxy, "bad call to mapping proxy, use 'new'");
+        Sk.asserts.assert(
+            this instanceof Sk.builtin.mappingproxy,
+            "bad call to mapping proxy, use 'new'"
+        );
         this.mapping = new Sk.builtin.dict([]);
         if (d !== undefined) {
             // internal call so d is an object literal
@@ -48,7 +51,9 @@ Sk.builtin.mappingproxy = Sk.abstr.buildNativeClass("mappingproxy", {
             Sk.abstr.checkOneArg("mappingproxy", args, kwargs);
             const mapping = args[0];
             if (!Sk.builtin.checkMapping(mapping)) {
-                throw new Sk.builtin.TypeError("mappingproxy() argument must be a mapping, not " + Sk.abstr.typeName(mapping));
+                throw new Sk.builtin.TypeError(
+                    "mappingproxy() argument must be a mapping, not " + Sk.abstr.typeName(mapping)
+                );
             }
             const mp = new Sk.builtin.mappingproxy();
             mp.mapping = mapping;
@@ -89,13 +94,19 @@ Sk.builtin.mappingproxy = Sk.abstr.buildNativeClass("mappingproxy", {
             return Sk.abstr.numberBinOp(other, this.mapping, "BitOr");
         },
         nb$inplace_or(other) {
-            throw new Sk.builtin.TypeError("'|=' is not supported by " + Sk.abstr.typeName(this) + "; use '|' instead");
+            throw new Sk.builtin.TypeError(
+                "'|=' is not supported by " + Sk.abstr.typeName(this) + "; use '|' instead"
+            );
         },
     },
     methods: {
         get: {
             $meth(args, kwargs) {
-                return Sk.misceval.callsimArray(this.mapping.tp$getattr(this.str$get), args, kwargs);
+                return Sk.misceval.callsimArray(
+                    this.mapping.tp$getattr(this.str$get),
+                    args,
+                    kwargs
+                );
             },
             $flags: { FastCall: true },
             $textsig: null,

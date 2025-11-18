@@ -7,8 +7,6 @@
  * skulpt wrapper (i.e., runit) to present the exception message.
  */
 
-
-
 /**
  * @constructor
  * @param {...} args Typically called with a single string argument
@@ -16,7 +14,10 @@
 const BaseException = Sk.abstr.buildNativeClass("BaseException", {
     constructor: function BaseException(arg, ...tb) {
         // internally args is either a string
-        Sk.asserts.assert(this instanceof BaseException, "bad call to exception constructor, use 'new'");
+        Sk.asserts.assert(
+            this instanceof BaseException,
+            "bad call to exception constructor, use 'new'"
+        );
         // for all internal calls only the first argument is included in args
         if (typeof arg === "string") {
             arg = new Sk.builtin.str(arg);
@@ -24,7 +25,8 @@ const BaseException = Sk.abstr.buildNativeClass("BaseException", {
         this.args = new Sk.builtin.tuple(arg ? [arg] : []);
         // if we have tb args then it's an internal call indicating the pre instantiated traceback
         // we should probably change this at some point because this only happens with SyntaxErrors
-        this.traceback = tb.length >= 2 ? [{ filename: tb[0] || "<unknown>", text: tb[1], lineno: tb[2] }] : [];
+        this.traceback =
+            tb.length >= 2 ? [{ filename: tb[0] || "<unknown>", text: tb[1], lineno: tb[2] }] : [];
         this._full_traceback = tb;
         this.feedback = Sk.builtin.none.none$;
         this.__cause__ = Sk.builtin.none.none$;
@@ -54,23 +56,39 @@ const BaseException = Sk.abstr.buildNativeClass("BaseException", {
                 this.args = new Sk.builtin.tuple(v);
             },
         },
-        __dict__: Sk.generic.getSetDict,	
+        __dict__: Sk.generic.getSetDict,
         __cause__: {
-            $get: function () { return this.__cause__; },
-            $set: function(v) { this.__cause__ = v; }
+            $get: function () {
+                return this.__cause__;
+            },
+            $set: function (v) {
+                this.__cause__ = v;
+            },
         },
         feedback: {
-            $get: function () { return this.feedback; },
-            $set: function(v) { this.feedback = v; }
+            $get: function () {
+                return this.feedback;
+            },
+            $set: function (v) {
+                this.feedback = v;
+            },
         },
         __context__: {
-            $get: function () { return this.__context__; },
-            $set: function(v) { this.__context__ = v; }
+            $get: function () {
+                return this.__context__;
+            },
+            $set: function (v) {
+                this.__context__ = v;
+            },
         },
         __suppress_context__: {
-            $get: function () { return this.__suppress_context__; },
-            $set: function(v) { this.__suppress_context__ = v; }
-        }
+            $get: function () {
+                return this.__suppress_context__;
+            },
+            $set: function (v) {
+                this.__suppress_context__ = v;
+            },
+        },
     },
     proto: /**@lends {BaseException}*/ {
         toString() {
@@ -92,8 +110,8 @@ const BaseException = Sk.abstr.buildNativeClass("BaseException", {
             }
 
             return ret;
-        }
-    }
+        },
+    },
 });
 
 // will be used when we implement other getsets
@@ -177,11 +195,27 @@ function simpleExtends(base, name, doc) {
     });
 }
 
-const SystemExit = simpleExtends(BaseException, "SystemExit", "Request to exit from the interpreter.");
-const KeyboardInterrupt = simpleExtends(BaseException, "KeyboardInterrupt", "Program interrupted by user.");
-const GeneratorExit = simpleExtends(BaseException, "GeneratorExit", "Request that a generator exit.");
+const SystemExit = simpleExtends(
+    BaseException,
+    "SystemExit",
+    "Request to exit from the interpreter."
+);
+const KeyboardInterrupt = simpleExtends(
+    BaseException,
+    "KeyboardInterrupt",
+    "Program interrupted by user."
+);
+const GeneratorExit = simpleExtends(
+    BaseException,
+    "GeneratorExit",
+    "Request that a generator exit."
+);
 
-const Exception = simpleExtends(BaseException, "Exception", "Common base class for all non-exit exceptions.");
+const Exception = simpleExtends(
+    BaseException,
+    "Exception",
+    "Common base class for all non-exit exceptions."
+);
 
 const StopIteration = complexExtends(
     Exception,
@@ -194,11 +228,27 @@ const StopIteration = complexExtends(
     ["value"]
 );
 
-const StopAsyncIteration = simpleExtends(Exception, "StopAsyncIteration", "Signal the end from iterator.__anext__().");
+const StopAsyncIteration = simpleExtends(
+    Exception,
+    "StopAsyncIteration",
+    "Signal the end from iterator.__anext__()."
+);
 
-const ArithmeticError = simpleExtends(Exception, "ArithmeticError", "Base class for arithmetic errors.");
-const FloatingPointError = simpleExtends(ArithmeticError, "FloatingPointError", "Floating point operation failed.");
-const OverflowError = simpleExtends(ArithmeticError, "OverflowError", "Result too large to be represented.");
+const ArithmeticError = simpleExtends(
+    Exception,
+    "ArithmeticError",
+    "Base class for arithmetic errors."
+);
+const FloatingPointError = simpleExtends(
+    ArithmeticError,
+    "FloatingPointError",
+    "Floating point operation failed."
+);
+const OverflowError = simpleExtends(
+    ArithmeticError,
+    "OverflowError",
+    "Result too large to be represented."
+);
 const ZeroDivisionError = simpleExtends(
     ArithmeticError,
     "ZeroDivisionError",
@@ -215,7 +265,12 @@ const ImportError = complexExtends(
     "Import can't find module, or can't find name in module.",
     function init(args, kws) {
         BaseExc_init.call(this, args);
-        const [name, path] = Sk.abstr.copyKeywordsToNamedArgs("ImportError", ["name", "path"], [], kws);
+        const [name, path] = Sk.abstr.copyKeywordsToNamedArgs(
+            "ImportError",
+            ["name", "path"],
+            [],
+            kws
+        );
         this.$name = name;
         this.$path = path;
         if (args.length === 1) {
@@ -235,12 +290,19 @@ const ModuleNotFoundError = simpleExtends(ImportError, "ModuleNotFoundError", "M
 
 const LookupError = simpleExtends(Exception, "LookupError", "Base class for lookup errors.");
 const IndexError = simpleExtends(LookupError, "IndexError", "Sequence index out of range.");
-const KeyError = complexExtends(LookupError, "KeyError", "Mapping key not found.", null, null, function str() {
-    if (this.args.v.length === 1) {
-        return this.args.v[0].$r(); // prevents printing an empty string
+const KeyError = complexExtends(
+    LookupError,
+    "KeyError",
+    "Mapping key not found.",
+    null,
+    null,
+    function str() {
+        if (this.args.v.length === 1) {
+            return this.args.v[0].$r(); // prevents printing an empty string
+        }
+        return BaseExc_str.call(this);
     }
-    return BaseExc_str.call(this);
-});
+);
 
 const MemoryError = simpleExtends(Exception, "MemoryError", "Out of memory.");
 
@@ -251,9 +313,14 @@ const UnboundLocalError = simpleExtends(
     "Local name referenced but not bound to a value."
 );
 
-const OSError = complexExtends(Exception, "OSError", "Base class for I/O related errors.", function (args, kws) {
-    BaseExc_init.call(this, args, kws);
-});
+const OSError = complexExtends(
+    Exception,
+    "OSError",
+    "Base class for I/O related errors.",
+    function (args, kws) {
+        BaseExc_init.call(this, args, kws);
+    }
+);
 // const BlockingIOError = simpleExtends(OSError, "BlockingIOError", "I/O operation would block.");
 // const ChildProcessError = simpleExtends(OSError, "ChildProcessError", "Child process error.");
 // const ConnectionError = simpleExtends(OSError, "ConnectionError", "Connection error.");
@@ -270,7 +337,11 @@ const FileNotFoundError = simpleExtends(OSError, "FileNotFoundError", "File not 
 // const ProcessLookupError = simpleExtends(OSError, "ProcessLookupError", "Process not found.");
 const TimeoutError = simpleExtends(OSError, "TimeoutError", "Timeout expired.");
 
-const ReferenceError = simpleExtends(Exception, "ReferenceError", "Weak ref proxy used after referent went away.");
+const ReferenceError = simpleExtends(
+    Exception,
+    "ReferenceError",
+    "Weak ref proxy used after referent went away."
+);
 
 const RuntimeError = simpleExtends(Exception, "RuntimeError", "Unspecified run-time error.");
 const NotImplementedError = simpleExtends(
@@ -320,23 +391,51 @@ const SyntaxError = complexExtends(
             // TODO: acbart this just makes the traceback work for now, not actually getting the data yet
         }
     },
-    ["msg", "filename", "text", "lineno", "offset", "end_lineno", "end_offset" /*"print_file_and_line"*/],
+    [
+        "msg",
+        "filename",
+        "text",
+        "lineno",
+        "offset",
+        "end_lineno",
+        "end_offset" /*"print_file_and_line"*/,
+    ],
     function str() {
         return BaseExc_str.call(this);
     }
 );
 const IndentationError = simpleExtends(SyntaxError, "IndentationError", "Improper indentation.");
-const TabError = simpleExtends(IndentationError, "TabError", "Improper mixture of spaces and tabs.");
+const TabError = simpleExtends(
+    IndentationError,
+    "TabError",
+    "Improper mixture of spaces and tabs."
+);
 
-const SystemError = simpleExtends(Exception, "SystemError", "Internal error in the Skulpt interpreter.");
+const SystemError = simpleExtends(
+    Exception,
+    "SystemError",
+    "Internal error in the Skulpt interpreter."
+);
 
 const TypeError = simpleExtends(Exception, "TypeError", "Inappropriate argument type.");
-const ValueError = simpleExtends(Exception, "ValueError", "Inappropriate argument value (of correct type).");
+const ValueError = simpleExtends(
+    Exception,
+    "ValueError",
+    "Inappropriate argument value (of correct type)."
+);
 
 const UnicodeError = simpleExtends(ValueError, "UnicodeError", "Unicode related error.");
 // these have some extra args - for now just keep them as simple extends
-const UnicodeDecodeError = simpleExtends(UnicodeError, "UnicodeDecodeError", "Unicode decoding error.");
-const UnicodeEncodeError = simpleExtends(UnicodeError, "UnicodeEncodeError", "Unicode encoding error.");
+const UnicodeDecodeError = simpleExtends(
+    UnicodeError,
+    "UnicodeDecodeError",
+    "Unicode decoding error."
+);
+const UnicodeEncodeError = simpleExtends(
+    UnicodeError,
+    "UnicodeEncodeError",
+    "Unicode encoding error."
+);
 // const UnicodeTranslateError = simpleExtends(UnicodeError, "UnicodeTranslateError", "Unicode translation error.");
 
 /**@todo we should support warnings */
@@ -422,8 +521,11 @@ const pyExc = {
 
 Object.assign(Sk.builtin, pyExc);
 
-
-Sk.builtin.SuspensionError = simpleExtends(Exception, "SuspensionError", "Unsupported Suspension in code.");
+Sk.builtin.SuspensionError = simpleExtends(
+    Exception,
+    "SuspensionError",
+    "Unsupported Suspension in code."
+);
 
 Sk.builtin.ExternalError = Sk.abstr.buildNativeClass("ExternalError", {
     constructor: function ExternalError(...args) {
@@ -440,16 +542,77 @@ Sk.builtin.ExternalError = Sk.abstr.buildNativeClass("ExternalError", {
     base: Exception,
 });
 
+/**
+ * @constructor
+ */
+Sk.builtin.code = function (trace) {
+    if (!(this instanceof Sk.builtin.code)) {
+        return new Sk.builtin.code(trace);
+    }
+
+    this.co_filename = trace.filename || "<unknown>";
+    this.co_name = trace.scope || "<unknown>";
+    this.co_firstlineno = trace.lineno || -1;
+
+    this.__class__ = Sk.builtin.code;
+    return this;
+};
+
+Sk.abstr.setUpInheritance("code", Sk.builtin.code, Sk.builtin.object);
+
+Sk.builtin.code.prototype.tp$getattr = function (name) {
+    if (name != null && (Sk.builtin.checkString(name) || typeof name === "string")) {
+        var _name = name;
+
+        // get javascript string
+        if (Sk.builtin.checkString(name)) {
+            _name = Sk.ffi.remapToJs(name);
+        }
+
+        switch (_name) {
+            case "co_filename":
+                return Sk.ffi.remapToPy(this.co_filename);
+            case "co_name":
+                return Sk.ffi.remapToPy(this.co_name);
+            case "co_firstlineno":
+                return new Sk.builtin.int_(this.co_firstlineno);
+            // Other code object attributes can be added here
+            case "co_argcount":
+                return new Sk.builtin.int_(0);
+            case "co_flags":
+                return new Sk.builtin.int_(0);
+            case "co_nlocals":
+                return new Sk.builtin.int_(0);
+        }
+    }
+
+    // if we have not returned yet, try the genericgetattr
+    return Sk.generic.getAttr(this, name);
+};
+
+Sk.builtin.code.prototype["$r"] = function () {
+    return new Sk.builtin.str("<code object " + this.co_name + ", file \"" + this.co_filename + "\", line " + this.co_firstlineno + ">");
+};
+
+Sk.exportSymbol("Sk.builtin.code", Sk.builtin.code);
 
 /**
  * @constructor
  */
-Sk.builtin.frame = function (trace, index=0) {
+Sk.builtin.frame = function (trace, index = 0) {
     if (!(this instanceof Sk.builtin.frame)) {
-        return new Sk.builtin.frame(trace);
+        return new Sk.builtin.frame(trace, index);
     }
     this.trace = trace;
     this.index = index;
+    // Initialize frame attributes
+    this.f_back = Sk.builtin.none.none$; // Will be set by fromList
+    this.f_code = new Sk.builtin.code(trace);
+    this.f_globals = Sk.builtin.none.none$; // TODO: implement later
+    this.f_locals = Sk.builtin.none.none$; // TODO: implement later
+    this.f_builtins = Sk.builtin.none.none$; // TODO: implement later
+    this.f_lasti = new Sk.builtin.int_(-1); // Last instruction
+    this.f_trace = Sk.builtin.none.none$; // Trace function
     this.__class__ = Sk.builtin.frame;
     return this;
 };
@@ -469,30 +632,30 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
         if (line == null) {
             if (this.trace.filename != null && this.trace.lineno != null) {
                 if (Sk.parse.linecache[this.trace.filename]) {
-                    line = Sk.parse.linecache[this.trace.filename][this.trace.lineno-1];
+                    line = Sk.parse.linecache[this.trace.filename][this.trace.lineno - 1];
                 }
             }
         }
 
         switch (_name) {
             case "f_back":
-                return Sk.builtin.none.none$;
+                return this.f_back;
             case "f_builtins":
-                return Sk.builtin.none.none$;
+                return this.f_builtins;
             case "f_code":
-                return Sk.builtin.none.none$;
+                return this.f_code;
             case "f_globals":
-                return Sk.builtin.none.none$;
+                return this.f_globals;
             case "f_lasti":
-                return Sk.builtin.none.none$;
+                return this.f_lasti;
             case "f_lineno":
                 return Sk.ffi.remapToPy(this.trace.lineno);
             case "f_line":
                 return Sk.ffi.remapToPy(line);
             case "f_locals":
-                return Sk.builtin.none.none$;
+                return this.f_locals;
             case "f_trace":
-                return Sk.builtin.none.none$;
+                return this.f_trace;
             case "co_filename":
                 return Sk.ffi.remapToPy(this.trace.filename);
             case "co_name":
@@ -501,7 +664,7 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.frame.prototype["$r"] = function () {
     return new Sk.builtin.str("<frame object>");
@@ -535,13 +698,34 @@ Sk.builtin.traceback = function (trace) {
 
 Sk.abstr.setUpInheritance("traceback", Sk.builtin.traceback, Sk.builtin.object);
 Sk.builtin.traceback.fromList = function (traces) {
-    var current = Sk.builtin.traceback(traces[0]),
-        first = current;
-    for (var i = 1; i < traces.length; i++) {
-        current.tb_next = Sk.builtin.traceback(traces[i]);
+    if (!traces || traces.length === 0) {
+        return Sk.builtin.none.none$;
+    }
+
+    console.log("TRACES", traces);
+
+    let current = new Sk.builtin.traceback(traces[0]);
+    let first = current;
+    let frames = [current.tb_frame]; // Keep track of frames for chaining
+
+    // Create all traceback objects first
+    for (let i = 1; i < traces.length; i++) {
+        current.tb_next = new Sk.builtin.traceback(traces[i]);
         current = current.tb_next;
+        frames.push(current.tb_frame);
     }
     current.tb_next = Sk.builtin.none.none$;
+
+    // Now set up the frame chain: each frame's f_back points to the calling frame
+    // The innermost frame (frames[0]) points to frames[1], etc.
+    for (let i = 0; i < frames.length - 1; i++) {
+        frames[i].f_back = frames[i + 1];
+    }
+    // The outermost frame has no caller
+    if (frames.length > 0) {
+        frames[frames.length - 1].f_back = Sk.builtin.none.none$;
+    }
+
     return first;
 };
 Sk.builtin.traceback.prototype.tp$getattr = function (name) {
@@ -563,13 +747,12 @@ Sk.builtin.traceback.prototype.tp$getattr = function (name) {
     }
 
     // if we have not returned yet, try the genericgetattr
-    return Sk.builtin.object.prototype.GenericGetAttr(name);
+    return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.traceback.prototype["$r"] = function () {
     return new Sk.builtin.str("<traceback object>");
 };
 Sk.exportSymbol("Sk.builtin.traceback", Sk.builtin.traceback);
-
 
 // TODO: Extract into sys.exc_info(). Work out how the heck
 // to find out what exceptions are being processed by parent stack frames...

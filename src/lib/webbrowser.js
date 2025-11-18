@@ -1,6 +1,6 @@
-var $builtinmodule = function(name){
+var $builtinmodule = function (name) {
     var mod = {};
-    var inBrowser = (typeof window != "undefined") && (typeof window.navigator != "undefined");
+    var inBrowser = typeof window != "undefined" && typeof window.navigator != "undefined";
 
     function open_tab(url) {
         Sk.builtin.pyCheckType("url", "string", Sk.builtin.checkString(url));

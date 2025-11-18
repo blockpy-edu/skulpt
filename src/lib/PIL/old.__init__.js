@@ -11,10 +11,10 @@ TODO: Implement the following functions:
 
 var $builtinmodule = function (name) {
     var mod, sampleWrapper;
-    mod = {__name__: "PIL"};
+    mod = { __name__: "PIL" };
 
     if (!Sk.PIL) {
-        Sk.PIL = {assets: {}};
+        Sk.PIL = { assets: {} };
     }
 
     // InstantPromise is a workaround to allow usage of the clean promise-style
@@ -61,9 +61,7 @@ var $builtinmodule = function (name) {
         return this.lastResult instanceof Promise ? this.lastResult : this;
     };
 
-    var buildImage = function (imageData) {
-
-    };
+    var buildImage = function (imageData) {};
 
     function getAsset(name) {
         return new Promise(function (resolve, reject) {
@@ -112,23 +110,29 @@ var $builtinmodule = function (name) {
             };
             susp.data = {
                 type: "Sk.promise",
-                promise: imagePromise.then(function (value) {
-                    //console.log("PROMISED");
-                    self.image = value;
-                    self.canvas = document.createElement("canvas");
-                    self.canvas.width = self.image.width;
-                    self.canvas.height = self.image.height;
-                    console.log(self.image);
-                    console.log(self.image.width, self.image.height);
-                    self.canvas.getContext("2d").drawImage(self.image, 0, 0, self.image.width, self.image.height);
-                    self.pixels = self.canvas.getContext("2d").getImageData(0, 0, self.image.width, self.image.height).data;
-                    console.log(self.pixels);
-                    return value;
-                }/*, function (err) {
+                promise: imagePromise.then(
+                    function (value) {
+                        //console.log("PROMISED");
+                        self.image = value;
+                        self.canvas = document.createElement("canvas");
+                        self.canvas.width = self.image.width;
+                        self.canvas.height = self.image.height;
+                        console.log(self.image);
+                        console.log(self.image.width, self.image.height);
+                        self.canvas
+                            .getContext("2d")
+                            .drawImage(self.image, 0, 0, self.image.width, self.image.height);
+                        self.pixels = self.canvas
+                            .getContext("2d")
+                            .getImageData(0, 0, self.image.width, self.image.height).data;
+                        console.log(self.pixels);
+                        return value;
+                    } /*, function (err) {
                     self.image = "";
                     throw err;
                     //return err;
-                }*/)
+                }*/
+                ),
             };
 
             return susp;
@@ -136,12 +140,14 @@ var $builtinmodule = function (name) {
 
         $loc.show = new Sk.builtin.func(function (self) {
             if (Sk.console === undefined) {
-                throw new Sk.builtin.NameError("Can not resolve drawing area. Sk.console is undefined!");
+                throw new Sk.builtin.NameError(
+                    "Can not resolve drawing area. Sk.console is undefined!"
+                );
             }
 
             var consoleData = {
                 image: self.image,
-                file_or_url: self.file_or_url
+                file_or_url: self.file_or_url,
             };
 
             Sk.console.printPILImage(consoleData);

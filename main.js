@@ -1,4 +1,4 @@
-require('./dist/skulpt.min.js');
-require('./dist/skulpt-stdlib.js');
+require("./dist/skulpt.min.js");
+require("./dist/skulpt-stdlib.js");
 
 module.exports = Sk;

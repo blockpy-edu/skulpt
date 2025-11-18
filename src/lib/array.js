@@ -76,14 +76,17 @@ $builtinmodule = function (name) {
         "tostring",
         "tounicode",
         "typecode",
-        "write"];
+        "write",
+    ];
 
     var array = function ($gbl, $loc) {
         $loc.__init__ = new Sk.builtin.func(function (self, typecode, initialiser) {
             Sk.builtin.pyCheckArgsLen("__init__", arguments.length, 2, 3);
 
             if (typecodes.indexOf(Sk.ffi.remapToJs(typecode)) == -1) {
-                throw new Sk.builtin.ValueError("bad typecode (must be c, b, B, u, h, H, i, I, l, L, f or d)");
+                throw new Sk.builtin.ValueError(
+                    "bad typecode (must be c, b, B, u, h, H, i, I, l, L, f or d)"
+                );
             }
 
             if (initialiser && !Sk.builtin.checkIterable(initialiser)) {
@@ -102,11 +105,15 @@ $builtinmodule = function (name) {
                 self.internalIterable = initialiser;
             } else {
                 self.internalIterable = new Sk.builtin.list();
-                for (iter = Sk.abstr.iter(initialiser), item = iter.tp$iternext();
+                for (
+                    let iter = Sk.abstr.iter(initialiser), item = iter.tp$iternext();
                     item !== undefined;
-                    item = iter.tp$iternext()) {
-
-                    Sk.misceval.callsimArray(self.internalIterable.append, [self.internalIterable, item]);
+                    item = iter.tp$iternext()
+                ) {
+                    Sk.misceval.callsimArray(self.internalIterable.append, [
+                        self.internalIterable,
+                        item,
+                    ]);
                 }
             }
         });
@@ -118,7 +125,13 @@ $builtinmodule = function (name) {
                 if (Sk.ffi.remapToJs(self.typecode) == "c") {
                     iterableJs = ", '" + Sk.ffi.remapToJs(self.internalIterable).join("") + "'";
                 } else {
-                    iterableJs = ", " + Sk.ffi.remapToJs(Sk.misceval.callsimArray(self.internalIterable.__repr__, [self.internalIterable]));
+                    iterableJs =
+                        ", " +
+                        Sk.ffi.remapToJs(
+                            Sk.misceval.callsimArray(self.internalIterable.__repr__, [
+                                self.internalIterable,
+                            ])
+                        );
                 }
             }
 
@@ -143,11 +156,15 @@ $builtinmodule = function (name) {
                 throw new Sk.builtin.TypeError("iteration over non-sequence");
             }
 
-            for (iter = Sk.abstr.iter(iterable), item = iter.tp$iternext();
+            for (
+                iter = Sk.abstr.iter(iterable), item = iter.tp$iternext();
                 item !== undefined;
-                item = iter.tp$iternext()) {
-
-                Sk.misceval.callsimArray(self.internalIterable.append, [self.internalIterable, item]);
+                item = iter.tp$iternext()
+            ) {
+                Sk.misceval.callsimArray(self.internalIterable.append, [
+                    self.internalIterable,
+                    item,
+                ]);
             }
         });
     };

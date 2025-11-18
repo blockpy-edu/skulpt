@@ -25,7 +25,7 @@
  * @constructor
  * @extends events.EventEmitter
  */
-var process = function() {};
+var process = function () {};
 
 /**
  * @type {stream.ReadableStream}
@@ -54,18 +54,18 @@ process.execPath;
 
 /**
  */
-process.abort = function() {};
+process.abort = function () {};
 
 /**
  * @param {string} directory
  */
-process.chdir = function(directory) {};
+process.chdir = function (directory) {};
 
 /**
  * @return {string}
  * @nosideeffects
  */
-process.cwd = function() {};
+process.cwd = function () {};
 
 /**
  * @type {Object.<string,string>}
@@ -75,29 +75,29 @@ process.env;
 /**
  * @param {number=} code
  */
-process.exit = function(code) {};
+process.exit = function (code) {};
 
 /**
  * @return {number}
  * @nosideeffects
  */
-process.getgid = function() {};
+process.getgid = function () {};
 
 /**
  * @param {number} id
  */
-process.setgid = function(id) {};
+process.setgid = function (id) {};
 
 /**
  * @return {number}
  * @nosideeffects
  */
-process.getuid = function() {};
+process.getuid = function () {};
 
 /**
  * @param {number} id
  */
-process.setuid = function(id) {};
+process.setuid = function (id) {};
 
 /**
  * @type {!string}
@@ -118,7 +118,7 @@ process.config;
  * @param {number} pid
  * @param {string=} signal
  */
-process.kill = function(pid, signal) {};
+process.kill = function (pid, signal) {};
 
 /**
  * @type {number}
@@ -144,26 +144,26 @@ process.platform;
  * @return {Object.<string,number>}
  * @nosideeffects
  */
-process.memoryUsage = function() {};
+process.memoryUsage = function () {};
 
 /**
  * @param {!function()} callback
  */
-process.nextTick = function(callback) {};
+process.nextTick = function (callback) {};
 
 /**
  * @param {number=} mask
  */
-process.umask = function(mask) {};
+process.umask = function (mask) {};
 
 /**
  * @return {number}
  * @nosideeffects
  */
-process.uptime = function() {};
+process.uptime = function () {};
 
 /**
  * @return {number}
  * @nosideeffects
  */
-process.hrtime = function() {};
+process.hrtime = function () {};

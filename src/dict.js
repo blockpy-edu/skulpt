@@ -19,7 +19,10 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
         if (L === undefined) {
             L = [];
         }
-        Sk.asserts.assert(Array.isArray(L) && L.length % 2 === 0 && this instanceof Sk.builtin.dict, "bad call to dict constructor");
+        Sk.asserts.assert(
+            Array.isArray(L) && L.length % 2 === 0 && this instanceof Sk.builtin.dict,
+            "bad call to dict constructor"
+        );
 
         this.size = 0;
         this.entries = Object.create(null);
@@ -30,13 +33,12 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
         this.in$repr = false;
         this.$version = 0; // change version number anytime the keys change
     },
-    slots: /**@lends {Sk.builtin.dict.prototype}*/{
+    slots: /**@lends {Sk.builtin.dict.prototype}*/ {
         tp$getattr: Sk.generic.getAttr,
         tp$as_sequence_or_mapping: true,
         tp$as_number: true,
         tp$hash: Sk.builtin.none.none$,
-        tp$doc:
-            "dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",
+        tp$doc: "dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",
         $r() {
             if (this.in$repr) {
                 // prevents recursively calling repr;
@@ -44,7 +46,9 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             }
             this.in$repr = true;
             // iterate over the keys - we don't use the dict iterator or mp$subscript here
-            const ret = this.$items().map(([key, val]) => Sk.misceval.objectRepr(key) + ": " + Sk.misceval.objectRepr(val));
+            const ret = this.$items().map(
+                ([key, val]) => Sk.misceval.objectRepr(key) + ": " + Sk.misceval.objectRepr(val)
+            );
             this.in$repr = false;
             return new Sk.builtin.str("{" + ret.join(", ") + "}");
         },
@@ -68,7 +72,10 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 let otherv;
                 res = this.$items().every(([key, val]) => {
                     otherv = other.mp$lookup(key);
-                    return otherv !== undefined && (otherv === val || Sk.misceval.richCompareBool(val, otherv, "Eq"));
+                    return (
+                        otherv !== undefined &&
+                        (otherv === val || Sk.misceval.richCompareBool(val, otherv, "Eq"))
+                    );
                 });
             }
             return op === "Eq" ? res : !res;
@@ -125,12 +132,12 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             }
         },
     },
-    methods: /**@lends {Sk.builtin.dict.prototype}*/{
+    methods: /**@lends {Sk.builtin.dict.prototype}*/ {
         __reversed__: {
             $meth() {
                 return new dict_reverse_iter_(this);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "Return a reverse iterator over the dict keys.",
         },
@@ -138,7 +145,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             $meth(key, d) {
                 return this.mp$lookup(key) || d || Sk.builtin.none.none$;
             },
-            $flags: {MinArgs: 1, MaxArgs: 2},
+            $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: "($self, key, default=None, /)",
             $doc: "Return the value for key if key is in the dictionary, else default.",
         },
@@ -147,7 +154,8 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 // logic could be simpler here but some tests dictate we can't do too many lookups
                 let item;
                 const hash = getHash(key);
-                item = typeof hash === "string" ? this.entries[hash] : this.get$bucket_item(key, hash);
+                item =
+                    typeof hash === "string" ? this.entries[hash] : this.get$bucket_item(key, hash);
                 if (item !== undefined) {
                     return item[1];
                 }
@@ -161,10 +169,9 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 this.$version++;
                 return default_;
             },
-            $flags: {MinArgs: 1, MaxArgs: 2},
+            $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: "($self, key, default=None, /)",
-            $doc:
-                "Insert key with a value of default if key is not in the dictionary.\n\nReturn the value for key if key is in the dictionary, else default.",
+            $doc: "Insert key with a value of default if key is not in the dictionary.\n\nReturn the value for key if key is in the dictionary, else default.",
         },
         pop: {
             $meth(key, d) {
@@ -178,10 +185,9 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 }
                 throw new Sk.builtin.KeyError(key);
             },
-            $flags: {MinArgs: 1, MaxArgs: 2},
+            $flags: { MinArgs: 1, MaxArgs: 2 },
             $textsig: null,
-            $doc:
-                "D.pop(k[,d]) -> v, remove specified key and return the corresponding value.\nIf key is not found, d is returned if given, otherwise KeyError is raised",
+            $doc: "D.pop(k[,d]) -> v, remove specified key and return the corresponding value.\nIf key is not found, d is returned if given, otherwise KeyError is raised",
         },
         popitem: {
             $meth() {
@@ -194,7 +200,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 this.pop$item(key);
                 return new Sk.builtin.tuple([key, val]);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.popitem() -> (k, v), remove and return some (key, value) pair as a\n2-tuple; but raise KeyError if D is empty.",
         },
@@ -202,7 +208,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             $meth() {
                 return new dict_keys(this);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.keys() -> a set-like object providing a view on D's keys",
         },
@@ -210,7 +216,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             $meth() {
                 return new dict_items(this);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.items() -> a set-like object providing a view on D's items",
         },
@@ -218,18 +224,20 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             $meth() {
                 return new dict_values(this);
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.values() -> an object providing a view on D's values",
         },
         update: {
             $meth(args, kwargs) {
-                return Sk.misceval.chain(this.update$common(args, kwargs, "update"), () => Sk.builtin.none.none$);
+                return Sk.misceval.chain(
+                    this.update$common(args, kwargs, "update"),
+                    () => Sk.builtin.none.none$
+                );
             },
-            $flags: {FastCall: true},
+            $flags: { FastCall: true },
             $textsig: null,
-            $doc:
-                "D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.\nIf E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]\nIf E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v\nIn either case, this is followed by: for k in F:  D[k] = F[k]",
+            $doc: "D.update([E, ]**F) -> None.  Update D from dict/iterable E and F.\nIf E is present and has a .keys() method, then does:  for k in E: D[k] = E[k]\nIf E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v\nIn either case, this is followed by: for k in F:  D[k] = F[k]",
         },
         clear: {
             $meth() {
@@ -238,7 +246,7 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
                 this.entries = Object.create(null);
                 this.buckets = {};
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.clear() -> None.  Remove all items from D.",
         },
@@ -246,32 +254,35 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
             $meth() {
                 return this.dict$copy();
             },
-            $flags: {NoArgs: true},
+            $flags: { NoArgs: true },
             $textsig: null,
             $doc: "D.copy() -> a shallow copy of D",
         },
     },
-    classmethods: /**@lends {Sk.builtin.dict.prototype}*/ Object.assign({
-        fromkeys: {
-            $meth: function fromkeys(seq, value) {
-                value = value || Sk.builtin.none.none$;
-                let dict = this === Sk.builtin.dict ? new this() : this.tp$call([], []);
-                return Sk.misceval.chain(
-                    dict,
-                    (d) => {
-                        dict = d;
-                        return Sk.misceval.iterFor(Sk.abstr.iter(seq), (key) => {
-                            return dict.mp$ass_subscript(key, value, true);
-                        });
-                    },
-                    () => dict
-                );
+    classmethods: /**@lends {Sk.builtin.dict.prototype}*/ Object.assign(
+        {
+            fromkeys: {
+                $meth: function fromkeys(seq, value) {
+                    value = value || Sk.builtin.none.none$;
+                    let dict = this === Sk.builtin.dict ? new this() : this.tp$call([], []);
+                    return Sk.misceval.chain(
+                        dict,
+                        (d) => {
+                            dict = d;
+                            return Sk.misceval.iterFor(Sk.abstr.iter(seq), (key) => {
+                                return dict.mp$ass_subscript(key, value, true);
+                            });
+                        },
+                        () => dict
+                    );
+                },
+                $flags: { MinArgs: 1, MaxArgs: 2 },
+                $textsig: "($type, iterable, value=None, /)",
+                $doc: "Create a new dictionary with keys from iterable and values set to value.",
             },
-            $flags: { MinArgs: 1, MaxArgs: 2 },
-            $textsig: "($type, iterable, value=None, /)",
-            $doc: "Create a new dictionary with keys from iterable and values set to value.",
         },
-    }, Sk.generic.classGetItem),
+        Sk.generic.classGetItem
+    ),
     proto: /**@lends {Sk.builtin.dict.prototype}*/ {
         quick$lookup,
         mp$lookup,
@@ -284,7 +295,10 @@ Sk.builtin.dict = Sk.abstr.buildNativeClass("dict", {
         },
         update$common,
         update$onearg(arg) {
-            if (arg instanceof Sk.builtin.dict || Sk.abstr.lookupSpecial(arg, Sk.builtin.str.$keys) !== undefined) {
+            if (
+                arg instanceof Sk.builtin.dict ||
+                Sk.abstr.lookupSpecial(arg, Sk.builtin.str.$keys) !== undefined
+            ) {
                 return this.dict$merge(arg);
             } else {
                 return this.dict$merge_seq(arg);
@@ -335,7 +349,7 @@ function getHash(key) {
  * @private
  * @param {Sk.builtin.str} pyName
  * @this {Sk.builtin.dict}
- * 
+ *
  * this is hot code!
  */
 function quick$lookup(pyName) {
@@ -346,7 +360,7 @@ function quick$lookup(pyName) {
         return item[1];
     }
     return;
-};
+}
 
 /**
  * NB:
@@ -383,7 +397,7 @@ function get$bucket_item(key, hash_value) {
         }
     }
     return;
-};
+}
 
 /**
  * @function
@@ -417,7 +431,7 @@ function pop$bucket_item(key, hash_value) {
         }
     }
     return;
-};
+}
 
 /**
  * @function
@@ -451,7 +465,7 @@ function set$bucket_item(key, value, hash_value) {
         }
     }
     this.entries[key_hash] = item;
-};
+}
 
 /**
  * @function
@@ -475,7 +489,7 @@ function mp$lookup(key) {
     }
     // Not found in dictionary
     return undefined;
-};
+}
 
 /**
  * @function
@@ -505,7 +519,9 @@ function dict$merge(b) {
         // or other mapping types like mapping proxy
         const keyfunc = Sk.abstr.lookupSpecial(b, Sk.builtin.str.$keys);
         if (keyfunc === undefined) {
-            throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(b) + "' object is not a mapping");
+            throw new Sk.builtin.TypeError(
+                "'" + Sk.abstr.typeName(b) + "' object is not a mapping"
+            );
         }
 
         return Sk.misceval.chain(Sk.misceval.callsimOrSuspendArray(keyfunc), (keys) =>
@@ -516,7 +532,7 @@ function dict$merge(b) {
             )
         );
     }
-};
+}
 
 /**
  * @function
@@ -556,7 +572,7 @@ function update$common(args, kwargs, func_name) {
         }
         return;
     });
-};
+}
 
 /**
  * @function
@@ -574,16 +590,24 @@ function dict$merge_seq(arg) {
     let idx = 0;
     return Sk.misceval.iterFor(Sk.abstr.iter(arg), (i) => {
         if (!Sk.builtin.checkIterable(i)) {
-            throw new Sk.builtin.TypeError("cannot convert dictionary update sequence element #" + idx + " to a sequence");
+            throw new Sk.builtin.TypeError(
+                "cannot convert dictionary update sequence element #" + idx + " to a sequence"
+            );
         }
         const seq = Sk.misceval.arrayFromIterable(i);
         if (seq.length !== 2) {
-            throw new Sk.builtin.ValueError("dictionary update sequence element #" + idx + " has length " + seq.length + "; 2 is required");
+            throw new Sk.builtin.ValueError(
+                "dictionary update sequence element #" +
+                    idx +
+                    " has length " +
+                    seq.length +
+                    "; 2 is required"
+            );
         }
         this.set$item(seq[0], seq[1]);
         idx++;
     });
-};
+}
 
 /**
  * @function
@@ -619,7 +643,7 @@ function set$item(key, value) {
             item[1] = value;
         }
     }
-};
+}
 
 /**
  * @function
@@ -647,8 +671,7 @@ function pop$item(key) {
     }
     // Not found in dictionary
     return undefined;
-};
-
+}
 
 /******** Start of Dict Views ********/
 
@@ -659,7 +682,11 @@ function checkAnyView(view) {
     return view instanceof dict_keys || view instanceof dict_items;
 }
 function all_contained_in(self, other) {
-    for (let it = Sk.abstr.iter(self), i = it.tp$iternext(); i !== undefined; i = it.tp$iternext()) {
+    for (
+        let it = Sk.abstr.iter(self), i = it.tp$iternext();
+        i !== undefined;
+        i = it.tp$iternext()
+    ) {
         if (!Sk.abstr.sequenceContains(other, i)) {
             return false;
         }
@@ -735,7 +762,9 @@ function buildDictView(typename, slots, reverse_method) {
     const options = {
         constructor: function dict_view(dict) {
             if (arguments.length !== 1) {
-                throw new Sk.builtin.TypeError("cannot create '" + Sk.abstr.typeName(this) + "' instances");
+                throw new Sk.builtin.TypeError(
+                    "cannot create '" + Sk.abstr.typeName(this) + "' instances"
+                );
             }
             this.dict = dict;
             this.in$repr = false;
@@ -888,9 +917,21 @@ var dict_valueiter_ = buildDictIterClass("dict_valueiterator", function () {
     return item && item[1];
 });
 
-var dict_reverse_iter_ = buildDictIterClass("dict_reversekeyiterator", dict_iter_.prototype.tp$iternext, true);
-var dict_reverse_itemiter_ = buildDictIterClass("dict_reverseitemiterator", dict_itemiter_.prototype.tp$iternext, true);
-var dict_reverse_valueiter_ = buildDictIterClass("dict_reversevalueiterator", dict_valueiter_.prototype.tp$iternext, true);
+var dict_reverse_iter_ = buildDictIterClass(
+    "dict_reversekeyiterator",
+    dict_iter_.prototype.tp$iternext,
+    true
+);
+var dict_reverse_itemiter_ = buildDictIterClass(
+    "dict_reverseitemiterator",
+    dict_itemiter_.prototype.tp$iternext,
+    true
+);
+var dict_reverse_valueiter_ = buildDictIterClass(
+    "dict_reversevalueiterator",
+    dict_valueiter_.prototype.tp$iternext,
+    true
+);
 
 /**
  * Py2 methods
@@ -899,7 +940,7 @@ var dict_reverse_valueiter_ = buildDictIterClass("dict_reversevalueiterator", di
 Sk.builtin.dict.py2$methods = {
     has_key: {
         $name: "has_key",
-        $flags: {OneArg: true},
+        $flags: { OneArg: true },
         $meth(k) {
             return new Sk.builtin.bool(this.sq$contains(k));
         },
@@ -910,16 +951,18 @@ Sk.builtin.dict.py2$methods = {
         $meth() {
             return new Sk.builtin.list(this.sk$asarray());
         },
-        $flags: {NoArgs: true},
+        $flags: { NoArgs: true },
         $textsig: null,
         $doc: "D.keys() -> a set-like object providing a view on D's keys",
     },
     items: {
         $name: "items",
         $meth() {
-            return new Sk.builtin.list(this.$items().map(([key, val]) => new Sk.builtin.tuple([key, val])));
+            return new Sk.builtin.list(
+                this.$items().map(([key, val]) => new Sk.builtin.tuple([key, val]))
+            );
         },
-        $flags: {NoArgs: true},
+        $flags: { NoArgs: true },
         $textsig: null,
         $doc: "D.items() -> a set-like object providing a view on D's items",
     },
@@ -928,7 +971,7 @@ Sk.builtin.dict.py2$methods = {
         $meth() {
             return new Sk.builtin.list(this.$items().map(([_, val]) => val));
         },
-        $flags: {NoArgs: true},
+        $flags: { NoArgs: true },
         $textsig: null,
         $doc: "D.values() -> an object providing a view on D's values",
     },

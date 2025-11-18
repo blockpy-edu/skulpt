@@ -53,27 +53,30 @@ var $builtinmodule = function (name) {
         var args = Array.prototype.slice.call(arguments, 1),
             kwargs = new Sk.builtins.dict(kwa),
             sort_keys = false,
-            stringify_opts, default_, jsobj, str;
+            stringify_opts,
+            default_,
+            jsobj,
+            str;
 
         // default stringify options
         stringify_opts = {
             ascii: true,
             separators: {
                 item_separator: ", ",
-                key_separator: ": "
-            }
+                key_separator: ": ",
+            },
         };
 
         kwargs = Sk.ffi.remapToJs(kwargs);
         jsobj = Sk.ffi.remapToJs(args[0]);
 
         // TODO: likely need to go through character by character to enable this
-        if (typeof (kwargs.ensure_ascii) === "boolean" && kwargs.ensure_ascii === false) {
+        if (typeof kwargs.ensure_ascii === "boolean" && kwargs.ensure_ascii === false) {
             stringify_opts.ascii = false;
         }
 
         // TODO: javascript sort isn't entirely compatible with python's
-        if (typeof (kwargs.sort_keys) === "boolean" && kwargs.sort_keys) {
+        if (typeof kwargs.sort_keys === "boolean" && kwargs.sort_keys) {
             sort_keys = true;
         }
 
@@ -86,7 +89,7 @@ var $builtinmodule = function (name) {
         }
 
         // item_separator, key_separator) tuple. The default is (', ', ': ').
-        if (typeof (kwargs.separators) === "object" && kwargs.separators.length == 2) {
+        if (typeof kwargs.separators === "object" && kwargs.separators.length == 2) {
             stringify_opts.separators.item_separator = kwargs.separators[0];
             stringify_opts.separators.key_separator = kwargs.separators[1];
         }
@@ -98,6 +101,7 @@ var $builtinmodule = function (name) {
 
         // Sk.ffi.remapToJs doesn't map functions
         if (kwargs.default) {
+            // TODO: Need to implement this
         }
 
         // may need to create a clone of this to have more control/options
@@ -119,7 +123,8 @@ var $builtinmodule = function (name) {
 
         var args = Array.prototype.slice.call(arguments, 1),
             kwargs = new Sk.builtins.dict(kwa),
-            str, obj;
+            str,
+            obj;
 
         kwargs = Sk.ffi.remapToJs(kwargs);
         str = args[0].v;
@@ -140,7 +145,9 @@ var $builtinmodule = function (name) {
 
         var args = Array.prototype.slice.call(arguments, 1),
             kwargs = new Sk.builtins.dict(kwa),
-            str, obj, file;
+            str,
+            obj,
+            file;
 
         kwargs = Sk.ffi.remapToJs(kwargs);
         file = args[0];
@@ -153,8 +160,16 @@ var $builtinmodule = function (name) {
     load_f.co_kwargs = true;
     mod.load = new Sk.builtin.func(load_f);
 
-    const JSONDecodeError = mod.JSONDecodeError = simpleExtends(Sk.builtin.ValueError, "JSONDecodeError", "Subclass of ValueError with the JSON decoder.");
-    const JSONEncodeError = mod.JSONEncodeError = simpleExtends(Sk.builtin.ValueError, "JSONEncodeError", "Subclass of ValueError with the JSON encoder.");
+    const JSONDecodeError = (mod.JSONDecodeError = simpleExtends(
+        Sk.builtin.ValueError,
+        "JSONDecodeError",
+        "Subclass of ValueError with the JSON decoder."
+    ));
+    const JSONEncodeError = (mod.JSONEncodeError = simpleExtends(
+        Sk.builtin.ValueError,
+        "JSONEncodeError",
+        "Subclass of ValueError with the JSON encoder."
+    ));
 
     return mod;
 };

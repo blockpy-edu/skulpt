@@ -7,7 +7,6 @@ function $builtinmodule() {
 }
 
 function functools_mod(functools) {
-
     const {
         object: pyObject,
         int_: pyInt,
@@ -46,7 +45,7 @@ function functools_mod(functools) {
     } = Sk.misceval;
 
     const { remapToPy: toPy } = Sk.ffi;
-    
+
     const {
         buildNativeClass,
         setUpModuleMethods,
@@ -60,9 +59,11 @@ function functools_mod(functools) {
         gattr: objectGetAttr,
     } = Sk.abstr;
 
-    const { getSetDict: genericGetSetDict, getAttr: genericGetAttr, setAttr: genericSetAttr } = Sk.generic;
-
-
+    const {
+        getSetDict: genericGetSetDict,
+        getAttr: genericGetAttr,
+        setAttr: genericSetAttr,
+    } = Sk.generic;
 
     Object.assign(functools, {
         __name__: new pyStr("functools"),
@@ -193,8 +194,7 @@ function functools_mod(functools) {
                 }
                 return new pyMethod(this, obj);
             },
-            tp$doc:
-                "Create a cached callable that wraps another function.\n\
+            tp$doc: "Create a cached callable that wraps another function.\n\
 \n\
 user_function:      the function being cached\n\
 \n\
@@ -333,7 +333,7 @@ cache_info_type:    namedtuple class with the fields:\n\
     }
 
     function lru_cache_extract_link(link) {
-        const {prev: link_prev, next: link_next} = link;
+        const { prev: link_prev, next: link_next } = link;
         link_prev.next = link.next;
         link_next.prev = link.prev;
     }
@@ -353,7 +353,6 @@ cache_info_type:    namedtuple class with the fields:\n\
         link.prev = root;
         link.next = first;
     }
-
 
     const _HachedSeq = buildNativeClass("_HachedSeq", {
         base: pyList,
@@ -389,7 +388,6 @@ cache_info_type:    namedtuple class with the fields:\n\
         }
         return new _HachedSeq(key);
     }
-
 
     /********** Partial *************/
 
@@ -524,8 +522,7 @@ cache_info_type:    namedtuple class with the fields:\n\
         },
         slots: {
             tp$new: partial_new,
-            tp$doc:
-                "Method descriptor with partial application of the given arguments\n    and keywords.\n\n    Supports wrapping existing descriptors and handles non-descriptor\n    callables as instance methods.\n    ",
+            tp$doc: "Method descriptor with partial application of the given arguments\n    and keywords.\n\n    Supports wrapping existing descriptors and handles non-descriptor\n    callables as instance methods.\n    ",
             $r: partial_repr,
             tp$descr_get(obj, obtype) {
                 let res;
@@ -535,7 +532,11 @@ cache_info_type:    namedtuple class with the fields:\n\
                         if (!checkCallable(new_func)) {
                             throw new pyTypeError("type 'partial' requires a callable");
                         }
-                        res = new functools.partial(new_func, this.arg_arr.slice(0), this.kwdict.dict$copy());
+                        res = new functools.partial(
+                            new_func,
+                            this.arg_arr.slice(0),
+                            this.kwdict.dict$copy()
+                        );
                         const __self__ = lookupSpecial(new_func, this.str$self);
                         if (__self__ !== undefined) {
                             res.tp$setattr(this.str$self, __self__);
@@ -623,25 +624,64 @@ cache_info_type:    namedtuple class with the fields:\n\
         return compare_slot;
     }
 
-    const _gt_from_lt = from_slot("__lt__", (op_result, self, other) => !op_result && richCompareBool(self, other, "NotEq"));
-    const _le_from_lt = from_slot("__lt__", (op_result, self, other) => op_result || richCompareBool(self, other, "Eq"));
+    const _gt_from_lt = from_slot(
+        "__lt__",
+        (op_result, self, other) => !op_result && richCompareBool(self, other, "NotEq")
+    );
+    const _le_from_lt = from_slot(
+        "__lt__",
+        (op_result, self, other) => op_result || richCompareBool(self, other, "Eq")
+    );
     const _ge_from_lt = from_slot("__lt__", (op_result) => !op_result);
-    const _ge_from_le = from_slot("__le__", (op_result, self, other) => !op_result || richCompareBool(self, other, "Eq"));
-    const _lt_from_le = from_slot("__le__", (op_result, self, other) => op_result && richCompareBool(self, other, "NotEq"));
+    const _ge_from_le = from_slot(
+        "__le__",
+        (op_result, self, other) => !op_result || richCompareBool(self, other, "Eq")
+    );
+    const _lt_from_le = from_slot(
+        "__le__",
+        (op_result, self, other) => op_result && richCompareBool(self, other, "NotEq")
+    );
     const _gt_from_le = from_slot("__le__", (op_result) => !op_result);
-    const _lt_from_gt = from_slot("__gt__", (op_result, self, other) => !op_result && richCompareBool(self, other, "NotEq"));
-    const _ge_from_gt = from_slot("__gt__", (op_result, self, other) => op_result || richCompareBool(self, other, "Eq"));
+    const _lt_from_gt = from_slot(
+        "__gt__",
+        (op_result, self, other) => !op_result && richCompareBool(self, other, "NotEq")
+    );
+    const _ge_from_gt = from_slot(
+        "__gt__",
+        (op_result, self, other) => op_result || richCompareBool(self, other, "Eq")
+    );
     const _le_from_gt = from_slot("__gt__", (op_result) => !op_result);
-    const _le_from_ge = from_slot("__ge__", (op_result, self, other) => !op_result || richCompareBool(self, other, "Eq"));
-    const _gt_from_ge = from_slot("__ge__", (op_result, self, other) => op_result && richCompareBool(self, other, "NotEq"));
+    const _le_from_ge = from_slot(
+        "__ge__",
+        (op_result, self, other) => !op_result || richCompareBool(self, other, "Eq")
+    );
+    const _gt_from_ge = from_slot(
+        "__ge__",
+        (op_result, self, other) => op_result && richCompareBool(self, other, "NotEq")
+    );
     const _lt_from_ge = from_slot("__ge__", (op_result) => !op_result);
 
-
     const _convert = {
-        __lt__: { __gt__: new pyFunc(_gt_from_lt), __le__: new pyFunc(_le_from_lt), __ge__: new pyFunc(_ge_from_lt) },
-        __le__: { __ge__: new pyFunc(_ge_from_le), __lt__: new pyFunc(_lt_from_le), __gt__: new pyFunc(_gt_from_le) },
-        __gt__: { __lt__: new pyFunc(_lt_from_gt), __ge__: new pyFunc(_ge_from_gt), __le__: new pyFunc(_le_from_gt) },
-        __ge__: { __le__: new pyFunc(_le_from_ge), __gt__: new pyFunc(_gt_from_ge), __lt__: new pyFunc(_lt_from_ge) },
+        __lt__: {
+            __gt__: new pyFunc(_gt_from_lt),
+            __le__: new pyFunc(_le_from_lt),
+            __ge__: new pyFunc(_ge_from_lt),
+        },
+        __le__: {
+            __ge__: new pyFunc(_ge_from_le),
+            __lt__: new pyFunc(_lt_from_le),
+            __gt__: new pyFunc(_gt_from_le),
+        },
+        __gt__: {
+            __lt__: new pyFunc(_lt_from_gt),
+            __ge__: new pyFunc(_ge_from_gt),
+            __le__: new pyFunc(_le_from_gt),
+        },
+        __ge__: {
+            __le__: new pyFunc(_le_from_ge),
+            __gt__: new pyFunc(_gt_from_ge),
+            __lt__: new pyFunc(_lt_from_ge),
+        },
     };
 
     const op_name_short = {
@@ -766,7 +806,9 @@ See:  http://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_use
                     initializer,
                     (initial) => {
                         if (initial === undefined) {
-                            throw new pyTypeError("reduce() of empty sequence with no initial value");
+                            throw new pyTypeError(
+                                "reduce() of empty sequence with no initial value"
+                            );
                         }
                         accum_value = initial;
                         return iterFor(iter, (item) => {
@@ -781,8 +823,7 @@ See:  http://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_use
                 );
             },
             $flags: { MinArgs: 2, MaxArgs: 3 },
-            $doc:
-                "reduce(function, sequence[, initial]) -> value\n\nApply a function of two arguments cumulatively to the items of a sequence,\nfrom left to right, so as to reduce the sequence to a single value.\nFor example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5]) calculates\n((((1+2)+3)+4)+5).  If initial is present, it is placed before the items\nof the sequence in the calculation, and serves as a default when the\nsequence is empty.",
+            $doc: "reduce(function, sequence[, initial]) -> value\n\nApply a function of two arguments cumulatively to the items of a sequence,\nfrom left to right, so as to reduce the sequence to a single value.\nFor example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5]) calculates\n((((1+2)+3)+4)+5).  If initial is present, it is placed before the items\nof the sequence in the calculation, and serves as a default when the\nsequence is empty.",
             $textsig: "($module, function, sequence[, initial], /)",
         },
         total_ordering: {
@@ -815,8 +856,7 @@ See:  http://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_use
                 NamedArgs: ["wrapper", "wrapped", "assigned", "updated"],
                 Defaults: [functools.WRAPPER_ASSIGNMENTS, functools.WRAPPER_UPDATES],
             },
-            $doc:
-                "Update a wrapper function to look like the wrapped function\n\n       wrapper is the function to be updated\n       wrapped is the original function\n       assigned is a tuple naming the attributes assigned directly\n       from the wrapped function to the wrapper function (defaults to\n       functools.WRAPPER_ASSIGNMENTS)\n       updated is a tuple naming the attributes of the wrapper that\n       are updated with the corresponding attribute from the wrapped\n       function (defaults to functools.WRAPPER_UPDATES)\n    ",
+            $doc: "Update a wrapper function to look like the wrapped function\n\n       wrapper is the function to be updated\n       wrapped is the original function\n       assigned is a tuple naming the attributes assigned directly\n       from the wrapped function to the wrapper function (defaults to\n       functools.WRAPPER_ASSIGNMENTS)\n       updated is a tuple naming the attributes of the wrapper that\n       are updated with the corresponding attribute from the wrapped\n       function (defaults to functools.WRAPPER_UPDATES)\n    ",
             $textsig:
                 "($module, /, wrapper, wrapped, assigned=('__module__', '__name__', '__qualname__', '__doc__', '__annotations__'), updated=('__dict__',))",
         },
@@ -829,8 +869,7 @@ See:  http://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_use
                 NamedArgs: ["wrapped", "assigned", "updated"],
                 Defaults: [functools.WRAPPER_ASSIGNMENTS, functools.WRAPPER_UPDATES],
             },
-            $doc:
-                "Decorator factory to apply update_wrapper() to a wrapper function\n\n       Returns a decorator that invokes update_wrapper() with the decorated\n       function as the wrapper argument and the arguments to wraps() as the\n       remaining arguments. Default arguments are as for update_wrapper().\n       This is a convenience function to simplify applying partial() to\n       update_wrapper().\n    ",
+            $doc: "Decorator factory to apply update_wrapper() to a wrapper function\n\n       Returns a decorator that invokes update_wrapper() with the decorated\n       function as the wrapper argument and the arguments to wraps() as the\n       remaining arguments. Default arguments are as for update_wrapper().\n       This is a convenience function to simplify applying partial() to\n       update_wrapper().\n    ",
             $textsig:
                 "($module, /, wrapped, assigned=('__module__', '__name__', '__qualname__', '__doc__', '__annotations__'), updated=('__dict__',))",
         },
