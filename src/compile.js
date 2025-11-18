@@ -31,6 +31,13 @@ function Compiler(filename, st, flags, canSuspend, sourceCodeForAnnotation) {
 
     this.source = sourceCodeForAnnotation ? sourceCodeForAnnotation.split("\n") : false;
     this.retainComments = false;
+    
+    // Initialize source map for VLQ encoding
+    if (sourceCodeForAnnotation && typeof Sk.sourcemap !== 'undefined') {
+        this.sourceMap = new Sk.sourcemap.SourceMapGenerator(filename, sourceCodeForAnnotation);
+    } else {
+        this.sourceMap = null;
+    }
 }
 
 /**
@@ -114,7 +121,6 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         const astName = ast._astname;
         lineno = ast.lineno;
         col_offset = ast.col_offset;
-        sourceLine = this.getSourceLine(lineno);
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         let isDocstring = !!(ast.constructor === Sk.astnodes.Expr &&
                              ast.value.constructor === Sk.astnodes.Str);
@@ -123,10 +129,19 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
             !this.filename.startsWith("src/lib/"))) {
             out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
             // TODO: Make filename a module-global, and update it via that quickly.
-            // JSON.stringify(sourceLine)
-            let chompedLine = sourceLine;
-            if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
-            out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
+            
+            // Use source map approach: store position index instead of inline source
+            if (this.sourceMap) {
+                // Store VLQ-encoded position instead of full source text
+                // Format: "line:col" as a compact identifier
+                out("Sk.currFilename=$fname;$currSource='", lineno, ":", col_offset, "';");
+            } else {
+                // Fallback to old behavior if source map not available
+                sourceLine = this.getSourceLine(lineno);
+                let chompedLine = sourceLine;
+                if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
+                out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
+            }
             out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring}, '${astName}');\n`);
         }
     }
@@ -3132,6 +3147,23 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
     Sk.__future__ = savedFlags;
 
     var shortCutConstants = "const $fname='" + filename + "',$moduleConstants={},$ule=Sk.misceval.errorUL;";
+    
+    // Add source map if available
+    if (c.sourceMap) {
+        var sourceMapData = c.sourceMap.toJSON();
+        shortCutConstants += "const $sourceMap=" + JSON.stringify(sourceMapData) + ";";
+        // Add helper function to decode source from position
+        shortCutConstants += "const $getSource=function(pos){" +
+            "if(!pos||typeof pos!=='string')return pos;" +
+            "var parts=pos.split(':');" +
+            "if(parts.length===2){" +
+            "var line=parseInt(parts[0],10);" +
+            "return $sourceMap.sourcesContent&&$sourceMap.sourcesContent[0]?" +
+            "$sourceMap.sourcesContent[0].split('\\n')[line-1]||'':'';" +
+            "}return pos;" +
+            "};";
+    }
+    
     var constantDefinitions = [];
     for (var constant in c.consts) {
         if (c.consts.hasOwnProperty(constant)) {
