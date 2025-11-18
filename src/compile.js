@@ -122,11 +122,8 @@ Compiler.prototype.annotateSource = function (ast, shouldStep) {
         if (shouldStep && (!this.filename ||
             !this.filename.startsWith("src/lib/"))) {
             out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
-            // TODO: Make filename a module-global, and update it via that quickly.
-            // JSON.stringify(sourceLine)
-            let chompedLine = sourceLine;
-            if (chompedLine.length > 24) {chompedLine = chompedLine.substr(0, 24)+"...";}
-            out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
+            // Store only line/column info, source will be looked up at runtime
+            out("Sk.currFilename=$fname;");
             out(`Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring}, '${astName}');\n`);
         }
     }
@@ -245,7 +242,7 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
         }
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "if ($dateNow - Sk.lastYield > Sk.yieldLimit) {";
-            output += "var $susp = $saveSuspension($mys(), $fname,$currLineNo,$currColNo, $currSource);";
+            output += "var $susp = $saveSuspension($mys(), $fname,$currLineNo,$currColNo);";
             output += "$susp.$blk = $blk;";
             output += "$susp.optional = true;";
             output += "return $susp;";
@@ -292,9 +289,9 @@ Compiler.prototype._checkSuspension = function (e) {
         this._jump(retblk);
         this.setBlock(retblk);
 
-        e = e || {lineno: "$currLineNo", col_offset: "$currColNo", source: "$currSource"};
+        e = e || {lineno: "$currLineNo", col_offset: "$currColNo"};
 
-        out("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,$fname," + e.lineno + "," + e.col_offset + "," + e.source + "); }");
+        out("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,$fname," + e.lineno + "," + e.col_offset + "); }");
 
         this.u.doesSuspend = true;
         this.u.tempsToSave = this.u.tempsToSave.concat(this.u.localtemps);
@@ -1278,7 +1275,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     output += "var $wakeFromSuspension = function() {" +
         "var susp = " + unit.scopename + ".$wakingSuspension; " + unit.scopename + ".$wakingSuspension = undefined;" +
         "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
-        "$currLineNo=susp.$lineno;$currColNo=susp.$colno;$currSource=susp.$source;Sk.lastYield=Date.now();" +
+        "$currLineNo=susp.$lineno;$currColNo=susp.$colno;Sk.lastYield=Date.now();" +
         //"console.log('WAKEY', $fname, $loc, $gbl, $exc, $exc.length, $currColNo, $currLineNo, $err, $currSource,$blk);" +
         (hasCell ? "$cell=susp.$cell;" : "");
 
@@ -1299,9 +1296,9 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     }
 
     output += "var $mys = function(){return {data: {type: 'Sk.yield'}, resume: function(){} } };";
-    output += "var $saveSuspension = function($child, $filename, $lineno, $colno, $source) {" +
+    output += "var $saveSuspension = function($child, $filename, $lineno, $colno) {" +
         //"var susp = new Sk.misceval.Suspension(); susp.child=$child;" +
-        "var susp = Sk.misceval.injectSusp($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$source,{" + localSaveCode.join(",") + "});"+
+        "var susp = Sk.misceval.injectSusp($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,{" + localSaveCode.join(",") + "});"+
         "susp.resume=function(){" + unit.scopename + ".$wakingSuspension=susp; return " + unit.scopename + "(" + (unit.ste.generator ? "$gen" : "") + "); };" +
         /*"susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
         "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;susp.source=$source;" +
@@ -1440,7 +1437,7 @@ Compiler.prototype.cwhile = function (s) {
             var suspType = "Sk.delay";
             var debugBlock = this.newBlock("debug breakpoint for line " + s.lineno);
             out("if (Sk.breakpoints('" + this.filename + "'," + s.lineno + "," + s.col_offset + ")) {",
-                "var $susp = $saveSuspension({data: {type: '" + suspType + "'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + "," + s.source + ");",
+                "var $susp = $saveSuspension({data: {type: '" + suspType + "'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + ");",
                 "$susp.$blk = " + debugBlock + ";",
                 "$susp.optional = true;",
                 "return $susp;",
@@ -1508,7 +1505,7 @@ Compiler.prototype.cfor = function (s) {
         var suspType = "Sk.delay";
         var debugBlock = this.newBlock("debug breakpoint for line " + s.lineno);
         out("if (Sk.breakpoints('" + this.filename + "'," + s.lineno + "," + s.col_offset + ")) {",
-            "var $susp = $saveSuspension({data: {type: '" + suspType + "'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + "," + s.source + ");",
+            "var $susp = $saveSuspension({data: {type: '" + suspType + "'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + ");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
             "return $susp;",
@@ -2084,7 +2081,7 @@ Compiler.prototype.buildcodeobj = function (n, coname, decorator_list, args, cal
     // note special usage of 'this' to avoid having to slice globals into
     // all function invocations in call
     // (fastcall doesn't need to do this, as 'this' is the func object)
-    this.u.varDeclsCode += "var $blk=" + entryBlock + ",$exc=[],$loc=" + locals + cells + ",$gbl=" +(fastCall?"this.func_globals":"this") + ((fastCall&&hasFree)?",$free=this.func_closure":"") + ",$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined,$currSource=undefined;";
+    this.u.varDeclsCode += "var $blk=" + entryBlock + ",$exc=[],$loc=" + locals + cells + ",$gbl=" +(fastCall?"this.func_globals":"this") + ((fastCall&&hasFree)?",$free=this.func_closure":"") + ",$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
@@ -2559,7 +2556,7 @@ Compiler.prototype.cclass = function (s) {
 
     this.u.prefixCode = "var " + scopename + "=(function $" + s.name.v + "$class_outer($globals,$locals,$cell){var $gbl=$globals,$loc=$locals,$free=$globals;";
     this.u.switchCode += "(function $" + s.name.v + "$_closure($cell){";
-    this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
+    this.u.switchCode += "var $blk=" + entryBlock + ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.switchCode += "Sk.misceval.startTimer();";
@@ -2651,7 +2648,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
     if (Sk.debugging && this.u.canSuspend) {
         debugBlock = this.newBlock("debug breakpoint for line " + s.lineno);
         out("if (Sk.breakpoints('" + this.filename + "'," + s.lineno + "," + s.col_offset + ")) {",
-            "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + "," + s.source + ");",
+            "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '" + this.filename + "'," + s.lineno + "," + s.col_offset + ");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
             "return $susp;",
@@ -3033,7 +3030,7 @@ Compiler.prototype.cmod = function (mod) {
         "var $gbl = $forcegbl || {}, $blk=" + entryBlock +
         ",$exc=[],$loc=$forceloc || $gbl,$cell={},$err=undefined;" +
         "$loc.__file__=new Sk.builtins.str($fname);" +
-        "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
+        "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
@@ -3096,7 +3093,7 @@ Compiler.prototype.cmod = function (mod) {
 Compiler.prototype.handleTraceback = function (doContinue, scopeName) {
     doContinue = doContinue ? "continue" : "";
     return "}catch(err){" +
-        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,$currSource,$fname,'" + scopeName + "');" +
+        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,undefined,$fname,'" + scopeName + "');" +
         "if($exc.length>0){$err=err;$blk=$exc.pop();" + doContinue + "}else{throw err;}}}";
 };
 
@@ -3126,6 +3123,12 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
 
     var st = Sk.symboltable(ast, filename);
     var c = new Compiler(filename, st, flags.cf_flags, canSuspend, annotate ? source : false); // todo; CO_xxx
+    
+    // Register source code for lookup instead of embedding it
+    if (annotate && source) {
+        Sk.registerSourceMap(filename, source);
+    }
+    
     var funcname = c.cmod(ast);
 
     // Restore the global __future__ flags
