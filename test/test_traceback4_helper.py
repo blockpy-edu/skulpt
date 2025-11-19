@@ -106,16 +106,3 @@ del sys, _f, _g, _C, _x  # Not for export
 __all__ = list(n for n in globals() if n[:1] != '_')
 
 GenericAlias = type(type[int])
-
-class SimpleNamespace:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    def __repr__(self):
-        items = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
-        return f"{self.__class__.__name__}({items})"
-
-    def __eq__(self, other):
-        if isinstance(other, SimpleNamespace):
-            return self.__dict__ == other.__dict__
-        return NotImplemented

@@ -31,7 +31,7 @@ function collections_mod(collections) {
             // 'UserString',
             "Counter",
             "OrderedDict",
-            // 'ChainMap'
+            'ChainMap'
         ].map((x) => new Sk.builtin.str(x))
     );
 

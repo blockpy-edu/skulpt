@@ -3,6 +3,11 @@ import unittest
 import re
 
 class ReTests(unittest.TestCase):
+    def test_simple(self):
+        pattern = r"[\w\\-\?#\[\]]+"
+        # pattern = r"^(?:http(s)?://)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$"
+        self.assertTrue(re.match(pattern, "https://www.example.com"))
+
     def test_findall(self):
         #Skulpt is failing all the commented out tests in test_findall and it shouldn't be
         val = re.findall("From","dlkjdsljkdlkdsjlk")

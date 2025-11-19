@@ -10,6 +10,7 @@ import itertools
 import abc
 import _thread
 from types import FunctionType, GenericAlias
+from reprlib import recursive_repr
 
 
 __all__ = ['dataclass',
@@ -262,11 +263,12 @@ class Field:
                  'compare',
                  'metadata',
                  'kw_only',
+                 'doc',
                  '_field_type',  # Private: not to be used by user code.
                  )
 
     def __init__(self, default, default_factory, init, repr, hash, compare,
-                 metadata, kw_only):
+                 metadata, kw_only, doc):
         self.name = None
         self.type = None
         self.default = default
@@ -279,8 +281,10 @@ class Field:
                          if metadata is None else
                          types.MappingProxyType(metadata))
         self.kw_only = kw_only
+        self.doc = doc
         self._field_type = None
 
+    @recursive_repr()
     def __repr__(self):
         return ('Field('
                 f'name={self.name!r},'
@@ -293,6 +297,7 @@ class Field:
                 f'compare={self.compare!r},'
                 f'metadata={self.metadata!r},'
                 f'kw_only={self.kw_only!r},'
+                f'doc={self.doc!r},'
                 f'_field_type={self._field_type}'
                 ')')
 
@@ -346,7 +351,7 @@ class _DataclassParams:
 # so that a type checker can be told (via overloads) that this is a
 # function whose type depends on its parameters.
 def field(*, default=MISSING, default_factory=MISSING, init=True, repr=True,
-          hash=None, compare=True, metadata=None, kw_only=MISSING):
+          hash=None, compare=True, metadata=None, kw_only=MISSING, doc=None):
     """Return an object to identify dataclass fields.
 
     default is the default value of the field.  default_factory is a
@@ -358,7 +363,7 @@ def field(*, default=MISSING, default_factory=MISSING, init=True, repr=True,
     comparison functions.  metadata, if specified, must be a mapping
     which is stored but not otherwise examined by dataclass.  If kw_only
     is true, the field will become a keyword-only parameter to
-    __init__().
+    __init__(). doc is an optional docstring for this field.
 
     It is an error to specify both default and default_factory.
     """
@@ -366,7 +371,7 @@ def field(*, default=MISSING, default_factory=MISSING, init=True, repr=True,
     if default is not MISSING and default_factory is not MISSING:
         raise ValueError('cannot specify both default and default_factory')
     return Field(default, default_factory, init, repr, hash, compare,
-                 metadata, kw_only)
+                 metadata, kw_only, doc)
 
 
 def _fields_in_init_order(fields):
@@ -412,7 +417,7 @@ def _recursive_repr(user_function):
 
 
 def _create_fn(name, args, body, *, globals=None, locals=None,
-               return_type=MISSING):
+               return_type=MISSING, decorator=None):
     # Note that we mutate locals when exec() is called.  Caller
     # beware!  The only callers are internal to this module, so no
     # worries about external callers.
@@ -429,7 +434,8 @@ def _create_fn(name, args, body, *, globals=None, locals=None,
     body = '\n'.join(f'  {b}' for b in body)
 
     # Compute the text of the entire function.
-    txt = f' def {name}({args}){return_annotation}:\n{body}'
+    pre = f" {decorator}\n" if decorator else ''
+    txt = f'{pre} def {name}({args}){return_annotation}:\n{body}'
 
     local_vars = ', '.join(locals.keys())
     txt = f"def __create_fn__({local_vars}):\n{txt}\n return {name}"
@@ -596,8 +602,10 @@ def _repr_fn(fields, globals):
                      ', '.join([f"{f.name}={{self.{f.name}!r}}"
                                 for f in fields]) +
                      ')"'],
-                     globals=globals)
-    return _recursive_repr(fn)
+                     globals=globals,
+                     locals={'__dataclasses_recursive_repr': recursive_repr},
+                     decorator="@__dataclasses_recursive_repr()")
+    return fn
 
 
 def _frozen_get_del_attr(cls, fields, globals):

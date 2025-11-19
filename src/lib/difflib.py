@@ -1640,13 +1640,13 @@ _styles = """
         .diff_sub {background-color:#ffaaaa}"""
 
 _table_template = """
-    <table class="diff" id="difflib_chg_%(prefix)s_top"
+    <table class="diff" id="difflib_chg_{prefix}_top"
            cellspacing="0" cellpadding="0" rules="groups" >
         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-        %(header_row)s
+        {header_row}
         <tbody>
-%(data_rows)s        </tbody>
+{data_rows}        </tbody>
     </table>"""
 
 _legend = """
@@ -1867,12 +1867,15 @@ class HtmlDiff(object):
         linenum -- line number (used for line number column)
         text -- line text to be marked up
         """
-        try:
-            linenum = '%d' % linenum
-            id = ' id="%s%s"' % (self._prefix[side],linenum)
-        except TypeError:
-            # handle blank lines where linenum is '>' or ''
+        if isinstance(linenum,str) and (linenum == '' or linenum == '>'):
             id = ''
+        else:
+            try:
+                linenum = '%d' % linenum
+                id = ' id="%s%s"' % (self._prefix[side],linenum)
+            except TypeError:
+                # handle blank lines where linenum is '>' or ''
+                id = ''
         # replace those things that would get confused with HTML symbols
         text=text.replace("&","&amp;").replace(">","&gt;").replace("<","&lt;")
 
@@ -1971,8 +1974,8 @@ class HtmlDiff(object):
             context_lines = numlines
         else:
             context_lines = None
-        diffs = _mdiff(fromlines,tolines,context_lines,linejunk=self._linejunk,
-                      charjunk=self._charjunk)
+        diffs = _mdiff(fromlines,tolines,context_lines,self._linejunk,
+                      self._charjunk)
 
         # set up iterator to wrap lines that exceed desired width
         if self._wrapcolumn:
@@ -2006,7 +2009,9 @@ class HtmlDiff(object):
         else:
             header_row = ''
 
-        table = self._table_template % dict(
+        print(s, header_row, self._prefix[1])
+
+        table = self._table_template.format(
             data_rows=''.join(s),
             header_row=header_row,
             prefix=self._prefix[1])

@@ -702,7 +702,7 @@ Sk.builtin.traceback.fromList = function (traces) {
         return Sk.builtin.none.none$;
     }
 
-    console.log("TRACES", traces);
+    // console.log("TRACES", traces);
 
     let current = new Sk.builtin.traceback(traces[0]);
     let first = current;

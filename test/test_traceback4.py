@@ -1,6 +1,11 @@
 import sys
 import traceback
 
+# import test_traceback4_helper
+list(x for x in range(10))
+from dataclasses import dataclass
+import types
+
 def blue_1():
     return blue_2()
 
@@ -8,12 +13,13 @@ def blue_2():
     return blue_3()
 
 def blue_3():
-    pass
+    print("Inside blue_3", get_line_code())
 
 def red_1():
     return red_2()
 
 def red_2():
+    print("Inside red_2", get_line_code())
     raise Exception("An error occurred")
 
 def green_1(alpha: int):
@@ -32,11 +38,11 @@ def testing_function():
     try:
         return red_1()
     except Exception:
-        pass
+        print("Inside Exception", get_line_code())
     return green_1(1)
 
 
-def get_line_code(depth=3):
+def get_line_code(target="testing_function()", depth=3):
     # Load in extract_stack, or provide shim for environments without it.
     try:
         from traceback import extract_stack
@@ -45,7 +51,7 @@ def get_line_code(depth=3):
         # Find the first assert_equal line
         for data in trace:
             line, code = data[1], data[3]
-            if code.strip().startswith("testing_function"):  # type: ignore
+            if code.strip().startswith(target):  # type: ignore
                 return line, code
         # If none found, just try jumping up there and see what we can find
         frame = trace[len(trace) - depth]
@@ -63,5 +69,5 @@ line, code = (
 )
 
 print(line, code)
-assert line == 62
+assert line == 64
 assert code.strip() == "testing_function()"

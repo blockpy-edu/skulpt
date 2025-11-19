@@ -100,35 +100,24 @@ CompilerUnit.prototype.activateScope = function () {
     };
 };
 
-Compiler.prototype.getSourceLine = function (lineno) {
-    Sk.asserts.assert(this.source);
-    return this.source[lineno - 1];
-};
 
 Compiler.prototype.annotateSource = function (ast, shouldStep) {
-    var i;
     var col_offset;
     var lineno;
-    var sourceLine;
     if (this.source) {
         const astName = ast._astname;
         lineno = ast.lineno;
         col_offset = ast.col_offset;
-        sourceLine = this.getSourceLine(lineno);
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         let isDocstring = !!(
             ast.constructor === Sk.astnodes.Expr && ast.value.constructor === Sk.astnodes.Str
         );
         // Do not trace the standard library
-        if (shouldStep && (!this.filename || !this.filename.startsWith("src/lib/"))) {
+        if (shouldStep) {//!this.filename || !this.filename.startsWith("src/lib/"))) {
             out("\n$currLineNo=", lineno, ";$currColNo=", col_offset, ";");
             // TODO: Make filename a module-global, and update it via that quickly.
             // JSON.stringify(sourceLine)
-            let chompedLine = sourceLine;
-            if (chompedLine.length > 24) {
-                chompedLine = chompedLine.substr(0, 24) + "...";
-            }
-            out("Sk.currFilename=$fname;$currSource=", JSON.stringify(chompedLine), ";");
+            out("Sk.currFilename=$fname;");
             out(
                 `Sk.afterSingleExecution && Sk.afterSingleExecution($gbl,$getLocals(),${lineno}, ${col_offset}, $fname, ${isDocstring}, '${astName}');\n`
             );
@@ -249,7 +238,7 @@ Compiler.prototype.outputInterruptTest = function () {
         if (Sk.yieldLimit !== null && this.u.canSuspend) {
             output += "if ($dateNow - Sk.lastYield > Sk.yieldLimit) {";
             output +=
-                "var $susp = $saveSuspension($mys(), $fname,$currLineNo,$currColNo, $currSource);";
+                "var $susp = $saveSuspension($mys(), $fname,$currLineNo,$currColNo);";
             output += "$susp.$blk = $blk;";
             output += "$susp.optional = true;";
             output += "return $susp;";
@@ -295,15 +284,13 @@ Compiler.prototype._checkSuspension = function (e) {
         this._jump(retblk);
         this.setBlock(retblk);
 
-        e = e || { lineno: "$currLineNo", col_offset: "$currColNo", source: "$currSource" };
+        e = e || { lineno: "$currLineNo", col_offset: "$currColNo" };
 
         out(
             "if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,$fname," +
                 e.lineno +
                 "," +
                 e.col_offset +
-                "," +
-                e.source +
                 "); }"
         );
 
@@ -1515,8 +1502,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
         unit.scopename +
         ".$wakingSuspension = undefined;" +
         "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
-        "$currLineNo=susp.$lineno;$currColNo=susp.$colno;$currSource=susp.$source;Sk.lastYield=Date.now();" +
-        //"console.log('WAKEY', $fname, $loc, $gbl, $exc, $exc.length, $currColNo, $currLineNo, $err, $currSource,$blk);" +
+        "$currLineNo=susp.$lineno;$currColNo=susp.$colno;Sk.lastYield=Date.now();" +
         (hasCell ? "$cell=susp.$cell;" : "");
 
     for (i = 0; i < localsToSave.length; i++) {
@@ -1538,9 +1524,9 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
 
     output += "var $mys = function(){return {data: {type: 'Sk.yield'}, resume: function(){} } };";
     output +=
-        "var $saveSuspension = function($child, $filename, $lineno, $colno, $source) {" +
+        "var $saveSuspension = function($child, $filename, $lineno, $colno) {" +
         //"var susp = new Sk.misceval.Suspension(); susp.child=$child;" +
-        "var susp = Sk.misceval.injectSusp($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,$source,{" +
+        "var susp = Sk.misceval.injectSusp($child,$blk,$loc,$gbl,$exc,$err,$postfinally,$filename,$lineno,$colno,{" +
         localSaveCode.join(",") +
         "});" +
         "susp.resume=function(){" +
@@ -1701,8 +1687,6 @@ Compiler.prototype.cwhile = function (s) {
                     s.lineno +
                     "," +
                     s.col_offset +
-                    "," +
-                    s.source +
                     ");",
                 "$susp.$blk = " + debugBlock + ";",
                 "$susp.optional = true;",
@@ -1781,8 +1765,6 @@ Compiler.prototype.cfor = function (s) {
                 s.lineno +
                 "," +
                 s.col_offset +
-                "," +
-                s.source +
                 ");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
@@ -2453,7 +2435,7 @@ Compiler.prototype.buildcodeobj = function (
         ",$gbl=" +
         (fastCall ? "this.func_globals" : "this") +
         (fastCall && hasFree ? ",$free=this.func_closure" : "") +
-        ",$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined,$currSource=undefined;";
+        ",$err=undefined,$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
     }
@@ -2936,6 +2918,7 @@ Compiler.prototype.cgenexpgen = function (generators, genIndex, elt) {
         this.annotateSource(elt, true);
 
         velt = this.vexpr(elt);
+        out("Sk.execStack.pop();");
         out("return [", skip, "/*resume*/,", velt, "/*ret*/];");
         this.setBlock(skip);
     }
@@ -2945,6 +2928,7 @@ Compiler.prototype.cgenexpgen = function (generators, genIndex, elt) {
     this.setBlock(end);
 
     if (genIndex === 1) {
+        out("Sk.execStack.pop();");
         out("return Sk.builtin.none.none$;");
     }
 };
@@ -2996,7 +2980,7 @@ Compiler.prototype.cclass = function (s) {
     this.u.switchCode +=
         "var $blk=" +
         entryBlock +
-        ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
+        ",$exc=[],$ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.switchCode += "Sk.misceval.startTimer();";
@@ -3115,8 +3099,6 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
                 s.lineno +
                 "," +
                 s.col_offset +
-                "," +
-                s.source +
                 ");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
@@ -3535,7 +3517,7 @@ Compiler.prototype.cmod = function (mod) {
         entryBlock +
         ",$exc=[],$loc=$forceloc || $gbl,$cell={},$err=undefined;" +
         "$loc.__file__=new Sk.builtins.str($fname);" +
-        "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;$currSource=undefined;";
+        "var $ret=undefined,$postfinally=undefined,$currLineNo=undefined,$currColNo=undefined;";
 
     if (Sk.execLimit !== null) {
         this.u.varDeclsCode += "Sk.misceval.startTimer();";
@@ -3602,7 +3584,7 @@ Compiler.prototype.handleTraceback = function (doContinue, scopeName) {
     doContinue = doContinue ? "continue" : "";
     return (
         "}catch(err){" +
-        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,$currSource,$fname,'" +
+        "err=Sk.misceval.handleTraceback(err,$currLineNo,$currColNo,$fname,'" +
         scopeName +
         "');" +
         "if($exc.length>0){$err=err;$blk=$exc.pop();" +
@@ -3638,6 +3620,9 @@ Sk.compile = function (source, filename, mode, canSuspend, annotate) {
 
     var st = Sk.symboltable(ast, filename);
     var c = new Compiler(filename, st, flags.cf_flags, canSuspend, annotate ? source : false); // todo; CO_xxx
+    if (annotate && source) {
+        Sk.registerSourceMap(filename, source);
+    }
     var funcname = c.cmod(ast);
 
     // Restore the global __future__ flags

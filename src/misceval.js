@@ -47,6 +47,39 @@ Sk.misceval.Suspension = function Suspension(resume, child, data) {
 Sk.exportSymbol("Sk.misceval.Suspension", Sk.misceval.Suspension);
 
 /**
+ * Global storage for source code by filename
+ * @type {Object.<string, Array.<string>>}
+ */
+Sk.sourceMaps = Sk.sourceMaps || {};
+
+/**
+ * Register source code for a filename
+ * @param {string} filename The name of the file
+ * @param {string} source The source code as a string
+ */
+Sk.registerSourceMap = function(filename, source) {
+    if (source) {
+        Sk.sourceMaps[filename] = source.split("\n");
+    }
+};
+Sk.exportSymbol("Sk.registerSourceMap", Sk.registerSourceMap);
+
+/**
+ * Get a specific line of source code
+ * @param {string} filename The name of the file
+ * @param {number} lineno The line number (1-indexed)
+ * @returns {string|undefined} The source line, or undefined if not found
+ */
+Sk.getSourceLine = function(filename, lineno) {
+    var sourceLines = Sk.sourceMaps[filename];
+    if (sourceLines && lineno > 0 && lineno <= sourceLines.length) {
+        return sourceLines[lineno - 1];
+    }
+    return undefined;
+};
+Sk.exportSymbol("Sk.getSourceLine", Sk.getSourceLine);
+
+/**
  * @description
  * Well this seems pretty obvious by the name what it should do..
  *
@@ -1428,7 +1461,6 @@ Sk.misceval.handleTraceback = function (
     err,
     currLineNo,
     currColNo,
-    currSource,
     filename,
     scopeName
 ) {
@@ -1438,12 +1470,20 @@ Sk.misceval.handleTraceback = function (
     }
     if (!(err instanceof Sk.builtin.BaseException)) {
         err = new Sk.builtin.ExternalError(err);
+        console.error("Native Error", err);
     }
     Sk.err = err;
+
+    // Look up source from the source map instead of using embedded source
+    let source = undefined;
+    if (filename && currLineNo) {
+        source = Sk.getSourceLine(filename, currLineNo);
+    }
+
     err.traceback.push({
         lineno: currLineNo,
         colno: currColNo,
-        source: currSource,
+        source: source,
         filename: filename,
         scope: scopeName,
     });
@@ -1506,7 +1546,6 @@ Sk.misceval.injectSusp = function (
     $filename,
     $lineno,
     $colno,
-    $source,
     $tmps
 ) {
     var susp = new Sk.misceval.Suspension();
@@ -1521,7 +1560,6 @@ Sk.misceval.injectSusp = function (
     susp.$filename = $filename;
     susp.$lineno = $lineno;
     susp.$colno = $colno;
-    susp.source = $source;
     susp.optional = susp.child.optional;
     susp.$tmps = $tmps;
     return susp;

@@ -149,12 +149,13 @@ var $builtinmodule = function (name) {
         for (let i = 0; i < Sk.execStack.length - 1 ; i+=2) {
             const callLine = Sk.execStack[i];
             const defLine = Sk.execStack[i + 1];
+            const source = Sk.getSourceLine(callLine[1], callLine[2]);
             preparedTraces.push({
                 lineno: callLine[2],
                 colno: callLine[3],
                 filename: callLine[1],
                 scope: defLine[0],
-                source: defLine[0] // callLine.length > 4 ? callLine[4] || "" : "",
+                source: source // callLine.length > 4 ? callLine[4] || "" : "",
             });
         }
         preparedTraces.reverse();
@@ -170,7 +171,7 @@ var $builtinmodule = function (name) {
             depth = Sk.builtin.asnum$(depth);
         }
         const tb = prepareStackFrame();
-        console.log("STACK TRACE:", Sk.execStack, tb)
+        // console.log("STACK TRACE:", Sk.execStack, tb)
         return tb.tb_frame;
     };
     sys._getframe = new Sk.builtin.func(_getframe);
