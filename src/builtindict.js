@@ -70,6 +70,7 @@ Sk.builtins = {
     EOFError: Sk.builtin.EOFError,
     MemoryError: Sk.builtin.MemoryError,
     ReferenceError: Sk.builtin.ReferenceError,
+    FileNotFoundError: Sk.builtin.FileNotFoundError,
 
     float_$rw$: Sk.builtin.float_,
     int_$rw$: Sk.builtin.int_,

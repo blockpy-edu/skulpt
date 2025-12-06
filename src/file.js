@@ -41,10 +41,10 @@ Sk.builtin.file = function (name, mode, buffering, encoding, errors, newline, cl
         if (Sk.inBrowser) {
             // todo:  Maybe provide a replaceable function for non-import files
             this.fileno = 10;
-            this.data$ = Sk.inBrowser(this.name);
+            this.data$ = Sk.inBrowser(this.name, mode.v);
         } else {
             this.fileno = 11;
-            this.data$ = Sk.read(name.v);
+            this.data$ = Sk.read(name.v, mode.v);
         }
         this.lineList = splitLines(this.data$, this.newline, Sk.inBrowser);
         this.currentLine = 0;

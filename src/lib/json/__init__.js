@@ -47,19 +47,9 @@ var $builtinmodule = function (name) {
     // sort_keys=False,
     // **kw
 
-    var dumps_f = function (kwa) {
-        Sk.builtin.pyCheckArgs("dumps", arguments, 1, Infinity, true, false);
-
-        var args = Array.prototype.slice.call(arguments, 1),
-            kwargs = new Sk.builtins.dict(kwa),
-            sort_keys = false,
-            stringify_opts,
-            default_,
-            jsobj,
-            str;
-
+    function handleDumpLogic(kwargs, jsobj) {
         // default stringify options
-        stringify_opts = {
+        let stringify_opts = {
             ascii: true,
             separators: {
                 item_separator: ", ",
@@ -68,7 +58,6 @@ var $builtinmodule = function (name) {
         };
 
         kwargs = Sk.ffi.remapToJs(kwargs);
-        jsobj = Sk.ffi.remapToJs(args[0]);
 
         // TODO: likely need to go through character by character to enable this
         if (typeof kwargs.ensure_ascii === "boolean" && kwargs.ensure_ascii === false) {
@@ -76,6 +65,7 @@ var $builtinmodule = function (name) {
         }
 
         // TODO: javascript sort isn't entirely compatible with python's
+        let sort_keys = false;
         if (typeof kwargs.sort_keys === "boolean" && kwargs.sort_keys) {
             sort_keys = true;
         }
@@ -106,16 +96,47 @@ var $builtinmodule = function (name) {
 
         // may need to create a clone of this to have more control/options
         try {
-            str = JSON.stringify(jsobj, stringify_opts, kwargs.indent || 1);
+            return JSON.stringify(jsobj, stringify_opts, kwargs.indent || 1);
         } catch (e) {
             throw new JSONEncodeError(e.message);
         }
+    }
+
+    var dumps_f = function (kwa) {
+        Sk.builtin.pyCheckArgs("dumps", arguments, 1, Infinity, true, false);
+
+        let args = Array.prototype.slice.call(arguments, 1),
+            kwargs = new Sk.builtins.dict(kwa);
+
+        let str = handleDumpLogic(kwargs, Sk.ffi.remapToJs(args[0]));
 
         return new Sk.builtin.str(str);
     };
 
     dumps_f.co_kwargs = true;
     mod.dumps = new Sk.builtin.func(dumps_f);
+
+    let dump_f = function (kwa) {
+        Sk.builtin.pyCheckArgs("dump", arguments, 2, Infinity, true, false);
+
+        var args = Array.prototype.slice.call(arguments, 2),
+            kwargs = new Sk.builtins.dict(kwa);
+
+        kwargs = Sk.ffi.remapToJs(kwargs);
+        const jsobj = args[0];
+        const file = args[1];
+        const str = handleDumpLogic(kwargs, jsobj);
+
+        Sk.misceval.callsim(Sk.builtin.file.prototype["write"], file, new Sk.builtin.str(str));
+
+        // str = Sk.misceval.callsim(Sk.builtin.file.prototype["read"], file).v;
+        // obj = JSON.parse(str);
+
+
+    };
+
+    dump_f.co_kwargs = true;
+    mod.dump = new Sk.builtin.func(dump_f);
 
     // encoding[, cls[, object_hook[, parse_float[, parse_int[, parse_constant[, object_pairs_hook[, **kw]]]]]]]
     var loads_f = function (kwa) {

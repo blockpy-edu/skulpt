@@ -36,7 +36,7 @@ var $builtinmodule = function (name) {
             },
             $r() {
                 return new pyStr(
-                    `Parameter(${this.name$.v}, ${this.kind$.v}, default=${this.default$.v}, annotation=${this.annotation$.v})`
+                    `Parameter(${this.name$.v}, ${this.kind$.v}, default=${Sk.misceval.objectRepr(this.default$)}, annotation=${Sk.misceval.objectRepr(this.annotation$)})`
                 )
             }
         },
@@ -104,9 +104,19 @@ var $builtinmodule = function (name) {
         const parameters = new Sk.builtin.dict([]);
         if (funct.co_varnames) {
             let annotations = {};
-            if (funct.func_annotations && funct.func_annotations.length) {
-                for (let i = 0; i < funct.func_annotations.length; i += 2) {
-                    annotations[funct.func_annotations[i]] = funct.func_annotations[i + 1];
+            let originalAnnotations = funct.func_annotations;
+            if (Array.isArray(originalAnnotations)) {
+                if (funct.func_annotations && funct.func_annotations.length) {
+                    for (let i = 0; i < funct.func_annotations.length; i += 2) {
+                        annotations[funct.func_annotations[i]] = funct.func_annotations[i + 1];
+                    }
+                }
+            } else if (originalAnnotations !== null) {
+                originalAnnotations = originalAnnotations.$items();
+                if (funct.func_annotations) {
+                    for (let i = 0; i < originalAnnotations.length; i += 1) {
+                        annotations[Sk.ffi.remapToJs(originalAnnotations[i][0])] = originalAnnotations[i][1];
+                    }
                 }
             }
 

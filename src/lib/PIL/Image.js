@@ -1,3 +1,36 @@
+function BaseExc_new(args, kws) {
+    const instance = new this.constructor();
+    if (this.ht$type) {
+        BaseException.call(instance);
+    }
+    // called from python so do the args here
+    instance.args = new Sk.builtin.tuple(args.slice(0));
+    return instance;
+}
+
+function BaseExc_init(args, kws) {
+    Sk.abstr.checkNoKwargs(Sk.abstr.typeName(this), kws);
+    this.args = new Sk.builtin.tuple(args.slice(0));
+}
+
+function simpleExtends(base, name, doc) {
+    const tp$init = base.prototype.tp$init;
+    const slots = { tp$doc: doc, tp$init };
+    if (tp$init === BaseExc_init) {
+        slots.tp$new = BaseExc_new;
+    }
+    return Sk.abstr.buildNativeClass(name, {
+        base,
+        constructor: function pyExc(...args) {
+            base.apply(this, args);
+        },
+        slots,
+        flags: {
+            sk$solidBase: false,
+        },
+    });
+}
+
 var $builtinmodule = function (name) {
     const {
         object: pyObject,
@@ -185,6 +218,9 @@ var $builtinmodule = function (name) {
                     const url = URL.createObjectURL(blob);
                     return Sk.misceval.promiseToSuspension(
                         new Promise(function (resolve, reject) {
+                            if (uint8array.length === 0) {
+                                reject(new UnidentifiedImageError("cannot identify image file "+bytes.$r()));
+                            }
                             const img = new Image();
                             img.onload = function () {
                                 Sk.PIL.assets[src] = this;
@@ -913,6 +949,12 @@ var $builtinmodule = function (name) {
         });
     };
     mod.PixelAccess = Sk.misceval.buildClass(mod, PixelAccessClass, "PixelAccess", []);
+
+    const UnidentifiedImageError = mod.UnidentifiedImageError = simpleExtends(
+        Sk.builtin.OSError,
+    "UnidentifiedImageError",
+    "Raised when an image cannot be opened and identified."
+    );
 
     return mod;
 };

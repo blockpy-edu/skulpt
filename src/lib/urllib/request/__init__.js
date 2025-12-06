@@ -52,7 +52,7 @@ var $builtinmodule = function (name) {
         $loc.__init__ = new Sk.builtin.func(function (self, xhr) {
             self.data$ = xhr.responseText;
             self.status = xhr.status;
-            Sk.abstr.sattr(self, "status", Sk.ffi.remapToPy(self.status));
+            Sk.abstr.sattr(self, new Sk.builtin.str("status"), Sk.ffi.remapToPy(self.status));
             self.headers = new Sk.builtin.dict([]);
             xhr.getAllResponseHeaders()
                 .split("\n")
@@ -182,6 +182,10 @@ var $builtinmodule = function (name) {
             }
 
             if (!data) {
+                data = req.data;
+            }
+
+            if (!data) {
                 xmlhttp.open("GET", url);
             } else {
                 xmlhttp.open("POST", url);
@@ -195,7 +199,14 @@ var $builtinmodule = function (name) {
                     xmlhttp.setRequestHeader(key, headers[key]);
                 }
             }
-            xmlhttp.send(data ? JSON.stringify(Sk.ffi.remapToJs(data)) : null);
+            let formattedData;
+            if (data) {
+                const dataV = Sk.ffi.remapToJs(data);
+                formattedData = typeof dataV === "string" ? dataV : JSON.stringify(dataV);
+            } else {
+                formattedData = null;
+            }
+            xmlhttp.send(formattedData);
         });
 
         var susp = new Sk.misceval.Suspension();

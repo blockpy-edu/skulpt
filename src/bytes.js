@@ -219,7 +219,7 @@ Sk.builtin.bytes = Sk.abstr.buildNativeClass("bytes", {
             return this.v.length;
         },
         sq$concat(other) {
-            if (!(other instanceof Sk.builtin.bytes) && !(other instanceof Sk.builtin.array)) {
+            if (!(other instanceof Sk.builtin.bytes)) {
                 throw new Sk.builtin.TypeError(
                     "can't concat " + Sk.abstr.typeName(other) + " to bytes"
                 );
@@ -1154,7 +1154,7 @@ Sk.builtin.bytearray = Sk.abstr.buildNativeClass("bytearray", {
             return this.v.length;
         },
         sq$concat(other) {
-            if (!(other instanceof Sk.builtin.bytes) && !(other instanceof Sk.builtin.array)) {
+            if (!(other instanceof Sk.builtin.bytes)) {
                 throw new Sk.builtin.TypeError(
                     "can't concat " + Sk.abstr.typeName(other) + " to bytearray"
                 );

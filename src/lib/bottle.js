@@ -11,6 +11,38 @@ function combineWithCurrentPath(pathname) {
   return `${base}${cleanPath}${window.location.search}${window.location.hash}`;
 }
 
+function replaceHTML(tag, html) {
+    // // Save current scroll position
+    // const scrollTop = window.scrollY;
+    // const scrollLeft = window.scrollX;
+
+    tag.innerHTML = html;
+
+    tag.querySelectorAll("#extra-js-container script").forEach(oldScript => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) {
+            newScript.src = oldScript.src;  // external script
+        } else {
+            newScript.textContent = oldScript.textContent
+                .replace(/&lt;script>/, "")
+                .replace(/&lt;\/script&gt;/, "")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">"); // inline script
+        }
+        document.body.appendChild(newScript);
+    });
+
+    // Replace content
+    // const r = document.createRange();
+    // r.selectNode(tag);
+    // const fragment = r.createContextualFragment(html);
+    // tag.replaceChildren(fragment);
+
+    //
+    // // Restore scroll position
+    // window.scrollTo(scrollLeft, scrollTop);
+}
+
 
 function $builtinmodule() {
     const bottle = { __name__: new Sk.builtin.str("bottle") };
@@ -270,7 +302,8 @@ function $builtinmodule() {
                             console.warn("Could not push state to history:", e);
                         }
                     }
-                    root.innerHTML = page;
+                    replaceHTML(root, page);
+                    // root.innerHTML = page;
                     return changePageNavigation(root, (newUrl, parameters) => {
                         console.log("Page navigation begun!", newUrl, parameters);
                         const newFiles = new pyDict([]);
@@ -334,6 +367,9 @@ function $builtinmodule() {
                 filename,
             ]);
             this.fileObject = fileObject;
+            if (typeof filename === "string") {
+                filename = new pyStr(filename);
+            }
             objectSetAttr(self, new pyStr("file"), fileObject);
             objectSetAttr(self, new pyStr("filename"), filename);
 
