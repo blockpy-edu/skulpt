@@ -36,6 +36,7 @@ Object.defineProperties(
                 tp$new,
                 tp$getattr,
                 tp$setattr,
+                nb$or,
                 $r,
             },
             writable: true,
@@ -319,6 +320,11 @@ function tp$setattr(pyName, value, canSuspend) {
             this.$allocateSlot(jsName, value);
         }
     }
+}
+
+function nb$or(other) {
+    const pair = new Sk.builtin.tuple([this, other]);
+    return Sk.builtin.unionFromTuple(pair);
 }
 
 function fastLookup(pyName) {

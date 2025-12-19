@@ -45,6 +45,9 @@ Sk.builtin.GenericAlias = Sk.abstr.buildNativeClass("types.GenericAlias", {
             }
             return h0 ^ h1;
         },
+        nb$or(other) {
+            return Sk.builtin.unionFromTuple(new Sk.builtin.tuple([this, other]));
+        },
         tp$call(args, kwargs) {
             const obj = Sk.misceval.callsimArray(this.$origin, args, kwargs);
             try {

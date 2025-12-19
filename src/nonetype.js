@@ -22,6 +22,9 @@ Sk.builtin.none = Sk.abstr.buildNativeClass("NoneType", {
         nb$bool() {
             return false;
         },
+        nb$or(other) {
+            return Sk.builtin.unionFromTuple(new Sk.builtin.tuple([this, other]));
+        }
     },
     flags: {
         sk$unacceptableBase: true,

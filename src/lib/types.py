@@ -84,6 +84,8 @@ try:
 except NameError:
     pass
 
+UnionType = type(int | str)
+
 # try:
 #     raise TypeError
 # except TypeError:

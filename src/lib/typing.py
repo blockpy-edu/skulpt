@@ -10,11 +10,27 @@ class _IndexReturnsSelf:
 class Any:
     pass
 
-class Optional(_IndexReturnsSelf):
-    pass
+# class Optional(_IndexReturnsSelf):
+#     pass
 
-class Union(_IndexReturnsSelf):
-    pass
+# class Union(_IndexReturnsSelf):
+#     pass
+class _UnionFactory:
+    __name__ = "Union"
+    __qualname__ = "Union"
+
+    def __class_getitem__(cls, args):
+        if not args:
+            return cls
+        if not isinstance(args, tuple):
+            args = (args,)
+        start = args[0]
+        for arg in args[1:]:
+            start = start | arg
+        return start
+
+Union = _UnionFactory
+Optional = lambda T: T | None
 
 class List(_IndexReturnsSelf):
     pass
