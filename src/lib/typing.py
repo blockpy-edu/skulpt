@@ -30,7 +30,15 @@ class _UnionFactory:
         return start
 
 Union = _UnionFactory
-Optional = lambda T: T | None
+
+class _OptionalFactory:
+    __name__ = "Optional"
+    __qualname__ = "Optional"
+
+    def __class_getitem__(cls, arg):
+        return Union[arg, type(None)]
+
+Optional = _OptionalFactory
 
 class List(_IndexReturnsSelf):
     pass

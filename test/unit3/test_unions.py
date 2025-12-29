@@ -31,3 +31,24 @@ assert Union[int, int, int] == int
 assert Union[int, str] != Union[int, str, float]
 
 assert Union[Union[int, str], Union[int, str]] == Union[int, str]
+
+
+from typing import Optional
+
+assert Optional[int] == Union[int, None]
+
+
+assert isinstance(5, int) is True
+assert isinstance(5, str | int) is True
+assert isinstance(5, int | str) is True
+assert isinstance(5, Optional[int]) is True
+assert isinstance(None, Optional[int]) is True
+assert isinstance(5, Union[str, int]) is True
+assert isinstance("5", Union[str, int]) is True
+
+assert isinstance(5, str) is False
+assert isinstance(None, str) is False
+assert isinstance([1,2], int | str) is False
+assert isinstance("test", Optional[int]) is False
+assert isinstance({1, 2}, Union[str, int]) is False
+

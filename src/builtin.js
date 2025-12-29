@@ -702,7 +702,9 @@ Sk.builtin.open = function open(
 };
 
 Sk.builtin.isinstance = function isinstance(obj, type) {
-    if (!Sk.builtin.checkClass(type) && !(type instanceof Sk.builtin.tuple)) {
+    if (!Sk.builtin.checkClass(type) &&
+        !(type instanceof Sk.builtin.tuple) &&
+        !(type instanceof Sk.builtin.uniontype)) {
         throw new Sk.builtin.TypeError(
             "isinstance() arg 2 must be a class, type, or tuple of classes and types"
         );
@@ -712,6 +714,14 @@ Sk.builtin.isinstance = function isinstance(obj, type) {
     const act_type = obj.ob$type;
     if (act_type === type) {
         return Sk.builtin.bool.true$;
+    }
+    if (type instanceof Sk.builtin.uniontype) {
+        for (let i = 0; i < type.$args.v.length; ++i) {
+            if (Sk.misceval.isTrue(Sk.builtin.isinstance(obj, type.$args.v[i]))) {
+                return Sk.builtin.bool.true$;
+            }
+        }
+        return Sk.builtin.bool.false$;
     }
     if (!(type instanceof Sk.builtin.tuple)) {
         // attempt 1
