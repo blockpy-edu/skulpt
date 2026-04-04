@@ -274,4 +274,4 @@ def main(verbosity=1):
                 tc.verbosity = verbosity
                 tc.main()
             except:
-                print("Uncaught Error in: ", name)
+                print("Uncaught Error in: " + name)

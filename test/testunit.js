@@ -31,7 +31,11 @@ function test(python3, opt) {
     Sk.configure({
         syspath: [dir],
         read: (fname) => {
-            return fs.readFileSync(fname, "utf8");
+            if (fname !== "/dev/stdout") {
+                return fs.readFileSync(fname, "utf8");
+            } else {
+                return "Trying to read /dev/stdout";
+            }
         },
         output: (args) => {
             Sk.buf += args;

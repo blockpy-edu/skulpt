@@ -249,6 +249,11 @@ Sk.builtin.float_ = Sk.abstr.buildNativeClass("float", {
             $doc: Sk.builtin.none.none$,
         },
     },
+    proto: {
+        valueOf() {
+            return this.v;
+        }
+    }
 });
 
 function frexp(arg) {
@@ -456,7 +461,7 @@ function remainder(v, w) {
         return new Sk.builtin.float_(0);
     }
     if (w === Infinity) {
-        if (v === Infinity || this.v === -Infinity) {
+        if (v === Infinity || v === -Infinity) {
             return new Sk.builtin.float_(NaN);
         } else if (v > 0) {
             return new Sk.builtin.float_(v);

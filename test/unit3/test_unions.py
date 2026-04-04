@@ -52,3 +52,14 @@ assert isinstance([1,2], int | str) is False
 assert isinstance("test", Optional[int]) is False
 assert isinstance({1, 2}, Union[str, int]) is False
 
+from typing import TypeVar
+
+T = TypeVar('T')
+
+assert T | int
+assert T | str
+assert T | None
+
+assert Optional[T]
+assert Union[T, int]
+assert Union[T, str]

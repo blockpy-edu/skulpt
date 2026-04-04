@@ -29,6 +29,11 @@ Sk.builtin.none = Sk.abstr.buildNativeClass("NoneType", {
     flags: {
         sk$unacceptableBase: true,
     },
+    proto: {
+        valueOf() {
+            return null;
+        }
+    }
 });
 
 /**

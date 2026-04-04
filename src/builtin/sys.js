@@ -146,7 +146,7 @@ var $builtinmodule = function (name) {
         // Call -> function pairs
         const preparedTraces = [];
         // console.log(Sk.execStack, preparedTraces);
-        for (let i = 0; i < Sk.execStack.length - 1 ; i+=2) {
+        for (let i = 0; i < Sk.execStack.length; i+=2) {
             const callLine = Sk.execStack[i];
             const defLine = Sk.execStack[i + 1];
             const source = Sk.getSourceLine(callLine[1], callLine[2]);
@@ -154,11 +154,12 @@ var $builtinmodule = function (name) {
                 lineno: callLine[2],
                 colno: callLine[3],
                 filename: callLine[1],
-                scope: defLine[0],
+                scope: defLine ? defLine[0] : "<module>",
                 source: source // callLine.length > 4 ? callLine[4] || "" : "",
             });
         }
         preparedTraces.reverse();
+        // console.log(preparedTraces);
 
         const tb = Sk.builtin.traceback.fromList(preparedTraces);
         return tb;

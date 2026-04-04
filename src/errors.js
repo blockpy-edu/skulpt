@@ -156,6 +156,7 @@ function complexExtends(base, name, doc, init, descriptors, str) {
         constructor: function pyExc(...args) {
             base.apply(this, args);
             descriptors.forEach((getset, i) => {
+                // console.log(name, "Creating new property", getset, args[i]);
                 this["$" + getset] = Sk.ffi.remapToPy(args[i]);
             });
         },
@@ -550,8 +551,8 @@ Sk.builtin.code = function (trace) {
         return new Sk.builtin.code(trace);
     }
 
-    this.co_filename = trace.filename || "<unknown>";
-    this.co_name = trace.scope || "<unknown>";
+    this.co_filename = trace.filename ? Sk.builtin.checkString(trace.filename) ? Sk.ffi.remapToJs(trace.filename) : trace.filename : "unknown";
+    this.co_name = trace.scope ? Sk.builtin.checkString(trace.scope) ? Sk.ffi.remapToJs(trace.scope) : trace.scope : "<unknown>";
     this.co_firstlineno = trace.lineno || -1;
 
     this.__class__ = Sk.builtin.code;
@@ -667,7 +668,12 @@ Sk.builtin.frame.prototype.tp$getattr = function (name) {
     return Sk.generic.getAttr(this, name);
 };
 Sk.builtin.frame.prototype["$r"] = function () {
-    return new Sk.builtin.str("<frame object>");
+    const filename = this.trace.filename || "<unknown>";
+    const lineno = this.trace.lineno || -1;
+    const name = this.trace.scope || "<unknown>";
+    return new Sk.builtin.str(
+        `<frame object, file "${filename}", line ${lineno}, in ${name}>`
+    );
 };
 Sk.exportSymbol("Sk.builtin.frame", Sk.builtin.frame);
 

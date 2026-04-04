@@ -1,10 +1,10 @@
 # Python test set -- math module
 # XXXX Should not do tests around zero only
-
+print("A")
 import unittest
 import math
 import sys
-
+print("B")
 eps = 1E-05
 NAN = float('nan')
 INF = float('inf')

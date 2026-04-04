@@ -69,5 +69,5 @@ line, code = (
 )
 
 print(line, code)
-assert line == 64
+assert line == 68
 assert code.strip() == "testing_function()"

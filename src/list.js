@@ -413,6 +413,9 @@ Sk.builtin.list = Sk.abstr.buildNativeClass("list", {
                 dec += offdir;
             });
         },
+        valueOf() {
+            return this.v;
+        }
     },
 });
 

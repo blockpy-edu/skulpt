@@ -175,8 +175,6 @@ Sk.builtin.object = Sk.abstr.buildNativeClass("object", {
     proto: /**@lends {Sk.builtin.object.prototype}*/ {
         valueOf: Object.prototype.valueOf,
         toString: function () {
-            //console.log("Calling toString on", this);
-            //debugger;
             return this.tp$str().v;
         },
         hasOwnProperty: Object.prototype.hasOwnProperty,

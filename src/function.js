@@ -151,7 +151,16 @@ Sk.builtin.func = Sk.abstr.buildNativeClass("function", {
         __defaults__: {
             $get() {
                 return new Sk.builtin.tuple(this.$defaults);
-            }, // technically this is a writable property but we'll leave it as read-only for now
+            },
+            $set(v) {
+                if (v === undefined || Sk.builtin.checkNone(v)) {
+                    this.$defaults = null;
+                } else if (!(v instanceof Sk.builtin.tuple)) {
+                    throw new Sk.builtin.TypeError("__defaults__ must be set to a tuple object");
+                } else {
+                    this.$defaults = v.valueOf();
+                }
+            }
         },
         __doc__: {
             $get() {

@@ -315,6 +315,9 @@ Sk.builtin.str = Sk.abstr.buildNativeClass("str", {
                 "a str instance is required not '" + Sk.abstr.typeName(tgt) + "'"
             );
         },
+        valueOf() {
+            return this.v;
+        },
         $isIdentifier() {
             return Sk.token.isIdentifier(this.v);
         },

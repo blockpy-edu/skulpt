@@ -43,7 +43,15 @@ function run(python3, opt, filename) {
             });*/
         },
         read: (fname) => {
+            if (fname === "/dev/stdout") {
+                return "Cannot read from stdout";
+            } else if (fname === "/dev/stdin") {
+                return "Cannot read from stdin";
+            }
             return fs.readFileSync(fname, "utf8");
+        },
+        filewrite: (fname, data) => {
+            console.log(data);
         },
         output: (args) => {
             process.stdout.write(args);

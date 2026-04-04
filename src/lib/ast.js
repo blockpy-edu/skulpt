@@ -367,9 +367,11 @@ var $builtinmodule = function (name) {
             return Sk.misceval.callsim(mod.Module, new Sk.INHERITANCE_MAP.mod[0]([]));
         }
         if (filename === undefined) {
-            filename = new Sk.builtin.str("<unknown>");
+            filename = "<unknown>";
+        } else {
+            filename = Sk.ffi.remapToJs(filename);
         }
-        var parse = Sk.parse(filename, Sk.ffi.remapToJs(source));
+        const parse = Sk.parse(filename, Sk.ffi.remapToJs(source));
         ast = Sk.astFromParse(parse.cst, filename, parse.flags);
         return Sk.misceval.callsim(mod.Module, ast);
         // Walk tree and create nodes (lazily?)

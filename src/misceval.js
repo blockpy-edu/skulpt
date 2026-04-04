@@ -317,10 +317,10 @@ Sk.misceval.iterator = Sk.abstr.buildIteratorClass("iterator", {
 Sk.misceval.swappedOp_ = {
     Eq: "Eq",
     NotEq: "NotEq",
-    Lt: "GtE",
-    LtE: "Gt",
-    Gt: "LtE",
-    GtE: "Lt",
+    Lt: "Gt",
+    LtE: "GtE",
+    Gt: "Lt",
+    GtE: "LtE",
     Is: "IsNot",
     IsNot: "Is",
     In_: "NotIn",
@@ -518,6 +518,7 @@ Sk.misceval.richCompareBool = function (v, w, op, canSuspend) {
     shortcut = op2shortcut[op];
     // similar rules apply as with binops - prioritize the reflected ops of subtypes
     // but different to binop - even if the swapped op is the same as the parent still call it
+
     if (w_is_subclass) {
         swapped_shortcut = op2shortcut[Sk.misceval.swappedOp_[op]];
         if ((ret = w[swapped_shortcut](v)) !== Sk.builtin.NotImplemented.NotImplemented$) {

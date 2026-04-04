@@ -307,12 +307,14 @@ function formatString(format_spec) {
 }
 
 // str.format() implementation
+const isDigit = /^\d+$/;
+
+const regex = /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!(.))?(?:\:([^}]*))?}/g;
+
 function format(args, kwargs) {
     // following PEP 3101
     kwargs = kwargs || [];
     const arg_dict = {};
-    const regex =
-        /{(((?:\d+)|(?:\w+))?((?:\.(\w+))|(?:\[((?:\d+)|(?:\w+))\])?))?(?:\!([rs]))?(?:\:([^}]*))?}/g;
     // ex: {o.name!r:*^+#030,.9b}
     // Field 1, Field_name, o.name
     // Field 2, arg_name, o
@@ -329,9 +331,35 @@ function format(args, kwargs) {
     for (let i = 0; i < kwargs.length; i += 2) {
         arg_dict[kwargs[i]] = kwargs[i + 1];
     }
-    for (let i in args) {
-        arg_dict[i] = args[i];
-    }
+    let currentMode;
+    const manual = "manual field specification";
+    const auto = "automatic field numbering";
+    const checkMode = (newMode) => {
+        if (currentMode === undefined) {
+            currentMode = newMode;
+        } else if (currentMode !== newMode) {
+            throw new Sk.builtin.ValueError(`cannot switch from ${currentMode} to ${newMode}`);
+        }
+    };
+    const getArg = (key) => {
+        let rv;
+        if (typeof key === "number") {
+            checkMode(manual);
+            rv = args[key];
+        } else if (isDigit.test(key)) {
+            checkMode(auto);
+            rv = args[key];
+        } else {
+            rv = arg_dict[key];
+            if (rv === undefined) {
+                throw new Sk.builtin.KeyError(key);
+            }
+        }
+        if (rv === undefined) {
+            throw new Sk.builtin.IndexError(`Replacement index ${key} out of range for positional args tuple`);
+        }
+        return rv;
+    };
 
     let index = 0;
     function replFunc(
@@ -349,10 +377,10 @@ function format(args, kwargs) {
         let value;
 
         if (element_index !== undefined && element_index !== "") {
-            let container = arg_dict[arg_name];
+            let container = getArg(arg_name);
             if (container.constructor === Array) {
                 value = container[element_index];
-            } else if (/^\d+$/.test(element_index)) {
+            } else if (isDigit.test(element_index)) {
                 value = Sk.abstr.objectGetItem(
                     container,
                     new Sk.builtin.int_(parseInt(element_index, 10)),
@@ -363,22 +391,20 @@ function format(args, kwargs) {
             }
             index++;
         } else if (attribute_name !== undefined && attribute_name !== "") {
+            const arg = getArg(arg_name || index++);
             value = Sk.abstr.gattr(
-                arg_dict[arg_name || index++],
+                arg,
                 new Sk.builtin.str(attribute_name)
             );
         } else if (arg_name !== undefined && arg_name !== "") {
-            value = arg_dict[arg_name];
+            value = getArg(arg_name);
         } else if (field_name === undefined || field_name === "") {
-            value = arg_dict[index];
+            value = getArg(index);
             index++;
         } else if (
-            field_name instanceof Sk.builtin.int_ ||
-            field_name instanceof Sk.builtin.float_ ||
-            field_name instanceof Sk.builtin.lng ||
-            /^\d+$/.test(field_name)
+            isDigit.test(field_name)
         ) {
-            value = arg_dict[field_name];
+            value = getArg(field_name);
             index++;
         }
 
@@ -386,6 +412,8 @@ function format(args, kwargs) {
             value = new Sk.builtin.str(value);
         } else if (conversion === "r") {
             value = Sk.builtin.repr(value);
+        } else if (conversion === "a") {
+            value = Sk.builtin.ascii(value);
         } else if (conversion !== "" && conversion !== undefined) {
             throw new Sk.builtin.ValueError("Unknown conversion specifier " + conversion);
         }
